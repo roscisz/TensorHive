@@ -1,1 +1,1 @@
-Scripts for running inception training with Distributed TensorFlow and KernelHive manager.
+Scripts for running [inception](https://github.com/tensorflow/models/tree/master/inception) training with Distributed TensorFlow and [KernelHive manager](https://github.com/roscisz/KernelHive/tree/manager/hive-manager).
