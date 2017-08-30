@@ -4,13 +4,14 @@ import time
 from kernelhive.management import Manager
 from kernelhive.monitors.GPUMonitor import GPUMonitor
 from kernelhive.monitoring_handlers.PrintingHandler import PrintingHandler
+from monitoring_handlers.RRDHandler import RRDHandler
 
 stop = False
 
 
 def main():
     # TODO: read server hostname, port host list and command from commandline
-    manager = Manager('localhost', 31333, [GPUMonitor()], [PrintingHandler()])
+    manager = Manager('localhost', 31333, [GPUMonitor()], [PrintingHandler(), RRDHandler()])
     manager.start()
 
     def shutdown(signum, frame):
