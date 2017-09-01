@@ -1,0 +1,2 @@
+recursive-include tensorhive/static *
+recursive-include tensorhive/scripts *

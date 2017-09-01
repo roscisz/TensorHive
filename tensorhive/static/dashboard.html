@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+
+<html>
+
+    <head>
+      <meta charset="UTF-8">
+      <title>TensorHive Dashboard</title>
+    </head>
+    <script src="handlebars.min-v4.0.10.js"></script>
+    <script type="text/javascript" src="javascriptrrd.wlibs.js"></script>
+    <script>
+        var charts = {};
+        var graph_opts = {legend: { noColumns:4 }, yaxis: {min: 0, max: 100}};
+        var ds_graph_opts={'utilization':{ color: "#ff8000", lines: { show: true, fill: false, fillColor:"#ffff80"} },};
+        var rrdflot_opts={graph_only:true, graph_height: "140px", graph_width: "240px", legend: "None"};
+
+        function refresh_rrd(infrastructure) {
+            for(var node_name in infrastructure) {
+                node = infrastructure[node_name];
+                for(var gpu_id in node.gpu) {
+                    if(!(gpu_id in charts))
+                        charts[gpu_id] = new rrdFlotAsync(gpu_id, null, null, graph_opts, ds_graph_opts, rrdflot_opts);
+                    charts[gpu_id].reload('dynamic/' + gpu_id + '.rrd');
+                }
+            }
+        }
+
+        function check_new_devices(infrastructure) {
+            for(var node_name in infrastructure) {
+                node = infrastructure[node_name];
+                for(var gpu_id in node.gpu) {
+                    if(!(gpu_id in charts))
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        function refresh_processes(infrastructure) {
+            for(var node_name in infrastructure) {
+                node = infrastructure[node_name];
+                for(var gpu_id in node.gpu) {
+                    var processes = node.gpu[gpu_id].processes;
+                    var processlist = [];
+                    for(var process in processes) {
+                        processlist.push(processes[process].pid + ": " + processes[process].owner);
+                    }
+                    document.getElementById(gpu_id + '_processes').innerHTML = processlist.join(" <br/>");
+                }
+            }
+            return false;
+        }
+
+        // TODO: error handling
+        function refresh() {
+            var http = new XMLHttpRequest();
+            http.open("POST", "http://localhost:31333/", true);
+            http.onreadystatechange = function() {
+                if(http.readyState == 4 && http.status == 200) {
+                    response_json = JSON.parse(http.responseText);
+                    if(check_new_devices(response_json.result)) {
+                        var rendered = compiled_template(response_json);
+                        document.getElementById("target").innerHTML = rendered;
+                    }
+                    refresh_rrd(response_json.result);
+                    refresh_processes(response_json.result);
+                }
+            };
+            http.send('{"jsonrpc": "2.0", "method": "get_infrastructure", "id": "1"}');
+        }
+
+        function load() {
+            var template = document.getElementById("template").innerHTML;
+            compiled_template = Handlebars.compile(template);
+            refresh();
+        }
+
+        function add_node() {
+            var http = new XMLHttpRequest();
+            // TODO: host and port configuration
+            http.open("POST", "http://localhost:31333/", true);
+            http.onreadystatechange = function() {
+                if(http.readyState == 4 && http.status == 200) {
+                    //alert('Add node: ' + http.responseText);
+                }
+            };
+            new_node = document.getElementById("new_node").value;
+            http.send('{"jsonrpc": "2.0", "method": "add_node", "params": ["' + new_node + '"], "id": "1"}');
+        }
+
+        window.setInterval(function(){
+          refresh();
+        }, 10000);
+    </script>
+
+    <body onload="load()">
+        <div id="target">Loading...</div>
+        <script id="template" type="x-tmpl-mustache">
+
+            <table>
+            {{#each result}}
+                <tr><td colspan="4">
+                {{@key}}:<br/>
+                </td></tr>
+                <tr>
+                {{#each this.gpu}}
+                    <td>
+		                {{this.name}}: {{this.model}}
+                        <div id="{{@key}}"></div>
+                    </td>
+                {{/each}}
+                </tr>
+                <tr>
+                {{#each this.gpu}}
+                    <td>
+                        <div id="{{@key}}_processes"></div><br/>
+                    </td>
+                {{/each}}
+                </tr>
+            {{/each}}
+            </table>
+
+        </script>
+
+        <input id="new_node" type="text" value=""/>
+        <input type="button" value="Add node" onclick="add_node()"/><br/>
+
+    </body>
+</html>

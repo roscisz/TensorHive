@@ -1,16 +1,13 @@
 import signal
 import time
 
-from kernelhive.management import Manager
-from kernelhive.monitors.GPUMonitor import GPUMonitor
-from kernelhive.monitoring_handlers.PrintingHandler import PrintingHandler
+from tensorhive.TensorHiveManager import TensorHiveManager
 
 stop = False
 
-
 def main():
     # TODO: read server hostname, port host list and command from commandline
-    manager = Manager('localhost', 31333, [GPUMonitor()], [PrintingHandler()])
+    manager = TensorHiveManager('localhost', 31333)
     manager.start()
 
     def shutdown(signum, frame):
