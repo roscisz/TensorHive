@@ -10,9 +10,9 @@
     <script type="text/javascript" src="javascriptrrd.wlibs.js"></script>
     <script>
         var charts = {};
-        var graph_opts = {legend: { noColumns:4 }, yaxis: {min: 0}};
+        var graph_opts = {legend: { noColumns:4 }, yaxis: {min: 0, max: 100}};
         var ds_graph_opts={'utilization':{ color: "#ff8000", lines: { show: true, fill: false, fillColor:"#ffff80"} },};
-        var rrdflot_opts={graph_only:true};
+        var rrdflot_opts={graph_only:true, graph_height: "140px", graph_width: "240px", legend: "None"};
 
         function refresh_rrd(infrastructure) {
             for(var node_name in infrastructure) {
@@ -41,7 +41,7 @@
                 node = infrastructure[node_name];
                 for(var gpu_id in node.gpu) {
                     var processes = node.gpu[gpu_id].processes;
-                    var processlist = ['Processes: '];
+                    var processlist = [];
                     for(var process in processes) {
                         processlist.push(processes[process].pid + ": " + processes[process].owner);
                     }
@@ -77,10 +77,11 @@
 
         function add_node() {
             var http = new XMLHttpRequest();
+            // TODO: host and port configuration
             http.open("POST", "http://localhost:31333/", true);
             http.onreadystatechange = function() {
                 if(http.readyState == 4 && http.status == 200) {
-                    alert('Add node: ' + http.responseText);
+                    //alert('Add node: ' + http.responseText);
                 }
             };
             new_node = document.getElementById("new_node").value;
@@ -93,19 +94,31 @@
     </script>
 
     <body onload="load()">
-        <h1 id="title">TensorHive Dashboard</h1>
         <div id="target">Loading...</div>
         <script id="template" type="x-tmpl-mustache">
 
+            <table>
             {{#each result}}
+                <tr><td colspan="4">
                 {{@key}}:<br/>
+                </td></tr>
+                <tr>
                 {{#each this.gpu}}
-		            {{@key}}
-                    <div id="{{@key}}"></div>
-                    <br/>
-                    <div id="{{@key}}_processes"></div><br/>
+                    <td>
+		                {{this.name}}: {{this.model}}
+                        <div id="{{@key}}"></div>
+                    </td>
                 {{/each}}
+                </tr>
+                <tr>
+                {{#each this.gpu}}
+                    <td>
+                        <div id="{{@key}}_processes"></div><br/>
+                    </td>
+                {{/each}}
+                </tr>
             {{/each}}
+            </table>
 
         </script>
 
