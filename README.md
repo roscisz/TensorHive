@@ -1,18 +1,40 @@
 # TensorHive
 
-Resource management tool for executing distributed [TensorFlow](https://github.com/tensorflow/tensorflow) based on [KernelHive](https://github.com/roscisz/KernelHive) manager libraries.
+TensorHive is a work in progress project with the objective to develop
+a lightweight computing resource management tool for executing
+machine learning applications in distributed
+[TensorFlow](https://github.com/tensorflow/tensorflow).
+The planned core feature of TensorHive is to allow easy execution of
+distributed trainings without the need for manual logging in to every
+worker node or installing and configuring resource management daemons.
+Further planned features include task queuing and hardware and library
+version selection based on application requirements.
 
-GPU monitoring example:
+Beta version enabling executing distributed TensorFlow applications is a milestone planned for 31.12.2017.
+In the current version, TensorHive can be used for monitoring utilization and process owners of GPUs in a cluster.
 
-0. Install KernelHive python libraries:
+TensorHive is based on [KernelHive](https://github.com/roscisz/KernelHive) python libraries.
 
-pip install kernelhive
+## Requirements
 
-1. Run the monitoring daemon:
+* cluster nodes should be accessible by SSH without password
+* GPUs should support utilization monitoring through nvidia-smi
 
-python gpu_monitoring.py
+## Installation
 
-2. Add nodes that should be monitored:
+```shell
+$ pip install tensorhive
+```
 
-cd scripts
-./add_node.sh <hostname>
+## Usage
+
+1. Run TensorHive:
+```shell
+$ tensorhive
+```
+
+2. Browse to http://localhost:31333
+
+3. Add managed nodes by inserting their hostnames and clicking "Add node"
+
+4. Watch GPU utilization and process owners on an interactive dashboard

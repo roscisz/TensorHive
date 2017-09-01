@@ -2,13 +2,19 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'tensorhive',
-    version = '0.0.1',
+    version = '0.1',
     packages = find_packages(),
-    description = 'Lightweight resource management tool for distributed TensorFlow in clusters with SSH connectivity',
+    entry_points={
+        'console_scripts': [
+            'tensorhive = tensorhive.__main__:main'
+        ],
+    },
+    description = 'Lightweight computing resource management tool for executing distributed TensorFlow programs',
     author = 'Pawel Rosciszewski',
     author_email = 'pawel.rosciszewski@pg.edu.pl',
     url = 'https://github.com/roscisz/TensorHive',
-    download_url = 'https://github.com/roscisz/TensorHive/archive/0.0.1.tar.gz',
+    download_url = 'https://github.com/roscisz/TensorHive/archive/0.1.tar.gz',
     keywords = 'distributed machine learning tensorflow resource management',
-    install_requires=['kernelhive']
+    install_requires=['kernelhive>=1.2.7', 'pyrrd'],
+    zip_safe=False
 )
