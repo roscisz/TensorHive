@@ -7,11 +7,12 @@ from kernelhive.monitoring import MonitoringHandler
 
 # TODO: dirty fast code, refactor
 class RRDHandler(MonitoringHandler):
-    def __init__(self):
+    def __init__(self, rrd_dir):
+        self.rrd_dir = rrd_dir
         self.rrds = dict()
 
     def create_rrd(self, gpuid):
-        ret = RRD(os.path.join(os.getcwd(), 'files/dynamic/%s.rrd' % gpuid),
+        ret = RRD('/'.join([self.rrd_dir, '%s.rrd' % gpuid]),
                        ds=[DataSource(dsName='utilization', dsType='GAUGE', heartbeat=10)],
                        rra=[RRA(cf='MIN', xff=0.5, steps=1, rows=360)],
                        step=10,
