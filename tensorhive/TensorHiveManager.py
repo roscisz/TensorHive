@@ -1,7 +1,7 @@
-from kernelhive.management import Manager
-from kernelhive.monitors.GPUMonitor import GPUMonitor
-from kernelhive.monitoring_handlers.PrintingHandler import PrintingHandler
-from tensorhive.RRDHandler import RRDHandler
+from management import Manager
+from monitors.GPUMonitor import GPUMonitor
+from monitoring_handlers.PrintingHandler import PrintingHandler
+from monitoring_handlers.RRDHandler import RRDHandler
 import logging
 
 
