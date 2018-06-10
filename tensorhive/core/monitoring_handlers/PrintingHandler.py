@@ -1,4 +1,4 @@
-from tensorhive.monitoring import MonitoringHandler
+from tensorhive.core.monitoring import MonitoringHandler
 
 
 class PrintingHandler(MonitoringHandler):

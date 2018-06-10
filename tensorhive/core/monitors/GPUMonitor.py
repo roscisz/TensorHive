@@ -1,4 +1,4 @@
-from tensorhive.monitoring import Monitor
+from tensorhive.core.monitoring import Monitor
 
 timeout_prefix = 'timeout 2 '
 

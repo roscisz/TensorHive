@@ -1,7 +1,7 @@
 import signal
 import time
 
-from tensorhive.TensorHiveManager import TensorHiveManager
+from tensorhive.core.TensorHiveManager import TensorHiveManager
 
 stop = False
 

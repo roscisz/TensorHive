@@ -1,6 +1,6 @@
-from tensorhive.management import Manager
-from tensorhive.monitors.GPUMonitor import GPUMonitor
-from tensorhive.monitoring_handlers.PrintingHandler import PrintingHandler
+from tensorhive.core.management import Manager
+from tensorhive.core.monitors.GPUMonitor import GPUMonitor
+from tensorhive.core.monitoring_handlers.PrintingHandler import PrintingHandler
 #from tensorhive.monitoring_handlers.RRDHandler import RRDHandler
 import logging
 
