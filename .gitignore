@@ -4,3 +4,9 @@
 # python
 __pycache__/
 *.pyc
+tensorhive.egg-info/
+dist/
+build/
+
+# mypy
+\.mypy_cache
