@@ -1,31 +1,35 @@
 import signal
 import time
-from tensorhive.config import CONFIG
-from tensorhive.core.TensorHiveManager import TensorHiveManager
+# from tensorhive.config import CONFIG
+# from tensorhive.core.TensorHiveManager import TensorHiveManager
 
-stop = False
-
+# stop = False
+from tensorhive.core_anew.connections.SSHConnector import SSHConnector
 
 def main():
-    # TODO: read server hostname, port host list and command from commandline
-    manager = TensorHiveManager(
-        hostname=CONFIG['THManager']['server']['hostname'],
-        port=CONFIG['THManager']['server']['port']
-    )
-    manager.start()
+    '''THIS IS ONLY TEMPORARY SIMLIFICATION'''
+    beka = SSHConnector()
 
-    def shutdown(signum, frame):
-        manager.shutdown()
-        global stop
-        stop = True
+    # # TODO: read server hostname, port host list and command from commandline
+    # manager = TensorHiveManager(
+    #     hostname=CONFIG['THManager']['server']['hostname'],
+    #     port=CONFIG['THManager']['server']['port']
+    # )
+    # manager.start()
 
-    signal.signal(signal.SIGINT, shutdown)
-    signal.signal(signal.SIGTERM, shutdown)
+    # def shutdown(signum, frame):
+    #     manager.shutdown()
+    #     global stop
+    #     stop = True
 
-    while not stop:
-        time.sleep(5)
+    # signal.signal(signal.SIGINT, shutdown)
+    # signal.signal(signal.SIGTERM, shutdown)
 
-    manager.join()
+    # while not stop:
+    #     time.sleep(5)
+
+    # manager.join()
+    
 
 
 if __name__ == "__main__":

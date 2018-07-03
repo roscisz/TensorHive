@@ -16,7 +16,7 @@ setup(
     url = 'https://github.com/roscisz/TensorHive',
     download_url = 'https://github.com/roscisz/TensorHive/archive/0.1.1.tar.gz',
     keywords = 'distributed machine learning tensorflow resource management',
-    install_requires=['paramiko', 'werkzeug', 'json-rpc', 'pyrrd'],
+    install_requires=['paramiko', 'werkzeug', 'json-rpc', 'spur'],
     include_package_data=True,
     zip_safe=False
 )
