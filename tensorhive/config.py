@@ -1,31 +1,32 @@
-# TODO Add reading command-line arguments with argparse e.g. tensorhive --host localhost --port 1234
+from typing import Any, Dict, Union, ClassVar
 
-class BaseConfig:
+# TODO Add reading command-line arguments with argparse e.g. tensorhive --host localhost --port 1234
+class BaseConfig():
     '''Contains ALL configuration constants'''
-    def __init__(self):
+    StringOrInt = Union[str, int]
+    CONFIG: Dict[str, StringOrInt]
+
+    def __init__(self) -> None:
         # Put all keys with default values here...
         self.CONFIG = {
-            'THManager': {
-                'server': {
-                    'hostname': 'localhost',
-                    'port': 12345
-                }
-            }
+            'TH__SERVER_HOSTNAME': 'localhost',
+            'TH__SERVER_PORT': 31333,
+            'TH__SLEEP_IN_S': 5
+
         }
 
     def __repr__(self):
         return self.CONFIG
     
-    def get_config(self):
-        return self.CONFIG
 
 class DevelopmentConfig(BaseConfig):
     '''Default config, can overwrite BaseConfig'''
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         # Override here...
-        self.CONFIG['THManager']['server']['port'] = 31333
+        self.CONFIG['TH__SERVER_PORT'] = 31333
+        self.CONFIG['TH__SLEEP_IN_S'] = 1
 
     
 class ProductionConfig(BaseConfig):
@@ -33,6 +34,6 @@ class ProductionConfig(BaseConfig):
     pass
 
 # Object to be imported by application modules
-CONFIG = DevelopmentConfig().get_config()
+CONFIG = DevelopmentConfig().CONFIG
 
 

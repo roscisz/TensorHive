@@ -1,35 +1,41 @@
 import signal
 import time
-# from tensorhive.config import CONFIG
-# from tensorhive.core.TensorHiveManager import TensorHiveManager
+from tensorhive.config import CONFIG
+from tensorhive.core_anew.managers.TensorHiveManager import TensorHiveManager
+from tensorhive.core_anew.services.MonitoringService import MonitoringService
+from tensorhive.core_anew.monitors.GPUMonitor import GPUMonitor
 
-# stop = False
-from tensorhive.core_anew.connections.SSHConnector import SSHConnector
+
+class GracefulKiller():
+    kill_now = False
+
+    def __init__(self):
+        signal.signal(signal.SIGINT, self.shutdown_gracefully)
+        signal.signal(signal.SIGTERM, self.shutdown_gracefully)
+
+    def shutdown_gracefully(self, signum, frame):
+        self.kill_now = True
+
 
 def main():
-    '''THIS IS ONLY TEMPORARY SIMLIFICATION'''
-    beka = SSHConnector()
+    termination_handler = GracefulKiller()
 
-    # # TODO: read server hostname, port host list and command from commandline
-    # manager = TensorHiveManager(
-    #     hostname=CONFIG['THManager']['server']['hostname'],
-    #     port=CONFIG['THManager']['server']['port']
-    # )
-    # manager.start()
+    services_to_inject = [MonitoringService(monitors=[GPUMonitor()
+                                                      # Add more monitors here
+                                                      ])
+                          # Add more services here
+                          ]
 
-    # def shutdown(signum, frame):
-    #     manager.shutdown()
-    #     global stop
-    #     stop = True
+    manager = TensorHiveManager(services=services_to_inject)
+    manager.start()
+    while True:
+        time.sleep(CONFIG['TH__SLEEP_IN_S'])
 
-    # signal.signal(signal.SIGINT, shutdown)
-    # signal.signal(signal.SIGTERM, shutdown)
+        if termination_handler.kill_now:
+            manager.shutdown()
+            break
 
-    # while not stop:
-    #     time.sleep(5)
-
-    # manager.join()
-    
+        manager.join()
 
 
 if __name__ == "__main__":
