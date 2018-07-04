@@ -5,20 +5,12 @@ from tensorhive.core_anew.managers.TensorHiveManager import TensorHiveManager
 from tensorhive.core_anew.services.MonitoringService import MonitoringService
 from tensorhive.core_anew.monitors.GPUMonitor import GPUMonitor
 
+from tensorhive.core_anew.utils.SigShutdownHandler import SigShutdownHandler
 
-class GracefulKiller():
-    kill_now = False
-
-    def __init__(self):
-        signal.signal(signal.SIGINT, self.shutdown_gracefully)
-        signal.signal(signal.SIGTERM, self.shutdown_gracefully)
-
-    def shutdown_gracefully(self, signum, frame):
-        self.kill_now = True
 
 
 def main():
-    termination_handler = GracefulKiller()
+    termination_handler = SigShutdownHandler()
 
     services_to_inject = [MonitoringService(monitors=[GPUMonitor()
                                                       # Add more monitors here
@@ -35,7 +27,7 @@ def main():
             manager.shutdown()
             break
 
-        manager.join()
+    manager.join()
 
 
 if __name__ == "__main__":

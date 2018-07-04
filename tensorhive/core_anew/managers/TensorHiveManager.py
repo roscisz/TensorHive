@@ -40,6 +40,6 @@ class TensorHiveManager(ThreadedManager):
 
     # @override
     def shutdown(self):
-        super().shutdown()
         self.service_manager.shutdown_all_services()
+        super().shutdown()
         print(f'[✔] {self.thread_name} has stopped')
