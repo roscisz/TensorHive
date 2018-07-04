@@ -11,7 +11,7 @@ class Monitor(ABC):
     # TODO _mode -> run all commands, specific, or single
 
     @abstractmethod
-    def refresh(self, monitored_client_shell_session: spur.ssh.SshShell) -> None:
+    def update(self, connection) -> None:
         pass
 
     # TODO discover/register methods etc.

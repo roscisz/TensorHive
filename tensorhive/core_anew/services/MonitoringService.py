@@ -17,7 +17,7 @@ class MonitoringService(Service):
     infrastructure_manager: Any
 
     # TODO Configure from config or inject
-    _polling_interval: float = 3.0
+    _polling_interval: float = 1.0
 
     def __init__(self, monitors):
         super().__init__()
@@ -32,7 +32,7 @@ class MonitoringService(Service):
         if isinstance(injected_object, InfrastructureManager):
             self.infrastructure_manager = injected_object
         elif isinstance(injected_object, ConnectionManager):
-            self.connections = injected_object.connections
+            self.connection_manager = injected_object
 
     def shutdown(self):
         super().shutdown()
@@ -41,8 +41,8 @@ class MonitoringService(Service):
     # TODO May want to introduce threaded workers, but need to take care of
     # accessing manager in parallel mode...
     def do_run(self):
-        print(f'{self.service_name} is working...')
-        for connection in self.connections:
+        #DEBUG print(f'{self.service_name} is working...')
+        for connection in self.connection_manager.connections:
             with connection:
                 for monitor in self.monitors:
                     monitor.update(connection)

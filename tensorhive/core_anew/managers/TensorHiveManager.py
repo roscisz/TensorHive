@@ -8,6 +8,9 @@ from tensorhive.core_anew.connectors.SSHConnector import SSHConnector
 from tensorhive.core_anew.services.Service import Service
 from typing import List, Dict
 
+# FIXME Remove colorama dependency from setup.py
+from colorama import Fore, Back, Style
+
 
 class TensorHiveManager(ThreadedManager):
     '''
@@ -20,7 +23,10 @@ class TensorHiveManager(ThreadedManager):
         self.infrastructure_manager = InfrastructureManager()
 
         # FIXME hardcoded SSHConnector
-        self.connection_manager = ConnectionManager(SSHConnector())
+        print(f'{Back.RED}WARNING! You need to replace hostname and username in tensorhive/core_anew/managers/TensorHiveManager.py{Style.RESET_ALL}')
+
+        self.connection_manager = ConnectionManager(
+            SSHConnector(hostname='localhost', username='miczi'))
         self.service_manager = ServiceManager(services=services,
                                               infrastructure_manager=self.infrastructure_manager,
                                               connection_manager=self.connection_manager)

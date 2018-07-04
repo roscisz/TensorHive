@@ -32,20 +32,20 @@ class GPUMonitor(Monitor):
         '''Setter for the protected, inherited variable'''
         self._gathered_data = new_value
 
-    #TODO add argument type
-    def refresh(self, monitored_client_shell_session: spur.ssh.SshShell) -> None:
+    #@override
+    def update(self, connection) -> None:
         '''
         Attaches to given shell session,
         updates info about monitored resource,
         replaces old data (old state) with current
         '''
-        with monitored_client_shell_session:
+        with connection:
             # e.g. can loop through all commands (depending on selected monitoring mode)
 
             for command_key, command_str in self.available_commands.items():
                 try:
                     shell_command = command_str.split(' ')
-                    result = monitored_client_shell_session.run(shell_command, allow_error=False)
+                    result = connection.run(shell_command, allow_error=False)
                     output = result.output.decode('utf-8').rstrip('\n')
                     self.gathered_data[command_key] = output
                 except(spur.results.RunProcessError, 

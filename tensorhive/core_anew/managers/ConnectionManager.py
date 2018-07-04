@@ -1,8 +1,9 @@
+from tensorhive.core_anew.connectors.SSHConnector import SSHConnector
 class ConnectionManager():
     '''
     Responsible for establishing, holding connections etc.
 
-    In case of SSHConnector, connection should be opened and closed in place where it's been used:
+    In case of SSHConnector, is opened and closed by default in place, where it was used:
     example: 
     ```
         <context of some Monitor>
@@ -12,17 +13,17 @@ class ConnectionManager():
         <connection is automatically released here...>
     ```
     '''
-    # FIXME hardcoded for sshconnector from spur
 
-    def __init__(self, injected_connector):
-        self._connector = injected_connector
-        self._connections = []
+    def __init__(self, injected_connector=None):
+        self._connectors = []
+        if injected_connector is not None:
+            self.add_connector(injected_connector)
 
-    def add_node(self, hostname, username):
-        connection = self._connector.shell_connection(hostname, username)
-        self._connections.append(connection)
+    def add_connector(self, connector):
+        self._connectors.append(connector)
 
     @property
     def connections(self):
-        '''Returns all available connections'''
-        return self._connections
+        '''Returns new connections instances'''
+        reestablish = lambda connector: connector.reestablished_connection
+        return list(map(reestablish, self._connectors))

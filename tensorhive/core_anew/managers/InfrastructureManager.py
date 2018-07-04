@@ -12,10 +12,12 @@ class InfrastructureManager():
     @property
     def infrastructure(self) -> Dict:
         #FIXME Only for testing purposes
-        print(json.dumps(self._infrastructure, indent=1))
+        
         return self._infrastructure
 
     def update_infrastructure(self, new_value: Dict):
         self._infrastructure = new_value
+        #FIXME Remove, debug only
+        print(json.dumps(self._infrastructure, indent=1))
 
 
