@@ -16,6 +16,7 @@ class Service(StoppableThread):
     def start(self):
         '''Overrides Thread'''
         print(f' └─ Starting {self.service_name}')
+        super().run()
         
     #@inherited
     @abstractmethod
@@ -27,4 +28,5 @@ class Service(StoppableThread):
         pass
 
     def shutdown(self):
+        super().shutdown()
         print(f' └─ Shutting down {self.service_name}')

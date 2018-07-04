@@ -10,3 +10,6 @@ build/
 
 # mypy
 \.mypy_cache
+
+# editors
+\.vscode
