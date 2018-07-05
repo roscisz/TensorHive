@@ -10,6 +10,7 @@ from typing import List, Dict
 
 # FIXME Remove colorama dependency from setup.py
 from colorama import Fore, Back, Style
+from tensorhive.core_anew.utils.decorators.override import override
 
 
 class TensorHiveManager(ThreadedManager):
@@ -35,16 +36,16 @@ class TensorHiveManager(ThreadedManager):
     def thread_name(self):
         return f'{self.__class__.__name__} {self.name}'
 
-    # @override
+    @override
     def run(self):
         super().run()
         self.service_manager.start_all_services()
 
-    # @override
+    @override
     def start(self):
         super().start()
 
-    # @override
+    @override
     def shutdown(self):
         self.service_manager.shutdown_all_services()
         super().shutdown()

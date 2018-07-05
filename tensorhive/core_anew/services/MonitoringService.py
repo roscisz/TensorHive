@@ -4,6 +4,8 @@ from tensorhive.core_anew.managers.ConnectionManager import ConnectionManager
 from tensorhive.core_anew.services.Service import Service
 from typing import List, Dict, Any
 import time
+from tensorhive.core_anew.utils.decorators.override import override
+
 
 class MonitoringService(Service):
     '''
@@ -23,11 +25,11 @@ class MonitoringService(Service):
         super().__init__()
         self.monitors = monitors
 
-    # @override
+    @override
     def start(self):
         super().start()
 
-    # @override
+    @override
     def inject(self, injected_object):
         if isinstance(injected_object, InfrastructureManager):
             self.infrastructure_manager = injected_object
@@ -37,11 +39,11 @@ class MonitoringService(Service):
     def shutdown(self):
         super().shutdown()
 
-    # @override
-    # TODO May want to introduce threaded workers, but need to take care of
-    # accessing manager in parallel mode...
+    # TODO May want to introduce threaded workers or green threads (gevent - awesome), but need to take care of
+    # accessing manager in parallel...
+    @override
     def do_run(self):
-        #DEBUG print(f'{self.service_name} is working...')
+        # DEBUG print(f'{self.service_name} is working...')
         for connection in self.connection_manager.connections:
             with connection:
                 for monitor in self.monitors:

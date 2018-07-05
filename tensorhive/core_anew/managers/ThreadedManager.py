@@ -1,6 +1,7 @@
 from threading import Thread
 from tensorhive.core_anew.monitors.Monitor import Monitor
 from typing import List, Dict
+from tensorhive.core_anew.utils.decorators.override import override
 
 
 class ThreadedManager(Thread):
@@ -13,7 +14,7 @@ class ThreadedManager(Thread):
     def thread_name(self):
         return f'{self.__class__.__name__} {self.name}'
 
-    # @override
+    @override
     def start(self):
         super().start()
 

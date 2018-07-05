@@ -1,15 +1,18 @@
 from tensorhive.core_anew.monitors.Monitor import Monitor
+from tensorhive.core_anew.utils.decorators.override import override
 from typing import Dict, List
 import spur
+
 
 class GPUMonitor(Monitor):
     _commands: Dict = {
         'list_gpus': 'nvidia-smi --list-gpus',
-        #TODO below
-        #'process_statistics': 'nvidia-smi pmon --count 1 --id TODO_PUT_UUID',
-        'memory.free': 'nvidia-smi --query-gpu=memory.free --format=csv,noheader',
-        'memory.used': 'nvidia-smi --query-gpu=memory.used --format=csv,noheader',
-        'memory.total': 'nvidia-smi --query-gpu=memory.total --format=csv,noheader',
+        # TODO Right now these commands receive output containing info about all gpus present... it is intended to query them by uuid and store under separate dict keys
+        # 'process_statistics': 'nvidia-smi pmon --count 1 --id TODO_PUT_UUID',
+        'gpu_uuid': 'nvidia-smi --query-gpu=gpu_uuid --format=csv,noheader',
+        'memory.free': 'nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits',
+        'memory.used': 'nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits',
+        'memory.total': 'nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits',
         'temperature.gpu': 'nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader'
         # add more commands here
     }
@@ -32,7 +35,7 @@ class GPUMonitor(Monitor):
         '''Setter for the protected, inherited variable'''
         self._gathered_data = new_value
 
-    #@override
+    @override
     def update(self, connection) -> None:
         '''
         Attaches to given shell session,
@@ -48,11 +51,7 @@ class GPUMonitor(Monitor):
                     result = connection.run(shell_command, allow_error=False)
                     output = result.output.decode('utf-8').rstrip('\n')
                     self.gathered_data[command_key] = output
-                except(spur.results.RunProcessError, 
-                        spur.CouldNotChangeDirectoryError, 
+                except(spur.results.RunProcessError,
+                        spur.CouldNotChangeDirectoryError,
                         spur.NoSuchCommandError) as e:
                     print('Spur ERROR! message:\n{msg}\n'.format(msg=e))
-
-    
-
-  
