@@ -1,7 +1,8 @@
 from tensorhive.core_anew.monitors.Monitor import Monitor
 from tensorhive.core_anew.utils.decorators.override import override
 from typing import Dict, List
-import spur
+import fabric
+import invoke
 
 
 class GPUMonitor(Monitor):
@@ -36,22 +37,34 @@ class GPUMonitor(Monitor):
         self._gathered_data = new_value
 
     @override
-    def update(self, connection) -> None:
+    def update(self, connection_group) -> None:
         '''
         Attaches to given shell session,
         updates info about monitored resource,
         replaces old data (old state) with current
         '''
-        with connection:
-            # e.g. can loop through all commands (depending on selected monitoring mode)
-
-            for command_key, command_str in self.available_commands.items():
-                try:
-                    shell_command = command_str.split(' ')
-                    result = connection.run(shell_command, allow_error=False)
-                    output = result.output.decode('utf-8').rstrip('\n')
-                    self.gathered_data[command_key] = output
-                except(spur.results.RunProcessError,
-                        spur.CouldNotChangeDirectoryError,
-                        spur.NoSuchCommandError) as e:
-                    print('Spur ERROR! message:\n{msg}\n'.format(msg=e))
+        # TODO Catch all errors
+        # TODO Organize dict structure (see how fabric handles this)
+        # FIXME Too many simplifications
+        # DEBUG print(f'Benchmark with {len(connection_group)} nodes on {type(connection_group)}')
+        for command_key, command_str in self.available_commands.items():
+            try:
+                results = connection_group.run(command_str, hide=True)
+            except fabric.exceptions.GroupException as e:
+                results = e.result
+            finally:
+                for connection, result in results.items():
+                    if isinstance(result, fabric.runners.Result):
+                        self.gathered_data[connection.host] = {
+                            command_key: {
+                                'result': result.stdout.strip('\n'),
+                                'exit_code': result.exited
+                            }
+                        }
+                    elif isinstance(result, invoke.exceptions.UnexpectedExit):
+                        self.gathered_data[connection.host] = {
+                            command_key: {
+                                'result': 'Execution error',
+                                'exit_code': result.result.exited
+                            }
+                        }

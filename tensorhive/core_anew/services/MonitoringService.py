@@ -1,6 +1,6 @@
-from tensorhive.core_anew.connectors.SSHConnector import SSHConnector
+
 from tensorhive.core_anew.managers.InfrastructureManager import InfrastructureManager
-from tensorhive.core_anew.managers.ConnectionManager import ConnectionManager
+from tensorhive.core_anew.managers.SSHConnectionManager import SSHConnectionManager
 from tensorhive.core_anew.services.Service import Service
 from typing import List, Dict, Any
 import time
@@ -33,7 +33,7 @@ class MonitoringService(Service):
     def inject(self, injected_object):
         if isinstance(injected_object, InfrastructureManager):
             self.infrastructure_manager = injected_object
-        elif isinstance(injected_object, ConnectionManager):
+        elif isinstance(injected_object, SSHConnectionManager):
             self.connection_manager = injected_object
 
     def shutdown(self):
@@ -44,10 +44,11 @@ class MonitoringService(Service):
     @override
     def do_run(self):
         # DEBUG print(f'{self.service_name} is working...')
-        for connection in self.connection_manager.connections:
-            with connection:
-                for monitor in self.monitors:
-                    monitor.update(connection)
-                    self.infrastructure_manager.update_infrastructure(
-                        monitor.gathered_data)
-        time.sleep(self._polling_interval)
+        import time
+        start = time.time()
+        for monitor in self.monitors:
+            monitor.update(self.connection_manager.connections)
+            self.infrastructure_manager.update_infrastructure(monitor.gathered_data)
+        end = time.time()
+        #time.sleep(10.0 - (end-start))
+        print(f'Monitoring service loop took: {end-start}s')

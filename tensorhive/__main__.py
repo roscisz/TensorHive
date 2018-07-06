@@ -21,7 +21,7 @@ def main():
     manager = TensorHiveManager(services=services_to_inject)
     manager.start()
     while True:
-        time.sleep(CONFIG['TH__SLEEP_IN_S'])
+        #time.sleep(CONFIG['TH__SLEEP_IN_S'])
 
         if termination_handler.should_terminate:
             manager.shutdown()

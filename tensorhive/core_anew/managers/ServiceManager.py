@@ -1,7 +1,7 @@
 # types
 from tensorhive.core_anew.managers.InfrastructureManager import InfrastructureManager
-from tensorhive.core_anew.managers.ConnectionManager import ConnectionManager
-from tensorhive.core_anew.connectors.SSHConnector import SSHConnector
+from tensorhive.core_anew.managers.SSHConnectionManager import SSHConnectionManager
+
 from tensorhive.core_anew.services.Service import Service
 from typing import List
 
@@ -10,7 +10,7 @@ class ServiceManager():
 
     def __init__(self, services: List[Service],
                  infrastructure_manager: InfrastructureManager,
-                 connection_manager: ConnectionManager) -> None:
+                 connection_manager: SSHConnectionManager) -> None:
         self.infrastructure_manager = infrastructure_manager
         self.connection_manager = connection_manager
         self.services = services
