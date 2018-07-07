@@ -3,7 +3,7 @@ from tensorhive.core_anew.utils.decorators.override import override
 from typing import Dict, List
 import fabric
 import invoke
-
+from tensorhive.core_anew.utils.NvidiaSmiParser import NvidiaSmiParser
 
 class GPUMonitor(Monitor):
     base_command: str = 'nvidia-smi --query-gpu='
@@ -67,10 +67,8 @@ class GPUMonitor(Monitor):
         connection_group.join(output)
     
         for host, host_out in output.items():
-            list_of_stdout_lines = list(host_out.stdout)
-
             if host_out.exit_code is 0:
-                gpus_info = self._parse_lines(list_of_stdout_lines)
+                gpus_info = NvidiaSmiParser.gpus_info_from_stdout(host_out.stdout)
                 self.gathered_data[host] = gpus_info
             else:
                 self.gathered_data[host] = []
