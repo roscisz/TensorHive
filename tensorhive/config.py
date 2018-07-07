@@ -38,24 +38,31 @@ class ProductionConfig(BaseConfig):
 
 
 class APIConfig():
-    SERVER_ENABLED = True
-    SERVER_PORT = 9876
+    API_SERVER_ENABLED = True
+    API_SERVER_PORT = 9876
 
     API_SPECIFICATION_FILE = 'api_specification.yml'
     # Indicates location of folder containing api implementation (RustyResolver)
-    API_VERSION_IN_USE = 'apiv1'
+    API_VERSION_FOLDER = 'api_v1'
+    API_TITLE = 'TensorHive API'
 
 
 class SSHConfig():
     # TODO We want to use DB for it -> more flexibility
-    AVAILABLE_NODES = [
-        'miczi@localhost',
-        '155136mm@galileo.eti.pg.gda.pl',
-        's155136@kask.eti.pg.gda.pl'
-    ]
+    # AVAILABLE_NODES = [
+    #     'miczi@localhost',
+    #     '155136mm@galileo.eti.pg.gda.pl',
+    #     's155136@kask.eti.pg.gda.pl'
+    # ]
+    AVAILABLE_NODES = {
+        'localhost' : {'user': 'miczi'},
+        'galileo.eti.pg.gda.pl' : {'user': '155136mm'},
+        'kask.eti.pg.gda.pl' : {'user': 's155136'}
+    }
     CONNECTION_TIMEOUT = 10
 
 
 # Object to be imported by application modules
 CONFIG = DevelopmentConfig().CONFIG
 SSH_CONFIG = SSHConfig()
+API_CONFIG = APIConfig()
