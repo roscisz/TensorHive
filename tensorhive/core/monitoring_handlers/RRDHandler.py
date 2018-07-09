@@ -2,7 +2,7 @@ import os
 from pyrrd.rrd import DataSource, RRA, RRD
 from time import time
 
-from tensorhive.monitoring import MonitoringHandler
+from tensorhive.core.monitoring import MonitoringHandler
 
 
 # TODO: dirty fast code, refactor

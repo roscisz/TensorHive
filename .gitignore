@@ -1,0 +1,15 @@
+# macOS
+\.DS_Store
+
+# python
+__pycache__/
+*.pyc
+tensorhive.egg-info/
+dist/
+build/
+
+# mypy
+\.mypy_cache
+
+# editors
+\.vscode
