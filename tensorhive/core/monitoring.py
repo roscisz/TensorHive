@@ -1,5 +1,5 @@
 import time
-from utils import StoppableThread
+from tensorhive.core.utils import StoppableThread
 
 
 class MonitoringHandler:

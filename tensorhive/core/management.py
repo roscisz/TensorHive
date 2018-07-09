@@ -1,8 +1,8 @@
 from threading import Thread
 
-from monitoring import *
-from connectivity import ConnectionManager
-from serving import HTTPJSONRPCServer
+from tensorhive.core.monitoring import *
+from tensorhive.core.connectivity import ConnectionManager
+from tensorhive.core.serving import HTTPJSONRPCServer
 
 
 class Manager(Thread):
