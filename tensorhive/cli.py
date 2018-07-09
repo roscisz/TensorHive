@@ -7,10 +7,12 @@ Current CLI Structure: (update regularly)
 tensorhive 
 ├── -v/--version
 ├── --help
-└── run
-    ├── --help
-    ├── core      
-    └── api
+├── run
+|   ├── --help
+|   ├── core      
+|   └── api
+└── db
+    └── init
 '''
 
 
