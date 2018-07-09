@@ -13,7 +13,7 @@ from colorama import Fore, Back, Style
 from tensorhive.core_anew.utils.decorators.override import override
 from tensorhive.config import CONFIG, SSH_CONFIG, API_CONFIG
 from tensorhive.api.APIServer import APIServer
-import fabric
+
 
 class TensorHiveManager(ThreadedManager):
     # TODO should be a singleton!
@@ -21,13 +21,6 @@ class TensorHiveManager(ThreadedManager):
 
     def __init__(self, services: List[Service]):
         super().__init__()
-
-        if API_CONFIG.API_SERVER_ENABLED:
-            #APIServer().start()
-            #fabric.Connection('localhost').local('cd /home/miczi/Projects/TensorHive/tensorhive/api && python APIServer.py &')
-            pass
-
-        
         self.infrastructure_manager = InfrastructureManager()
 
         # FIXME hardcoded SSHConnector

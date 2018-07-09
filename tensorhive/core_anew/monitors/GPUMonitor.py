@@ -1,8 +1,6 @@
 from tensorhive.core_anew.monitors.Monitor import Monitor
 from tensorhive.core_anew.utils.decorators.override import override
 from typing import Dict, List
-import fabric
-import invoke
 from tensorhive.core_anew.utils.NvidiaSmiParser import NvidiaSmiParser
 
 
