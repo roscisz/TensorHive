@@ -51,8 +51,11 @@ class SSHConfig():
     }
     CONNECTION_TIMEOUT = 10
 
+class DBConfig():
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///tensorhive_dev.db'
 
 # Object to be imported by application modules
 CONFIG = DevelopmentConfig()
 SSH_CONFIG = SSHConfig()
 API_CONFIG = APIConfig()
+DB_CONFIG = DBConfig()

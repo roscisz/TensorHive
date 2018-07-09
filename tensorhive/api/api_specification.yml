@@ -25,42 +25,13 @@ paths:
             $ref: '#/definitions/UserRegistration'
       responses:
         '201':
-          description: 'Register a new user'  
-definitions:
-  UserRegistration:
-    type: object
-    properties:
-      name: { type: string }
-  User:
-    type: object
-    properties:
-      id:
-        type: integer
-        format: int64
-      name: { type: string }
-      registered:
-        type: string
-        format: date-time
-  # /pets:
-  #   get:
-  #     responses:
-  #       '200':
-  #         description: 'Fetch a list of pets'
-  #         schema:
-  #           type: array
-  #           items:
-  #             $ref: '#/definitions/Pet'
-  #   post:
-  #     parameters:
-  #       - in: body
-  #         name: pet
-  #         required: true
-  #         schema:
-  #           $ref: '#/definitions/PetRegistration'
-  #     responses:
-  #       '201':
-  #         description: 'Register a new pet'
-  # '/pets/{id}':
+          description: 'User has been successfully created.'
+        '409':
+          description: 'User with such username exists. (TODO duplicate error in general)'
+        '500':
+          description: 'User was no registered due to and error.'
+  # Not implemented yet
+  # '/users/{id}':
   #   put:
   #     parameters:
   #       - in: path
@@ -68,13 +39,14 @@ definitions:
   #         required: true
   #         type: integer
   #       - in: body
-  #         name: pet
+  #         name: user
   #         required: true
   #         schema:
-  #           $ref: '#/definitions/Pet'
+  #           $ref: '#/definitions/User'
   #     responses:
   #       '200':
-  #         description: 'Update a pet by ID'
+  #         description: 'Update a user by ID'
+  #       # TODO Add response when not found, etc.
   #   delete:
   #     parameters:
   #       - in: path
@@ -83,7 +55,7 @@ definitions:
   #         type: integer
   #     responses:
   #       '204':
-  #         description: 'Delete a pet by ID'
+  #         description: 'Delete a user by ID'
   #   get:
   #     parameters:
   #       - in: path
@@ -92,21 +64,22 @@ definitions:
   #         type: integer
   #     responses:
   #       '200':
-  #         description: 'Fetch a pet by ID'
+  #         description: 'Fetch a user by ID'
   #         schema:
-  #           $ref: '#/definitions/Pet'
-   
-  # PetRegistration:
-  #   type: object
-  #   properties:
-  #     name: { type: string }
-  # Pet:
-  #   type: object
-  #   properties:
-  #     id:
-  #       type: integer
-  #       format: int64
-  #     name: { type: string }
-  #     registered:
-  #       type: string
-  #       format: date-time
+  #           $ref: '#/definitions/User'
+  #       # TODO Add response when not found, etc.
+definitions:
+  UserRegistration:
+    type: object
+    properties:
+      username: { type: string }
+  User:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      username: { type: string }
+      created_at:
+        type: string
+        format: date-time

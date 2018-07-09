@@ -1,25 +1,18 @@
 import datetime
 
 from connexion import NoContent
-#from tensorhive.core_anew.models.UserModel import UserModel
-
-#TODO replace with database model
-users = {}
+from tensorhive.models.resources.user.UserRegistration import UserRegistration
+from tensorhive.models.resources.user.AllUsers import AllUsers
 
 def post(user):
     '''Create new user'''
-    count = len(users)
-    user['id'] = count + 1
-    user['registered'] = datetime.datetime.now()
-    users[user['id']] = user
-    return user, 201
+    return UserRegistration.register(user)
 
-# all users
 def search():
     '''Get all users'''
-    return list(users.values())
+    return AllUsers.get()
 
-# TODO implement
+# TODO Implement (see API specification)
 # def put(id, user):
 #     id = int(id)
 #     if pets.get(id) is None:

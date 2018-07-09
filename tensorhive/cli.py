@@ -69,3 +69,18 @@ def api(ctx):
     click.echo('API server has started...')
     from tensorhive.api.APIServer import APIServer
     APIServer().start()
+
+@main.group()
+@click.pass_context
+def db(ctx):
+    pass
+
+@db.command()
+@click.pass_context
+def init(ctx):
+    '''Initialize database'''
+    from tensorhive.database import init_db
+    click.echo('[•] Initializing database...')
+    # TODO Check if init_db can fail and if so, print that error
+    init_db()
+    click.echo('[✔] Done.')

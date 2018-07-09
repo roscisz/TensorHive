@@ -1,6 +1,7 @@
 import logging
 import connexion
 from tensorhive.config import API_CONFIG
+from tensorhive.database import db_session
 
 
 class APIServer():
@@ -9,6 +10,11 @@ class APIServer():
         # TODO Read settings from config
         logging.basicConfig(level=logging.INFO)
         app = connexion.FlaskApp(__name__)
+
+        @app.app.teardown_appcontext
+        def shutdown_session(exception=None):
+            db_session.remove()
+
         app.add_api(API_CONFIG.API_SPECIFICATION_FILE,
                     arguments={'title': API_CONFIG.API_TITLE},
                     resolver=connexion.RestyResolver('tensorhive.api.api'))
@@ -16,20 +22,8 @@ class APIServer():
 
 
 if __name__ == '__main__':
+    #Default Swagger UI URL: http://0.0.0.0:9876/v1.0/ui/#/default
     APIServer().start()
 
-# SWagger UI http://0.0.0.0:9090/v1.0/ui/#/default
-# import logging
 
-# import connexion
-# from connexion.resolver import RestyResolver
 
-# logging.basicConfig(level=logging.INFO)
-
-# if __name__ == '__main__':
-#     app = connexion.FlaskApp(__name__)
-#     app.add_api('api_specification.yml',
-#                 arguments={'title': 'RestyResolver Example'},
-#                 resolver=RestyResolver('api'),
-#                 specification_dir='swagger/')
-#     app.run(port=9090)
