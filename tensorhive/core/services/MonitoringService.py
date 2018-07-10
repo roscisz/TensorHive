@@ -1,10 +1,10 @@
 
-from tensorhive.core_anew.managers.InfrastructureManager import InfrastructureManager
-from tensorhive.core_anew.managers.SSHConnectionManager import SSHConnectionManager
-from tensorhive.core_anew.services.Service import Service
+from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
+from tensorhive.core.managers.SSHConnectionManager import SSHConnectionManager
+from tensorhive.core.services.Service import Service
 from typing import List, Dict, Any
 import time
-from tensorhive.core_anew.utils.decorators.override import override
+from tensorhive.core.utils.decorators.override import override
 
 
 class MonitoringService(Service):

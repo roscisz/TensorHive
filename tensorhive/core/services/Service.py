@@ -1,4 +1,4 @@
-from tensorhive.core_anew.utils.StoppableThread import StoppableThread
+from tensorhive.core.utils.StoppableThread import StoppableThread
 from abc import abstractmethod
 
 class Service(StoppableThread):

@@ -44,11 +44,17 @@ class APIConfig():
 
 
 class SSHConfig():
+    # AVAILABLE_NODES= {'example_host': {'user': 'example'}}
     AVAILABLE_NODES = {
-        'localhost': {'user': 'miczi'},
-        'galileo.eti.pg.gda.pl': {'user': '155136mm'},
-        'kask.eti.pg.gda.pl': {'user': 's155136'}
+        'localhost': { 'user': 'miczi'},
+        'galileo.eti.pg.gda.pl': { 'user': '155136mm'},
+        'kask.eti.pg.gda.pl': { 'user': 's155136'}
     }
+    # AVAILABLE_NODES = [
+    #     'host_0',
+    #     'host_1',
+    #     'host_2'
+    # ]
     CONNECTION_TIMEOUT = 10
 
 class DBConfig():

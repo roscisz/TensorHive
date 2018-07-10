@@ -16,7 +16,7 @@ setup(
     url = 'https://github.com/roscisz/TensorHive',
     download_url = 'https://github.com/roscisz/TensorHive/archive/0.1.1.tar.gz',
     keywords = 'distributed machine learning tensorflow resource management',
-    install_requires=['parallel-ssh', 'click', 'colorama'],
+    install_requires=['parallel-ssh', 'click', 'connexion', 'Flask', 'colorama'],
     include_package_data=True,
     zip_safe=False
 )

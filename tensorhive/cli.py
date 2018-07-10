@@ -41,10 +41,10 @@ def run(ctx):
 @click.pass_context
 def core(ctx):
     '''Start TensorHiveManager instance'''
-    from tensorhive.core_anew.managers.TensorHiveManager import TensorHiveManager
-    from tensorhive.core_anew.services.MonitoringService import MonitoringService
-    from tensorhive.core_anew.monitors.GPUMonitor import GPUMonitor
-    from tensorhive.core_anew.utils.SigShutdownHandler import SigShutdownHandler
+    from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
+    from tensorhive.core.services.MonitoringService import MonitoringService
+    from tensorhive.core.monitors.GPUMonitor import GPUMonitor
+    from tensorhive.core.utils.SigShutdownHandler import SigShutdownHandler
     
     termination_handler = SigShutdownHandler()
     services_to_inject = [MonitoringService(monitors=[GPUMonitor()

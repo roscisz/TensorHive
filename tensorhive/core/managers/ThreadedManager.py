@@ -1,7 +1,7 @@
 from threading import Thread
-from tensorhive.core_anew.monitors.Monitor import Monitor
+from tensorhive.core.monitors.Monitor import Monitor
 from typing import List, Dict
-from tensorhive.core_anew.utils.decorators.override import override
+from tensorhive.core.utils.decorators.override import override
 
 
 class ThreadedManager(Thread):

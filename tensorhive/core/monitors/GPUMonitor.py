@@ -1,49 +1,70 @@
-from tensorhive.core.monitoring import Monitor
-
-timeout_prefix = 'timeout 2 '
+from tensorhive.core.monitors.Monitor import Monitor
+from tensorhive.core.utils.decorators.override import override
+from typing import Dict, List
+from tensorhive.core.utils.NvidiaSmiParser import NvidiaSmiParser
 
 
 class GPUMonitor(Monitor):
-    def get_key(self):
-        return 'gpu'
+    base_command: str = 'nvidia-smi --query-gpu='
+    format_options: str = '--format=csv'  # ,nounits
+    _available_commands: List = [
+        'name',
+        'uuid',
+        'fan.speed',
+        'memory.free',
+        'memory.used',
+        'memory.total',
+        'utilization.gpu',
+        'utilization.memory',
+        'temperature.gpu',
+        'power.draw'
+    ]
 
-    def discover(self, client):
-        gpus = {}
-        _, stdout, _ = client.exec_command('nvidia-smi -L')
-        gpu_descrs = stdout.read().split('\n')[:-1]
-        for gpu_descr in gpu_descrs:
-            name, model, uuid = gpu_descr.split(': ')
-            model = model[:-6]
-            uuid = uuid[:-1]
-            gpus[uuid] = {}
-            gpus[uuid]['name'] = name
-            gpus[uuid]['model'] = model
-        return gpus
+    @property
+    def available_commands(self) -> List:
+        return self._available_commands
 
-    def check_process_owner(self, client, pid):
-        _, stdout, _ = client.exec_command('ps -o user %s' % pid)
-        return stdout.read().split('\n')[1]
+    @property
+    def name(self) -> str:
+        return 'GPU'
 
-    def monitor_processes(self, client, uuid):
-        processes = []
-        _, stdout, _ = client.exec_command('%s nvidia-smi pmon -c 1 -i %s' % (timeout_prefix, uuid))
-        outputs = stdout.read().split('\n')[2:-1]
-        for output in outputs:
-            values = output.split()
-            if values[1] is not '-':
-                processes.append({'pid': values[1], 'owner': self.check_process_owner(client, values[1])})
-        return processes
+    @property
+    def gathered_data(self) -> Dict:
+        '''Getter for the protected, inherited variable'''
+        return self._gathered_data
 
-    def monitor_utilization(self, client, uuid):
-        _, stdout, _ = client.exec_command('%s nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader -i %s' % (timeout_prefix, uuid))
-        output = stdout.read().split()
-        if not len(output):
-            return 0
-        return output[0]
+    @gathered_data.setter
+    def gathered_data(self, new_value) -> None:
+        '''Setter for the protected, inherited variable'''
+        self._gathered_data = new_value
 
-    def monitor(self, client, gpus):
-        for uuid in gpus.keys():
-            gpus[uuid]['processes'] = self.monitor_processes(client, uuid)
-            gpus[uuid]['utilization'] = self.monitor_utilization(client, uuid)
-        return gpus
+    # TODO Make separate class for it
+    def _parse_lines(self, lines: List) -> Dict:
+        '''Assumes that header is present'''
+        assert (lines and len(lines) > 1), f'Cannot parse result: {lines}'
+        header: str = lines[0]
+        parameter_keys: List[str] = header.split(', ')
+        results_for_gpus: List[str] = lines[1:]
 
+        gpus_info = []
+        for single_gpu_result_line in results_for_gpus:
+            parameter_values: List[str] = single_gpu_result_line.split(', ')
+            gpu_info = dict(zip(parameter_keys, parameter_values))
+            gpus_info.append(gpu_info)
+        return gpus_info
+
+    @override
+    def update(self, connection_group):
+        query = ','.join(self.available_commands)
+        command = f'{self.base_command}{query} {self.format_options}'
+        output = connection_group.run_command(command)
+
+        connection_group.join(output)
+
+        for host, host_out in output.items():
+            if host_out.exit_code is 0:
+                gpus_info = NvidiaSmiParser.gpus_info_from_stdout(
+                    host_out.stdout)
+                self.gathered_data[host] = gpus_info
+            else:
+                self.gathered_data[host] = []
