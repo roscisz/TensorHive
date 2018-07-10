@@ -13,3 +13,6 @@ build/
 
 # editors
 \.vscode
+
+# database
+**/*.db
