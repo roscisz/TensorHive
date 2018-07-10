@@ -1,9 +1,0 @@
-ssh-keygen -t rsa  
-cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
-chmod og-wx ~/.ssh/authorized_keys 
-
-sudo apt-get install openssh-server -y
-sudo nano /etc/ssh/sshd_config
-# Uncomment "Port 22" line
-sudo service ssh restart
-ssh miczi@miczi
