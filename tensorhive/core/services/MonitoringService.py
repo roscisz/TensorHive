@@ -39,8 +39,6 @@ class MonitoringService(Service):
     def shutdown(self):
         super().shutdown()
 
-    # TODO May want to introduce threaded workers or green threads (gevent - awesome), but need to take care of
-    # accessing manager in parallel...
     @override
     def do_run(self):
         # DEBUG print(f'{self.service_name} is working...')
