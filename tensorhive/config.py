@@ -44,18 +44,15 @@ class APIConfig():
 
 
 class SSHConfig():
-    # AVAILABLE_NODES= {'example_host': {'user': 'example'}}
+    # Replace with your own config, see docs:
+    # https://parallel-ssh.readthedocs.io/en/latest/advanced.html#per-host-configuration
     AVAILABLE_NODES = {
         'localhost': { 'user': 'miczi'},
-        'galileo.eti.pg.gda.pl': { 'user': '155136mm'},
-        'kask.eti.pg.gda.pl': { 'user': 's155136'}
+        'example_host_0': { 'user': '155136mm'},
+        'example_host_1': { 'user': 's155136'}
     }
-    # AVAILABLE_NODES = [
-    #     'host_0',
-    #     'host_1',
-    #     'host_2'
-    # ]
-    CONNECTION_TIMEOUT = 10
+    # TODO Make use of it in SSHConnectionManager.py
+    #CONNECTION_TIMEOUT = 10
 
 class DBConfig():
     SQLALCHEMY_DATABASE_URI = 'sqlite:///tensorhive_dev.db'
