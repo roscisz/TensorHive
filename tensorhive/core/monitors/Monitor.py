@@ -5,9 +5,8 @@ from typing import Dict
 class Monitor(ABC):
     '''Base class for all monitors'''
 
-    _name: str = 'Abstract Monitor'
-    _gathered_data: Dict = {}
-    # TODO _mode -> run all commands, specific, or single
+    _name = 'Abstract Monitor'
+    _gathered_data = {}
 
     @abstractmethod
     def update(self, connection) -> None:

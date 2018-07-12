@@ -12,7 +12,7 @@ class ThreadedManager(Thread):
 
     @property
     def thread_name(self):
-        return f'{self.__class__.__name__} {self.name}'
+        return '{class_name} {name}'.format(class_name=self.__class__.__name__, name=self.name)
 
     @override
     def start(self):
@@ -20,7 +20,7 @@ class ThreadedManager(Thread):
 
     def run(self):
         '''Overrides Thread'''
-        print(f'[•] Starting {self.thread_name}')
+        print('[•] Starting {thread_name}'.format(thread_name=self.thread_name))
 
     def shutdown(self):
-        print(f'[•] Shutting down {self.thread_name}')
+        print('[•] Shutting down {thread_name}'.format(thread_name=self.thread_name))

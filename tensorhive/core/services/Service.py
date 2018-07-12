@@ -11,11 +11,11 @@ class Service(StoppableThread):
 
     @property
     def service_name(self):
-        return f'{self.__class__.__name__} {self.name}'
+        return '{class_name} {name}'.format(class_name=self.__class__.__name__,name=self.name)
 
     def start(self):
         '''Overrides Thread'''
-        print(f' └─ Starting {self.service_name}')
+        print(' └─ Starting {service_name}'.format(service_name=self.service_name))
         super().run()
         
     #@inherited
@@ -29,4 +29,4 @@ class Service(StoppableThread):
 
     def shutdown(self):
         super().shutdown()
-        print(f' └─ Shutting down {self.service_name}')
+        print(' └─ Shutting down {service_name}'.format(service_name=self.service_name))

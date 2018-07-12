@@ -24,7 +24,7 @@ class TensorHiveManager(ThreadedManager):
         self.infrastructure_manager = InfrastructureManager()
 
         # FIXME hardcoded SSHConnector
-        print(f'{Back.RED}WARNING! You need to replace hostname and username in tensorhive/core/managers/TensorHiveManager.py{Style.RESET_ALL}')
+        print('{bg_red}WARNING! You need to replace hostname and username in tensorhive/core/managers/TensorHiveManager.py{style_reset}'.format(bg_red=Back.RED,style_reset=Style.RESET_ALL))
 
         self.connection_manager = SSHConnectionManager(
             SSH_CONFIG.AVAILABLE_NODES)
@@ -34,7 +34,7 @@ class TensorHiveManager(ThreadedManager):
 
     @property
     def thread_name(self):
-        return f'{self.__class__.__name__} {self.name}'
+        return '{class_name} {name}'.format(class_name=self.__class__.__name__, name=self.name)
 
     @override
     def run(self):
@@ -49,4 +49,4 @@ class TensorHiveManager(ThreadedManager):
     def shutdown(self):
         self.service_manager.shutdown_all_services()
         super().shutdown()
-        print(f'[✔] {self.thread_name} has stopped')
+        print('[✔] {self.thread_name} has stopped'.format(thread_name=self.thread_name))

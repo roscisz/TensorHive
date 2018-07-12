@@ -19,7 +19,7 @@ tensorhive
 def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
-    click.echo(f'TensorHive {CONFIG.VERSION}')
+    click.echo('TensorHive {ver}'.format(ver=CONFIG.VERSION))
     ctx.exit()
 
 
@@ -47,6 +47,7 @@ def core(ctx):
     from tensorhive.core.utils.SigShutdownHandler import SigShutdownHandler
     
     termination_handler = SigShutdownHandler()
+    # TODO Move to config.py
     services_to_inject = [MonitoringService(monitors=[GPUMonitor()
                                                       # Add more monitors here
                                                       ])
