@@ -1,9 +1,9 @@
 from threading import Thread
-
+from abc import abstractmethod
 
 class StoppableThread(Thread):
     def __init__(self):
-        Thread.__init__(self)
+        super().__init__()
         self.stop = False
 
     def shutdown(self):
@@ -14,9 +14,10 @@ class StoppableThread(Thread):
             self.do_run()
         self.finalize()
 
+    @abstractmethod
     def do_run(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def finalize(self):
-        raise NotImplementedError
-
+        pass

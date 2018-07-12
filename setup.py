@@ -1,10 +1,10 @@
 from setuptools import setup, find_packages
-
+from tensorhive.config import CONFIG
 setup(
     name = 'tensorhive',
-    version = '0.1.1',
+    version = CONFIG.VERSION,
     packages = find_packages(),
-    package_data = {'tensorhive': ['scripts/*', 'static/*']},
+    package_data = {'tensorhive': ['scripts/*', 'static/*', 'api/*']},
     entry_points = {
         'console_scripts': [
             'tensorhive = tensorhive.__main__:main'
@@ -16,7 +16,7 @@ setup(
     url = 'https://github.com/roscisz/TensorHive',
     download_url = 'https://github.com/roscisz/TensorHive/archive/0.1.1.tar.gz',
     keywords = 'distributed machine learning tensorflow resource management',
-    install_requires=['paramiko', 'werkzeug', 'json-rpc', 'pyrrd'],
+    install_requires=['parallel-ssh', 'passlib', 'sqlalchemy', 'click', 'connexion', 'colorama'],
     include_package_data=True,
     zip_safe=False
 )
