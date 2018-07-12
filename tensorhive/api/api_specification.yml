@@ -11,7 +11,7 @@ paths:
     get:
       responses:
         '200':
-          description: 'Fetch a list of users'
+          description: 'All fetched with success.'
           schema:
             type: array
             items:
@@ -25,11 +25,45 @@ paths:
             $ref: '#/definitions/UserRegistration'
       responses:
         '201':
-          description: 'User has been successfully created.'
+          description: 'Successfully created.'
         '409':
-          description: 'User with such username exists. (TODO duplicate error in general)'
+          description: 'Duplication error.'
         '500':
-          description: 'User was no registered due to and error.'
+          description: 'Not registered due to an error.'
+  /reservations:
+    get:
+      responses:
+        '200':
+          description: 'All fetched with success.'
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ReservationEvent'
+    post:
+      parameters:
+        - in: body
+          name: reservation_event
+          required: True
+          schema:
+            $ref: '#/definitions/ReservationEventCreation'
+      responses:
+        '201':
+          description: 'Successfully created.'
+        '500':
+          description: 'Not created due to an error.'
+  '/reservations/{id}':
+    delete:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: integer
+      responses:
+        '204':
+          description: 'Successfully deleted.'
+        '404':
+          description: 'Not found.'
+
   # Not implemented yet
   # '/users/{id}':
   #   put:
@@ -83,3 +117,34 @@ definitions:
       created_at:
         type: string
         format: date-time
+        
+  ReservationEventCreation:
+    type: object
+    properties:
+      title: { type: string }
+      description: { type: string }
+      start_datetime:
+        type: string
+        format: date-time
+      end_datetime: 
+        type: string
+        format: date-time
+      # TODO Add user id, node id
+  ReservationEvent:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      title: { type: string }
+      description: { type: string }
+      start_datetime: 
+        type: string
+        format: date-time
+      end_datetime: 
+        type: string
+        format: date-time
+      created_at:
+        type: string
+        format: date-time
+      # TODO Add user id, node id

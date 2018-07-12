@@ -17,7 +17,8 @@ class APIServer():
 
         app.add_api(API_CONFIG.API_SPECIFICATION_FILE,
                     arguments={'title': API_CONFIG.API_TITLE},
-                    resolver=connexion.RestyResolver('tensorhive.api.api'))
+                    resolver=connexion.RestyResolver('tensorhive.api.api'),
+                    strict_validation=True)
         app.run(port=API_CONFIG.API_SERVER_PORT)
 
 
