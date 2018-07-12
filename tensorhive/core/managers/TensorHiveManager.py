@@ -23,8 +23,7 @@ class TensorHiveManager(ThreadedManager):
         super().__init__()
         self.infrastructure_manager = InfrastructureManager()
 
-        # FIXME hardcoded SSHConnector
-        print('{bg_red}WARNING! You need to replace hostname and username in tensorhive/core/managers/TensorHiveManager.py{style_reset}'.format(bg_red=Back.RED,style_reset=Style.RESET_ALL))
+        print('{bg_red}WARNING! You need to replace hostnames and usernames to your own in tensorhive/config.py{style_reset}'.format(bg_red=Back.RED,style_reset=Style.RESET_ALL))
 
         self.connection_manager = SSHConnectionManager(
             SSH_CONFIG.AVAILABLE_NODES)
