@@ -1,0 +1,10 @@
+os: linux
+sudo: false   # Uses sudo for e.g. binding the port but not for testing
+language: python
+python:
+  - 3.5
+cache: pip
+install: 
+  - pip install .
+script:
+  - python -m tensorhive --version
