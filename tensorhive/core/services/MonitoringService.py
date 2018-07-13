@@ -14,12 +14,12 @@ class MonitoringService(Service):
     '''
 
     # FIXME Add _
-    monitors: List
-    connections: List
-    infrastructure_manager: Any
+    monitors = []
+    connections = []
+    infrastructure_manager = None
 
     # TODO Configure from config or inject
-    _polling_interval: float = 1.0
+    _polling_interval = 5.0
 
     def __init__(self, monitors):
         super().__init__()
@@ -48,5 +48,5 @@ class MonitoringService(Service):
             monitor.update(self.connection_manager.connections)
             self.infrastructure_manager.update_infrastructure(monitor.gathered_data)
         end = time.time()
-        #time.sleep(10.0 - (end-start))
-        print(f'Monitoring service loop took: {end-start}s')
+        #time.sleep(_pooling_interval - (end-start))
+        print('Monitoring service loop took: {time_elapsed}s'.format(time_elapsed=(end-start)))

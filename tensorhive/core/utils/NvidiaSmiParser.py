@@ -1,5 +1,6 @@
 from typing import Generator, Dict, List
 
+
 class NvidiaSmiParser():
     @staticmethod
     def gpus_info_from_stdout(stdout: Generator) -> Dict[str, str]:
@@ -16,30 +17,32 @@ class NvidiaSmiParser():
                 "name": "GeForce GTX 780 Ti",
                 "fan.speed [%]": "25 %"
                 ...
-            
+
             ]
         ]
         '''
-        stdout_lines: List[str] = list(stdout)
+        stdout_lines = list(stdout)  # type: List[str]
         assert stdout_lines, 'stdout is empty!'
         assert len(stdout_lines) > 1, 'stdout query result contains header only!'
 
         # Extract keys from nvidia-smi query result header
-        header: str = stdout_lines[0]
-        gpu_parameters_keys: List[str] = header.split(', ')
+        header = stdout_lines[0]  # type: str
+        gpu_parameters_keys = header.split(', ')  # type: List[str]
 
         # Extract stdout lines, where:  1 line = 1 GPU
-        all_gpus_stdout_lines: List[str] = stdout_lines[1:]
+        all_gpus_stdout_lines = stdout_lines[1:]  # type: List[str]
 
         # Result accumulator
-        all_gpus_info: List[Dict[str, str]] = []
+        all_gpus_info = []  # type:List[Dict[str, str]]
 
         # Transform stdout of a single GPU and append to accumulator
         for single_gpu_result_line in all_gpus_stdout_lines:
             # Split by commas
-            gpu_parameters_values: List[str] = single_gpu_result_line.split(', ')
+            gpu_parameters_values = single_gpu_result_line.split(
+                ', ')  # type: List[str]
             # Transform to dict
-            single_gpu_info = dict(zip(gpu_parameters_keys, gpu_parameters_values))
+            single_gpu_info = dict(
+                zip(gpu_parameters_keys, gpu_parameters_values))
             # Append
             all_gpus_info.append(single_gpu_info)
         return all_gpus_info

@@ -4,7 +4,7 @@ class InfrastructureManager():
     '''
     Holds the state/representation of discovered/known infrastruture
     '''
-    _infrastructure: Dict = {}
+    _infrastructure = {}
 
     #TODO Add observer design pattern. 
     # Observator must be responsible for updating database when infrastructure changes
