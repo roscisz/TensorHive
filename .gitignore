@@ -13,6 +13,7 @@ build/
 
 # editors
 \.vscode
+tensorhive/.idea
 
 # database
 **/*.db
