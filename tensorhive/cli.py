@@ -43,12 +43,13 @@ def core(ctx):
     '''Start TensorHiveManager instance'''
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
     from tensorhive.core.services.MonitoringService import MonitoringService
-    from tensorhive.core.monitors.GPUMonitor import GPUMonitor
+    from tensorhive.core.monitors.Monitor import Monitor
+    from tensorhive.core.monitors.GPUMonitoringBehaviour import GPUMonitoringBehaviour
     from tensorhive.core.utils.SigShutdownHandler import SigShutdownHandler
     
     termination_handler = SigShutdownHandler()
     # TODO Move to config.py
-    services_to_inject = [MonitoringService(monitors=[GPUMonitor()
+    services_to_inject = [MonitoringService(monitors=[Monitor(GPUMonitoringBehaviour())
                                                       # Add more monitors here
                                                       ])
                           # Add more services here
