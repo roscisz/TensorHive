@@ -9,7 +9,7 @@ class SSHConnectionManager():
 
     def __init__(self, nodes):
         hosts = nodes.keys()
-        self._connection_group = ParallelSSHClient(hosts, host_config=nodes)
+        self._connection_group = ParallelSSHClient(hosts, host_config=nodes, timeout=1, num_retries=1)
         
 
     def add_connection(self, node):
