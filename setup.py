@@ -1,8 +1,9 @@
 from setuptools import setup, find_packages
-from tensorhive.config import CONFIG
+import tensorhive
+
 setup(
     name = 'tensorhive',
-    version = CONFIG.VERSION,
+    version = tensorhive.__version__,
     packages = find_packages(),
     package_data = {'tensorhive': ['scripts/*', 'static/*', 'api/*']},
     entry_points = {

@@ -1,6 +1,7 @@
 import click
-
+import tensorhive
 from tensorhive.config import CONFIG
+
 '''
 Current CLI Structure: (update regularly)
 
@@ -19,7 +20,7 @@ tensorhive
 def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
-    click.echo('TensorHive {ver}'.format(ver=CONFIG.VERSION))
+    click.echo('TensorHive {ver}'.format(ver=tensorhive.__version__))
     ctx.exit()
 
 
