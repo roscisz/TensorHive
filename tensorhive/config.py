@@ -51,8 +51,8 @@ class SSHConfig():
         'example_host_0': { 'user': '155136mm'},
         'example_host_1': { 'user': 's155136'}
     }
-    # TODO Make use of it in SSHConnectionManager.py
-    #CONNECTION_TIMEOUT = 10
+    CONNECTION_TIMEOUT = 1
+    CONNECTION_NUM_RETRIES = 0
 
 class DBConfig():
     SQLALCHEMY_DATABASE_URI = 'sqlite:///tensorhive_dev.db'
