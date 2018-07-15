@@ -1,15 +1,19 @@
 from abc import ABC, abstractmethod
 from typing import Dict
+from tensorhive.core.monitors.MonitoringBehaviour import MonitoringBehaviour
 
 
-class Monitor(ABC):
-    '''Base class for all monitors'''
-
-    _name = 'Abstract Monitor'
+class Monitor():
+    _monitoring_behaviour = None
     _gathered_data = {}
 
-    @abstractmethod
-    def update(self, connection) -> None:
-        pass
+    def __init__(self, injected_behaviour: MonitoringBehaviour):
+        self._monitoring_behaviour = injected_behaviour
 
-    # TODO discover/register methods etc.
+    @property
+    def gathered_data(self) -> Dict:
+        return self._gathered_data
+
+    def update(self, group_connection) -> None:
+        self._gathered_data = self._monitoring_behaviour.update(
+            group_connection)

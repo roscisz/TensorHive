@@ -9,8 +9,11 @@ class SSHConnectionManager():
 
     def __init__(self, nodes):
         hosts = nodes.keys()
-        self._connection_group = ParallelSSHClient(hosts, host_config=nodes)
-        
+        self._connection_group = ParallelSSHClient(
+            hosts, host_config=nodes, 
+            timeout=SSH_CONFIG.CONNECTION_TIMEOUT, 
+            num_retries=SSH_CONFIG.CONNECTION_NUM_RETRIES
+        )
 
     def add_connection(self, node):
         pass
