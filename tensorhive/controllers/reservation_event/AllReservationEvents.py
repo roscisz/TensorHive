@@ -1,4 +1,4 @@
-from tensorhive.models.ReservationEventModel import ReservationEventModel
+from tensorhive.models.reservation_event.ReservationEventModel import ReservationEventModel
 
 
 class AllReservationEvents():
