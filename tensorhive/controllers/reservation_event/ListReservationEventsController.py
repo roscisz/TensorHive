@@ -1,7 +1,7 @@
 from tensorhive.models.reservation_event.ReservationEventModel import ReservationEventModel
 
 
-class AllReservationEvents():
+class ListReservationEventsController():
 
     @staticmethod
     def get():

@@ -4,7 +4,7 @@ from flask import jsonify
 from datetime import datetime
 
 
-class ReservationEventCreation():
+class CreateReservationEventController():
 
     @staticmethod
     def create(reservation_event):

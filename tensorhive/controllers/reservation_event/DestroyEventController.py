@@ -3,7 +3,7 @@ from connexion import NoContent
 from flask import jsonify
 
 
-class ReservationEventDeletion():
+class DestroyEventController():
 
     @staticmethod
     def delete(id):

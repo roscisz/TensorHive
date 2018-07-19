@@ -1,18 +1,18 @@
 import datetime
 
 from connexion import NoContent
-from tensorhive.controllers.reservation_event.ReservationEventCreation import ReservationEventCreation
-from tensorhive.controllers.reservation_event.AllReservationEvents import AllReservationEvents
-from tensorhive.controllers.reservation_event.ReservationEventDeletion import ReservationEventDeletion
+from tensorhive.controllers.reservation_event.CreateReservationEventController import CreateReservationEventController
+from tensorhive.controllers.reservation_event.ListReservationEventsController import ListReservationEventsController
+from tensorhive.controllers.reservation_event.DestroyEventController import DestroyEventController
 
 def post(reservation_event):
     '''Create new'''
-    return ReservationEventCreation.create(reservation_event)
+    return CreateReservationEventController.create(reservation_event)
 
 def search():
     '''Get all'''
-    return AllReservationEvents.get()
+    return ListReservationEventsController.get()
 
 def delete(id):
     '''Remove if exists'''
-    return ReservationEventDeletion.delete(id)
+    return DestroyEventController.delete(id)

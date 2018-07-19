@@ -22,7 +22,7 @@ paths:
           name: user
           required: true
           schema:
-            $ref: '#/definitions/UserRegistration'
+            $ref: '#/definitions/CreateUserController'
       responses:
         '201':
           description: 'Successfully created.'
@@ -45,7 +45,7 @@ paths:
           name: reservation_event
           required: True
           schema:
-            $ref: '#/definitions/ReservationEventCreation'
+            $ref: '#/definitions/CreateReservationEventController'
       responses:
         '201':
           description: 'Successfully created.'
@@ -103,7 +103,7 @@ paths:
   #           $ref: '#/definitions/User'
   #       # TODO Add response when not found, etc.
 definitions:
-  UserRegistration:
+  CreateUserController:
     type: object
     properties:
       username: { type: string }
@@ -118,7 +118,7 @@ definitions:
         type: string
         format: date-time
         
-  ReservationEventCreation:
+  CreateReservationEventController:
     type: object
     properties:
       title: { type: string }
