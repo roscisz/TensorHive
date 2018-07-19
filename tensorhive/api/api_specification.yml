@@ -123,10 +123,10 @@ definitions:
     properties:
       title: { type: string }
       description: { type: string }
-      start_datetime:
+      start:
         type: string
         format: date-time
-      end_datetime: 
+      end:
         type: string
         format: date-time
       # TODO Add user id, node id
@@ -138,10 +138,10 @@ definitions:
         format: int64
       title: { type: string }
       description: { type: string }
-      start_datetime: 
+      start:
         type: string
         format: date-time
-      end_datetime: 
+      end:
         type: string
         format: date-time
       created_at:

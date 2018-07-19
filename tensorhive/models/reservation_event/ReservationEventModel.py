@@ -10,8 +10,8 @@ class ReservationEventModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(60), unique=False, nullable=False)
     description = Column(String(200), nullable=True)
-    start_datetime = Column(DateTime, nullable=False)
-    end_datetime = Column(DateTime, nullable=False)
+    start = Column(DateTime, nullable=False)
+    end = Column(DateTime, nullable=False)
 
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     # TODO Relation with user
@@ -58,9 +58,9 @@ class ReservationEventModel(Base):
         return dict(id=self.id,
                     title=self.title,
                     description=self.description,
-                    start_datetime=self.start_datetime.strftime(
+                    start=self.start.strftime(
                         self.__display_datetime_format),
-                    end_datetime=self.end_datetime.strftime(
+                    end=self.end.strftime(
                         self.__display_datetime_format),
                     created_at=self.created_at.strftime(
                         self.__display_datetime_format)

@@ -17,8 +17,8 @@ class CreateReservationEventController():
         new_reservation_model = ReservationEventModel(
             title=reservation_event['title'],
             description=reservation_event['description'],
-            start_datetime=parsed_datetime(reservation_event['start_datetime']),
-            end_datetime=parsed_datetime(reservation_event['end_datetime'])
+            start=parsed_datetime(reservation_event['start']),
+            end=parsed_datetime(reservation_event['end'])
         )
 
         if not new_reservation_model.save_to_db():
