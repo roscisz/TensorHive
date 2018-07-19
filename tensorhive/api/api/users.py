@@ -1,8 +1,9 @@
 import datetime
 
 from connexion import NoContent
-from tensorhive.models.resources.user.UserRegistration import UserRegistration
-from tensorhive.models.resources.user.AllUsers import AllUsers
+from tensorhive.controllers.user.UserRegistration import UserRegistration
+from tensorhive.controllers.user.AllUsers import AllUsers
+
 
 def post(user):
     '''Create new user'''

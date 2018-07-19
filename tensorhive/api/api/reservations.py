@@ -1,9 +1,9 @@
 import datetime
 
 from connexion import NoContent
-from tensorhive.models.resources.reservation_event.ReservationEventCreation import ReservationEventCreation
-from tensorhive.models.resources.reservation_event.AllReservationEvents import AllReservationEvents
-from tensorhive.models.resources.reservation_event.ReservationEventDeletion import ReservationEventDeletion
+from tensorhive.controllers.reservation_event.ReservationEventCreation import ReservationEventCreation
+from tensorhive.controllers.reservation_event.AllReservationEvents import AllReservationEvents
+from tensorhive.controllers.reservation_event.ReservationEventDeletion import ReservationEventDeletion
 
 def post(reservation_event):
     '''Create new'''

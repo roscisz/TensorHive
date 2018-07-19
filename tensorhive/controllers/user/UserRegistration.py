@@ -2,6 +2,7 @@ from tensorhive.models.UserModel import UserModel
 from connexion import NoContent
 from flask import jsonify
 
+
 class UserRegistration():
     # TODO Add authentication, uniqueness checks
     # TODO Add more user parameters

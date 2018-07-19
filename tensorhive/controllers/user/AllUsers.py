@@ -1,5 +1,6 @@
 from tensorhive.models.UserModel import UserModel
 
+
 class AllUsers():
 
     @staticmethod
