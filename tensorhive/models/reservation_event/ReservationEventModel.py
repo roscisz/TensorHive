@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, and_
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from tensorhive.database import Base, db_session
 
@@ -27,6 +27,10 @@ class ReservationEventModel(Base):
                 userId={userId}, \n \
                 description={description}, \n \
                 created_at={created_at}>'.format(id=self.id, title=self.title, description=self.description, created_at=self.created_at)
+
+    @classmethod
+    def find_events_the_same_time_nodes(cls, start, end, nodeId):
+        return cls.query.filter(and_(cls.start>= start, cls.end <= end, cls.nodeId == nodeId)).first()
 
     def save_to_db(self):
         try:
