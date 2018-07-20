@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from tensorhive.database import Base, db_session
 
@@ -10,6 +10,8 @@ class ReservationEventModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(60), unique=False, nullable=False)
     description = Column(String(200), nullable=True)
+    userId = Column(Integer,ForeignKey('users.id'))
+    nodeId = Column(Integer, nullable=False)
     start = Column(DateTime, nullable=False)
     end = Column(DateTime, nullable=False)
 
@@ -21,6 +23,8 @@ class ReservationEventModel(Base):
     def __repr__(self):
         return '<ReservationEvent: id={id}, \n \
                 title={title}, \n \
+                nodeId={nodeId}, \n \
+                userId={userId}, \n \
                 description={description}, \n \
                 created_at={created_at}>'.format(id=self.id, title=self.title, description=self.description, created_at=self.created_at)
 
@@ -58,6 +62,8 @@ class ReservationEventModel(Base):
         return dict(id=self.id,
                     title=self.title,
                     description=self.description,
+                    nodeId=self.nodeId,
+                    userId=self.userId,
                     start=self.start.strftime(
                         self.__display_datetime_format),
                     end=self.end.strftime(

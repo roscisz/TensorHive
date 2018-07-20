@@ -2,6 +2,7 @@ from passlib.hash import pbkdf2_sha256 as sha256
 import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.orm import relationship
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from tensorhive.database import Base, db_session
 
@@ -11,6 +12,7 @@ class UserModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    reservationEvents = relationship("ReservationEventModel", backref="user")
 
     def __repr__(self):
         return '<User: id={self.id}, username={self.username}, created_at={self.created_at}>'
@@ -30,6 +32,10 @@ class UserModel(Base):
     @classmethod
     def find_by_username(cls, username):
         return cls.query.filter_by(username=username).first()
+
+    @classmethod
+    def find_by_id(cls, id):
+        return cls.query.filter_by(id=id).first()
 
     @classmethod
     def return_all(cls):
