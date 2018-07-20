@@ -30,6 +30,15 @@ paths:
           description: 'User with such username exists. (TODO duplicate error in general)'
         '500':
           description: 'User was no registered due to and error.'
+  /machines:
+    get:
+      responses:
+        '200':
+          description: 'Fetch a list of machines'
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Machine'
   # Not implemented yet
   # '/users/{id}':
   #   put:
@@ -83,3 +92,5 @@ definitions:
       created_at:
         type: string
         format: date-time
+  Machine:
+    type: string

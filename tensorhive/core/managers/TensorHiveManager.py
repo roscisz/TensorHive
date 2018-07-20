@@ -1,4 +1,5 @@
 from threading import Thread
+from tensorhive.core.utils.Singleton import Singleton
 from tensorhive.core.managers.ThreadedManager import ThreadedManager
 from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.managers.SSHConnectionManager import SSHConnectionManager
@@ -15,11 +16,10 @@ from tensorhive.config import CONFIG, SSH_CONFIG, API_CONFIG
 from tensorhive.api.APIServer import APIServer
 
 
-class TensorHiveManager(ThreadedManager):
-    # TODO should be a singleton!
-    '''Heart of the whole engine'''
+class TensorHiveManager(ThreadedManager, metaclass=Singleton):
+    """Heart of the whole engine"""
 
-    def __init__(self, services: List[Service]):
+    def __init__(self):
         super().__init__()
         self.infrastructure_manager = InfrastructureManager()
 
@@ -27,6 +27,10 @@ class TensorHiveManager(ThreadedManager):
 
         self.connection_manager = SSHConnectionManager(
             SSH_CONFIG.AVAILABLE_NODES)
+
+        self.service_manager = None
+
+    def configure_services(self, services: List[Service]):
         self.service_manager = ServiceManager(services=services,
                                               infrastructure_manager=self.infrastructure_manager,
                                               connection_manager=self.connection_manager)

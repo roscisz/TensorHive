@@ -8,6 +8,7 @@ class APIServer():
     def start(self):
         # TODO Enable debug mode
         # TODO Read settings from config
+        # FIXME: set log level for the whole app in cli
         logging.basicConfig(level=logging.INFO)
         app = connexion.FlaskApp(__name__)
 
