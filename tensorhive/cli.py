@@ -31,39 +31,24 @@ def main():
     pass
 
 
-@main.group()
+@main.command()
 @click.pass_context
 def run(ctx):
-    '''What to run? Select one from the list specified below'''
-    pass
-
-
-@run.command()
-@click.pass_context
-def core(ctx):
-    '''Start TensorHiveManager instance'''
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
     from tensorhive.core.utils.SigShutdownHandler import SigShutdownHandler
+    from tensorhive.api.APIServer import APIServer
     from tensorhive.config import SERVICES_CONFIG
 
-    termination_handler = SigShutdownHandler()
-
-    manager = TensorHiveManager(services=SERVICES_CONFIG.ENABLED_SERVICES)
+    manager = TensorHiveManager()
+    manager.configure_services(SERVICES_CONFIG.ENABLED_SERVICES)
     manager.start()
-    while True:
-        if termination_handler.should_terminate:
-            manager.shutdown()
-            break
+
+    click.echo('API server has started...')
+    APIServer().start()
+
+    manager.shutdown()
     manager.join()
 
-
-@run.command()
-@click.pass_context
-def api(ctx):
-    '''Start API server instance'''
-    click.echo('API server has started...')
-    from tensorhive.api.APIServer import APIServer
-    APIServer().start()
 
 @main.group()
 @click.pass_context
