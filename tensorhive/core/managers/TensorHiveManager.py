@@ -22,12 +22,10 @@ class TensorHiveManager(ThreadedManager, metaclass=Singleton):
     def __init__(self):
         super().__init__()
         self.infrastructure_manager = InfrastructureManager()
-
-        print('{bg_red}WARNING! You need to replace hostnames and usernames to your own in tensorhive/config.py{style_reset}'.format(bg_red=Back.RED,style_reset=Style.RESET_ALL))
-
+        print('{bg_red}WARNING! You need to replace hostnames and usernames to your own in tensorhive/config.py{style_reset}'.format(
+            bg_red=Back.RED, style_reset=Style.RESET_ALL))
         self.connection_manager = SSHConnectionManager(
-            SSH_CONFIG.AVAILABLE_NODES)
-
+            config=SSH_CONFIG.AVAILABLE_NODES)
         self.service_manager = None
 
     def configure_services(self, services: List[Service]):
@@ -52,4 +50,5 @@ class TensorHiveManager(ThreadedManager, metaclass=Singleton):
     def shutdown(self):
         self.service_manager.shutdown_all_services()
         super().shutdown()
-        print('[✔] {thread_name} has stopped'.format(thread_name=self.thread_name))
+        print('[✔] {thread_name} has stopped'.format(
+            thread_name=self.thread_name))
