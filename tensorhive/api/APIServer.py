@@ -2,29 +2,26 @@ import logging
 import connexion
 from tensorhive.config import API_CONFIG
 from tensorhive.database import db_session
+log = logging.getLogger(__name__)
 
 
 class APIServer():
     def start(self):
-        # TODO Enable debug mode
-        # TODO Read settings from config
-        # FIXME: set log level for the whole app in cli
-        logging.basicConfig(level=logging.INFO)
         app = connexion.FlaskApp(__name__)
+        log.info(
+            'API docs (Swagger UI) available at: http://<address>:<port>/v1.0/ui/')
 
         @app.app.teardown_appcontext
         def shutdown_session(exception=None):
             db_session.remove()
 
-        app.add_api(API_CONFIG.API_SPECIFICATION_FILE,
-                    arguments={'title': API_CONFIG.API_TITLE},
+        app.add_api(API_CONFIG.SPECIFICATION_FILE,
+                    arguments={'title': API_CONFIG.TITLE},
                     resolver=connexion.RestyResolver('tensorhive.api.api'))
-        app.run(port=API_CONFIG.API_SERVER_PORT)
+        app.run(server=API_CONFIG.SERVER_BACKEND,
+                port=API_CONFIG.SERVER_PORT,
+                debug=API_CONFIG.SERVER_DEBUG)
 
 
 if __name__ == '__main__':
-    #Default Swagger UI URL: http://0.0.0.0:9876/v1.0/ui/#/default
     APIServer().start()
-
-
-

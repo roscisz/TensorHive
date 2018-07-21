@@ -1,3 +1,6 @@
+import logging
+
+
 class BaseConfig():
     '''Contains ALL configuration constants'''
     pass
@@ -14,11 +17,15 @@ class ProductionConfig(BaseConfig):
 
 
 class APIConfig():
-    API_SERVER_PORT = 9876
-    API_SPECIFICATION_FILE = 'api_specification.yml'
-    # Indicates location of a folder containing api implementation (RustyResolver)
-    API_VERSION_FOLDER = 'api_v1'
-    API_TITLE = 'TensorHive API'
+    # Available backends: 'flask', 'gevent', 'tornado', 'aiohttp'
+    SERVER_BACKEND = 'flask'
+    SERVER_PORT = 9876
+    SERVER_DEBUG = True
+
+    SPECIFICATION_FILE = 'api_specification.yml'
+    # Indicates the location of folder containing api implementation (RustyResolver)
+    VERSION_FOLDER = 'api_v1'
+    TITLE = 'TensorHive API'
 
 
 class SSHConfig():
@@ -31,13 +38,26 @@ class SSHConfig():
         'example_host_0': {'user': '155136mm'},
         'example_host_1': {'user': 's155136'}
     }
-    CONNECTION_TIMEOUT = 1
+    CONNECTION_TIMEOUT = 1.0
     CONNECTION_NUM_RETRIES = 0
 
 
 class DBConfig():
     SQLALCHEMY_DATABASE_URI = 'sqlite:///tensorhive_dev.db'
 
+
+class LogConfig():
+    LEVEL = logging.INFO
+    FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+
+    @classmethod
+    def apply(cls):
+        # TODO May want to add file logger
+        logging.basicConfig(level=cls.LEVEL, format=cls.FORMAT)
+
+        # TODO May want to disable logging for more external modules (must be imported first!)
+        # import pssh
+        logging.getLogger('pssh').setLevel(logging.CRITICAL)
 
 
 # Objects to be imported by application modules
