@@ -14,18 +14,14 @@ class MonitoringService(Service):
     Periodically updates infrastructure
     Can be configured to use multiple monitors against nodes with available connection
     '''
-
-    # FIXME Add _
     monitors = []
     connections = []
     infrastructure_manager = None
-
-    # TODO Configure from config or inject
-    _polling_interval = 5.0
-
-    def __init__(self, monitors):
+    
+    def __init__(self, monitors, interval=0.0):
         super().__init__()
         self.monitors = monitors
+        self.interval = interval
 
     @override
     def inject(self, injected_object):
@@ -51,7 +47,7 @@ class MonitoringService(Service):
 
         # Hold on until next interval
         if execution_time < self.interval:
-           time.sleep(self.interval - execution_time) 
+           time.sleep(self.interval - execution_time)
         waiting_time = time_func() - end_time
         total_time = execution_time + waiting_time
         log.debug('Monitoring service loop took: {:.2f}s (waiting {:.2f}) = {:.2f}'.format(
