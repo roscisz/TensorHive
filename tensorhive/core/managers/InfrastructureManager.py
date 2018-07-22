@@ -1,5 +1,7 @@
 from typing import Dict
 import json
+import logging
+log = logging.getLogger(__name__)
 
 
 class InfrastructureManager():
@@ -14,5 +16,4 @@ class InfrastructureManager():
 
     def update_infrastructure(self, new_value: Dict):
         self._infrastructure = new_value
-        # FIXME Remove, debug only
-        print(json.dumps(self._infrastructure, indent=2))
+        log.debug('\n{}\n'.format(json.dumps(self._infrastructure, indent=2)))

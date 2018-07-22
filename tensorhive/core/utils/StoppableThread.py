@@ -1,5 +1,7 @@
 from threading import Thread
 from abc import abstractmethod
+import logging
+log = logging.getLogger(__name__)
 
 class StoppableThread(Thread):
     def __init__(self):
@@ -21,3 +23,13 @@ class StoppableThread(Thread):
     @abstractmethod
     def finalize(self):
         pass
+
+    def shutdown(self):
+        self.stop = True
+        self.after_execution()
+
+    def before_execution(self):
+        log.info('[•] Starting {}'.format(self.name))
+
+    def after_execution(self):
+        log.info('[✔] Stopped {}'.format(self.name))

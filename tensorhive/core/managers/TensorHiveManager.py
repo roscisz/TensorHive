@@ -14,6 +14,8 @@ from colorama import Fore, Back, Style
 from tensorhive.core.utils.decorators.override import override
 from tensorhive.config import CONFIG, SSH_CONFIG, API_CONFIG
 from tensorhive.api.APIServer import APIServer
+import logging
+log = logging.getLogger(__name__)
 
 
 class TensorHiveManager(ThreadedManager, metaclass=Singleton):
@@ -22,8 +24,7 @@ class TensorHiveManager(ThreadedManager, metaclass=Singleton):
     def __init__(self):
         super().__init__()
         self.infrastructure_manager = InfrastructureManager()
-        print('{bg_red}WARNING! You need to replace hostnames and usernames to your own in tensorhive/config.py{style_reset}'.format(
-            bg_red=Back.RED, style_reset=Style.RESET_ALL))
+        log.warning('You need to replace hostnames and usernames to your own in tensorhive/config.py')
         self.connection_manager = SSHConnectionManager(
             config=SSH_CONFIG.AVAILABLE_NODES)
         self.service_manager = None

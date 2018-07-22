@@ -47,8 +47,8 @@ class DBConfig():
 
 
 class LogConfig():
-    LEVEL = logging.INFO
-    FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    LEVEL = logging.DEBUG
+    FORMAT = '%(levelname)-8s | %(asctime)s | %(threadName)-30s | MSG: %(message)-100s'
 
     @classmethod
     def apply(cls):
@@ -58,6 +58,8 @@ class LogConfig():
         # TODO May want to disable logging for more external modules (must be imported first!)
         # import pssh
         logging.getLogger('pssh').setLevel(logging.CRITICAL)
+        logging.getLogger('connexion').setLevel(logging.CRITICAL)
+        logging.getLogger('swagger_spec_validator').setLevel(logging.CRITICAL)
 
 
 # Objects to be imported by application modules
