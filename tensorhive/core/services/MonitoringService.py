@@ -28,18 +28,12 @@ class MonitoringService(Service):
         self.monitors = monitors
 
     @override
-    def start(self):
-        super().start()
-
-    @override
     def inject(self, injected_object):
         if isinstance(injected_object, InfrastructureManager):
             self.infrastructure_manager = injected_object
         elif isinstance(injected_object, SSHConnectionManager):
             self.connection_manager = injected_object
 
-    def shutdown(self):
-        super().shutdown()
 
     @override
     def do_run(self):
