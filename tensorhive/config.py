@@ -35,8 +35,8 @@ class SSHConfig():
     '''
     AVAILABLE_NODES = {
         'localhost': {'user': 'miczi'},
-        #'example_host_0': {'user': '155136mm'},
-        #'example_host_1': {'user': 's155136'}
+        # 'example_host_0': {'user': '155136mm'},
+        # 'example_host_1': {'user': 's155136'}
     }
     CONNECTION_TIMEOUT = 1.0
     CONNECTION_NUM_RETRIES = 0
@@ -81,7 +81,7 @@ class ServicesConfig():
         MonitoringService(monitors=[
             Monitor(GPUMonitoringBehaviour())
             # Add more monitors here
-            
+
         ], interval=1.0)
         # Add more services here
     ]

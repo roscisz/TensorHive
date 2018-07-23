@@ -22,7 +22,6 @@ class StoppableThread(Thread):
         '''Override with a cyclic task'''
         pass
 
-
     def shutdown(self):
         self.stop = True
         self.after_execution()

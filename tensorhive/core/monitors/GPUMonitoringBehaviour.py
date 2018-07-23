@@ -58,13 +58,15 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         for host, host_out in data.items():
             if host_out.exit_code is 0:
                 '''Command executed successfully'''
-                data_from_host = NvidiaSmiParser.gpus_info_from_stdout(host_out.stdout)
+                data_from_host = NvidiaSmiParser.gpus_info_from_stdout(
+                    host_out.stdout)
             else:
                 '''Command execution failed'''
                 if host_out.exit_code:
                     message = {'exit_code': host_out.exit_code}
                 elif host_out.exception:
-                    message = {'exception': host_out.exception.__class__.__name__}
+                    message = {
+                        'exception': host_out.exception.__class__.__name__}
                 # TODO Make sure there are no other possibilities than exit_code/exception
                 else:
                     message = 'Unknown failure'
