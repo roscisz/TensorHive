@@ -10,8 +10,8 @@ class ReservationEventModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(60), unique=False, nullable=False)
     description = Column(String(200), nullable=True)
-    userId = Column(Integer,ForeignKey('users.id'))
-    nodeId = Column(Integer, nullable=False)
+    user_Id = Column(Integer, ForeignKey('users.id'))
+    node_Id = Column(Integer, nullable=False)
     start = Column(DateTime, nullable=False)
     end = Column(DateTime, nullable=False)
 
@@ -23,14 +23,14 @@ class ReservationEventModel(Base):
     def __repr__(self):
         return '<ReservationEvent: id={id}, \n \
                 title={title}, \n \
-                nodeId={nodeId}, \n \
-                userId={userId}, \n \
+                node_Id={node_Id}, \n \
+                user_Id={user_Id}, \n \
                 description={description}, \n \
                 created_at={created_at}>'.format(id=self.id, title=self.title, description=self.description, created_at=self.created_at)
 
     @classmethod
     def find_node_events_between(cls, start, end, nodeId):
-        return cls.query.filter(and_(cls.start>= start, cls.end <= end, cls.nodeId == nodeId)).first()
+        return cls.query.filter(and_(cls.start >= start, cls.end <= end, cls.node_Id == nodeId)).first()
 
     def save_to_db(self):
         try:
@@ -66,13 +66,13 @@ class ReservationEventModel(Base):
         return dict(id=self.id,
                     title=self.title,
                     description=self.description,
-                    nodeId=self.nodeId,
-                    userId=self.userId,
+                    nodeId=self.node_Id,
+                    userId=self.user_Id,
                     start=self.start.strftime(
                         self.__display_datetime_format),
                     end=self.end.strftime(
                         self.__display_datetime_format),
-                    created_at=self.created_at.strftime(
+                    createdAt=self.created_at.strftime(
                         self.__display_datetime_format)
                     )
     # TODO We may need deserialzer

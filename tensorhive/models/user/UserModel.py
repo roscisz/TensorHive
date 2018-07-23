@@ -46,7 +46,7 @@ class UserModel(Base):
         '''Serializes model instance into dict (which is interpreted as json automatically)'''
         return dict(id=self.id,
                     username=self.username,
-                    created_at=self.created_at.isoformat()
+                    createdAt=self.created_at.isoformat()
                     )
     # TODO We may need deserialzer
     

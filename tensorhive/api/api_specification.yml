@@ -114,7 +114,7 @@ definitions:
         type: integer
         format: int64
       username: { type: string }
-      created_at:
+      createdAt:
         type: string
         format: date-time
         
@@ -148,7 +148,7 @@ definitions:
       end:
         type: string
         format: date-time
-      created_at:
+      createdAt:
         type: string
         format: date-time
       # TODO Add user id, node id
