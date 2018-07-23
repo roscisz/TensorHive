@@ -24,7 +24,7 @@ class CreateReservationEventController():
         if (not UserModel.find_by_id(userId)):
             return NoContent, 500
 
-        if (ReservationEventModel.find_events_the_same_time_nodes(startTime, endTime, nodeId) is not None):
+        if (ReservationEventModel.find_node_events_between(startTime, endTime, nodeId) is not None):
             return NoContent, 500
 
         new_reservation_model = ReservationEventModel(

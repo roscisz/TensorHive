@@ -29,7 +29,7 @@ class ReservationEventModel(Base):
                 created_at={created_at}>'.format(id=self.id, title=self.title, description=self.description, created_at=self.created_at)
 
     @classmethod
-    def find_events_the_same_time_nodes(cls, start, end, nodeId):
+    def find_node_events_between(cls, start, end, nodeId):
         return cls.query.filter(and_(cls.start>= start, cls.end <= end, cls.nodeId == nodeId)).first()
 
     def save_to_db(self):
