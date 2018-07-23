@@ -12,7 +12,7 @@ class UserModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    reservationEvents = relationship("ReservationEventModel", backref="user")
+    reservation_events = relationship("ReservationEventModel", backref="user")
 
     def __repr__(self):
         return '<User: id={self.id}, username={self.username}, created_at={self.created_at}>'

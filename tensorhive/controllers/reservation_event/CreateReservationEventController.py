@@ -17,24 +17,24 @@ class CreateReservationEventController():
         if not UserModel.find_by_id(reservation_event['userId']):
             return NoContent, 500
 
-        startTime = parsed_datetime(reservation_event['start'])
-        endTime = parsed_datetime(reservation_event['end'])
-        node_Id = reservation_event['nodeId']
-        user_Id = reservation_event['userId']
+        start_time = parsed_datetime(reservation_event['start'])
+        end_time = parsed_datetime(reservation_event['end'])
+        node_id = reservation_event['nodeId']
+        user_id = reservation_event['userId']
 
-        if (not UserModel.find_by_id(user_Id)):
+        if (not UserModel.find_by_id(user_id)):
             return NoContent, 500
 
-        if (ReservationEventModel.find_node_events_between(startTime, endTime, node_Id) is not None):
+        if (ReservationEventModel.find_node_events_between(start_time, end_time, node_id) is not None):
             return NoContent, 500
 
         new_reservation_model = ReservationEventModel(
             title=reservation_event['title'],
             description=reservation_event['description'],
-            node_Id=node_Id,
-            user_Id=user_Id,
-            start=startTime,
-            end=endTime
+            node_id=node_id,
+            user_id=user_id,
+            start=start_time,
+            end=end_time
         )
 
         if not new_reservation_model.save_to_db():

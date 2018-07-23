@@ -10,8 +10,8 @@ class ReservationEventModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(60), unique=False, nullable=False)
     description = Column(String(200), nullable=True)
-    user_Id = Column(Integer, ForeignKey('users.id'))
-    node_Id = Column(Integer, nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    node_id = Column(Integer, nullable=False)
     start = Column(DateTime, nullable=False)
     end = Column(DateTime, nullable=False)
 
@@ -23,14 +23,14 @@ class ReservationEventModel(Base):
     def __repr__(self):
         return '<ReservationEvent: id={id}, \n \
                 title={title}, \n \
-                node_Id={node_Id}, \n \
-                user_Id={user_Id}, \n \
+                node_id={node_id}, \n \
+                user_id={user_id}, \n \
                 description={description}, \n \
                 created_at={created_at}>'.format(id=self.id, title=self.title, description=self.description, created_at=self.created_at)
 
     @classmethod
-    def find_node_events_between(cls, start, end, nodeId):
-        return cls.query.filter(and_(cls.start >= start, cls.end <= end, cls.node_Id == nodeId)).first()
+    def find_node_events_between(cls, start, end, node_id):
+        return cls.query.filter(and_(cls.start >= start, cls.end <= end, cls.node_id == node_id)).first()
 
     def save_to_db(self):
         try:
@@ -66,8 +66,8 @@ class ReservationEventModel(Base):
         return dict(id=self.id,
                     title=self.title,
                     description=self.description,
-                    nodeId=self.node_Id,
-                    userId=self.user_Id,
+                    nodeId=self.node_id,
+                    userId=self.user_id,
                     start=self.start.strftime(
                         self.__display_datetime_format),
                     end=self.end.strftime(
