@@ -20,7 +20,7 @@ class APIConfig():
     # Available backends: 'flask', 'gevent', 'tornado', 'aiohttp'
     SERVER_BACKEND = 'flask'
     SERVER_PORT = 9876
-    SERVER_DEBUG = True
+    SERVER_DEBUG = False
 
     SPECIFICATION_FILE = 'api_specification.yml'
     # Indicates the location of folder containing api implementation (RustyResolver)
@@ -47,19 +47,26 @@ class DBConfig():
 
 
 class LogConfig():
-    LEVEL = logging.DEBUG
-    FORMAT = '%(levelname)-8s | %(asctime)s | %(threadName)-30s | MSG: %(message)-100s'
+    LEVEL = logging.INFO
+    FORMAT = '%(levelname)-8s | %(asctime)s | %(threadName)-30s | MSG: %(message)-80s | FROM: %(name)s'
 
     @classmethod
     def apply(cls):
         # TODO May want to add file logger
+        # TODO May want use dictConfig (must import separately: logging.config)
         logging.basicConfig(level=cls.LEVEL, format=cls.FORMAT)
+        # logging.config.dictConfig(...)
 
-        # TODO May want to disable logging for more external modules (must be imported first!)
+        # May want to restrict logging from external modules (must be imported first!)
         # import pssh
+
         logging.getLogger('pssh').setLevel(logging.CRITICAL)
+        logging.getLogger('werkzeug').setLevel(logging.CRITICAL)
         logging.getLogger('connexion').setLevel(logging.CRITICAL)
         logging.getLogger('swagger_spec_validator').setLevel(logging.CRITICAL)
+
+        # May want to disable logging completely
+        # logging.getLogger('werkzeug').disabled = True
 
 
 # Objects to be imported by application modules
