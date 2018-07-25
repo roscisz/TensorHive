@@ -13,7 +13,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class TensorHiveManager(StoppableThread, metaclass=Singleton):
+class TensorHiveManager(Thread, metaclass=Singleton):
     """Heart of the whole engine"""
 
     def __init__(self):
@@ -24,6 +24,9 @@ class TensorHiveManager(StoppableThread, metaclass=Singleton):
             config=SSH_CONFIG.AVAILABLE_NODES)
         self.service_manager = None
 
+        # Thread name
+        self.name = '{}_{}'.format(self.__class__.__name__, self.name)
+
     def configure_services(self, services: List[Service]):
         self.service_manager = ServiceManager(services=services,
                                               infrastructure_manager=self.infrastructure_manager,
@@ -31,10 +34,10 @@ class TensorHiveManager(StoppableThread, metaclass=Singleton):
 
     @override
     def run(self):
-        super().before_execution()
+        log.info('[•] Starting {}'.format(self.name))
         self.service_manager.start_all_services()
 
     @override
     def shutdown(self):
         self.service_manager.shutdown_all_services()
-        super().shutdown()
+        log.info('[✔] Stopped {}'.format(self.name))
