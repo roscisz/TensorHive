@@ -19,9 +19,9 @@ class TensorHiveManager(Thread, metaclass=Singleton):
     def __init__(self):
         super().__init__()
         self.infrastructure_manager = InfrastructureManager()
-        log.warning('You need to replace hostnames and usernames to your own in tensorhive/config.py')
-        self.connection_manager = SSHConnectionManager(
-            config=SSH_CONFIG.AVAILABLE_NODES)
+        if not SSH_CONFIG.AVAILABLE_NODES:
+            log.warning('You need to replace hostnames and usernames to your own in tensorhive/config.py')
+        self.connection_manager = SSHConnectionManager(config=SSH_CONFIG.AVAILABLE_NODES)
         self.service_manager = None
 
         # Thread name
