@@ -35,9 +35,8 @@ class SSHConfig():
     https://parallel-ssh.readthedocs.io/en/latest/advanced.html#per-host-configuration
     '''
     AVAILABLE_NODES = {
-        'localhost': {'user': 'miczi'},
-        # 'example_host_0': {'user': '155136mm'},
-        # 'example_host_1': {'user': 's155136'}
+        #'example_host_0': {'user': 'example_username'},
+        #'example_host_1': {'user': 'example_username'}
     }
     CONNECTION_TIMEOUT = 1.0
     CONNECTION_NUM_RETRIES = 0
