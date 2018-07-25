@@ -19,6 +19,7 @@ class ProductionConfig(BaseConfig):
 class APIConfig():
     # Available backends: 'flask', 'gevent', 'tornado', 'aiohttp'
     SERVER_BACKEND = 'flask'
+    SERVER_HOST = '0.0.0.0'
     SERVER_PORT = 9876
     SERVER_DEBUG = False
 

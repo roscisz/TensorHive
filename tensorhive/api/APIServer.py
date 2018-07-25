@@ -8,8 +8,8 @@ log = logging.getLogger(__name__)
 class APIServer():
     def start(self):
         app = connexion.FlaskApp(__name__)
-        log.info(
-            'API docs (Swagger UI) available at: http://<address>:<port>/v1.0/ui/')
+        log.info('API docs (Swagger UI) available at: http://{host}:{port}/v1.0/ui/'.format(
+            host=API_CONFIG.SERVER_HOST, port=API_CONFIG.SERVER_PORT))
 
         @app.app.teardown_appcontext
         def shutdown_session(exception=None):
@@ -19,6 +19,7 @@ class APIServer():
                     arguments={'title': API_CONFIG.TITLE},
                     resolver=connexion.RestyResolver('tensorhive.api.api'))
         app.run(server=API_CONFIG.SERVER_BACKEND,
+                host=API_CONFIG.SERVER_HOST,
                 port=API_CONFIG.SERVER_PORT,
                 debug=API_CONFIG.SERVER_DEBUG)
 
