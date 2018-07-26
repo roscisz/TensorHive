@@ -1,12 +1,11 @@
-# types
 from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.managers.SSHConnectionManager import SSHConnectionManager
-
 from tensorhive.core.services.Service import Service
 from typing import List
 
+
 class ServiceManager():
-    '''Encapsulates set of services'''
+    '''Encapsulates a set of services'''
 
     def __init__(self, services: List[Service],
                  infrastructure_manager: InfrastructureManager,

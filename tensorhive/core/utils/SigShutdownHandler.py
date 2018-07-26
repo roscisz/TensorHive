@@ -1,4 +1,7 @@
 import signal
+import logging
+log = logging.getLogger(__name__)
+
 
 class SigShutdownHandler():
     '''Implements the behaviour for unexpected termination requests, like: Ctrl+C etc.'''
@@ -8,9 +11,7 @@ class SigShutdownHandler():
         signal.signal(signal.SIGINT, self.shutdown_gracefully)
         signal.signal(signal.SIGTERM, self.shutdown_gracefully)
 
-    @property
-    def should_terminate(self):
-        return self._kill_now
-
     def shutdown_gracefully(self, signum, frame):
         self._kill_now = True
+        log.info('[✔] All stopped')
+        exit(0)
