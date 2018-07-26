@@ -1,6 +1,7 @@
-from tensorhive.models.UserModel import UserModel
+from tensorhive.models.user.UserModel import UserModel
 
-class AllUsers():
+
+class ListUsersController():
 
     @staticmethod
     def get():

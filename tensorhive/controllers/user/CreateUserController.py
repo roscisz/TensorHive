@@ -1,8 +1,9 @@
-from tensorhive.models.UserModel import UserModel
+from tensorhive.models.user.UserModel import UserModel
 from connexion import NoContent
 from flask import jsonify
 
-class UserRegistration():
+
+class CreateUserController():
     # TODO Add authentication, uniqueness checks
     # TODO Add more user parameters
 

@@ -14,5 +14,6 @@ def init_db():
     # import all modules here that might define models so that
     # they will be registered properly on the metadata.  Otherwise
     # you will have to import them first before calling init_db()
-    from tensorhive.models import UserModel
+    from tensorhive.models.user import UserModel
+    from tensorhive.models.reservation_event import ReservationEventModel
     return Base.metadata.create_all(bind=engine)

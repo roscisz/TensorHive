@@ -2,6 +2,7 @@ from passlib.hash import pbkdf2_sha256 as sha256
 import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.orm import relationship
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from tensorhive.database import Base, db_session
 
@@ -11,9 +12,10 @@ class UserModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    reservation_events = relationship("ReservationEventModel", backref="user")
 
     def __repr__(self):
-        return '<User: id={id}, username={username}, created_at={created_at}>'.format(id=self.id, username=self.username, created_at=self.created_at)
+        return '<User: id={self.id}, username={self.username}, created_at={self.created_at}>'
 
     # TODO updated_at timestamp, role and more
 
@@ -32,6 +34,10 @@ class UserModel(Base):
         return cls.query.filter_by(username=username).first()
 
     @classmethod
+    def find_by_id(cls, id):
+        return cls.query.filter_by(id=id).first()
+
+    @classmethod
     def return_all(cls):
         return UserModel.query.all()
 
@@ -40,7 +46,7 @@ class UserModel(Base):
         '''Serializes model instance into dict (which is interpreted as json automatically)'''
         return dict(id=self.id,
                     username=self.username,
-                    created_at=self.created_at.isoformat()
+                    createdAt=self.created_at.isoformat()
                     )
     # TODO We may need deserialzer
     

@@ -1,16 +1,17 @@
 import datetime
 
 from connexion import NoContent
-from tensorhive.models.resources.user.UserRegistration import UserRegistration
-from tensorhive.models.resources.user.AllUsers import AllUsers
+from tensorhive.controllers.user.CreateUserController import CreateUserController
+from tensorhive.controllers.user.ListUsersController import ListUsersController
+
 
 def post(user):
     '''Create new user'''
-    return UserRegistration.register(user)
+    return CreateUserController.register(user)
 
 def search():
     '''Get all users'''
-    return AllUsers.get()
+    return ListUsersController.get()
 
 # TODO Implement (see API specification)
 # def put(id, user):
