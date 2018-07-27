@@ -1,7 +1,8 @@
 import click
 import tensorhive
 from tensorhive.config import CONFIG
-
+from tensorhive.config import LogConfig
+import logging
 '''
 Current CLI Structure: (update regularly)
 
@@ -15,6 +16,13 @@ tensorhive
 └── db
     └── init
 '''
+AVAILABLE_LOG_LEVELS = {
+    'debug': logging.DEBUG,
+    'info': logging.INFO,
+    'warning': logging.WARNING,
+    'error': logging.ERROR,
+    'critical': logging.CRITICAL
+}
 
 
 def print_version(ctx, param, value):
@@ -22,6 +30,16 @@ def print_version(ctx, param, value):
         return
     click.echo('TensorHive {ver}'.format(ver=tensorhive.__version__))
     ctx.exit()
+
+
+def log_level_mapping(ctx, param, value: str) -> int:
+    '''
+    Callback function which takes care of mapping
+    from cli string param to int log level
+    '''
+    if value is None:
+        return LogConfig.DEFAULT_LEVEL
+    return AVAILABLE_LOG_LEVELS[value]
 
 
 @click.group()
@@ -32,12 +50,17 @@ def main():
 
 
 @main.command()
+@click.option('--log-level', '-l',
+              type=click.Choice(AVAILABLE_LOG_LEVELS.keys()),
+              callback=log_level_mapping,
+              help='Log level to apply.')
 @click.pass_context
-def run(ctx):
+def run(ctx, log_level):
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
     from tensorhive.core.utils.SigShutdownHandler import SigShutdownHandler
     from tensorhive.api.APIServer import APIServer
     from tensorhive.config import SERVICES_CONFIG
+    LogConfig.apply(log_level)
 
     manager = TensorHiveManager()
     manager.configure_services(SERVICES_CONFIG.ENABLED_SERVICES)
@@ -54,6 +77,7 @@ def run(ctx):
 @click.pass_context
 def db(ctx):
     pass
+
 
 @db.command()
 @click.pass_context

@@ -35,8 +35,8 @@ class SSHConfig():
     https://parallel-ssh.readthedocs.io/en/latest/advanced.html#per-host-configuration
     '''
     AVAILABLE_NODES = {
-        #'example_host_0': {'user': 'example_username'},
-        #'example_host_1': {'user': 'example_username'}
+        # 'example_host_0': {'user': 'example_username'},
+        # 'example_host_1': {'user': 'example_username'}
     }
     CONNECTION_TIMEOUT = 1.0
     CONNECTION_NUM_RETRIES = 0
@@ -47,19 +47,23 @@ class DBConfig():
 
 
 class LogConfig():
-    LEVEL = logging.INFO
+    DEFAULT_LEVEL = logging.INFO
     FORMAT = '%(levelname)-8s | %(asctime)s | %(threadName)-30s | MSG: %(message)-80s | FROM: %(name)s'
 
     @classmethod
-    def apply(cls):
+    def apply(cls, log_level):
+        # Remove existing configuration first (otherwise basicConfig won't be applied for the second time)
+        for handler in logging.root.handlers[:]:
+            logging.root.removeHandler(handler)
+
         # TODO May want to add file logger
-        # TODO May want use dictConfig (must import separately: logging.config)
-        logging.basicConfig(level=cls.LEVEL, format=cls.FORMAT)
-        # logging.config.dictConfig(...)
+        # TODO May want use dictConfig instead of basicConfig (must import separately: logging.config)
+
+        # Apply new config
+        logging.basicConfig(level=log_level, format=cls.FORMAT)
 
         # May want to restrict logging from external modules (must be imported first!)
         # import pssh
-
         logging.getLogger('pssh').setLevel(logging.CRITICAL)
         logging.getLogger('werkzeug').setLevel(logging.CRITICAL)
         logging.getLogger('connexion').setLevel(logging.CRITICAL)
