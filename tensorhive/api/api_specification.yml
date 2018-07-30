@@ -81,9 +81,7 @@ paths:
         '200':
           description: 'All metrics fetched with success.'
           schema:
-            type: array
-            items: 
-              type: object
+            type: object
   /nodes/{hostname}/metrics/gpu:
     get:
       operationId: 'tensorhive.api.api.nodes.get_gpu_metrics'
