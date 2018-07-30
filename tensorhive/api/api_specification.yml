@@ -63,54 +63,44 @@ paths:
           description: 'Successfully deleted.'
         '404':
           description: 'Not found.'
-
-  /machines:
+  # TODO Nodes: Add more specific schemas, response codes + descriptions
+  /nodes/hostnames:
     get:
+      operationId: 'tensorhive.api.api.nodes.get_hostnames'
       responses:
         '200':
-          description: 'Fetch a list of machines'
+          description: 'List of hostnames fetched with success'
           schema:
             type: array
-            items:
-              $ref: '#/definitions/Machine'
-  # Not implemented yet
-  # '/users/{id}':
-  #   put:
-  #     parameters:
-  #       - in: path
-  #         name: id
-  #         required: true
-  #         type: integer
-  #       - in: body
-  #         name: user
-  #         required: true
-  #         schema:
-  #           $ref: '#/definitions/User'
-  #     responses:
-  #       '200':
-  #         description: 'Update a user by ID'
-  #       # TODO Add response when not found, etc.
-  #   delete:
-  #     parameters:
-  #       - in: path
-  #         name: id
-  #         required: true
-  #         type: integer
-  #     responses:
-  #       '204':
-  #         description: 'Delete a user by ID'
-  #   get:
-  #     parameters:
-  #       - in: path
-  #         name: id
-  #         required: true
-  #         type: integer
-  #     responses:
-  #       '200':
-  #         description: 'Fetch a user by ID'
-  #         schema:
-  #           $ref: '#/definitions/User'
-  #       # TODO Add response when not found, etc.
+            items: 
+              type: string
+  /nodes/metrics:
+    get:
+      operationId: 'tensorhive.api.api.nodes.get_all_metrics'
+      responses:
+        '200':
+          description: 'All metrics fetched with success.'
+          schema:
+            type: array
+            items: 
+              type: object
+  /nodes/{hostname}/metrics/gpu:
+    get:
+      operationId: 'tensorhive.api.api.nodes.get_gpu_metrics'
+      parameters:
+        - in: path
+          name: hostname
+          required: true
+          type: string
+      responses:
+        '200':
+          description: 'List of GPU(s) metrics fetched with success.'
+          schema:
+            type: array
+            items: 
+              type: object
+        '404':
+          description: 'Not found.'
 definitions:
   CreateUserController:
     type: object
@@ -126,9 +116,6 @@ definitions:
       createdAt:
         type: string
         format: date-time
-  Machine:
-    type: string
-        
   CreateReservationEventController:
     type: object
     properties:
