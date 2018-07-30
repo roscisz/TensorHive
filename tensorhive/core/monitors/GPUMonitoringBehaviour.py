@@ -7,7 +7,7 @@ from pssh.exceptions import Timeout, UnknownHostException, ConnectionErrorExcept
 
 class GPUMonitoringBehaviour(MonitoringBehaviour):
     _base_command = 'nvidia-smi --query-gpu='
-    _format_options = '--format=csv'
+    _format_options = '--format=csv,nounits'
     _available_queries = [
         'name',
         'uuid',
