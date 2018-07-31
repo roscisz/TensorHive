@@ -11,8 +11,7 @@ tensorhive
 ├── --help
 ├── run
 |   ├── --help
-|   ├── core      
-|   └── api
+|   └── --log-level <level> (e.g. debug, info, warning, error, critical)
 └── db
     └── init
 '''
@@ -57,7 +56,6 @@ def main():
 @click.pass_context
 def run(ctx, log_level):
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
-    from tensorhive.core.utils.SigShutdownHandler import SigShutdownHandler
     from tensorhive.api.APIServer import APIServer
     from tensorhive.config import SERVICES_CONFIG
     LogConfig.apply(log_level)
