@@ -43,7 +43,7 @@ class SSHConfig():
 
 
 class DBConfig():
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///tensorhive_dev.db'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///tensorhive.db'
 
 
 class LogConfig():
