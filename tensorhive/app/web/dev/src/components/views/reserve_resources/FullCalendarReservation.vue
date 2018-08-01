@@ -64,7 +64,7 @@ export default {
     DatePicker
   },
 
-  data: function () {
+  data () {
     return {
       title: '',
       reservationTime: '',
@@ -80,9 +80,10 @@ export default {
     },
 
     reservation: function () {
+      var tempEvent
       for (var i = 0; i < this.numberOfNodes; i++) {
         if (this.nodesCheckboxes[i].checked) {
-          var tempEvent = {
+          tempEvent = {
             title: 'Reserved',
             description: 'node ' + (i + 1).toString(),
             start: this.reservationTime[0].toJSON().slice(0, -5),
