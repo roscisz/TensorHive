@@ -11,6 +11,17 @@
         <span class="page">Reserve resources</span>
       </a>
     </router-link>
+    <li class="header">RESOURCES</li>
+    <router-link
+      tag="li"
+      class="pageLink"
+      to="/nodes_overview"
+    >
+      <a>
+        <i class="fa fa-table"></i>
+        <span class="page">Nodes Overview</span>
+      </a>
+    </router-link>
     <li class="header">PAGES</li>
     <router-link
       tag="li"

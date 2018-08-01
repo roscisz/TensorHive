@@ -18,9 +18,7 @@ export default {
     if (method === 'get' && uri === '/reservations') {
       return url
     }
-    if (uri === '/machines') {
-      return 6
-    }
+
     return axios({ method, url, data })
   }
 }

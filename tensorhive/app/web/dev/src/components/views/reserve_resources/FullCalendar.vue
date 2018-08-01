@@ -32,7 +32,7 @@ export default {
       minReservationTime: '',
       maxReservationTime: '',
       nodesCheckboxes: [],
-      numberOfNodes: 0,
+      numberOfNodes: 6,
       errors: []
     }
   },
@@ -41,8 +41,7 @@ export default {
     setColor: function (node) {
       var color = '#123456'
       var step = node * 123456
-      var colorToInt
-      colorToInt = parseInt(color.substr(1), 16)
+      var colorToInt = parseInt(color.substr(1), 16)
       var nstep = parseInt(step)
       if (!isNaN(colorToInt) && !isNaN(nstep)) {
         colorToInt += nstep
@@ -81,9 +80,9 @@ export default {
     $(window).resize(function () {
       self.calendar.fullCalendar('rerenderEvents')
     })
-    this.numberOfNodes = api.request('get', '/machines')
+    var obj
     for (var i = 0; i < this.numberOfNodes; i++) {
-      var obj = {
+      obj = {
         name: 'Node ' + (i + 1).toString(),
         checked: false,
         disabled: false
