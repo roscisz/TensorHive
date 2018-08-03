@@ -122,7 +122,26 @@ paths:
             items: 
               type: object
         '404':
-          description: 'Not found.'
+          description: 'Not found.' 
+  /nodes/{hostname}/metrics/gpu/fan:
+    get:
+      tags: 
+        - nodes
+      summary: TODO
+      operationId: 'tensorhive.api.api.nodes.get_gpu_fan'
+      parameters:
+        - in: path
+          name: hostname
+          required: true
+          type: string
+      responses:
+        '200':
+          description: TODO
+          schema:
+            type: integer
+        '404':
+          description: 'Not found.' 
+  
 definitions:
   CreateUserController:
     type: object
