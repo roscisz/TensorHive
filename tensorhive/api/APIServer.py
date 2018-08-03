@@ -20,8 +20,10 @@ class APIServer():
             db_session.remove()
 
         app.add_api(API_CONFIG.SPECIFICATION_FILE,
-                    arguments={'title': API_CONFIG.TITLE},
-                    resolver=connexion.RestyResolver('tensorhive.api.api'),
+                    arguments={'title': API_CONFIG.TITLE,
+                               'version': API_CONFIG.VERSION},
+                    resolver=connexion.RestyResolver(
+                        API_CONFIG.VERSION_FOLDER),
                     strict_validation=True)
         CORS(app.app)
         app.run(server=API_CONFIG.SERVER_BACKEND,

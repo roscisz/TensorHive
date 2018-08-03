@@ -25,8 +25,9 @@ class APIConfig():
 
     SPECIFICATION_FILE = 'api_specification.yml'
     # Indicates the location of folder containing api implementation (RustyResolver)
-    VERSION_FOLDER = 'api_v1'
+    VERSION_FOLDER = 'tensorhive.api.api'
     TITLE = 'TensorHive API'
+    VERSION = '1.0'
 
 
 class SSHConfig():
