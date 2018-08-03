@@ -9,6 +9,9 @@ basePath: /v1.0
 paths:
   /users:
     get:
+      tags: 
+        - users
+      summary: Get all users
       responses:
         '200':
           description: 'All fetched with success.'
@@ -17,6 +20,9 @@ paths:
             items:
               $ref: '#/definitions/User'
     post:
+      tags: 
+        - users
+      summary: Create new user
       parameters:
         - in: body
           name: user
@@ -32,6 +38,9 @@ paths:
           description: 'Not registered due to an error.'
   /reservations:
     get:
+      tags: 
+        - reservations
+      summary: Get all reservation events
       responses:
         '200':
           description: 'All fetched with success.'
@@ -40,6 +49,9 @@ paths:
             items:
               $ref: '#/definitions/ReservationEvent'
     post:
+      tags: 
+        - reservations
+      summary: Create new reservation event
       parameters:
         - in: body
           name: reservation_event
@@ -53,6 +65,9 @@ paths:
           description: 'Not created due to an error.'
   '/reservations/{id}':
     delete:
+      tags: 
+          - reservations
+      summary: Delete reservation event by id
       parameters:
         - in: path
           name: id
@@ -66,6 +81,9 @@ paths:
   # TODO Nodes: Add more specific schemas, response codes + descriptions
   /nodes/hostnames:
     get:
+      tags: 
+        - nodes
+      summary: Get all hostnames
       operationId: 'tensorhive.api.api.nodes.get_hostnames'
       responses:
         '200':
@@ -76,6 +94,9 @@ paths:
               type: string
   /nodes/metrics:
     get:
+      tags: 
+        - nodes
+      summary: Get all metrics for each node
       operationId: 'tensorhive.api.api.nodes.get_all_metrics'
       responses:
         '200':
@@ -84,6 +105,9 @@ paths:
             type: object
   /nodes/{hostname}/metrics/gpu:
     get:
+      tags: 
+        - nodes
+      summary: Get GPU metrics for node with given id
       operationId: 'tensorhive.api.api.nodes.get_gpu_metrics'
       parameters:
         - in: path
