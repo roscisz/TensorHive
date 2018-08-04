@@ -35,7 +35,7 @@ paths:
         '409':
           description: 'Duplication error.'
         '500':
-          description: 'Not registered due to an error.'
+          $ref: '#/responses/InternalError'
   /reservations:
     get:
       tags: 
@@ -62,7 +62,7 @@ paths:
         '201':
           description: 'Successfully created.'
         '500':
-          description: 'Not created due to an error.'
+          $ref: '#/responses/InternalError'
   '/reservations/{id}':
     delete:
       tags: 
@@ -77,7 +77,7 @@ paths:
         '204':
           description: 'Successfully deleted.'
         '404':
-          description: 'Not found.'
+          $ref: '#/responses/NotFound'
   # TODO Nodes: Add more specific schemas, response codes + descriptions
   /nodes/hostnames:
     get:
@@ -120,7 +120,7 @@ paths:
             items: 
               type: object
         '404':
-          description: 'Hostname not found' 
+          $ref: '#/responses/NotFound'
 definitions:
   CreateUserController:
     type: object
@@ -170,34 +170,16 @@ definitions:
         type: string
         format: date-time
       # TODO Add user id, node id
-  Error:
-    type: object
-    properties:
-      code:
-        type: string
-      message:
-        type: string
-    required:
-      - code
-      - message
 
 responses:
-  # Created:
-  #   description: Resource created successfully
-  #   schema:
-  #     $ref: "#/definitions/Created"
+  # Example responses
+  # TODO Define more complex behaviour and use these reusable responses where possible (when API begins to stabilize)
   NotFound:
-    description: The specified resource was not found
-    schema:
-      $ref: "#/definitions/Error"
+    description: Resource was not found
   Unauthorized:
     description: Unauthorized
-    schema:
-      $ref: "#/definitions/Error"
   InternalError:
-    description: Internal Error
-    schema:
-      $ref: "#/definitions/Error"
+    description: Internal Server Error
 
 parameters:
   hostnameParam:
