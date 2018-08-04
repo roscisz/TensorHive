@@ -9,13 +9,13 @@ class GetMetricsController:
         return infrastructure, 200
 
     @staticmethod
-    def get(hostname: str, metric_type: str, parameter_name: str = None):
+    def get(hostname: str, resource_type: str, metric_type: str = None):
         try:
             infrastructure = TensorHiveManager().infrastructure_manager.infrastructure
-            metrics = infrastructure[hostname][metric_type]
+            metrics = infrastructure[hostname][resource_type]
 
-            if parameter_name is not None:
-                metrics = [resource[parameter_name] for resource in metrics]
+            if metric_type is not None:
+                metrics = [resource[metric_type] for resource in metrics]
 
             # If some data is unavailable, return [] (e.g. monitoring service got a connection exception),
             if isinstance(metrics, dict) and metrics.keys() & ['exception', 'exit_code']:

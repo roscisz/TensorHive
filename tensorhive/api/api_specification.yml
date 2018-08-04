@@ -96,52 +96,31 @@ paths:
     get:
       tags: 
         - nodes
-      summary: Get all metrics for each node
+      summary: Get each node's all metric data
       operationId: 'tensorhive.api.api.nodes.get_all_metrics'
       responses:
         '200':
-          description: 'All metrics fetched with success.'
+          description: 'Success'
           schema:
             type: object
   /nodes/{hostname}/metrics/gpu:
     get:
       tags: 
         - nodes
-      summary: Get GPU metrics for node with given id
+      summary: Get node's GPU metric data
       operationId: 'tensorhive.api.api.nodes.get_gpu_metrics'
       parameters:
-        - in: path
-          name: hostname
-          required: true
-          type: string
+        - $ref: '#/parameters/hostnameParam'
+        - $ref: '#/parameters/gpuMetricTypeQuery'
       responses:
         '200':
-          description: 'List of GPU(s) metrics fetched with success.'
+          description: 'Success'
           schema:
             type: array
             items: 
               type: object
         '404':
-          description: 'Not found.' 
-  /nodes/{hostname}/metrics/gpu/fan:
-    get:
-      tags: 
-        - nodes
-      summary: TODO
-      operationId: 'tensorhive.api.api.nodes.get_gpu_fan'
-      parameters:
-        - in: path
-          name: hostname
-          required: true
-          type: string
-      responses:
-        '200':
-          description: TODO
-          schema:
-            type: integer
-        '404':
-          description: 'Not found.' 
-  
+          description: 'Hostname not found' 
 definitions:
   CreateUserController:
     type: object
@@ -191,3 +170,56 @@ definitions:
         type: string
         format: date-time
       # TODO Add user id, node id
+  Error:
+    type: object
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    required:
+      - code
+      - message
+
+responses:
+  # Created:
+  #   description: Resource created successfully
+  #   schema:
+  #     $ref: "#/definitions/Created"
+  NotFound:
+    description: The specified resource was not found
+    schema:
+      $ref: "#/definitions/Error"
+  Unauthorized:
+    description: Unauthorized
+    schema:
+      $ref: "#/definitions/Error"
+  InternalError:
+    description: Internal Error
+    schema:
+      $ref: "#/definitions/Error"
+
+parameters:
+  hostnameParam:
+    description: Node's hostname in the network
+    in: path
+    name: hostname
+    required: true
+    type: string
+  gpuMetricTypeQuery:
+    description: Metric type. If not present, queries for all metrics
+    in: query
+    name: metric_type
+    required: false
+    type: string
+    enum:
+      - name
+      - uuid
+      - fan
+      - mem_free
+      - mem_used
+      - mem_total
+      - util
+      - mem_util
+      - temp
+      - power
