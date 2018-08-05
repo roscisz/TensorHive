@@ -48,7 +48,7 @@ class DBConfig():
 
 class LogConfig():
     DEFAULT_LEVEL = logging.INFO
-    FORMAT = '%(levelname)-8s | %(asctime)s | %(threadName)-30s | MSG: %(message)-80s | FROM: %(name)s'
+    FORMAT = '%(levelname)-8s | %(asctime)s | %(threadName)-30s | MSG: %(message)-79s | FROM: %(name)s'
 
     @classmethod
     def apply(cls, log_level):
@@ -86,14 +86,19 @@ class ServicesConfig():
     because instances below are depending on it
     '''
     from tensorhive.core.services.MonitoringService import MonitoringService
+    from tensorhive.core.services.ProtectionService import ProtectionService
     from tensorhive.core.monitors.Monitor import Monitor
     from tensorhive.core.monitors.GPUMonitoringBehaviour import GPUMonitoringBehaviour
+    from tensorhive.core.violation_handlers.ProtectionHandler import ProtectionHandler
+    from tensorhive.core.violation_handlers.MessageSendingBehaviour import MessageSendingBehaviour
     ENABLED_SERVICES = [
         MonitoringService(monitors=[
             Monitor(GPUMonitoringBehaviour())
             # Add more monitors here
 
-        ], interval=1.0)
+        ], interval=1.0),
+        ProtectionService(handler=ProtectionHandler(injected_behaviour=MessageSendingBehaviour()),
+                          interval=2.5)
         # Add more services here
     ]
 
