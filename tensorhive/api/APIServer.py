@@ -3,9 +3,6 @@ import connexion
 from tensorhive.config import API_CONFIG
 from tensorhive.database import db_session
 from flask_cors import CORS
-from specsynthase.specbuilder import SpecBuilder
-from os import path
-import better_exceptions
 log = logging.getLogger(__name__)
 
 
