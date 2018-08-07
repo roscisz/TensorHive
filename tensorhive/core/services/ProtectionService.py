@@ -33,35 +33,43 @@ class ProtectionService(Service):
         elif isinstance(injected_object, SSHConnectionManager):
             self.connection_manager = injected_object
 
-    def _format_output(self, stdout: Generator) -> Dict[str, str]:
-        stdout_lines = list(stdout)  # type: List[str]
-        assert stdout_lines, 'stdout is empty!'
-        assert len(stdout_lines) > 1, 'stdout query result contains header only!'
-
-        # Extract keys from nvidia-smi query result header
-        header = stdout_lines[0]  # type: str
-        header_keys = header.split()  # type: List[str]
-
-        stdout_lines_without_header = stdout_lines[1:]  # type: List[str]
-
-        all_sessions = []
-        for line in stdout_lines_without_header:
-            # Split line by whitespaces into columns
-            columns = line.split()  # type: List[str]
-            basic_dict_from_line = {
-                'username': columns[0], 'session': columns[1]}
-            all_sessions.append(basic_dict_from_line)
-        return all_sessions
-
-    def find_active_tty_sessions(self, connection) -> Dict[str, str]:
+    def node_tty_sessions(self, connection, username: str = '') -> Dict[str, str]:
         '''Executes shell command in order to fetch all active terminal sessions'''
-        command = 'who --users --heading'
+        command = 'w --no-header {}'.format(username)
         output = connection.run_command(command, stop_on_errors=True)
         connection.join(output)
 
+        # FIXME Assumes that only one node is in connection
         for host, host_out in output.items():
-            active_sessions = self._format_output(host_out.stdout)
-        return active_sessions
+            result = self._parse_output(host_out.stdout)
+        return result
+
+    def _parse_output(self, stdout: Generator) -> Dict[str, str]:
+        '''
+        Transforms command output into a dictionary
+        Assumes command was: 'w --no-header'
+        '''
+        stdout_lines = list(stdout)  # type: List[str]
+
+        # Empty stdout
+        if stdout_lines is None:
+            return None
+
+        def as_dict(line):
+            columns = line.split()
+            return {
+                # I wanted it to be more explicit and flexible (even if it could be done better)
+                'USER': columns[0],
+                'TTY': columns[1],
+                'FROM': columns[2],
+                'LOGIN': columns[3],
+                'IDLE': columns[4],
+                'JCPU': columns[5],
+                'PCPU': columns[6],
+                'WHAT': columns[7]
+            }
+
+        return [as_dict(line) for line in stdout_lines]
 
     @override
     def do_run(self):
@@ -69,34 +77,35 @@ class ProtectionService(Service):
         start_time = time_func()
 
         # 1. Get list of current reservations
-        current_reservations = ReservationEventModel.current_events()
-        # Mock (should be extracted from current_reservations)
-        __authorized_usage_collection = [
+        #current_reservations = ReservationEventModel.current_events()
+
+        # Mock (it only imitates result from database, it won't be a dict!)
+        current_reservations = [
             {
                 'node': {'host_config': {'localhost': {'user': 'miczi'}}},
-                'user': {'username': 'foobar'}
-            },
-            {
-                'node': {'host_config': {'localhost': {'user': 'miczi'}}},
-                'user': {'username': 'miczi'}
+                'user': {'username': 'UNPERMITTED_USERNAME_MOCK'}
             }
         ]
-        # 2. On each node check if only a particular, entitled user has active processes (terminal sessions for simplification)
-        for permission_ticket in __authorized_usage_collection:
-            # Establish connection to node
-            host_config = permission_ticket['node']['host_config']
-            connection = ParallelSSHClient(
-                hosts=host_config.keys(),
-                host_config=host_config
-            )
-            active_sessions = self.find_active_tty_sessions(connection)
-            # 3. Prepare a list of (node, user) that violate the restriction
 
-            # 4. Trigger handler if violation has been found
-            # Mock: All sessions violate (dev only)
-            unauthorized_sessions = active_sessions
-            self.handler.trigger_action(connection, unauthorized_sessions)
-        
+        unauthorized_sessions = []
+        for reservation in current_reservations:
+            # 1. Extract reservation info
+            host_config = reservation['node']['host_config']
+            username = reservation['user']['username']
+
+            # 2. Establish connection to node and find all tty sessions
+            node_connection = SSHConnectionManager.establish_connection(
+                host_config)            
+            node_sessions = self.node_tty_sessions(node_connection)
+
+            # 3. Any session that does not belong to a priviliged user should be rembered
+            for session in node_sessions:
+                if session['USER'] != username:
+                    unauthorized_sessions.append(session)
+
+        if len(unauthorized_sessions) > 0:
+            # 4. Execute handler's behaviour on unauthorized ttys
+            self.handler.trigger_action(node_connection, unauthorized_sessions)
 
         end_time = time_func()
         execution_time = end_time - start_time

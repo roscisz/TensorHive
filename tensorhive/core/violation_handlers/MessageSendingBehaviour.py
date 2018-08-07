@@ -1,37 +1,45 @@
 from tensorhive.core.violation_handlers.ProtectionHandler import ProtectionHandler
 from tensorhive.core.utils.decorators.override import override
+from typing import Generator, Dict, List
 import logging
 log = logging.getLogger(__name__)
 
 
 class MessageSendingBehaviour():
 
-    message = 'You are violating someone else\'s reservation! Please, logout!'
-    command_body = 'echo "{msg}" | write {username} {session_name}'
+    message = 'You are violating someone else\'s reservation! Please, log out!'
+    command_body = 'echo "{msg}" | write {username} {tty_name}'
 
-    def _merged_command(self, sessions):
+    def _merged_command(self, sessions: List):
         '''
         Concatenates multiple commands into one, 
-        It allows using ssh connection only once instead of multiple times
+        It allows using ssh connection only once instead of multiple times (for each tty separately)
+
+        Example: 'echo ... | write A pty/1; echo ... | write A pty/2; echo ... | write A pty/3'
         '''
-        commands = [self._formatted_command(session) for session in sessions]
+
+        def formatted_command(session):
+            '''Example: 'echo "Example message" | write example_username pts/1' '''
+            return self.command_body.format(
+                msg=self.message,
+                username=session['USER'],
+                tty_name=session['TTY'])
+
+        assert len(sessions) > 0, 'List cannot be empty!'
+        commands = [formatted_command(session) for session in sessions]
         merged_command = ';'.join(commands)
         return merged_command
 
-    def _formatted_command(self, session):
-        '''Returns a single bash command formatted with given data'''
-        return self.command_body.format(
-            msg=self.message,
-            username=session['username'],
-            session_name=session['session'])
-
-    def _send_message_to_unauthorized_sessions(self, connection, unauthorized_sessions):
+    def _send_message_to_ttys(self, connection, sessions):
         '''Sends a mesage to all user's terminal sessions within given connection (node)'''
-        command = self._merged_command(unauthorized_sessions)
+        command = self._merged_command(sessions)
         output = connection.run_command(command, stop_on_errors=False)
         connection.join(output)
-        log.info('Violation warning sent')
+
+        for session in sessions:
+            log.warning('Violation warning sent to {username}, {tty_name}'.format(
+                username=session['USER'],
+                tty_name=session['TTY']))
 
     def trigger_action(self, connection, unauthorized_sessions):
-        self._send_message_to_unauthorized_sessions(
-            connection, unauthorized_sessions)
+        self._send_message_to_ttys(connection, unauthorized_sessions)
