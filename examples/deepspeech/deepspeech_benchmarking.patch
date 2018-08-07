@@ -1,0 +1,130 @@
+diff --git a/DeepSpeech.py b/DeepSpeech.py
+index 8e1b529..c22142a 100755
+--- a/DeepSpeech.py
++++ b/DeepSpeech.py
+@@ -22,6 +22,7 @@ from six.moves import zip, range, filter, urllib, BaseHTTPServer
+ from tensorflow.python.tools import freeze_graph
+ from threading import Thread, Lock
+ from util.audio import audiofile_to_input_vector
++from util.benchmark import BenchmarkHook
+ from util.feeding import DataSet, ModelFeeder
+ from util.gpu import get_available_gpus
+ from util.shared_lib import check_cupti
+@@ -160,6 +161,11 @@ tf.app.flags.DEFINE_string  ('one_shot_infer',       '',       'one-shot inferen
+ 
+ tf.app.flags.DEFINE_string  ('initialize_from_frozen_model', '', 'path to frozen model to initialize from. This behaves like a checkpoint, loading the weights from the frozen model and starting training with those weights. The optimizer parameters aren\'t restored, so remember to adjust the learning rate.')
+ 
++# Benchmarking
++tf.app.flags.DEFINE_integer ('benchmark_steps',     0,       'number of benchmark steps - if 0, normal training will be run')
++tf.app.flags.DEFINE_integer ('benchmark_log_steps', 1,       'period of benchmark logging in steps - if 0, only final result will be displayed')
++tf.app.flags.DEFINE_integer ('warmup_steps',        1,       'number of warmup steps before benchmarking, works only if benchmark_steps > 0')
++
+ for var in ['b1', 'h1', 'b2', 'h2', 'b3', 'h3', 'b5', 'h5', 'b6', 'h6']:
+     tf.app.flags.DEFINE_float('%s_stddev' % var, None, 'standard deviation to use when initialising %s' % var)
+ 
+@@ -228,6 +234,9 @@ def initialize_globals():
+     if len(FLAGS.checkpoint_dir) == 0:
+         FLAGS.checkpoint_dir = xdg.save_data_path(os.path.join('deepspeech','checkpoints'))
+ 
++    if FLAGS.benchmark_steps > 0:
++        FLAGS.checkpoint_dir = None
++
+     # Set default summary dir
+     if len(FLAGS.summary_dir) == 0:
+         FLAGS.summary_dir = xdg.save_data_path(os.path.join('deepspeech','summaries'))
+@@ -1555,10 +1564,16 @@ def train(server=None):
+         hooks.append(tf.train.SummarySaverHook(save_secs=FLAGS.summary_secs, output_dir=FLAGS.summary_dir, summary_op=merge_all_summaries_op))
+ 
+     # Hook wih number of checkpoint files to save in checkpoint_dir
+-    if FLAGS.train and FLAGS.max_to_keep > 0:
++    if FLAGS.train and FLAGS.max_to_keep > 0 and FLAGS.checkpoint_dir is not None:
+         saver = tf.train.Saver(max_to_keep=FLAGS.max_to_keep)
+         hooks.append(tf.train.CheckpointSaverHook(checkpoint_dir=FLAGS.checkpoint_dir, save_secs=FLAGS.checkpoint_secs, saver=saver))
+ 
++    chief_only_hooks = []
++
++    if FLAGS.benchmark_steps > 0:
++        chief_only_hooks.append(BenchmarkHook(FLAGS.benchmark_steps, FLAGS.warmup_steps, FLAGS.benchmark_log_steps,
++                                              global_step, FLAGS.train_batch_size))
++
+     if len(FLAGS.initialize_from_frozen_model) > 0:
+         with tf.gfile.FastGFile(FLAGS.initialize_from_frozen_model, 'rb') as fin:
+             graph_def = tf.GraphDef()
+@@ -1595,6 +1610,7 @@ def train(server=None):
+         with tf.train.MonitoredTrainingSession(master='' if server is None else server.target,
+                                                is_chief=is_chief,
+                                                hooks=hooks,
++                                               chief_only_hooks=chief_only_hooks,
+                                                checkpoint_dir=FLAGS.checkpoint_dir,
+                                                save_checkpoint_secs=None, # already taken care of by a hook
+                                                config=session_config) as session:
+@@ -1864,7 +1880,7 @@ def main(_) :
+         do_single_file_inference(FLAGS.one_shot_infer)
+ 
+     # Stopping the coordinator
+-    COORD.stop()
++    COORD.stop(wait_for_running_epochs=(FLAGS.benchmark_steps == 0))
+ 
+ if __name__ == '__main__' :
+     tf.app.run()
+diff --git a/util/benchmark.py b/util/benchmark.py
+index 7dca193..de94dbc 100644
+--- a/util/benchmark.py
++++ b/util/benchmark.py
+@@ -3,6 +3,56 @@
+ 
+ from __future__ import absolute_import, division, print_function
+ 
++import time
++import tensorflow as tf
++
++
++class BenchmarkHook(tf.train.SessionRunHook):
++    def __init__(self, steps, warmup_steps, log_steps, global_step_tensor, batch_size):
++        self.steps = steps
++        self.warmup_steps = warmup_steps
++        self.log_steps = log_steps
++        self.global_step_tensor = global_step_tensor
++        self.batch_size = batch_size
++
++        self.start_time = None
++        self.last_time = None
++        self.start_global_step = None
++        self.benchmark_global_step = None
++        self.benchmarking = False
++
++    def before_run(self, run_context):
++        return tf.train.SessionRunArgs(self.global_step_tensor)
++
++    def after_run(self, run_context, run_values):
++        current_global_step = run_values.results
++
++        if self.start_global_step is None:
++            self.start_global_step = current_global_step
++            self.benchmark_global_step = self.start_global_step + self.warmup_steps
++            print('B Starting warm up')
++        elif current_global_step >= self.benchmark_global_step:
++            if not self.benchmarking:
++                print('B Done warm up')
++                if self.log_steps != 0:
++                    print('B Step\tutt/sec')
++                self.last_time = self.start_time = time.time()
++                self.benchmarking = True
++            else:
++                current_time = time.time()
++                if self.log_steps != 0 and not (current_global_step - self.benchmark_global_step) % self.log_steps:
++                    speed = self.log_steps * self.batch_size / (current_time - self.last_time)
++                    self.last_time = current_time
++                    print('B {}\t{:.2f}'.format(current_global_step - self.benchmark_global_step, speed))
++
++                if current_global_step - self.benchmark_global_step == self.steps:
++                    speed = self.steps * self.batch_size / (current_time - self.start_time)
++                    print('-' * 64)
++                    print('B total utt/sec: {:.2f}'.format(speed))
++                    print('-' * 64)
++                    run_context.request_stop()
++
++
+ def keep_only_digits(s):
+     r'''
+     local helper to just keep digits
