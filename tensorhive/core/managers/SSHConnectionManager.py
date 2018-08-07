@@ -31,6 +31,14 @@ class SSHConnectionManager():
             **self.connections.host_config, **host_config
         }
 
+    @staticmethod
+    def establish_connection(host_config: Dict):
+        return ParallelSSHClient(
+                hosts=host_config.keys(),
+                host_config=host_config,
+                timeout=SSH_CONFIG.CONNECTION_TIMEOUT,
+                num_retries=SSH_CONFIG.CONNECTION_NUM_RETRIES)
+
     @property
     def connections(self):
         return self._connection_group
