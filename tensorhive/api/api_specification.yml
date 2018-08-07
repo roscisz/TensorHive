@@ -197,11 +197,11 @@ parameters:
     enum:
       - name
       - uuid
-      - fan
+      - fan_speed
       - mem_free
       - mem_used
       - mem_total
-      - util
+      - gpu_util
       - mem_util
       - temp
       - power
