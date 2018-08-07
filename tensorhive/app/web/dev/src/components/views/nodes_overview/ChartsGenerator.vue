@@ -6,38 +6,37 @@
       v-for="line in lines"
       :key="line.name"
       class="chart_table">
-      <NodesTable
+      <ChartBox
         v-for="chart in line.charts"
         :key="chart.name"
-        :nodes="chartsNodeLevel"
+        :api-response="apiResponse"
+        :chart-datasets="chartDatasets"
+        :update-chart="updateChart"
         />
     </div>
   </div>
 </template>
 
 <script>
-import NodesTable from './NodesTable.vue'
+import ChartBox from './ChartBox.vue'
 import api from '../../../api'
 export default {
   components: {
-    NodesTable
+    ChartBox
   },
 
-  data: function () {
+  data () {
     return {
-      lines: [
-        {
-          name: 'line 1',
-          charts: [
-            {
-              name: 'chart 1'
-            }
-          ]
-        }
-      ],
-      chartsNodeLevel: [],
+      lines: [],
+      chartDatasets: {},
+      time: 5000,
+      chartLength: 25,
+      space: 2,
       interval: null,
-      nodes: []
+      apiResponse: null,
+      errors: [],
+      updateChart: false,
+      totalMemory: 0
     }
   },
 
@@ -46,7 +45,7 @@ export default {
     let self = this
     this.interval = setInterval(function () {
       self.changeData()
-    }, 1000)
+    }, this.time)
   },
 
   methods: {
@@ -66,63 +65,64 @@ export default {
       return color
     },
 
-    getCurrentDate () {
-      var currentDate = new Date()
-      var datetime = currentDate.getDate() +
-      '/' + (currentDate.getMonth() + 1) +
-      '/' + currentDate.getFullYear() +
-      ' @ ' + (currentDate.getHours() < 10 ? '0' + currentDate.getHours() : currentDate.getHours()) +
-      ':' + (currentDate.getMinutes() < 10 ? '0' + currentDate.getMinutes() : currentDate.getMinutes()) +
-      ':' + (currentDate.getSeconds() < 10 ? '0' + currentDate.getSeconds() : currentDate.getSeconds())
-      return datetime
-    },
-
     loadData () {
       api
         .request('get', '/nodes/metrics')
         .then(response => {
-          this.nodes = response.data
+          this.apiResponse = response.data
           this.parseData()
+          var obj = {
+            name: 'line 1',
+            charts: [
+              {
+                name: 'chart 1'
+              }
+            ]
+          }
+          this.lines.push(obj)
+        })
+        .catch(e => {
+          this.errors.push(e)
         })
     },
 
     parseData () {
-      var node, nodeName, resource, resourceType, metric, obj
-      var metrics = []
-      for (var i = 0; i < Object.keys(this.nodes).length; i++) {
-        node = this.nodes[Object.keys(this.nodes)[i]]
-        nodeName = Object.keys(this.nodes)[i]
-        for (var j = 0; j < Object.keys(node).length; j++) {
-          resourceType = Object.keys(node)[j]
-          resource = node[resourceType][0]
-          for (var k = 0; k < Object.keys(resource).length; k++) {
-            if (!isNaN(resource[Object.keys(resource)[k]]) && resource[Object.keys(resource)[k]] !== null) {
-              metric = this.createMetric(nodeName, resourceType, Object.keys(resource)[k])
-              metrics.push(metric)
+      var node, resource, metric, metricsObj, resourceTypes
+      for (var nodeName in this.apiResponse) {
+        resourceTypes = {}
+        node = this.apiResponse[nodeName]
+        for (var resourceTypeName in node) {
+          resource = node[resourceTypeName][0]
+          metricsObj = {}
+          this.totalMemory = resource['mem_total']
+          for (var metricName in resource) {
+            if (!isNaN(resource[metricName]) && resource[metricName] !== null && metricName !== 'mem_total') {
+              metric = this.createMetric(nodeName, resourceTypeName, metricName)
+              metricsObj[metricName] = metric
             }
           }
+          resourceTypes[resourceTypeName] = metricsObj
         }
-        obj = {
-          nodeName: nodeName,
-          metrics: metrics
-        }
-        this.chartsNodeLevel.push(obj)
+        this.chartDatasets[nodeName] = resourceTypes
       }
     },
 
     createMetric  (nodeName, resourceType, name) {
       var labels = []
-      for (var i = 0; i < 24; i++) {
-        labels.push('')
+      for (var i = (this.chartLength - 1) * this.time / 1000; i >= 0; i -= this.time / 1000) {
+        if (i % ((this.space + 1) * this.time / 1000) === 0) {
+          labels.push(i)
+        } else {
+          labels.push('')
+        }
       }
-      labels.push(this.getCurrentDate())
       var datasets = []
-      for (i = 0; i < this.nodes[nodeName][resourceType].length; i++) {
+      for (i = 0; i < this.apiResponse[nodeName][resourceType].length; i++) {
         datasets.push(
           this.createDataset(
-            this.nodes[nodeName][resourceType][i].name + ' ' + resourceType + i,
+            this.apiResponse[nodeName][resourceType][i].name + ' ' + resourceType + i,
             this.setColor(i + 1),
-            this.nodes[nodeName][resourceType][i][name]
+            this.apiResponse[nodeName][resourceType][i][name]
           )
         )
       }
@@ -139,7 +139,7 @@ export default {
 
     createDataset (label, color, data) {
       var defaultData = []
-      for (var i = 0; i < 24; i++) {
+      for (var i = 0; i < this.chartLength - 1; i++) {
         defaultData.push(0)
       }
       defaultData.push(data)
@@ -155,70 +155,97 @@ export default {
     },
 
     createOptions (metricName) {
-      var obj = null
-      if (metricName.substr(metricName.length - 3) === '[%]') {
-        obj = {
-          responsive: true,
-          maintainAspectRatio: true,
-          legend: {
-            position: 'bottom',
-            display: true
-          },
-          tooltips: {
-            mode: 'label',
-            xPadding: 10,
-            yPadding: 10,
-            bodySpacing: 10
-          },
-          scales: {
-            yAxes: [{
-              id: 'y-axis-1',
-              type: 'linear',
-              position: 'left',
-              ticks: {
-                min: 0,
-                max: 100
-              }
-            }]
-          }
+      var obj = {
+        responsive: true,
+        maintainAspectRatio: true,
+        legend: {
+          position: 'bottom',
+          display: true
+        },
+        tooltips: {
+          mode: 'label',
+          xPadding: 10,
+          yPadding: 10,
+          bodySpacing: 10
+        },
+        scales: {
+          xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'seconds ago'
+            }
+          }],
+          yAxes: [{
+            id: 'y-axis-1',
+            type: 'linear',
+            position: 'left',
+            scaleLabel: {
+              display: true,
+              labelString: ''
+            }
+          }]
         }
-      } else {
-        obj = {
-          responsive: true,
-          maintainAspectRatio: true,
-          legend: {
-            position: 'bottom',
-            display: true
-          },
-          tooltips: {
-            mode: 'label',
-            xPadding: 10,
-            yPadding: 10,
-            bodySpacing: 10
-          }
+      }
+      switch (metricName) {
+        case 'gpu_util' :
+          obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = '%'
+          break
+        case 'mem_free' :
+          obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = 'MiB'
+          break
+        case 'mem_used' :
+          obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = 'MiB'
+          break
+        case 'mem_util' :
+          obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = '%'
+          break
+        case 'power' :
+          obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = 'W'
+          break
+        case 'temp' :
+          obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = ''
+          break
+        default :
+          break
+      }
+      if (metricName === 'mem_util' || metricName === 'gpu_util') {
+        obj['scales']['yAxes'][0]['ticks'] = {
+          min: 0,
+          max: 100
+        }
+      }
+      if (metricName === 'mem_used' || metricName === 'mem_free') {
+        obj['scales']['yAxes'][0]['ticks'] = {
+          min: 0,
+          suggestedMax: this.totalMemory
         }
       }
       return obj
     },
 
     changeData () {
-      var node, metric
+      var node, metric, resourceType
       var data = []
-      for (var i = 0; i < this.chartsNodeLevel.length; i++) {
-        node = this.chartsNodeLevel[i]
+      for (var nodeName in this.chartDatasets) {
+        node = this.chartDatasets[nodeName]
         api
-          .request('get', '/nodes/' + node.nodeName + '/metrics/gpu')
+          .request('get', '/nodes/' + nodeName + '/metrics/gpu')
           .then(response => {
             data = response.data
-            for (var j = 0; j < node.metrics.length; j++) {
-              metric = node.metrics[j]
-              for (var k = 0; k < metric.data.datasets.length; k++) {
-                metric.data.datasets[k].data.shift()
-                metric.data.datasets[k].data.push(data[k][metric.metricName])
+            for (var resourceTypeName in node) {
+              resourceType = node[resourceTypeName]
+              for (var metricName in resourceType) {
+                metric = resourceType[metricName]
+                for (var i = 0; i < metric.data.datasets.length; i++) {
+                  metric.data.datasets[i].data.shift()
+                  metric.data.datasets[i].data.push(data[i][metric.metricName])
+                }
               }
-              metric.data.labels.shift()
-              metric.data.labels.push(this.getCurrentDate())
             }
+            this.updateChart = !(this.updateChart)
+          })
+          .catch(e => {
+            this.errors.push(e)
           })
       }
     },
