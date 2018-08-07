@@ -5,18 +5,17 @@ export default {
   extends: Line,
   props: {
     chartData: Object,
-    options: Object
-  },
-
-  computed: {
-    dataChanged () {
-      debugger
-      return this.chartData.labels[this.chartData.labels.length - 1]
-    }
+    options: Object,
+    rerenderChart: Boolean,
+    updateChart: Boolean
   },
 
   watch: {
-    dataChanged () {
+    rerenderChart () {
+      this.$data._chart.destroy()
+      this.renderChart(this.chartData, this.options)
+    },
+    updateChart () {
       this.$data._chart.update()
     }
   },
