@@ -11,7 +11,7 @@ class ReservationEventModel(Base):
     title = Column(String(60), unique=False, nullable=False)
     description = Column(String(200), nullable=True)
     user_id = Column(Integer, ForeignKey('users.id'))
-    node_id = Column(Integer, nullable=False)
+    resource_id = Column(Integer, nullable=False)
     start = Column(DateTime, nullable=False)
     end = Column(DateTime, nullable=False)
 
@@ -19,18 +19,19 @@ class ReservationEventModel(Base):
     # TODO Relation with user
 
     __display_datetime_format = '%Y-%m-%dT%H:%M:%S'
+    __server_timezone = '+00:00'
 
     def __repr__(self):
         return '<ReservationEvent: id={id}, \n \
                 title={title}, \n \
-                node_id={node_id}, \n \
+                resource_id={resource_id}, \n \
                 user_id={user_id}, \n \
                 description={description}, \n \
                 created_at={created_at}>'.format(id=self.id, title=self.title, description=self.description, created_at=self.created_at)
 
     @classmethod
-    def find_node_events_between(cls, start, end, node_id):
-        return cls.query.filter(and_(cls.start >= start, cls.end <= end, cls.node_id == node_id)).first()
+    def find_resource_events_between(cls, start, end, resource_id):
+        return cls.query.filter(and_(cls.start >= start, cls.end <= end, cls.resource_id == resource_id)).first()
 
     def save_to_db(self):
         try:
@@ -66,12 +67,14 @@ class ReservationEventModel(Base):
         return dict(id=self.id,
                     title=self.title,
                     description=self.description,
-                    nodeId=self.node_id,
+                    resourceId=self.resource_id,
                     userId=self.user_id,
                     start=self.start.strftime(
-                        self.__display_datetime_format),
+                        self.__display_datetime_format)
+                        +self.__server_timezone,
                     end=self.end.strftime(
-                        self.__display_datetime_format),
+                        self.__display_datetime_format)
+                        +self.__server_timezone,
                     createdAt=self.created_at.strftime(
                         self.__display_datetime_format)
                     )

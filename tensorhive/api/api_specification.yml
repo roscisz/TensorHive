@@ -141,7 +141,7 @@ definitions:
     properties:
       title: { type: string }
       description: { type: string }
-      nodeId: { type: integer}
+      resourceId: { type: integer}
       userId: { type: integer}
       start:
         type: string
@@ -149,7 +149,6 @@ definitions:
       end:
         type: string
         format: date-time
-      # TODO Add user id, node id
   ReservationEvent:
     type: object
     properties:
@@ -158,7 +157,7 @@ definitions:
         format: int64
       title: { type: string }
       description: { type: string }
-      nodeId: { type: integer}
+      resourceId: { type: integer}
       userId: { type: integer}
       start:
         type: string
@@ -169,7 +168,6 @@ definitions:
       createdAt:
         type: string
         format: date-time
-      # TODO Add user id, node id
 
 responses:
   # Example responses

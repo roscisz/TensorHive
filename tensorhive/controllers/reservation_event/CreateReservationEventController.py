@@ -19,19 +19,19 @@ class CreateReservationEventController():
 
         start_time = parsed_datetime(reservation_event['start'])
         end_time = parsed_datetime(reservation_event['end'])
-        node_id = reservation_event['nodeId']
+        resource_id = reservation_event['resourceId']
         user_id = reservation_event['userId']
 
         if (not UserModel.find_by_id(user_id)):
             return NoContent, 500
 
-        if (ReservationEventModel.find_node_events_between(start_time, end_time, node_id) is not None):
+        if (ReservationEventModel.find_resource_events_between(start_time, end_time, resource_id) is not None):
             return NoContent, 500
 
         new_reservation_model = ReservationEventModel(
             title=reservation_event['title'],
             description=reservation_event['description'],
-            node_id=node_id,
+            resource_id=resource_id,
             user_id=user_id,
             start=start_time,
             end=end_time
