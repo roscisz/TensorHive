@@ -8,6 +8,7 @@ class NvidiaSmiParser():
             '''Replaces nvidia-smi output values with custom formatting'''
             if value == '[Not Supported]':
                 return None
+            # TODO May want to handle floats also
             elif str.isdecimal(value):
                 return int(value)
             else:
