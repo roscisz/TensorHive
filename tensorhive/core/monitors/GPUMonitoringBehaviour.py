@@ -134,7 +134,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         > nvidia-smi --query
         > nvidia-smi pmon
 
-        Example result:
+        Return example:
         {
             "example_host_0": {
                 "GPU": [
@@ -164,14 +164,16 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
             }
         }
         '''
+        # TODO May want to refactor in the future
         for hostname, _ in processes.items():
-            gpu_processes_on_host = processes[hostname]['GPU']['processes']
-                
-            for gpu_device_idx, gpu_device in enumerate(metrics[hostname]['GPU']):
-                metrics[hostname]['GPU'][gpu_device_idx]['processes'] = []    
+            # Create new key - 'processes' and put the default value
+            node_gpus = metrics[hostname]['GPU'] # type: List[Dict]
+            for gpu_idx, _ in enumerate(node_gpus):
+                metrics[hostname]['GPU'][gpu_idx]['processes'] = []    
             
-            for process in gpu_processes_on_host:
-                # Put 'process' element at particular index in array
-                # FIXME Replace with pythonic code :) Author's intentions are unreadable
-                metrics[hostname]['GPU'][process['gpu']]['processes'].append(process)
+            # Loop through all processes and assign them into corresponding places in a list
+            gpu_processes_on_node = processes[hostname]['GPU']['processes'] # type: List[Dict]
+            for process in gpu_processes_on_node:
+                gpu_id_extracted_from_process = process['gpu'] # type: int
+                metrics[hostname]['GPU'][gpu_id_extracted_from_process]['processes'].append(process)
         return metrics
