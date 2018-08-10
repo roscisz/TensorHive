@@ -33,8 +33,7 @@ class MessageSendingBehaviour():
     def _send_message_to_ttys(self, connection, sessions):
         '''Sends a mesage to all user's terminal sessions within given connection (node)'''
         command = self._merged_command(sessions)
-        output = connection.run_command(command, stop_on_errors=False)
-        connection.join(output)
+        _ = connection.run_command(command)#, stop_on_errors=False)
 
         for session in sessions:
             log.warning('Violation warning sent to {username}, {tty_name}'.format(

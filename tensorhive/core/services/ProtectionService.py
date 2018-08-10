@@ -36,12 +36,11 @@ class ProtectionService(Service):
     def node_tty_sessions(self, connection, username: str = '') -> Dict[str, str]:
         '''Executes shell command in order to fetch all active terminal sessions'''
         command = 'w --no-header {}'.format(username)
-        output = connection.run_command(command, stop_on_errors=True)
-        connection.join(output)
+        output = connection.run_command(command)
 
         # FIXME Assumes that only one node is in connection
-        for host, host_out in output.items():
-            result = self._parse_output(host_out.stdout)
+        for _, host_out in output.items(): 
+            result = self._parse_output(host_out.stdout) 
         return result
 
     def _parse_output(self, stdout: Generator) -> Dict[str, str]:
@@ -82,7 +81,7 @@ class ProtectionService(Service):
         # Mock (it only imitates result from database, it won't be a dict!)
         current_reservations = [
             {
-                'node': {'host_config': {'localhost': {'user': 'miczi'}}},
+                'node': {'hostname': 'localhost'},
                 'user': {'username': 'UNPERMITTED_USERNAME_MOCK'}
             }
         ]
@@ -90,12 +89,11 @@ class ProtectionService(Service):
         unauthorized_sessions = []
         for reservation in current_reservations:
             # 1. Extract reservation info
-            host_config = reservation['node']['host_config']
+            hostname = reservation['node']['hostname']
             username = reservation['user']['username']
 
             # 2. Establish connection to node and find all tty sessions
-            node_connection = SSHConnectionManager.establish_connection(
-                host_config)            
+            node_connection = self.connection_manager.single_connection(hostname)
             node_sessions = self.node_tty_sessions(node_connection)
 
             # 3. Any session that does not belong to a priviliged user should be rembered
