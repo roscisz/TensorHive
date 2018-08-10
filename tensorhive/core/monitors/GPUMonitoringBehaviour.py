@@ -126,7 +126,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
                         process['pid'], host, group_connection)
             else:
                 # Not Supported
-                processes = None
+                processes = []
         result = {
             host: {
                 'GPU': {
@@ -174,8 +174,12 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         '''
         for hostname, _ in processes.items():
             gpu_processes_on_host = processes[hostname]['GPU']['processes']
+                
+            for gpu_device_idx, gpu_device in enumerate(metrics[hostname]['GPU']):
+                metrics[hostname]['GPU'][gpu_device_idx]['processes'] = []    
+            
             for process in gpu_processes_on_host:
                 # Put 'process' element at particular index in array
                 # FIXME Replace with pythonic code :) Author's intentions are unreadable
-                metrics[hostname]['GPU'][process['gpu']]['processes'] = process
+                metrics[hostname]['GPU'][process['gpu']]['processes'].append(process)
         return metrics
