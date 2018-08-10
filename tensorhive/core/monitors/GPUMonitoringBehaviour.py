@@ -49,6 +49,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         output = group_connection.run_command(command, stop_on_errors=False)
         group_connection.join(output)
 
+        result = {}
         for host, host_out in output.items():
             if host_out.exit_code is 0:
                 '''Command executed successfully'''
@@ -65,11 +66,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
                     message = 'Unknown failure'
                 # May want to assign None
                 metrics = message
-        result = {
-            host: {
-                'GPU': metrics
-            }
-        }
+            result[host] = {'GPU': metrics}
         return result
 
     def _get_process_owner(self, pid: int, hostname: str, group_connection) -> str:
@@ -116,6 +113,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         output = group_connection.run_command(command, stop_on_errors=False)
         group_connection.join(output)
 
+        result = {}
         for host, host_out in output.items():
             if host_out.exit_code is 0:
                 processes = NvidiaSmiParser.parse_pmon(host_out.stdout)
@@ -127,13 +125,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
             else:
                 # Not Supported
                 processes = []
-        result = {
-            host: {
-                'GPU': {
-                    'processes': processes
-                }
-            }
-        }
+            result[host] = {'GPU': {'processes': processes}}
         return result
 
     def _combine_outputs(self, metrics: Dict, processes: Dict) -> Dict:
