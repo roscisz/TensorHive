@@ -64,3 +64,67 @@ class NvidiaSmiParser():
             # Append
             all_gpus_info.append(single_gpu_info)
         return all_gpus_info
+
+    @classmethod
+    def parse_pmon(cls, stdout: Generator) -> List[Dict]:
+        '''
+        Assumming: nvidia-smi pmon --count 1
+        Example command output (input for this method):
+
+        # gpu     pid  type    sm   mem   enc   dec   command
+        # Idx       #   C/G     %     %     %     %   name
+            0    4810     G     0     0     0     0   Xorg           
+            0    7187     G     0     0     0     0   compiz         
+            0   16250     C    83    99     0     0   python         
+            1   23335     C     0     0     0     0   python         
+            1   31381     C    33    53     0     0   python         
+            2   19635     C    39    35     0     0   python         
+            3   33317     C    31    11     0     0   python 
+        
+        Result:
+        [
+            {
+                'gpu': 0, 
+                'pid': 4810, 
+                'type': 'G', 
+                'sm': 0, 
+                'mem': 0, 
+                'enc': 0, 
+                'dec': 0, 
+                'command': 'Xorg'
+            }
+            ...
+        ]
+        '''
+        stdout_lines = list(stdout)
+        assert stdout_lines, 'stdout is empty!'
+        assert len(stdout_lines) > 2, 'pmon\'s stdout should return at least 3 lines'
+
+        '''
+        stdout_lines[0]:
+        '# gpu        pid  type    sm   mem   enc   dec   command'
+        (We want to skip '#' -> not a key)
+
+        keys:
+        ['gpu', 'pid', 'type', 'sm', 'mem', 'enc', 'dec', 'command']
+        
+        lines:
+        ['0    4810     G     0     0     0     0   Xorg',
+        '0    7187     G     0     0     0     0   compiz']
+        '''
+        header = stdout_lines[0][2:]
+        keys = header.split()
+        lines = stdout_lines[2:]
+
+        processes = []
+        for line in lines:
+            values = line.split()
+            values = cls._format_values(values)
+
+            process = dict(zip(keys, values))
+            processes.append(process)
+        return processes
+
+
+    
+    
