@@ -3,6 +3,8 @@ from tensorhive.core.utils.decorators.override import override
 from typing import Dict, List
 from tensorhive.core.utils.NvidiaSmiParser import NvidiaSmiParser
 from pssh.exceptions import Timeout, UnknownHostException, ConnectionErrorException, AuthenticationException
+import logging
+log = logging.getLogger(__name__)
 
 
 class GPUMonitoringBehaviour(MonitoringBehaviour):
@@ -58,14 +60,10 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
             else:
                 '''Command execution failed'''
                 if host_out.exit_code:
-                    message = {'exit_code': host_out.exit_code}
+                    log.error('nvidia-smi failed with {} exit code on {}'.format(host_out.exit_code, host))
                 elif host_out.exception:
-                    message = {
-                        'exception': host_out.exception.__class__.__name__}
-                else:
-                    message = 'Unknown failure'
-                # May want to assign None
-                metrics = message
+                    log.error('nvidia-smi raised {} n {}'.format(host_out.exception.__class__.__name__, host))
+                metrics = []
             result[host] = {'GPU': metrics}
         return result
 
@@ -166,7 +164,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         '''
         # TODO May want to refactor in the future
         for hostname, _ in processes.items():
-            # Create new key - 'processes' and put the default value
+            # Loop thorugh each item on GPU list and create a new key with default value
             node_gpus = metrics[hostname]['GPU'] # type: List[Dict]
             for gpu_idx, _ in enumerate(node_gpus):
                 metrics[hostname]['GPU'][gpu_idx]['processes'] = []    
