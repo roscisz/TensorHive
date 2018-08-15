@@ -10,10 +10,7 @@ class CreateReservationEventController():
     @staticmethod
     def create(reservation_event):
         def parsed_datetime(input_datetime: str) -> str:
-            try:
-                return datetime.strptime(input_datetime, '%Y-%m-%dT%H:%M:%S.%fZ')
-            except ValueError:
-                return datetime.strptime(input_datetime, '%Y-%m-%dT%H:%M:%S')
+            return datetime.strptime(input_datetime, '%Y-%m-%dT%H:%M:%S.%fZ')
         if not UserModel.find_by_id(reservation_event['userId']):
             return NoContent, 500
 
