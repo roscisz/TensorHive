@@ -97,8 +97,9 @@ class ServicesConfig():
             # Add more monitors here
 
         ], interval=1.0),
-        ProtectionService(handler=ProtectionHandler(injected_behaviour=MessageSendingBehaviour()),
-                          interval=2.5)
+        # Not production-ready
+        # ProtectionService(handler=ProtectionHandler(behaviour=MessageSendingBehaviour()),
+        #                   interval=2.5)
         # Add more services here
     ]
 

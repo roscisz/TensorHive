@@ -50,5 +50,5 @@ class MonitoringService(Service):
            gevent.sleep(self.interval - execution_time)
         waiting_time = time_func() - end_time
         total_time = execution_time + waiting_time
-        log.info('MonitoringService loop took: {:.2f}s (waiting {:.2f}) = {:.2f}'.format(
+        log.debug('MonitoringService loop took: {:.2f}s (waiting {:.2f}) = {:.2f}'.format(
            execution_time, waiting_time, total_time))
