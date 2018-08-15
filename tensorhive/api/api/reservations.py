@@ -9,9 +9,9 @@ def post(reservation_event):
     '''Create new'''
     return CreateReservationEventController.create(reservation_event)
 
-def search():
-    '''Get all'''
-    return ListReservationEventsController.get()
+def search(resources_ids, start, end):
+    '''Get selected'''
+    return ListReservationEventsController.get(resources_ids, start, end)
 
 def delete(id):
     '''Remove if exists'''

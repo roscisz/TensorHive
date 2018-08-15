@@ -11,7 +11,7 @@ class ReservationEventModel(Base):
     title = Column(String(60), unique=False, nullable=False)
     description = Column(String(200), nullable=True)
     user_id = Column(Integer, ForeignKey('users.id'))
-    resource_id = Column(Integer, nullable=False)
+    resource_id = Column(String(60), nullable=False)
     start = Column(DateTime, nullable=False)
     end = Column(DateTime, nullable=False)
 
@@ -49,6 +49,10 @@ class ReservationEventModel(Base):
     @classmethod
     def return_all(cls):
         return cls.query.all()
+
+    @classmethod
+    def return_selected(cls, resources_ids, start, end):
+        return cls.query.filter(and_(cls.resource_id.in_(resources_ids), cls.start<=end, cls.end>=start)).all()
 
     @classmethod
     def delete_by_id(cls, id):

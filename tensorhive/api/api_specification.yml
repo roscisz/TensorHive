@@ -14,7 +14,7 @@ paths:
       summary: Get all users
       responses:
         '200':
-          description: 'All fetched with success.'
+          description: All fetched with success.
           schema:
             type: array
             items:
@@ -24,16 +24,17 @@ paths:
         - users
       summary: Create new user
       parameters:
-        - in: body
+        - description: Object with username
+          in: body
           name: user
           required: true
           schema:
             $ref: '#/definitions/CreateUserController'
       responses:
         '201':
-          description: 'Successfully created.'
+          description: Successfully created.
         '409':
-          description: 'Duplication error.'
+          description: Duplication error.
         '500':
           $ref: '#/responses/InternalError'
   /reservations:
@@ -41,9 +42,30 @@ paths:
       tags: 
         - reservations
       summary: Get all reservation events
+      parameters:
+        - description: Array of uuids
+          in: query
+          name: resources_ids
+          required: true
+          type: array
+          items: {
+              type: string
+            }
+        - description: Start of time period
+          in: query
+          name: start
+          required: true
+          type: string
+          format: date-time
+        - description: End of time period
+          in: query
+          name: end
+          required: true
+          type: string
+          format: date-time
       responses:
         '200':
-          description: 'All fetched with success.'
+          description: All fetched with success.
           schema:
             type: array
             items:
@@ -53,29 +75,31 @@ paths:
         - reservations
       summary: Create new reservation event
       parameters:
-        - in: body
+        - description: Reservation event object
+          in: body
           name: reservation_event
-          required: True
+          required: true
           schema:
             $ref: '#/definitions/CreateReservationEventController'
       responses:
         '201':
-          description: 'Successfully created.'
+          description: Successfully created.
         '500':
           $ref: '#/responses/InternalError'
-  '/reservations/{id}':
+  /reservations/{id}:
     delete:
       tags: 
           - reservations
       summary: Delete reservation event by id
       parameters:
-        - in: path
+        - description: Id of reservation event
+          in: path
           name: id
           required: true
           type: integer
       responses:
         '204':
-          description: 'Successfully deleted.'
+          description: Successfully deleted.
         '404':
           $ref: '#/responses/NotFound'
   # TODO Nodes: Add more specific schemas, response codes + descriptions
@@ -87,7 +111,7 @@ paths:
       operationId: 'tensorhive.api.api.nodes.get_hostnames'
       responses:
         '200':
-          description: 'List of hostnames fetched with success'
+          description: List of hostnames fetched with success
           schema:
             type: array
             items: 
@@ -141,8 +165,8 @@ definitions:
     properties:
       title: { type: string }
       description: { type: string }
-      resourceId: { type: integer}
-      userId: { type: integer}
+      resourceId: { type: string }
+      userId: { type: integer }
       start:
         type: string
         format: date-time
@@ -157,7 +181,7 @@ definitions:
         format: int64
       title: { type: string }
       description: { type: string }
-      resourceId: { type: integer}
+      resourceId: { type: string }
       userId: { type: integer}
       start:
         type: string
