@@ -27,11 +27,22 @@ class ReservationEventModel(Base):
                 resource_id={resource_id}, \n \
                 user_id={user_id}, \n \
                 description={description}, \n \
-                created_at={created_at}>'.format(id=self.id, title=self.title, description=self.description, created_at=self.created_at)
+                created_at={created_at}>'.format(id=self.id,
+                                                 title=self.title,
+                                                 node_id=self.node_id,
+                                                 user_id=self.user_id,
+                                                 description=self.description,
+                                                 created_at=self.created_at)
 
     @classmethod
     def find_resource_events_between(cls, start, end, resource_id):
         return cls.query.filter(and_(cls.start >= start, cls.end <= end, cls.resource_id == resource_id)).first()
+
+    @classmethod
+    def current_events(cls):
+        '''Returns only those events that should be currently respected by the users'''
+        current_time = datetime.datetime.utcnow()
+        return cls.query.filter(and_(cls.start <= current_time, current_time <= cls.end)).all()
 
     def save_to_db(self):
         try:

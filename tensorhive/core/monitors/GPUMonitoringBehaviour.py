@@ -3,6 +3,8 @@ from tensorhive.core.utils.decorators.override import override
 from typing import Dict, List
 from tensorhive.core.utils.NvidiaSmiParser import NvidiaSmiParser
 from pssh.exceptions import Timeout, UnknownHostException, ConnectionErrorException, AuthenticationException
+import logging
+log = logging.getLogger(__name__)
 
 
 class GPUMonitoringBehaviour(MonitoringBehaviour):
@@ -23,19 +25,21 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
 
     @override
     def update(self, group_connection) -> Dict:
-        output = self._execute_with_all_queries(group_connection)  # type: Dict
-        result = self._format_result(output)  # type: Dict
+        metrics = self._current_metrics(group_connection)  # type: Dict
+        processes = self._current_processes(group_connection)  # type: Dict
+        result = self._combine_outputs(metrics, processes)  # type: Dict
         return result
 
     @property
     def available_queries(self) -> List:
         return self._available_queries
 
-    def _execute_with_all_queries(self, group_connection) -> Dict:
+    def _current_metrics(self, group_connection) -> Dict:
         '''
         Merges all commands into a single nvidia-smi query 
         and executes them on all hosts within connection group
         '''
+
         # Example: nvidia-smi --query-gpu=temperature.gpu,utilization.gpu,utilization.memory --format=csv
         query = ','.join(self.available_queries)
         command = '{base_command}{query} {format_options}'.format(
@@ -46,30 +50,128 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         # instead simply adds them to the output.
         output = group_connection.run_command(command, stop_on_errors=False)
         group_connection.join(output)
-        return output
 
-    def _format_result(self, data: Dict) -> Dict:
-        '''
-        Creates a dictionary of results, based on hosts' outputs
-        Keys = hosts
-        Values = (result on success) or (exit code on failure) or (exception name on failure)
-        '''
-        formatted_data = {}
-        for host, host_out in data.items():
+        result = {}
+        for host, host_out in output.items():
             if host_out.exit_code is 0:
                 '''Command executed successfully'''
-                data_from_host = NvidiaSmiParser.gpus_info_from_stdout(
+                metrics = NvidiaSmiParser.gpus_info_from_stdout(
                     host_out.stdout)
             else:
                 '''Command execution failed'''
                 if host_out.exit_code:
-                    message = {'exit_code': host_out.exit_code}
+                    log.error('nvidia-smi failed with {} exit code on {}'.format(host_out.exit_code, host))
                 elif host_out.exception:
-                    message = {
-                        'exception': host_out.exception.__class__.__name__}
-                # TODO Make sure there are no other possibilities than exit_code/exception
-                else:
-                    message = 'Unknown failure'
-                data_from_host = message
-            formatted_data[host] = {'GPU': data_from_host}
-        return formatted_data
+                    log.error('nvidia-smi raised {} n {}'.format(host_out.exception.__class__.__name__, host))
+                metrics = []
+            result[host] = {'GPU': metrics}
+        return result
+
+    def _get_process_owner(self, pid: int, hostname: str, group_connection) -> str:
+        '''Use single-host connection to acquire process owner'''
+        # TODO Move common to SSHConnectionManager
+        connection = group_connection.host_clients[hostname]
+        command = 'ps --no-headers -o user {}'.format(pid)
+
+        output = connection.run_command(command)
+        channel, hostname, stdout, stderr, _ = output
+
+        result = list(stdout)
+        if not result:
+            # Empty output -> Process with such pid does not exist
+            return None
+        # Extract owner from list ['example_owner']
+        return result[0]
+
+    def _current_processes(self, group_connection) -> Dict:
+        '''
+        Fetches the information about all active gpu processes using nvidia-smi pmon
+
+        Example result:
+        {
+            'example_host_0': {
+                'GPU': {
+                    'processes': [
+                        {
+                            'gpu': 0, 
+                            'pid': 1958, 
+                            'type': 'G', 
+                            'sm': 0, 
+                            'mem': 3, 
+                            'enc': 0, 
+                            'dec': 0, 
+                            'command': 'X'
+                        }
+                    ]    
+                }
+            }
+        }
+        '''
+        command = 'nvidia-smi pmon --count 1'
+        output = group_connection.run_command(command, stop_on_errors=False)
+        group_connection.join(output)
+
+        result = {}
+        for host, host_out in output.items():
+            if host_out.exit_code is 0:
+                processes = NvidiaSmiParser.parse_pmon(host_out.stdout)
+
+                # Find each process owner
+                for process in processes:
+                    process['owner'] = self._get_process_owner(
+                        process['pid'], host, group_connection)
+            else:
+                # Not Supported
+                processes = []
+            result[host] = {'GPU': {'processes': processes}}
+        return result
+
+    def _combine_outputs(self, metrics: Dict, processes: Dict) -> Dict:
+        '''
+        Merges dicts from 
+        > nvidia-smi --query
+        > nvidia-smi pmon
+
+        Return example:
+        {
+            "example_host_0": {
+                "GPU": [
+                {
+                    "name": "GeForce GTX 1060 6GB",
+                    "uuid": "GPU-56a30ac8-fcac-f019-fb0a-1e2ffcd58a6a",
+                    "fan.speed [%]": 76,
+                    ...
+                    "processes": [
+                        {
+                            "gpu": 0,
+                            "pid": 1992,
+                            ...
+                            "command": "X",
+                            "owner": "root"
+                        },
+                        {
+                            "gpu": 0,
+                            "pid": 22170,
+                            ...
+                            "command": "python3",
+                            "owner": "143344sm"
+                        }
+                    ]
+                }
+                ]
+            }
+        }
+        '''
+        # TODO May want to refactor in the future
+        for hostname, _ in processes.items():
+            # Loop thorugh each item on GPU list and create a new key with default value
+            node_gpus = metrics[hostname]['GPU'] # type: List[Dict]
+            for gpu_idx, _ in enumerate(node_gpus):
+                metrics[hostname]['GPU'][gpu_idx]['processes'] = []    
+            
+            # Loop through all processes and assign them into corresponding places in a list
+            gpu_processes_on_node = processes[hostname]['GPU']['processes'] # type: List[Dict]
+            for process in gpu_processes_on_node:
+                gpu_id_extracted_from_process = process['gpu'] # type: int
+                metrics[hostname]['GPU'][gpu_id_extracted_from_process]['processes'].append(process)
+        return metrics

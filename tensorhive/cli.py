@@ -55,9 +55,13 @@ def main():
               help='Log level to apply.')
 @click.pass_context
 def run(ctx, log_level):
+    # from gevent import monkey
+    # monkey.patch_all()
+    
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
     from tensorhive.api.APIServer import APIServer
     from tensorhive.config import SERVICES_CONFIG
+    
     LogConfig.apply(log_level)
 
     manager = TensorHiveManager()

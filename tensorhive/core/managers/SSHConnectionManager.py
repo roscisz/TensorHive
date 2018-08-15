@@ -8,6 +8,7 @@ from typing import Dict
 class SSHConnectionManager():
     '''Responsible for configuring, establishing and holding shell sessions'''
     connection_group = None
+    connection_container = {}
 
     def __init__(self, config: Dict):
         hostnames = config.keys()
@@ -30,6 +31,17 @@ class SSHConnectionManager():
         self.connections.host_config = {
             **self.connections.host_config, **host_config
         }
+
+    def single_connection(self, hostname: str):
+        host_config = {hostname: SSH_CONFIG.AVAILABLE_NODES[hostname]}
+
+        if self.connection_container.get(hostname) is None:
+            # Create and store in cache
+            self.connection_container[hostname] = ParallelSSHClient(
+                hosts=host_config.keys(), host_config=host_config)
+
+        # Return cached object
+        return self.connection_container[hostname]
 
     @property
     def connections(self):
