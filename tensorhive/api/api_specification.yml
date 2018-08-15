@@ -227,3 +227,28 @@ parameters:
       - mem_util
       - temp
       - power
+      - processes
+
+# TODO Remove 'uuid' from enum, redundant.
+# {
+#   "GPU-7fcc76c8-ac23-0ead-83ce-3f6f3d831d8a": "GPU-7fcc76c8-ac23-0ead-83ce-3f6f3d831d8a",
+#   "GPU-ee90fea3-73a6-11b2-7dd0-573bac1627b4": "GPU-ee90fea3-73a6-11b2-7dd0-573bac1627b4"
+# }
+
+# TODO Remove duplicated 'uuid' key (redesign infrastructure manager or just remove it from the response)
+# Endpoint: /nodes/<hostname>/metrics/gpu (without query string)
+# {
+#==>"GPU-7fcc76c8-ac23-0ead-83ce-3f6f3d831d8a": {
+#     "fan_speed": 54,
+#     "gpu_util": null,
+#     "mem_free": 923,
+#     "mem_total": 964,
+#     "mem_used": 41,
+#     "mem_util": null,
+#     "name": "GeForce GTX 560 Ti",
+#     "power": null,
+#     "processes": [],
+#     "temp": 48,
+#==>  "uuid": "GPU-7fcc76c8-ac23-0ead-83ce-3f6f3d831d8a"
+#   }
+# }
