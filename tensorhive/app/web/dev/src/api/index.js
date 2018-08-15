@@ -15,10 +15,6 @@ export default {
 
     var url = config.serverURI + uri
 
-    if (method === 'get' && uri === '/reservations') {
-      return url
-    }
-
     return axios({ method, url, data })
   }
 }

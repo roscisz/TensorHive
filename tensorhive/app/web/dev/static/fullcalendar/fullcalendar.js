@@ -8485,8 +8485,11 @@ var JsonFeedEventSource = /** @class */ (function (_super) {
             customRequestParams = ajaxSettings.data || {};
         }
         $.extend(params, customRequestParams);
-        params[startParam] = start.format();
-        params[endParam] = end.format();
+/////////////// convert to UTC
+//        params[startParam] = start.format();
+//        params[endParam] = end.format();
+          params[startParam] = start.toISOString();
+          params[endParam] = end.toISOString();
         if (timezone && timezone !== 'local') {
             params[timezoneParam] = timezone;
         }
@@ -14035,10 +14038,9 @@ function computeSlotSegCollisions(seg, otherSegs, results) {
 } 	
 // Do these segments occupy the same vertical space?
 function isSlotSegCollision(seg1, seg2) {
-// little change
+/////////////// stop physics of segments
 //    return seg1.bottom > seg2.top && seg1.top < seg2.bottom;
     return 0;
-    debugger;
 }
 
 
