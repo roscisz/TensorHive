@@ -1,4 +1,5 @@
 from typing import Generator, Dict, List
+import re
 import logging
 log = logging.getLogger(__name__)
 
@@ -22,8 +23,9 @@ class NvidiaSmiParser():
 
     @classmethod
     def _format_values(cls, values: List[str]):
+        '''Replaces nvidia-smi --query-gpu output values'''
         def formatted_value(value):
-            '''Replaces nvidia-smi output values with custom formatting'''
+            
             if value == '[Not Supported]':
                 return None
             # TODO May want to handle floats also
@@ -49,14 +51,13 @@ class NvidiaSmiParser():
             raise KeyError(message)
 
     @classmethod
-    def gpus_info_from_stdout(cls, stdout: Generator) -> Dict[str, str]:
+    def parse_query(cls, stdout: Generator) -> Dict[str, str]:
         '''
-        Assumes nvidia-smi outputs with --format=csv (+must have a header)
-        Example output:
-        [
-            {
+        Assumming: nvidia-smi --query-gpu=uuid,... --format=csv,nounits
+        Example result:
+        {
+            "GPU-d38d4de3-85ee-e837-3d87-e8e2faeb6a63": {
                 "name": "GeForce GTX 660",
-                "uuid": "GPU-d38d4de3-85ee-e837-3d87-e8e2faeb6a63",
                 "fan_speed": 32,
                 "mem_free": 1329,
                 "mem_used": 667,
@@ -66,7 +67,7 @@ class NvidiaSmiParser():
                 "temp": 44,
                 "power": null
             }
-        ]
+        }
         '''
         stdout_lines = list(stdout)  # type: List[str]
         assert stdout_lines, 'stdout is empty!'
@@ -81,26 +82,33 @@ class NvidiaSmiParser():
         all_gpus_stdout_lines = stdout_lines[1:]  # type: List[str]
 
         # Define result accumulator
-        all_gpus_info = []  # type:List[Dict[str, str]]
+        result = {}  # type:Dict[str, Dict]
 
         # Transform stdout of a single GPU and append to accumulator
         for single_gpu_result_line in all_gpus_stdout_lines:
             # Split by commas
-            gpu_parameters_values = single_gpu_result_line.split(
-                ', ')  # type: List[str]
-            gpu_parameters_values = cls._format_values(gpu_parameters_values)
+            gpu_parameters_values = single_gpu_result_line.split(', ')  # type: List[str]
+            gpu_parameters_values = cls._format_values(gpu_parameters_values)  # type: List
 
-            # Transform to dict
-            single_gpu_info = dict(
-                zip(gpu_parameters_keys, gpu_parameters_values))
-            # Append
-            all_gpus_info.append(single_gpu_info)
-        return all_gpus_info
+            # Transform two lists into dictionary by zipping the keys with corresponding values
+            query_results_for_single_gpu = dict(zip(gpu_parameters_keys, gpu_parameters_values))
+
+            # Move UUID outside the dict
+            uuid = query_results_for_single_gpu.pop('uuid')  # type: str
+
+            # Assign query results to that key
+            result[uuid] = query_results_for_single_gpu
+        return result
 
     @classmethod
     def parse_pmon(cls, stdout: Generator) -> List[Dict]:
         '''
-        Assumming: nvidia-smi pmon --count 1
+        Assumming: 
+        nvidia-smi --query-gpu=uuid --format=csv,noheader | while read line; do
+            echo "UUID=$line"
+            nvidia-smi pmon --count 1 --id "$line"
+        done
+
         Example command output (input for this method):
 
         # gpu     pid  type    sm   mem   enc   dec   command
@@ -112,21 +120,25 @@ class NvidiaSmiParser():
             1   31381     C    33    53     0     0   python         
             2   19635     C    39    35     0     0   python         
             3   33317     C    31    11     0     0   python 
-        
+
         Result:
-        [
-            {
-                'gpu': 0, 
-                'pid': 4810, 
-                'type': 'G', 
-                'sm': 0, 
-                'mem': 0, 
-                'enc': 0, 
-                'dec': 0, 
-                'command': 'Xorg'
+        {
+            '<UUID>': {
+                'processes': [
+                    {
+                        'gpu': 0, 
+                        'pid': 4810, 
+                        'type': 'G', 
+                        'sm': 0, 
+                        'mem': 0, 
+                        'enc': 0, 
+                        'dec': 0, 
+                        'command': 'Xorg'
+                    }, 
+                    ...
+                ]
             }
-            ...
-        ]
+        }
         '''
         stdout_lines = list(stdout)
         assert stdout_lines, 'stdout is empty!'
@@ -144,19 +156,40 @@ class NvidiaSmiParser():
         ['0    4810     G     0     0     0     0   Xorg',
         '0    7187     G     0     0     0     0   compiz']
         '''
-        header = stdout_lines[0][2:]
-        keys = header.split()
-        lines = stdout_lines[2:]
+        def parse_single_gpu(uuid, lines: List[str]):
+            header = lines[0][2:]
+            keys = header.split()
+            lines = stdout_lines[2:]
 
-        processes = []
-        for line in lines:
-            values = line.split()
-            values = cls._format_values(values)
+            processes = []
+            for line in lines:
+                values = line.split()
+                values = cls._format_values(values)
 
-            process = dict(zip(keys, values))
-            processes.append(process)
-        return processes
+                process = dict(zip(keys, values))
+                processes.append(process)
+            return processes
 
 
-    
-    
+
+        uuid_regex = re.compile('^UUID=(.*)$')
+        terere = {}
+        # Read through and  the lines 
+        for line in list(stdout_lines):
+            uuid_match = uuid_regex.match(line)
+            if uuid_match:
+                uuid = uuid_match.group(1)
+                terere[uuid] = []
+            else:
+                terere[uuid].append(line)
+
+        for uuid, stdout_lines in terere.items():
+            terere[uuid] = {'processes': parse_single_gpu(uuid, stdout_lines)}
+
+        import json
+        log.debug('\n{}\n'.format(json.dumps(terere, indent=2)))
+
+        return terere
+            
+                
+        

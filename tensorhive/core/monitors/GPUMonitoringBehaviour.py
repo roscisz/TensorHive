@@ -55,7 +55,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         for host, host_out in output.items():
             if host_out.exit_code is 0:
                 '''Command executed successfully'''
-                metrics = NvidiaSmiParser.gpus_info_from_stdout(
+                metrics = NvidiaSmiParser.parse_query(
                     host_out.stdout)
             else:
                 '''Command execution failed'''
@@ -83,47 +83,61 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         # Extract owner from list ['example_owner']
         return result[0]
 
+
     def _current_processes(self, group_connection) -> Dict:
         '''
         Fetches the information about all active gpu processes using nvidia-smi pmon
-
+        On each node, `pmon` is called for each GPU (with --id <UUID>) in order to keep consistency
         Example result:
         {
             'example_host_0': {
                 'GPU': {
-                    'processes': [
-                        {
-                            'gpu': 0, 
-                            'pid': 1958, 
-                            'type': 'G', 
-                            'sm': 0, 
-                            'mem': 3, 
-                            'enc': 0, 
-                            'dec': 0, 
-                            'command': 'X'
-                        }
-                    ]    
+                    '<GPU UUID>': {
+                        'processes': [
+                            {
+                                'gpu': 0, 
+                                'pid': 1958, 
+                                'type': 'G', 
+                                'sm': 0, 
+                                'mem': 3, 
+                                'enc': 0, 
+                                'dec': 0, 
+                                'command': 'X'
+                            },
+                            ...
+                        ]    
+                    }
                 }
             }
         }
         '''
-        command = 'nvidia-smi pmon --count 1'
+        command = '''
+            function exec_pmon(){
+                nvidia-smi --query-gpu=uuid --format=csv,noheader | while read line; do
+                    echo "UUID=$line"
+                    nvidia-smi pmon --count 1 --id "$line"
+                done
+            }
+            exec_pmon
+        '''
         output = group_connection.run_command(command, stop_on_errors=False)
         group_connection.join(output)
 
         result = {}
         for host, host_out in output.items():
             if host_out.exit_code is 0:
-                processes = NvidiaSmiParser.parse_pmon(host_out.stdout)
+                processes_on_each_gpu = NvidiaSmiParser.parse_pmon(host_out.stdout)
 
                 # Find each process owner
-                for process in processes:
-                    process['owner'] = self._get_process_owner(
-                        process['pid'], host, group_connection)
-            else:
-                # Not Supported
-                processes = []
-            result[host] = {'GPU': {'processes': processes}}
+                for uuid, processes in processes_on_each_gpu.items():
+                    for process in processes['processes']:
+                        process['owner'] = self._get_process_owner(process['pid'], host, group_connection)
+            # else:
+            #     # Not Supported
+            #     processes = None
+                result[host] = {'GPU': processes_on_each_gpu}
+        import json
+        log.debug('\n{}\n'.format(json.dumps(result, indent=2)))
         return result
 
     def _combine_outputs(self, metrics: Dict, processes: Dict) -> Dict:
@@ -132,7 +146,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         > nvidia-smi --query
         > nvidia-smi pmon
 
-        Return example:
+        Example result:
         {
             "example_host_0": {
                 "GPU": [
