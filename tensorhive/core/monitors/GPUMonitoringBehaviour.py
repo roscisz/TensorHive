@@ -7,64 +7,106 @@ import logging
 log = logging.getLogger(__name__)
 
 
+import collections
+
+def dict_merge(dct, merge_dct):
+    """ Recursive dict merge. Inspired by :meth:``dict.update()``, instead of
+    updating only top-level keys, dict_merge recurses down into dicts nested
+    to an arbitrary depth, updating keys. The ``merge_dct`` is merged into
+    ``dct``.
+    :param dct: dict onto which the merge is executed
+    :param merge_dct: dct merged into dct
+    :return: None
+    """
+    for k, v in merge_dct.items():
+        if (k in dct and isinstance(dct[k], dict)
+                and isinstance(merge_dct[k], collections.Mapping)):
+            dict_merge(dct[k], merge_dct[k])
+        else:
+            dct[k] = merge_dct[k]
+
 class GPUMonitoringBehaviour(MonitoringBehaviour):
-    _base_command = 'nvidia-smi --query-gpu='
-    _format_options = '--format=csv,nounits'
-    _available_queries = [
-        'name',
-        'uuid',
-        'fan.speed',
-        'memory.free',
-        'memory.used',
-        'memory.total',
-        'utilization.gpu',
-        'utilization.memory',
-        'temperature.gpu',
-        'power.draw'
-    ]
+    
 
     @override
     def update(self, group_connection) -> Dict:
-        metrics = self._current_metrics(group_connection)  # type: Dict
+        metrics = self._query_gpu_for_metrics(group_connection)  # type: Dict
         processes = self._current_processes(group_connection)  # type: Dict
-        result = self._combine_outputs(metrics, processes)  # type: Dict
-        return result
+        #result = self._combine_outputs(metrics, processes)  # type: Dict
+        #import json
+        #log.debug('METRYKI\n{}\n'.format(json.dumps(metrics, indent=4)))
+        #log.debug('PROCESY\n{}\n'.format(json.dumps(processes, indent=4)))
+        dict_merge(metrics, processes)
+        #metrics = self._query_gpu_for_metrics(group_connection)  # type: Dict
+        #processes = self._current_processes(group_connection)  # type: Dict
+        #dict_merge(processes, metrics)
+
+        #log.debug('MERGE\n{}\n'.format(json.dumps(result, indent=4)))
+        #result = metrics
+        return metrics
 
     @property
-    def available_queries(self) -> List:
-        return self._available_queries
-
-    def _current_metrics(self, group_connection) -> Dict:
-        '''
-        Merges all commands into a single nvidia-smi query 
-        and executes them on all hosts within connection group
-        '''
+    def composed_query_command(self) -> str:
+        base_command = 'nvidia-smi --query-gpu='
+        format_options = '--format=csv,nounits'
+        available_queries = [
+            'name',
+            'uuid',
+            'fan.speed',
+            'memory.free',
+            'memory.used',
+            'memory.total',
+            'utilization.gpu',
+            'utilization.memory',
+            'temperature.gpu',
+            'power.draw'
+        ]
 
         # Example: nvidia-smi --query-gpu=temperature.gpu,utilization.gpu,utilization.memory --format=csv
-        query = ','.join(self.available_queries)
+        query = ','.join(available_queries)
         command = '{base_command}{query} {format_options}'.format(
-            base_command=self._base_command, query=query, format_options=self._format_options
-        )  # type: str
+            base_command=base_command,
+            query=query,
+            format_options=format_options)
+        return command
 
+    def _query_gpu_for_metrics(self, group_connection) -> Dict:
+        '''
+        Executes a query on each node within group_connection, then it 
+        returns gathered information as a dictionary.
+    
+        Example result:
+        {
+            'example_host_0': {
+                'GPU': {
+                    '<GPU0 UUID>': { "fan_speed": 10, ... }
+                    '<GPU1 UUID>': { "fan_speed": 22, ... },
+                    ...
+                }
+            },
+            ...
+        }
+        '''
         # stop_on_errors=False means that single host failure does not raise an exception,
         # instead simply adds them to the output.
-        output = group_connection.run_command(command, stop_on_errors=False)
+        output = group_connection.run_command(self.composed_query_command, stop_on_errors=False)
         group_connection.join(output)
 
         result = {}
         for host, host_out in output.items():
             if host_out.exit_code is 0:
-                '''Command executed successfully'''
-                metrics = NvidiaSmiParser.parse_query(
-                    host_out.stdout)
+                # Command executed successfully
+                metrics = NvidiaSmiParser.parse_query_gpu_stdout(host_out.stdout)
             else:
-                '''Command execution failed'''
+                # Command execution failed
                 if host_out.exit_code:
                     log.error('nvidia-smi failed with {} exit code on {}'.format(host_out.exit_code, host))
                 elif host_out.exception:
-                    log.error('nvidia-smi raised {} n {}'.format(host_out.exception.__class__.__name__, host))
-                metrics = []
+                    log.error('nvidia-smi raised {} on {}'.format(host_out.exception.__class__.__name__, host))
+                metrics = None
             result[host] = {'GPU': metrics}
+        #import json
+        #log.debug('\n{}\n'.format(json.dumps(result, indent=2)))
         return result
 
     def _get_process_owner(self, pid: int, hostname: str, group_connection) -> str:
@@ -82,7 +124,6 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
             return None
         # Extract owner from list ['example_owner']
         return result[0]
-
 
     def _current_processes(self, group_connection) -> Dict:
         '''
@@ -112,13 +153,24 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         }
         '''
         command = '''
-            function exec_pmon(){
-                nvidia-smi --query-gpu=uuid --format=csv,noheader | while read line; do
-                    echo "UUID=$line"
-                    nvidia-smi pmon --count 1 --id "$line"
-                done
-            }
-            exec_pmon
+            UUIDS=$(nvidia-smi --query-gpu=uuid --format=csv,noheader)
+
+            if [ $? -eq 0 ]; then
+                echo $UUIDS | while read line; do
+                    PROCESSES=$(nvidia-smi pmon --count 1 --id "$line")
+                    
+                    if [ $? -eq 0 ]; then
+                        echo "UUID=$line"
+                        echo "$PROCESSES"
+                    else
+                        # nvidia-smi pmon is not supported
+                        exit $?
+                    fi
+                done 
+            else
+                # nvidia-smi failed
+                exit $?
+            fi
         '''
         output = group_connection.run_command(command, stop_on_errors=False)
         group_connection.join(output)
@@ -126,18 +178,18 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         result = {}
         for host, host_out in output.items():
             if host_out.exit_code is 0:
-                processes_on_each_gpu = NvidiaSmiParser.parse_pmon(host_out.stdout)
-
+                processes_on_each_gpu = NvidiaSmiParser.parse_pmon_stdout(
+                    host_out.stdout)
                 # Find each process owner
                 for uuid, processes in processes_on_each_gpu.items():
                     for process in processes['processes']:
                         process['owner'] = self._get_process_owner(process['pid'], host, group_connection)
-            # else:
-            #     # Not Supported
-            #     processes = None
-                result[host] = {'GPU': processes_on_each_gpu}
-        import json
-        log.debug('\n{}\n'.format(json.dumps(result, indent=2)))
+            else:
+                # Not Supported
+                processes_on_each_gpu = {'processes': None}
+            result[host] = {'GPU': processes_on_each_gpu}
+        #import json
+        #log.debug('\n{}\n'.format(json.dumps(result, indent=2)))
         return result
 
     def _combine_outputs(self, metrics: Dict, processes: Dict) -> Dict:
@@ -179,13 +231,15 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         # TODO May want to refactor in the future
         for hostname, _ in processes.items():
             # Loop thorugh each item on GPU list and create a new key with default value
-            node_gpus = metrics[hostname]['GPU'] # type: List[Dict]
+            node_gpus = metrics[hostname]['GPU']  # type: List[Dict]
             for gpu_idx, _ in enumerate(node_gpus):
-                metrics[hostname]['GPU'][gpu_idx]['processes'] = []    
-            
+                metrics[hostname]['GPU'][gpu_idx]['processes'] = []
+
             # Loop through all processes and assign them into corresponding places in a list
-            gpu_processes_on_node = processes[hostname]['GPU']['processes'] # type: List[Dict]
+            # type: List[Dict]
+            gpu_processes_on_node = processes[hostname]['GPU']['processes']
             for process in gpu_processes_on_node:
-                gpu_id_extracted_from_process = process['gpu'] # type: int
-                metrics[hostname]['GPU'][gpu_id_extracted_from_process]['processes'].append(process)
+                gpu_id_extracted_from_process = process['gpu']  # type: int
+                metrics[hostname]['GPU'][gpu_id_extracted_from_process]['processes'].append(
+                    process)
         return metrics

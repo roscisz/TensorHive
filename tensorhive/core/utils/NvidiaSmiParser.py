@@ -5,6 +5,7 @@ log = logging.getLogger(__name__)
 
 
 class NvidiaSmiParser():
+    '''Responsible for parsing output from commands executed by pssh'''
 
     key_mapping = {
         # keys: original nvidia-smi parameter names
@@ -23,49 +24,45 @@ class NvidiaSmiParser():
 
     @classmethod
     def _format_values(cls, values: List[str]):
-        '''Replaces nvidia-smi --query-gpu output values'''
+        '''Replaces plain string values returned by `nvidia-smi --query-gpu=...`'''
         def formatted_value(value):
-            
             if value == '[Not Supported]':
                 return None
-            # TODO May want to handle floats also
+            # TODO May want to handle floats also (currently they remain as strings)
             elif str.isdecimal(value):
                 return int(value)
             else:
                 return value
 
-        # Apply filters returning new values
+        # Apply formatting to each value
         return [formatted_value(v) for v in values]
 
     @classmethod
     def _renamed_keys(cls, original_keys: List[str]):
-        '''Replaces nvidia-smi query key names with more compact alternatives'''
+        '''Replaces key names returned by `nvidia-smi --query-gpu=...` with more compact alternatives'''
         try:
-            new_keys = [cls.key_mapping[original_key]
-                        for original_key in original_keys]
+            new_keys = [cls.key_mapping[original_key] for original_key in original_keys]
             return new_keys
         except KeyError as unexisting_key:
-            message = 'key mapping for {} not implemented!'.format(
-                unexisting_key)
+            message = 'key mapping for {} not implemented!'.format(unexisting_key)
             log.critical(message)
             raise KeyError(message)
 
     @classmethod
-    def parse_query(cls, stdout: Generator) -> Dict[str, str]:
+    def parse_query_gpu_stdout(cls, stdout: Generator) -> Dict[str, Dict]:
         '''
-        Assumming: nvidia-smi --query-gpu=uuid,... --format=csv,nounits
+        Example stdout:
+        $ nvidia-smi --query-gpu=name,fan.speed,utilization.gpu --format=csv,nounits   
+        name, fan.speed [%], utilization.gpu [%]
+        GeForce GTX 660, 35, [Not Supported]
+
         Example result:
         {
             "GPU-d38d4de3-85ee-e837-3d87-e8e2faeb6a63": {
                 "name": "GeForce GTX 660",
                 "fan_speed": 32,
-                "mem_free": 1329,
-                "mem_used": 667,
-                "mem_total": 1996,
                 "gpu_util": null,
-                "mem_util": null,
-                "temp": 44,
-                "power": null
+                ...            
             }
         }
         '''
@@ -84,7 +81,7 @@ class NvidiaSmiParser():
         # Define result accumulator
         result = {}  # type:Dict[str, Dict]
 
-        # Transform stdout of a single GPU and append to accumulator
+        # Transform each line (corresponding to a single GPU) and append to the accumulator
         for single_gpu_result_line in all_gpus_stdout_lines:
             # Split by commas
             gpu_parameters_values = single_gpu_result_line.split(', ')  # type: List[str]
@@ -98,10 +95,12 @@ class NvidiaSmiParser():
 
             # Assign query results to that key
             result[uuid] = query_results_for_single_gpu
+        #import json
+        #log.debug('\n{}\n'.format(json.dumps(result, indent=2)))
         return result
 
     @classmethod
-    def parse_pmon(cls, stdout: Generator) -> List[Dict]:
+    def parse_pmon_stdout(cls, stdout: Generator) -> Dict[str, Dict]:
         '''
         Assumming: 
         nvidia-smi --query-gpu=uuid --format=csv,noheader | while read line; do
@@ -186,8 +185,8 @@ class NvidiaSmiParser():
         for uuid, stdout_lines in terere.items():
             terere[uuid] = {'processes': parse_single_gpu(uuid, stdout_lines)}
 
-        import json
-        log.debug('\n{}\n'.format(json.dumps(terere, indent=2)))
+        #import json
+        #log.debug('\n{}\n'.format(json.dumps(terere, indent=2)))
 
         return terere
             
