@@ -138,10 +138,22 @@ class NvidiaSmiParser():
                 ]
             }
         }
+        Result:
+        [
+            {
+                'uuid': '<UUID>',
+                'pid': 4810, 
+                'command': 'Xorg',
+                ...
+            },
+            ...
+        ]
         '''
         stdout_lines = list(stdout)
         assert stdout_lines, 'stdout is empty!'
         assert len(stdout_lines) > 2, 'pmon\'s stdout should return at least 3 lines'
+
+        
 
         '''
         stdout_lines[0]:
@@ -155,40 +167,43 @@ class NvidiaSmiParser():
         ['0    4810     G     0     0     0     0   Xorg',
         '0    7187     G     0     0     0     0   compiz']
         '''
-        def parse_single_gpu(uuid, lines: List[str]):
-            header = lines[0][2:]
-            keys = header.split()
-            lines = stdout_lines[2:]
-
-            processes = []
-            for line in lines:
-                values = line.split()
-                values = cls._format_values(values)
-
-                process = dict(zip(keys, values))
-                processes.append(process)
-            return processes
-
-
+        def minified_process_dict(original: Dict) -> Dict:
+            return {
+                'uuid': original['uuid'],
+                'pid': original['pid'],
+                'command': original['command']
+            }
 
         uuid_regex = re.compile('^UUID=(.*)$')
-        terere = {}
-        # Read through and  the lines 
+        stdout_of_all_gpus = {}
         for line in list(stdout_lines):
             uuid_match = uuid_regex.match(line)
             if uuid_match:
                 uuid = uuid_match.group(1)
-                terere[uuid] = []
+                stdout_of_all_gpus[uuid] = []
             else:
-                terere[uuid].append(line)
+                stdout_of_all_gpus[uuid].append(line)
 
-        for uuid, stdout_lines in terere.items():
-            terere[uuid] = {'processes': parse_single_gpu(uuid, stdout_lines)}
+        processes = []
+        for uuid, single_gpu_stdout_lines in stdout_of_all_gpus.items():
+            header = single_gpu_stdout_lines[0][2:]
+            keys = header.split()
+            processes_lines = single_gpu_stdout_lines[2:]
 
-        #import json
-        #log.debug('\n{}\n'.format(json.dumps(terere, indent=2)))
+            for line in processes_lines:
+                values = line.split()
+                values = cls._format_values(values)
 
-        return terere
+                full_process_info = dict(zip(keys, values))
+                full_process_info['uuid'] = uuid
+
+                process = minified_process_dict(full_process_info)
+                processes.append(process)
+
+        # import json
+        # log.debug('\n{}\n'.format(json.dumps(processes, indent=2)))
+
+        return processes
             
                 
         

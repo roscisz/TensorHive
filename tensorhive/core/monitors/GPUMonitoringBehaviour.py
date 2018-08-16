@@ -32,18 +32,18 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
     def update(self, group_connection) -> Dict:
         metrics = self._query_gpu_for_metrics(group_connection)  # type: Dict
         processes = self._current_processes(group_connection)  # type: Dict
-        #result = self._combine_outputs(metrics, processes)  # type: Dict
+        result = self._combine_outputs(metrics, processes)  # type: Dict
         #import json
         #log.debug('METRYKI\n{}\n'.format(json.dumps(metrics, indent=4)))
         #log.debug('PROCESY\n{}\n'.format(json.dumps(processes, indent=4)))
-        dict_merge(metrics, processes)
+        #dict_merge(metrics, processes)
         #metrics = self._query_gpu_for_metrics(group_connection)  # type: Dict
         #processes = self._current_processes(group_connection)  # type: Dict
         #dict_merge(processes, metrics)
 
         #log.debug('MERGE\n{}\n'.format(json.dumps(result, indent=4)))
         #result = metrics
-        return metrics
+        return result
 
     @property
     def composed_query_command(self) -> str:
@@ -151,6 +151,8 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
                 }
             }
         }
+
+        TERAZ ZWRACA LISTE
         '''
         command = '''
             UUIDS=$(nvidia-smi --query-gpu=uuid --format=csv,noheader)
@@ -178,16 +180,15 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         result = {}
         for host, host_out in output.items():
             if host_out.exit_code is 0:
-                processes_on_each_gpu = NvidiaSmiParser.parse_pmon_stdout(
+                processes = NvidiaSmiParser.parse_pmon_stdout(
                     host_out.stdout)
                 # Find each process owner
-                for uuid, processes in processes_on_each_gpu.items():
-                    for process in processes['processes']:
-                        process['owner'] = self._get_process_owner(process['pid'], host, group_connection)
+                for process in processes:
+                    process['owner'] = self._get_process_owner(process['pid'], host, group_connection)
             else:
                 # Not Supported
-                processes_on_each_gpu = {'processes': None}
-            result[host] = {'GPU': processes_on_each_gpu}
+                processes = None
+            result[host] = processes
         #import json
         #log.debug('\n{}\n'.format(json.dumps(result, indent=2)))
         return result
@@ -229,17 +230,30 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         }
         '''
         # TODO May want to refactor in the future
-        for hostname, _ in processes.items():
+        for hostname, gpu_processes_on_node in processes.items():
             # Loop thorugh each item on GPU list and create a new key with default value
-            node_gpus = metrics[hostname]['GPU']  # type: List[Dict]
-            for gpu_idx, _ in enumerate(node_gpus):
-                metrics[hostname]['GPU'][gpu_idx]['processes'] = []
+            # node_gpus = metrics[hostname]['GPU']  # type: List[Dict]
+            # for uuid, data in node_gpus.items():
+            #     metrics[hostname]['GPU'][uuid]['processes'] = []
 
             # Loop through all processes and assign them into corresponding places in a list
             # type: List[Dict]
-            gpu_processes_on_node = processes[hostname]['GPU']['processes']
-            for process in gpu_processes_on_node:
-                gpu_id_extracted_from_process = process['gpu']  # type: int
-                metrics[hostname]['GPU'][gpu_id_extracted_from_process]['processes'].append(
-                    process)
+            
+
+
+            # if gpu_processes_on_node is None:
+            #     for uuid, data in metrics[hostname]['GPU'].items():
+            #         metrics[hostname]['GPU'][uuid]['processes'] = None
+            
+            # Initialize
+            if gpu_processes_on_node is None:
+                for uuid, _ in metrics[hostname]['GPU'].items():
+                    metrics[hostname]['GPU'][uuid]['processes'] = None
+            else:
+                for uuid, _ in metrics[hostname]['GPU'].items():
+                    metrics[hostname]['GPU'][uuid]['processes'] = []
+
+                for process in gpu_processes_on_node:
+                    uuid = process.pop('uuid') 
+                    metrics[hostname]['GPU'][uuid]['processes'].append(process)
         return metrics
