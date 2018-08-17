@@ -10,14 +10,14 @@
       <div
         class="row"
         v-for="checkbox in resourcesCheckboxes"
-        :key="checkbox.name"
+        :key="checkbox.uuid"
       >
-        {{ checkbox.name }}
         <input
           type="checkbox"
           v-model="checkbox.checked"
           :disabled="checkbox.disabled"
         >
+        {{ checkbox.name }} {{ checkbox.uuid }}
       </div>
       <label class="form-label">
         Start and end time
@@ -108,7 +108,7 @@ export default {
             description: 'Resource ' + (i + 1).toString(),
             start: this.reservationTime[0].toISOString(),
             end: this.reservationTime[1].toISOString(),
-            resourceId: i + 1,
+            resourceId: this.resourcesCheckboxes[i].uuid,
             userId: 1
           }
           this.addReservation(tempReservation)

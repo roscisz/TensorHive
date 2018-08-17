@@ -8,7 +8,7 @@
     :min-reservation-time="minReservationTime"
     :max-reservation-time="maxReservationTime"
     :resources-checkboxes="resourcesCheckboxes"
-    :number-of-resources="numberOfResources"
+    :number-of-resources="selectedResources.length"
     :add-reservation="addReservation"
   ></full-calendar-reserve>
   <full-calendar-cancel
@@ -24,6 +24,7 @@
 import FullCalendarReserve from './FullCalendarReserve.vue'
 import FullCalendarCancel from './FullCalendarCancel.vue'
 import api from '../../../api'
+import config from '../../../config'
 import $ from 'jquery'
 require('../../../../static/fullcalendar/fullcalendar.js')
 
@@ -31,6 +32,38 @@ export default {
   components: {
     FullCalendarReserve,
     FullCalendarCancel
+  },
+
+  props: {
+    selectedResources: Array
+  },
+
+  watch: {
+    selectedResources () {
+      var resourcesString = ''
+      if (this.selectedResources.length > 0) {
+        resourcesString = this.selectedResources[0].uuid
+        for (var i = 1; i < this.selectedResources.length; i++) {
+          resourcesString += ',' + this.selectedResources[i].uuid
+        }
+      }
+      this.calendar.fullCalendar('removeEventSources')
+      this.calendar.fullCalendar('addEventSource', {
+        url: config.serverURI + '/reservations?resources_ids=' + resourcesString,
+        cache: true
+      })
+      var obj
+      this.resourcesCheckboxes = []
+      for (i = 0; i < this.selectedResources.length; i++) {
+        obj = {
+          name: this.selectedResources[i].name,
+          uuid: this.selectedResources[i].uuid,
+          checked: false,
+          disabled: false
+        }
+        this.resourcesCheckboxes[i] = obj
+      }
+    }
   },
 
   data () {
@@ -44,15 +77,14 @@ export default {
       minReservationTime: '',
       maxReservationTime: '',
       resourcesCheckboxes: [],
-      numberOfResources: 6,
       errors: []
     }
   },
 
   methods: {
-    setColor: function (resource) {
+    setColor: function (resourceIndex) {
       var color = '#123456'
-      var step = resource * 123456
+      var step = resourceIndex * 123456
       var colorToInt = parseInt(color.substr(1), 16)
       var nstep = parseInt(step)
       if (!isNaN(colorToInt) && !isNaN(nstep)) {
@@ -95,15 +127,6 @@ export default {
     $(window).resize(function () {
       self.calendar.fullCalendar('rerenderEvents')
     })
-    var obj
-    for (var i = 0; i < this.numberOfResources; i++) {
-      obj = {
-        name: 'resource ' + (i + 1).toString(),
-        checked: false,
-        disabled: false
-      }
-      this.resourcesCheckboxes[i] = obj
-    }
     this.calendar.fullCalendar({
       allDaySlot: false,
       height: 800,
@@ -121,22 +144,25 @@ export default {
         right: 'agendaWeek,agendaDay,month'
       },
 
-      events: api.request('get', '/reservations'),
-
       eventAfterRender: function (event, element, view) {
-        var resource = event.resourceId
+        var resourceIndex
+        for (var i = 0; i < self.selectedResources.length; i++) {
+          if (self.selectedResources[i].uuid === event.resourceId) {
+            resourceIndex = i + 1
+          }
+        }
         if (view.type !== 'month') {
           var hoursWidth = 42
           var scrollWidth = 16
           var width = view.el[0].clientWidth
           var dayWidth = (width - scrollWidth - hoursWidth) / 7
-          var eventSlotWidth = dayWidth / self.numberOfResources - 1
-          var margin = (Math.floor((resource - 1) * eventSlotWidth)).toString() + 'px'
+          var eventSlotWidth = dayWidth / self.selectedResources.length - 1
+          var margin = (Math.floor((resourceIndex - 1) * eventSlotWidth)).toString() + 'px'
           var eventWidth = (Math.floor(eventSlotWidth)).toString() + 'px'
           $(element).css('width', eventWidth)
           $(element).css('margin-left', margin)
         }
-        var c = self.setColor(resource)
+        var c = self.setColor(resourceIndex)
         if (event.color !== c) {
           event.color = c
           self.calendar.fullCalendar('updateEvent', event)
@@ -144,7 +170,7 @@ export default {
       },
 
       select: function (startDate, endDate) {
-        for (var i = 0; i < self.numberOfResources; i++) {
+        for (var i = 0; i < self.selectedResources.length; i++) {
           self.resourcesCheckboxes[i].checked = false
           self.resourcesCheckboxes[i].disabled = false
         }
@@ -152,8 +178,12 @@ export default {
         var id
         for (i = 0; i < events.length; i++) {
           if (events[i].end > startDate && events[i].start < endDate) {
-            id = events[i].resourceId
-            self.resourcesCheckboxes[id - 1].disabled = true
+            for (var j = 0; j < self.selectedResources.length; j++) {
+              if (self.selectedResources[j].uuid === events[i].resourceId) {
+                id = j
+              }
+            }
+            self.resourcesCheckboxes[id].disabled = true
           }
         }
         self.startDate = startDate.toDate()
