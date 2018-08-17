@@ -6,25 +6,6 @@ from pssh.exceptions import Timeout, UnknownHostException, ConnectionErrorExcept
 import logging
 log = logging.getLogger(__name__)
 
-
-import collections
-
-def dict_merge(dct, merge_dct):
-    """ Recursive dict merge. Inspired by :meth:``dict.update()``, instead of
-    updating only top-level keys, dict_merge recurses down into dicts nested
-    to an arbitrary depth, updating keys. The ``merge_dct`` is merged into
-    ``dct``.
-    :param dct: dict onto which the merge is executed
-    :param merge_dct: dct merged into dct
-    :return: None
-    """
-    for k, v in merge_dct.items():
-        if (k in dct and isinstance(dct[k], dict)
-                and isinstance(merge_dct[k], collections.Mapping)):
-            dict_merge(dct[k], merge_dct[k])
-        else:
-            dct[k] = merge_dct[k]
-
 class GPUMonitoringBehaviour(MonitoringBehaviour):
     
 
@@ -52,6 +33,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         available_queries = [
             'name',
             'uuid',
+            'index',
             'fan.speed',
             'memory.free',
             'memory.used',
@@ -70,6 +52,29 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
             format_options=format_options)
         return command
 
+    @property
+    def get_gpu_processes_command(self):
+        return '''
+            UUIDS=$(nvidia-smi --query-gpu=uuid --format=csv,noheader)
+
+            if [ $? -eq 0 ]; then
+                echo $UUIDS | while read line; do
+                    PROCESSES=$(nvidia-smi pmon --count 1 --id "$line")
+                    
+                    if [ $? -eq 0 ]; then
+                        echo "UUID=$line"
+                        echo "$PROCESSES"
+                    else
+                        # nvidia-smi pmon is not supported
+                        exit $?
+                    fi
+                done 
+            else
+                # nvidia-smi failed
+                exit $?
+            fi
+        '''
+
     def _query_gpu_for_metrics(self, group_connection) -> Dict:
         '''
         Executes a query on each node within group_connection, then it 
@@ -79,8 +84,16 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         {
             'example_host_0': {
                 'GPU': {
-                    '<GPU0 UUID>': { "fan_speed": 10, ... }
-                    '<GPU1 UUID>': { "fan_speed": 22, ... },
+                    '<GPU0 UUID>': { 
+                        'name': 'GeForce GTX 660',
+                        'index': 0,
+                        'metrics': { "fan_speed": 10, ... }
+                    }
+                    '<GPU1 UUID>': {
+                        'name': 'GeForce GTX 1060'
+                        'index': 1,
+                        'metrics': { "fan_speed": 22, ... },
+                    },
                     ...
                 }
             },
@@ -129,52 +142,21 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         '''
         Fetches the information about all active gpu processes using nvidia-smi pmon
         On each node, `pmon` is called for each GPU (with --id <UUID>) in order to keep consistency
+
         Example result:
         {
-            'example_host_0': {
-                'GPU': {
-                    '<GPU UUID>': {
-                        'processes': [
-                            {
-                                'gpu': 0, 
-                                'pid': 1958, 
-                                'type': 'G', 
-                                'sm': 0, 
-                                'mem': 3, 
-                                'enc': 0, 
-                                'dec': 0, 
-                                'command': 'X'
-                            },
-                            ...
-                        ]    
-                    }
+            "pmon_capable_hostname": [
+                {
+                    "uuid": "GPU-c6d01ed6-8240-2e11-efe9-aa32794b8273",
+                    "pid": 1979,
+                    "command": "X",
+                    "owner": "root"
                 }
-            }
+            ],
+            "pmon_not_supported_hostname": null
         }
-
-        TERAZ ZWRACA LISTE
         '''
-        command = '''
-            UUIDS=$(nvidia-smi --query-gpu=uuid --format=csv,noheader)
-
-            if [ $? -eq 0 ]; then
-                echo $UUIDS | while read line; do
-                    PROCESSES=$(nvidia-smi pmon --count 1 --id "$line")
-                    
-                    if [ $? -eq 0 ]; then
-                        echo "UUID=$line"
-                        echo "$PROCESSES"
-                    else
-                        # nvidia-smi pmon is not supported
-                        exit $?
-                    fi
-                done 
-            else
-                # nvidia-smi failed
-                exit $?
-            fi
-        '''
-        output = group_connection.run_command(command, stop_on_errors=False)
+        output = group_connection.run_command(self.get_gpu_processes_command, stop_on_errors=False)
         group_connection.join(output)
 
         result = {}
@@ -186,11 +168,14 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
                 for process in processes:
                     process['owner'] = self._get_process_owner(process['pid'], host, group_connection)
             else:
-                # Not Supported
+                # Possible reasons:
+                # - nvidia-smi not installed
+                # - nvidia-smi pmon is not supported
+                # - could not connect to host
                 processes = None
             result[host] = processes
-        #import json
-        #log.debug('\n{}\n'.format(json.dumps(result, indent=2)))
+        # import json
+        # log.debug('\n{}\n'.format(json.dumps(result, indent=2)))
         return result
 
     def _combine_outputs(self, metrics: Dict, processes: Dict) -> Dict:
@@ -200,35 +185,11 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         > nvidia-smi pmon
 
         Example result:
-        {
-            "example_host_0": {
-                "GPU": [
-                {
-                    "name": "GeForce GTX 1060 6GB",
-                    "uuid": "GPU-56a30ac8-fcac-f019-fb0a-1e2ffcd58a6a",
-                    "fan.speed [%]": 76,
-                    ...
-                    "processes": [
-                        {
-                            "gpu": 0,
-                            "pid": 1992,
-                            ...
-                            "command": "X",
-                            "owner": "root"
-                        },
-                        {
-                            "gpu": 0,
-                            "pid": 22170,
-                            ...
-                            "command": "python3",
-                            "owner": "143344sm"
-                        }
-                    ]
-                }
-                ]
-            }
-        }
+        TODO
         '''
+        # import json
+        # log.debug('\n{}\n'.format(json.dumps(metrics, indent=4)))
+        # log.debug('\n{}\n'.format(json.dumps(processes, indent=4)))
         # TODO May want to refactor in the future
         for hostname, gpu_processes_on_node in processes.items():
             # Loop thorugh each item on GPU list and create a new key with default value
@@ -245,7 +206,11 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
             #     for uuid, data in metrics[hostname]['GPU'].items():
             #         metrics[hostname]['GPU'][uuid]['processes'] = None
             
-            # Initialize
+            if metrics[hostname]['GPU'] is None:
+                # Example reason: counld not connect to host, hence no data
+                continue
+
+            # FIXME Need to refactor
             if gpu_processes_on_node is None:
                 for uuid, _ in metrics[hostname]['GPU'].items():
                     metrics[hostname]['GPU'][uuid]['processes'] = None
