@@ -23,7 +23,46 @@ class NvidiaSmiParser():
     }
 
     @classmethod
-    def _format_values(cls, values: List[str]):
+    def make_dict(cls, keys, values):
+        '''
+        Creates a custom dictionary which uses shorter key names and
+        
+        Example keys and values:
+        ['name', 'fan.speed [%]', 'utilization.gpu [%]', 'power.draw [W]']
+        ['GeForce GTX 660', 32, null, 80]
+
+        Example result:
+        {
+            "name": "GeForce GTX 660",
+            "fan_speed": {'value': 32, 'unit': '%'},
+            "gpu_util": {'value': null, 'unit': '%'},
+            "power": {'value': 80, 'unit': 'W'},
+            ...            
+        }
+        '''
+        assert len(keys) == len(values), 'List sizes does not match.'
+        values = cls._format_values(values)
+
+        # Regex that matches: [W], [%], [MiB], etc.
+        unit_regex = re.compile('[(.*)]$') 
+        result = {}
+
+        for (long_key_name, value) in zip(keys, values):
+            short_key_name = cls.key_mapping[long_key_name]
+            # Tries to find the unit inside original key name
+            unit_found = unit_regex.match(long_key_name)
+
+            if unit_found:
+                # Matches % from [%], etc.
+                unit = unit_found.group(1)
+                result[short_key_name] = {'value': value, 'unit': unit}
+            else:
+                result[short_key_name] = value
+        return result
+
+
+    @classmethod
+    def _format_values(cls, values: List[str]) -> List:
         '''Replaces plain string values returned by `nvidia-smi --query-gpu=...`'''
         def formatted_value(value):
             if value == '[Not Supported]':
@@ -73,7 +112,7 @@ class NvidiaSmiParser():
         # Extract keys from nvidia-smi query result header
         header = stdout_lines[0]  # type: str
         gpu_parameters_keys = header.split(', ')  # type: List[str]
-        gpu_parameters_keys = cls._renamed_keys(gpu_parameters_keys)
+        #gpu_parameters_keys = cls._renamed_keys(gpu_parameters_keys)
 
         # Extract stdout lines, where:  1 line = 1 GPU
         all_gpus_stdout_lines = stdout_lines[1:]  # type: List[str]
@@ -85,10 +124,11 @@ class NvidiaSmiParser():
         for single_gpu_result_line in all_gpus_stdout_lines:
             # Split by commas
             gpu_parameters_values = single_gpu_result_line.split(', ')  # type: List[str]
-            gpu_parameters_values = cls._format_values(gpu_parameters_values)  # type: List
+            #gpu_parameters_values = cls._format_values(gpu_parameters_values)  # type: List
 
+            query_results_for_single_gpu = csl.make_dict(gpu_parameters_keys, gpu_parameters_values)
             # Transform two lists into dictionary by zipping the keys with corresponding values
-            query_results_for_single_gpu = dict(zip(gpu_parameters_keys, gpu_parameters_values))
+            #query_results_for_single_gpu = dict(zip(gpu_parameters_keys, gpu_parameters_values))
 
             # Move UUID outside the dict
             uuid = query_results_for_single_gpu.pop('uuid')  # type: str
