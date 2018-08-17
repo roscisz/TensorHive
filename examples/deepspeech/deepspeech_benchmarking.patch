@@ -1,5 +1,5 @@
 diff --git a/DeepSpeech.py b/DeepSpeech.py
-index 8e1b529..c22142a 100755
+index 8e1b529..edc6636 100755
 --- a/DeepSpeech.py
 +++ b/DeepSpeech.py
 @@ -22,6 +22,7 @@ from six.moves import zip, range, filter, urllib, BaseHTTPServer
@@ -32,6 +32,15 @@ index 8e1b529..c22142a 100755
      # Set default summary dir
      if len(FLAGS.summary_dir) == 0:
          FLAGS.summary_dir = xdg.save_data_path(os.path.join('deepspeech','summaries'))
+@@ -483,7 +492,7 @@ def decode_with_lm(inputs, sequence_length, beam_width=100,
+       custom_op_module.ctc_beam_search_decoder_with_lm(
+           inputs, sequence_length, beam_width=beam_width,
+           model_path=FLAGS.lm_binary_path, trie_path=FLAGS.lm_trie_path, alphabet_path=FLAGS.alphabet_config_path,
+-          lm_weight=FLAGS.lm_weight, word_count_weight=FLAGS.word_count_weight, valid_word_count_weight=FLAGS.valid_word_count_weight,
++          lm_weight=FLAGS.lm_weight, valid_word_count_weight=FLAGS.valid_word_count_weight,
+           top_paths=top_paths, merge_repeated=merge_repeated))
+ 
+   return (
 @@ -1555,10 +1564,16 @@ def train(server=None):
          hooks.append(tf.train.SummarySaverHook(save_secs=FLAGS.summary_secs, output_dir=FLAGS.summary_dir, summary_op=merge_all_summaries_op))
  
