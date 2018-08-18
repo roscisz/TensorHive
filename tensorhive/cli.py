@@ -86,3 +86,12 @@ def init(ctx):
     # TODO Check if init_db can fail and if so, print that error
     init_db()
     click.echo('[✔] Done.')
+
+@db.command()
+@click.pass_context
+def example(ctx):
+    '''Initialize dataSet'''
+    from tensorhive.exemplaryDbSet import init_set
+    click.echo('[•] Initializing data set...')
+    init_set()
+    click.echo('[✔] Done.')
