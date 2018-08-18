@@ -39,9 +39,41 @@ class ProtectionService(Service):
         output = connection.run_command(command)
 
         # FIXME Assumes that only one node is in connection
-        for _, host_out in output.items(): 
-            result = self._parse_output(host_out.stdout) 
+        for _, host_out in output.items():
+            result = self._parse_output(host_out.stdout)
         return result
+
+    def node_gpu_processes(self, hostname: str) -> Dict:
+        '''
+
+        Example result:
+        {
+            "GPU-c6d01ed6-8240-2e11-efe9-aa32794b8273": [
+                {
+                    "pid": 1979,
+                    "command": "X",
+                    "owner": "root"
+                }
+            ]
+        }
+        '''
+        infrastructure = self.infrastructure_manager.infrastructure
+        node_processes = {}
+
+        # Make sure we can fetch GPU data first.
+        # Example reason: node could be unreachable, nvidia-smi failed to work
+        if infrastructure.get(hostname, {}).get('GPU') is None:
+            log.debug('There is no data for {}'.format(hostname))
+            return {}
+
+        # Loop through each GPU on node
+        for uuid, gpu_data in infrastructure[hostname]['GPU'].items():
+            # We need to make sure that this GPU supports process monitoring, hence .get()
+            single_gpu_processes = infrastructure[hostname]['GPU'][uuid].get('processes')
+            if single_gpu_processes is not None:
+                # We want to avoid 2D list, hence +=
+                node_processes[uuid] = single_gpu_processes
+        return node_processes
 
     def _parse_output(self, stdout: Generator) -> Dict[str, str]:
         '''
@@ -95,10 +127,20 @@ class ProtectionService(Service):
             # 2. Establish connection to node and find all tty sessions
             node_connection = self.connection_manager.single_connection(hostname)
             node_sessions = self.node_tty_sessions(node_connection)
+            node_processes = self.node_gpu_processes(hostname)
+
+            def processes_owners_on_node():
+                result = []
+                for uuid, processes in node_processes.items():
+                    for process in processes:
+                        if process['owner'] != 'root':
+                            result.append(process['owner'])
+                return result
+            processes_owners = processes_owners_on_node()
 
             # 3. Any session that does not belong to a priviliged user should be rembered
             for session in node_sessions:
-                if session['USER'] != username:
+                if (session['USER'] != username) and (session['USER'] in processes_owners):
                     unauthorized_sessions.append(session)
 
         if len(unauthorized_sessions) > 0:

@@ -99,8 +99,8 @@ class ServicesConfig():
 
         ], interval=1.0),
         # Not production-ready
-        # ProtectionService(handler=ProtectionHandler(behaviour=MessageSendingBehaviour()),
-        #                   interval=2.5)
+        ProtectionService(handler=ProtectionHandler(behaviour=MessageSendingBehaviour()),
+                          interval=2.5)
         # Add more services here
     ]
 
