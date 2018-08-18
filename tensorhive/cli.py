@@ -14,6 +14,7 @@ tensorhive
 |   └── --log-level <level> (e.g. debug, info, warning, error, critical)
 └── db
     └── init
+    └── example
 '''
 AVAILABLE_LOG_LEVELS = {
     'debug': logging.DEBUG,
@@ -75,7 +76,6 @@ def run(ctx, log_level):
 @click.pass_context
 def db(ctx):
     pass
-
 
 @db.command()
 @click.pass_context
