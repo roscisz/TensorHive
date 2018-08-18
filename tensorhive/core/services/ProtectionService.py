@@ -1,5 +1,6 @@
 from tensorhive.core.services.Service import Service
 from tensorhive.models.reservation_event.ReservationEventModel import ReservationEventModel
+from tensorhive.models.user.UserModel import UserModel
 from tensorhive.core.utils.decorators.override import override
 from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.managers.SSHConnectionManager import SSHConnectionManager
@@ -102,27 +103,38 @@ class ProtectionService(Service):
 
         return [as_dict(line) for line in stdout_lines]
 
+    def find_hostname(self, uuid: str) -> str:
+        infrastructure = self.infrastructure_manager.infrastructure
+        for hostname, data in infrastructure.items():
+            if data.get('GPU'):
+                if data['GPU'].get(uuid):
+                    return hostname
+
     @override
     def do_run(self):
         time_func = time.perf_counter
         start_time = time_func()
 
         # 1. Get list of current reservations
-        #current_reservations = ReservationEventModel.current_events()
+        current_reservations = ReservationEventModel.current_events()
+        tmp = [r.as_dict for r in current_reservations]
+        import json
+        log.debug(json.dumps(tmp, indent=4))
 
         # Mock (it only imitates result from database, it won't be a dict!)
-        current_reservations = [
-            {
-                'node': {'hostname': 'localhost'},
-                'user': {'username': 'UNPERMITTED_USERNAME_MOCK'}
-            }
-        ]
-
+        # current_reservations = [
+        #     {
+        #         'node': {'hostname': 'des13.kask'},
+        #         'user': {'username': 'UNPERMITTED_USERNAME_MOCK'}
+        #     }
+        # ]
+        
         unauthorized_sessions = []
         for reservation in current_reservations:
             # 1. Extract reservation info
-            hostname = reservation['node']['hostname']
-            username = reservation['user']['username']
+            hostname = self.find_hostname(uuid=reservation.resource_id)
+            #hostname = reservation['node']['hostname']
+            username = UserModel.find_by_id(reservation.user_id).username
 
             # 2. Establish connection to node and find all tty sessions
             node_connection = self.connection_manager.single_connection(hostname)
