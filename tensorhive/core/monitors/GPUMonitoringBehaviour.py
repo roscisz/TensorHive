@@ -230,18 +230,16 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
                 # Can't access any GPU right now, e.g. could not connect to host or nvidia-smi failure
                 continue
 
-            if gpu_processes_on_node is None:
-                # _current_processes could not fetch any info about processes
-                # Create 'processes' key for each GPU and fill with None
-                for uuid, _ in metrics[hostname]['GPU'].items():
-                    metrics[hostname]['GPU'][uuid]['processes'] = None
-            else:
-                # Prepare 'processes' key so that we can append processes later
-                for uuid, _ in metrics[hostname]['GPU'].items():
-                    metrics[hostname]['GPU'][uuid]['processes'] = []
+            # Introduce new key - 'processes' with default value
+            for uuid, _ in metrics[hostname]['GPU'].items():
+                metrics[hostname]['GPU'][uuid]['processes'] = None
 
-                # Unpack every known process and move to the corresponding GPU
-                for process in gpu_processes_on_node:
-                    uuid = process.pop('uuid')
-                    metrics[hostname]['GPU'][uuid]['processes'].append(process)
+            # Unpack every known process and move to the corresponding GPU
+            for process in gpu_processes_on_node:
+                uuid = process.pop('uuid')
+
+                # Replace default value with an empty list, because we have a new process to append
+                if metrics[hostname]['GPU'][uuid]['processes'] is None:
+                    metrics[hostname]['GPU'][uuid]['processes'] = []
+                metrics[hostname]['GPU'][uuid]['processes'].append(process)
         return metrics

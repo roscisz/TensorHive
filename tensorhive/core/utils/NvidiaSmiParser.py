@@ -197,9 +197,15 @@ class NvidiaSmiParser():
             uuid_match = uuid_regex.match(line)
             if uuid_match:
                 uuid = uuid_match.group(1)
+                # Initialize with default value
                 stdout_of_all_gpus[uuid] = []
             else:
-                stdout_of_all_gpus[uuid].append(line)
+                # Two types of stdout for a single GPU
+                if line == '[PMON NOT SUPPORTED]':
+                    # Replace [] with None (rare cases)
+                    stdout_of_all_gpus[uuid] = None
+                else:
+                    stdout_of_all_gpus[uuid].append(line)
 
         # Now parse pmon's stdout for each GPU
         # Transform each parsed process into dictionary and append to the list
@@ -207,7 +213,7 @@ class NvidiaSmiParser():
         for uuid, single_gpu_stdout_lines in stdout_of_all_gpus.items():
 
             # nvidia-smi pmon failed on this GPU => no processes to parse
-            if single_gpu_stdout_lines[0] == '[PMON NOT SUPPORTED]':
+            if single_gpu_stdout_lines is None:
                 continue
 
             '''
