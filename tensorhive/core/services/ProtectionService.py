@@ -109,7 +109,7 @@ class ProtectionService(Service):
         for hostname, data in infrastructure.items():
             if data.get('GPU') and data['GPU'].get(uuid):
                 return hostname
-        log.info('GPU with UUID={} was not found'.format(uuid))
+        log.info('GPU with UUID="{}" was not found'.format(uuid))
         return None
 
     def process_owners_on_node(self, node_processes) -> List[str]:
@@ -146,7 +146,7 @@ class ProtectionService(Service):
             node_connection = self.connection_manager.single_connection(hostname)
             node_sessions = self.node_tty_sessions(node_connection)
             node_processes = self.node_gpu_processes(hostname)
-            process_owners = self.processes_owners_on_node(node_processes)
+            process_owners = self.process_owners_on_node(node_processes)
 
             # 3. Any session that does not belong to a priviliged user should be rembered
             for session in node_sessions:
