@@ -127,7 +127,24 @@ paths:
           description: 'Success'
           schema:
             type: object
-  /nodes/{hostname}/metrics/gpu:
+  /nodes/{hostname}/gpu/info:
+    get:
+      tags: 
+        - nodes
+      summary: Get node's basic GPU information
+      operationId: 'tensorhive.api.api.nodes.get_gpu_info'
+      parameters:
+        - $ref: '#/parameters/hostnameParam'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: array
+            items: 
+              type: object
+        '404':
+          $ref: '#/responses/NotFound'
+  /nodes/{hostname}/gpu/metrics:
     get:
       tags: 
         - nodes
@@ -136,6 +153,23 @@ paths:
       parameters:
         - $ref: '#/parameters/hostnameParam'
         - $ref: '#/parameters/gpuMetricTypeQuery'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: array
+            items: 
+              type: object
+        '404':
+          $ref: '#/responses/NotFound'
+  /nodes/{hostname}/gpu/processes:
+    get:
+      tags: 
+        - nodes
+      summary: Get node's GPU processes data
+      operationId: 'tensorhive.api.api.nodes.get_gpu_processes'
+      parameters:
+        - $ref: '#/parameters/hostnameParam'
       responses:
         '200':
           description: 'Success'
@@ -217,8 +251,6 @@ parameters:
     required: false
     type: string
     enum:
-      - name
-      - uuid
       - fan_speed
       - mem_free
       - mem_used
@@ -227,7 +259,6 @@ parameters:
       - mem_util
       - temp
       - power
-      - processes
 
 # TODO Remove 'uuid' from enum, redundant.
 # {
