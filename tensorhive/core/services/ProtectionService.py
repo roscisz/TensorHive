@@ -104,11 +104,21 @@ class ProtectionService(Service):
         return [as_dict(line) for line in stdout_lines]
 
     def find_hostname(self, uuid: str) -> str:
+        '''Seeks the hostname of node with GPU given by UUID'''
         infrastructure = self.infrastructure_manager.infrastructure
         for hostname, data in infrastructure.items():
-            if data.get('GPU'):
-                if data['GPU'].get(uuid):
-                    return hostname
+            if data.get('GPU') and data['GPU'].get(uuid):
+                return hostname
+        log.info('GPU with UUID={} was not found'.format(uuid))
+        return None
+
+    def process_owners_on_node(self, node_processes) -> List[str]:
+        result = []
+        for uuid, processes in node_processes.items():
+            for process in processes:
+                if process['owner'] != 'root':
+                    result.append(process['owner'])
+        return result
 
     @override
     def do_run(self):
@@ -117,46 +127,34 @@ class ProtectionService(Service):
 
         # 1. Get list of current reservations
         current_reservations = ReservationEventModel.current_events()
-        tmp = [r.as_dict for r in current_reservations]
-        import json
-        log.debug(json.dumps(tmp, indent=4))
 
-        # Mock (it only imitates result from database, it won't be a dict!)
-        # current_reservations = [
-        #     {
-        #         'node': {'hostname': 'des13.kask'},
-        #         'user': {'username': 'UNPERMITTED_USERNAME_MOCK'}
-        #     }
-        # ]
-        
+        # DEBUG ONLY
+        __reservations_as_dict = [r.as_dict for r in current_reservations]
+        import json
+        log.debug(json.dumps(__reservations_as_dict, indent=4))
+
         unauthorized_sessions = []
         for reservation in current_reservations:
             # 1. Extract reservation info
             hostname = self.find_hostname(uuid=reservation.resource_id)
-            #hostname = reservation['node']['hostname']
             username = UserModel.find_by_id(reservation.user_id).username
+            if hostname is None or username is None:
+                log.warning('Unable to process the reservation ({}@{}), skipping...'.format(username, hostname))
+                continue
 
             # 2. Establish connection to node and find all tty sessions
             node_connection = self.connection_manager.single_connection(hostname)
             node_sessions = self.node_tty_sessions(node_connection)
             node_processes = self.node_gpu_processes(hostname)
-
-            def processes_owners_on_node():
-                result = []
-                for uuid, processes in node_processes.items():
-                    for process in processes:
-                        if process['owner'] != 'root':
-                            result.append(process['owner'])
-                return result
-            processes_owners = processes_owners_on_node()
+            process_owners = self.processes_owners_on_node(node_processes)
 
             # 3. Any session that does not belong to a priviliged user should be rembered
             for session in node_sessions:
-                if (session['USER'] != username) and (session['USER'] in processes_owners):
+                if (session['USER'] != username) and (session['USER'] in process_owners):
                     unauthorized_sessions.append(session)
 
+        # 4. Execute handler's behaviour on unauthorized ttys
         if len(unauthorized_sessions) > 0:
-            # 4. Execute handler's behaviour on unauthorized ttys
             self.handler.trigger_action(node_connection, unauthorized_sessions)
 
         end_time = time_func()
