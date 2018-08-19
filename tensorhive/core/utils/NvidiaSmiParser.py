@@ -178,9 +178,8 @@ class NvidiaSmiParser():
         '''
         stdout_lines = list(stdout)
         assert stdout_lines, 'stdout is empty!'
-        assert len(stdout_lines) > 2, 'pmon\'s stdout should return at least 3 lines'
+        assert len(stdout_lines) >= 2, 'pmon\'s stdout should return at least 2 lines'
 
-        
         def minified_process_dict(original: Dict) -> Dict:
             # Returns a dict which contains only the essential keys
             return {
@@ -188,7 +187,6 @@ class NvidiaSmiParser():
                 'pid': original['pid'],
                 'command': original['command']
             }
-
 
         # Parse whole stdout and split it into chunks.
         # Each chunk is transformed into a dictionary.
@@ -207,6 +205,11 @@ class NvidiaSmiParser():
         # Transform each parsed process into dictionary and append to the list
         processes = []
         for uuid, single_gpu_stdout_lines in stdout_of_all_gpus.items():
+
+            # nvidia-smi pmon failed on this GPU => no processes to parse
+            if single_gpu_stdout_lines[0] == '[PMON NOT SUPPORTED]':
+                continue
+
             '''
             single_gpu_stdout_lines[0]:
             '# gpu        pid  type    sm   mem   enc   dec   command'
