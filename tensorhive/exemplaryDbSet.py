@@ -12,7 +12,8 @@ def init_set():
                  {'username': 'Grzegorz Chlodzinski'},
                  {'username': 'Kamil Szymański'},
                  {'username': 'Paweł Rościszewski'},
-                 {'username': 'Jacek Rumiński'}
+                 {'username': 'Jacek Rumiński'},
+                 {'username': 'Marcin Knap'}
     ]
     for user in userList:
         CreateUserController.register(user)
@@ -205,6 +206,118 @@ def init_set():
                 'userId': userList.count({'username': 'Kamil Nowodworski'})+1,
                 'start': '2018-07-21T00:00:00.000Z',
                 'end': '2018-08-11T23:59:59.999Z'
+                },
+                {'title': 'Eksperymenty z DeepRL GPU0' ,
+                'description': '' ,
+                'resourceId': gpu.count('GPU0')+1,
+                'userId': userList.count({'username': 'Grzegorz Chlodzinski'})+1,
+                'start': '2018-07-23T00:00:00.000Z',
+                'end': '2018-07-29T23:59:59.999Z'
+                },
+                {'title': 'Eksperymenty z DeepRL GPU0' ,
+                'description': '' ,
+                'resourceId': gpu.count('GPU1')+1,
+                'userId': userList.count({'username': 'Grzegorz Chlodzinski'})+1,
+                'start': '2018-07-23T00:00:00.000Z',
+                'end': '2018-07-29T23:59:59.999Z'
+                },
+                {'title': 'Powtórka wyników bidirectional LSTM + attention_ocr' ,
+                'description': '' ,
+                'resourceId': gpu.count('GPU1')+1,
+                'userId': userList.count({'username': 'Kamil Nowodworski'})+1,
+                'start': '2018-07-30T00:00:00.000Z',
+                'end': '2018-08-11T23:59:59.999Z'
+                },
+                {'title': 'Testy mixed precision training na DeepSpeech' ,
+                'description': '' ,
+                'resourceId': gpu.count('GPU0')+1,
+                'userId': userList.count({'username': 'Paweł Rościszewski'})+1,
+                'start': '2018-07-30T00:00:00.000Z',
+                'end': '2018-08-03T23:59:59.999Z'
+                },
+                {'title': 'Modyfikacja Mobile Net, LSTM' ,
+                'description': '' ,
+                'resourceId': gpu.count('GPU0')+1,
+                'userId': userList.count({'username': 'Kamil Grinholc'})+1,
+                'start': '2018-08-04T00:00:00.000Z',
+                'end': '2018-08-05T23:59:59.999Z'
+                },
+                {'title': 'Testy UM, INT8, FL16' ,
+                'description': '' ,
+                'resourceId': gpu.count('GPU0')+1,
+                'userId': userList.count({'username': 'Marcin Knap'})+1,
+                'start': '2018-08-06T00:00:00.000Z',
+                'end': '2018-08-07T23:59:59.999Z'
+                },
+                {'title': 'Modyfikacja Mobile Net, LSTM' ,
+                'description': '' ,
+                'resourceId': gpu.count('GPU0')+1,
+                'userId': userList.count({'username': 'Kamil Grinholc'})+1,
+                'start': '2018-08-08T00:00:00.000Z',
+                'end': '2018-08-13T23:59:59.999Z'
+                },
+                {'title': 'Attention_ocr bez bidirectional LSTM' ,
+                'description': '' ,
+                'resourceId': gpu.count('GPU1')+1,
+                'userId': userList.count({'username': 'Kamil Nowodworski'})+1,
+                'start': '2018-08-11T00:00:00.000Z',
+                'end': '2018-08-21T23:59:59.999Z'
+                },
+                {'title': 'Attention_ocr bez bidirectional LSTM' ,
+                'description': '' ,
+                'resourceId': gpu.count('GPU2')+1,
+                'userId': userList.count({'username': 'Kamil Nowodworski'})+1,
+                'start': '2018-08-11T00:00:00.000Z',
+                'end': '2018-08-21T23:59:59.999Z'
+                },
+                {'title': 'Attention_ocr bez bidirectional LSTM' ,
+                'description': '' ,
+                'resourceId': gpu.count('GPU3')+1,
+                'userId': userList.count({'username': 'Kamil Nowodworski'})+1,
+                'start': '2018-08-11T00:00:00.000Z',
+                'end': '2018-08-21T23:59:59.999Z'
+                },
+                {'title': 'Testy multigpu na DeepSpeech' ,
+                'description': '' ,
+                'resourceId': gpu.count('GPU0')+1,
+                'userId': userList.count({'username': 'Paweł Rościszewski'})+1,
+                'start': '2018-08-22T00:00:00.000Z',
+                'end': '2018-08-24T23:59:59.999Z'
+                },
+                {'title': 'Testy multigpu na DeepSpeech' ,
+                'description': '' ,
+                'resourceId': gpu.count('GPU1')+1,
+                'userId': userList.count({'username': 'Paweł Rościszewski'})+1,
+                'start': '2018-08-22T00:00:00.000Z',
+                'end': '2018-08-24T23:59:59.999Z'
+                },
+                {'title': 'Testy multigpu na DeepSpeech' ,
+                'description': '' ,
+                'resourceId': gpu.count('GPU2')+1,
+                'userId': userList.count({'username': 'Paweł Rościszewski'})+1,
+                'start': '2018-08-22T00:00:00.000Z',
+                'end': '2018-08-24T23:59:59.999Z'
+                },
+                {'title': 'Testy multigpu na DeepSpeech' ,
+                'description': '' ,
+                'resourceId': gpu.count('GPU3')+1,
+                'userId': userList.count({'username': 'Paweł Rościszewski'})+1,
+                'start': '2018-08-22T00:00:00.000Z',
+                'end': '2018-08-24T23:59:59.999Z'
+                },
+                {'title': 'Attention_ocr' ,
+                'description': 'Dokończenie' ,
+                'resourceId': gpu.count('GPU2')+1,
+                'userId': userList.count({'username': 'Kamil Nowodworski'})+1,
+                'start': '2018-08-25T00:00:00.000Z',
+                'end': '2018-09-09T23:59:59.999Z'
+                },
+                {'title': 'Attention_ocr' ,
+                'description': 'Dokończenie' ,
+                'resourceId': gpu.count('GPU3')+1,
+                'userId': userList.count({'username': 'Kamil Nowodworski'})+1,
+                'start': '2018-08-25T00:00:00.000Z',
+                'end': '2018-09-09T23:59:59.999Z'
                 }
     ]
 
