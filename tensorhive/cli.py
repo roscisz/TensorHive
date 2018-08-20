@@ -91,7 +91,7 @@ def init(ctx):
 @click.pass_context
 def example(ctx):
     '''Initialize dataSet'''
-    from tensorhive.exemplaryDbSet import init_set
+    from tensorhive.db_seeds import init_set
     click.echo('[•] Initializing data set...')
     init_set()
     click.echo('[✔] Done.')
