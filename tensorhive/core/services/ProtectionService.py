@@ -112,11 +112,18 @@ class ProtectionService(Service):
         log.info('GPU with UUID="{}" was not found'.format(uuid))
         return None
 
+    @property
+    def ignored_processes(self):
+        return [
+            '/usr/lib/xorg/Xorg',
+            'X'
+        ]
+
     def process_owners_on_node(self, node_processes) -> List[str]:
         result = []
         for uuid, processes in node_processes.items():
             for process in processes:
-                if process['owner'] != 'root':
+                if process['command'] not in self.ignored_processes:
                     result.append(process['owner'])
         return result
 

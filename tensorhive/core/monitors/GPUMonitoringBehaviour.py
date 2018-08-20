@@ -200,7 +200,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
 
         Example result:
         {
-            "des13.kask": {
+            "example_host_0": {
                 "GPU": {
                     "GPU-c6d01ed6-8240-2e11-efe9-aa32794b8273": {
                         "name": "GeForce GTX 1060 6GB",
