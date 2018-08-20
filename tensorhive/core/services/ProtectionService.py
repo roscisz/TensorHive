@@ -119,13 +119,15 @@ class ProtectionService(Service):
             'X'
         ]
 
-    def process_owners_on_node(self, node_processes) -> List[str]:
-        result = []
-        for uuid, processes in node_processes.items():
-            for process in processes:
-                if process['command'] not in self.ignored_processes:
-                    result.append(process['owner'])
-        return result
+    def gpu_users(self, node_processes, uuid) -> List[str]:
+        '''Finds all users who are using this specific GPU'''
+        owners = []
+        gpu_processes = node_processes[uuid]
+        for process in gpu_processes:
+            if process['command'] not in self.ignored_processes:
+                owners.append(process['owner'])
+        unique_owners = list(set(owners))
+        return unique_owners
 
     @override
     def do_run(self):
@@ -153,11 +155,11 @@ class ProtectionService(Service):
             node_connection = self.connection_manager.single_connection(hostname)
             node_sessions = self.node_tty_sessions(node_connection)
             node_processes = self.node_gpu_processes(hostname)
-            process_owners = self.process_owners_on_node(node_processes)
+            reserved_gpu_process_owners = self.gpu_users(node_processes, uuid)
 
             # 3. Any session that does not belong to a priviliged user should be rembered
             for session in node_sessions:
-                if (session['USER'] != username) and (session['USER'] in process_owners):
+                if (session['USER'] != username) and (session['USER'] in reserved_gpu_process_owners):
                     unauthorized_sessions.append(session)
 
         # 4. Execute handler's behaviour on unauthorized ttys
