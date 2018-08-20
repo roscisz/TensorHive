@@ -142,10 +142,10 @@ class ProtectionService(Service):
         import json
         log.debug(json.dumps(__reservations_as_dict, indent=4))
 
-        unauthorized_sessions = []
         for reservation in current_reservations:
             # 1. Extract reservation info
-            hostname = self.find_hostname(uuid=reservation.resource_id)
+            uuid = reservation.resource_id
+            hostname = self.find_hostname(uuid)
             username = UserModel.find_by_id(reservation.user_id).username
             if hostname is None or username is None:
                 log.warning('Unable to process the reservation ({}@{}), skipping...'.format(username, hostname))
@@ -158,13 +158,19 @@ class ProtectionService(Service):
             reserved_gpu_process_owners = self.gpu_users(node_processes, uuid)
 
             # 3. Any session that does not belong to a priviliged user should be rembered
+            unauthorized_sessions = []
             for session in node_sessions:
                 if (session['USER'] != username) and (session['USER'] in reserved_gpu_process_owners):
+                    # TODO Need to refactor (session shouldn't be used for that purpose, but it's the easiest)
+                    # Inject additional data for handler
+                    session['LEGITIMATE_USER'] = username
+                    session['GPU_UUID'] = uuid
+
                     unauthorized_sessions.append(session)
 
-        # 4. Execute handler's behaviour on unauthorized ttys
-        if len(unauthorized_sessions) > 0:
-            self.handler.trigger_action(node_connection, unauthorized_sessions)
+            # 4. Execute handler's behaviour on unauthorized ttys
+            if len(unauthorized_sessions) > 0:
+                self.handler.trigger_action(node_connection, unauthorized_sessions)
 
         end_time = time_func()
         execution_time = end_time - start_time
