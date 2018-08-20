@@ -36,7 +36,7 @@ class ProtectionService(Service):
 
     def node_tty_sessions(self, connection, username: str = '') -> Dict[str, str]:
         '''Executes shell command in order to fetch all active terminal sessions'''
-        command = 'w --no-header {}'.format(username)
+        command = 'w --no-truncat {}'.format(username)
         output = connection.run_command(command)
 
         # FIXME Assumes that only one node is in connection
