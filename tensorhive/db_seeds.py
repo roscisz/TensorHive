@@ -3,7 +3,7 @@ from tensorhive.controllers.reservation_event.CreateReservationEventController i
 
 
 def init_set():
-    gpu_list = ['GPU0','GPU1','GPU2','GPU3','GPU4']
+    gpu_list = ['GPU0','GPU1','GPU2','GPU3']
 
     user_list = [ {'username': 'Kamil Nowodworski'},
                  {'username': 'Tomasz Berezowski'},
@@ -20,7 +20,28 @@ def init_set():
 
     reservation_events_list = [{'title': 'Attention_ocr + scheduled_sampling' ,
                 'description': '' ,
-                'resourceId': gpu_list.count('GPU4')+1,
+                'resourceId': gpu_list.count('GPU0')+1,
+                'userId': user_list.count({'username': 'Kamil Nowodworski'})+1,
+                'start': '2018-03-16T00:00:00.000Z',
+                'end': '2018-03-18T23:59:59.999Z'
+                },
+                {'title': 'Attention_ocr + scheduled_sampling' ,
+                'description': '' ,
+                'resourceId': gpu_list.count('GPU1')+1,
+                'userId': user_list.count({'username': 'Kamil Nowodworski'})+1,
+                'start': '2018-03-16T00:00:00.000Z',
+                'end': '2018-03-18T23:59:59.999Z'
+                },
+                {'title': 'Attention_ocr + scheduled_sampling' ,
+                'description': '' ,
+                'resourceId': gpu_list.count('GPU2')+1,
+                'userId': user_list.count({'username': 'Kamil Nowodworski'})+1,
+                'start': '2018-03-16T00:00:00.000Z',
+                'end': '2018-03-18T23:59:59.999Z'
+                },
+                {'title': 'Attention_ocr + scheduled_sampling' ,
+                'description': '' ,
+                'resourceId': gpu_list.count('GPU3')+1,
                 'userId': user_list.count({'username': 'Kamil Nowodworski'})+1,
                 'start': '2018-03-16T00:00:00.000Z',
                 'end': '2018-03-18T23:59:59.999Z'
@@ -76,7 +97,28 @@ def init_set():
                 },
                 {'title': 'Prezentacja dla koła Gradient, distributed GAN' ,
                 'description': '' ,
-                'resourceId': gpu_list.count('GPU4')+1,
+                'resourceId': gpu_list.count('GPU0')+1,
+                'userId': user_list.count({'username': 'Paweł Rościszewski'})+1,
+                'start': '2018-06-05T00:00:00.000Z',
+                'end': '2018-06-06T23:59:59.999Z'
+                },
+                {'title': 'Prezentacja dla koła Gradient, distributed GAN' ,
+                'description': '' ,
+                'resourceId': gpu_list.count('GPU1')+1,
+                'userId': user_list.count({'username': 'Paweł Rościszewski'})+1,
+                'start': '2018-06-05T00:00:00.000Z',
+                'end': '2018-06-06T23:59:59.999Z'
+                },
+                {'title': 'Prezentacja dla koła Gradient, distributed GAN' ,
+                'description': '' ,
+                'resourceId': gpu_list.count('GPU2')+1,
+                'userId': user_list.count({'username': 'Paweł Rościszewski'})+1,
+                'start': '2018-06-05T00:00:00.000Z',
+                'end': '2018-06-06T23:59:59.999Z'
+                },
+                {'title': 'Prezentacja dla koła Gradient, distributed GAN' ,
+                'description': '' ,
+                'resourceId': gpu_list.count('GPU3')+1,
                 'userId': user_list.count({'username': 'Paweł Rościszewski'})+1,
                 'start': '2018-06-05T00:00:00.000Z',
                 'end': '2018-06-06T23:59:59.999Z'
@@ -139,7 +181,28 @@ def init_set():
                 },
                 {'title': 'Szkola letnia' ,
                 'description': 'SERWER ZAREZEROWANY DLA PRAC ZWIĄZANYCH ZE SZKOŁĄ LETNIA!!!' ,
-                'resourceId': gpu_list.count('GPU4')+1,
+                'resourceId': gpu_list.count('GPU0')+1,
+                'userId': user_list.count({'username': 'Jacek Rumiński'})+1,
+                'start': '2018-06-20T00:00:00.000Z',
+                'end': '2018-07-07T23:59:59.999Z'
+                },
+                {'title': 'Szkola letnia' ,
+                'description': 'SERWER ZAREZEROWANY DLA PRAC ZWIĄZANYCH ZE SZKOŁĄ LETNIA!!!' ,
+                'resourceId': gpu_list.count('GPU1')+1,
+                'userId': user_list.count({'username': 'Jacek Rumiński'})+1,
+                'start': '2018-06-20T00:00:00.000Z',
+                'end': '2018-07-07T23:59:59.999Z'
+                },
+                {'title': 'Szkola letnia' ,
+                'description': 'SERWER ZAREZEROWANY DLA PRAC ZWIĄZANYCH ZE SZKOŁĄ LETNIA!!!' ,
+                'resourceId': gpu_list.count('GPU2')+1,
+                'userId': user_list.count({'username': 'Jacek Rumiński'})+1,
+                'start': '2018-06-20T00:00:00.000Z',
+                'end': '2018-07-07T23:59:59.999Z'
+                },
+                {'title': 'Szkola letnia' ,
+                'description': 'SERWER ZAREZEROWANY DLA PRAC ZWIĄZANYCH ZE SZKOŁĄ LETNIA!!!' ,
+                'resourceId': gpu_list.count('GPU3')+1,
                 'userId': user_list.count({'username': 'Jacek Rumiński'})+1,
                 'start': '2018-06-20T00:00:00.000Z',
                 'end': '2018-07-07T23:59:59.999Z'
