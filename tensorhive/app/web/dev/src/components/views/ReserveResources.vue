@@ -15,13 +15,14 @@
         <div
           class="paragraph"
           v-for="resource in resourceType.resources"
-          :key="resource.uuid"
+          :key="resource.resourceIndex"
         >
           <input
             type="checkbox"
-            v-model="resource.checked"
+            v-model="resource.metrics.checked"
             @change="loadCalendar"
-          >{{ resource.name }} {{ resource.uuid }}
+          >
+          GPU{{ resource.resourceIndex }} {{ resource.resourceName }} {{resource.resourceUUID}}
         </div>
       </div>
     </div>
@@ -60,27 +61,34 @@ export default {
 
   methods: {
     parseData () {
-      var node, resourceType, resources, obj
-      var resourceTypes = []
+      var node, resourceType, resources, resourceTypes, tempResource, tempResourceType, tempNode
       for (var nodeName in this.nodes) {
         resourceTypes = []
         node = this.nodes[nodeName]
         for (var resourceTypeName in node) {
-          resources = node[resourceTypeName]
-          for (var resource in resources) {
-            resources[resource]['checked'] = false
+          resources = []
+          resourceType = node[resourceTypeName]
+          for (var resourceUUID in resourceType) {
+            tempResource = {
+              resourceUUID: resourceUUID,
+              resourceName: resourceType[resourceUUID].name,
+              resourceIndex: resourceType[resourceUUID].index,
+              metrics: resourceType[resourceUUID].metrics
+            }
+            tempResource.metrics['checked'] = false
+            resources.push(tempResource)
           }
-          resourceType = {
+          tempResourceType = {
             name: resourceTypeName,
             resources: resources
           }
-          resourceTypes.push(resourceType)
+          resourceTypes.push(tempResourceType)
         }
-        obj = {
+        tempNode = {
           nodeName: nodeName,
           resourceTypes: resourceTypes
         }
-        this.parsedNodes.push(obj)
+        this.parsedNodes.push(tempNode)
       }
     },
 
@@ -93,10 +101,10 @@ export default {
           resourceType = node.resourceTypes[j]
           for (var k = 0; k < resourceType.resources.length; k++) {
             resource = resourceType.resources[k]
-            if (resource.checked) {
+            if (resource.metrics.checked) {
               obj = {
-                name: resource.name,
-                uuid: resource.uuid
+                name: resource.resourceName,
+                uuid: resource.resourceUUID
               }
               this.selectedResources.push(obj)
             }
