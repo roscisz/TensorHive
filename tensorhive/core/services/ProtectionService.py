@@ -36,7 +36,7 @@ class ProtectionService(Service):
 
     def node_tty_sessions(self, connection, username: str = '') -> Dict[str, str]:
         '''Executes shell command in order to fetch all active terminal sessions'''
-        command = 'w --no-truncat {}'.format(username)
+        command = 'who | grep {}'.format(username)
         output = connection.run_command(command)
 
         # FIXME Assumes that only one node is in connection
@@ -79,7 +79,7 @@ class ProtectionService(Service):
     def _parse_output(self, stdout: Generator) -> Dict[str, str]:
         '''
         Transforms command output into a dictionary
-        Assumes command was: 'w --no-header'
+        Assumes command was: 'who | grep <username>'
         '''
         stdout_lines = list(stdout)  # type: List[str]
 
@@ -92,13 +92,7 @@ class ProtectionService(Service):
             return {
                 # I wanted it to be more explicit and flexible (even if it could be done better)
                 'USER': columns[0],
-                'TTY': columns[1],
-                'FROM': columns[2],
-                'LOGIN': columns[3],
-                'IDLE': columns[4],
-                'JCPU': columns[5],
-                'PCPU': columns[6],
-                'WHAT': columns[7]
+                'TTY': columns[1]
             }
 
         return [as_dict(line) for line in stdout_lines]
