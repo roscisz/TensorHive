@@ -2,17 +2,15 @@
   <!-- Main content -->
   <div>
     <button v-on:click="addChart">Add chart</button>
-    <div
-      v-for="line in lines"
-      :key="line.name"
-      class="chart_table">
+    <div class="chart_table" >
       <ChartBox
-        v-for="chart in line.charts"
-        :key="chart.name"
+        class="chart_box"
+        v-for="chart in charts"
+        :key="chart.index"
         :api-response="apiResponse"
         :chart-datasets="chartDatasets"
         :update-chart="updateChart"
-        />
+      />
     </div>
   </div>
 </template>
@@ -27,7 +25,7 @@ export default {
 
   data () {
     return {
-      lines: [],
+      charts: [],
       chartDatasets: {},
       time: 5000,
       chartLength: 25,
@@ -36,7 +34,7 @@ export default {
       apiResponse: null,
       errors: [],
       updateChart: false,
-      totalMemory: 0
+      uniqueMetrics: {}
     }
   },
 
@@ -65,49 +63,98 @@ export default {
       return color
     },
 
-    loadData () {
+    loadData: function () {
       api
         .request('get', '/nodes/metrics')
         .then(response => {
           this.apiResponse = response.data
+          this.charts = [
+            {
+              index: 0
+            }
+          ]
           this.parseData()
-          var obj = {
-            name: 'line 1',
-            charts: [
-              {
-                name: 'chart 1'
-              }
-            ]
-          }
-          this.lines.push(obj)
         })
         .catch(e => {
           this.errors.push(e)
         })
     },
 
-    parseData () {
-      var node, resource, metric, metricsObj, resourceTypes
+    isVisible: function (metric, metricName) {
+      if (metric.value === null) {
+        return false
+      } else {
+        if (metricName === 'mem_total') return false
+        return true
+      }
+    },
+
+    parseData: function () {
+      var node, resourceType, metrics, resourceTypes
       for (var nodeName in this.apiResponse) {
         resourceTypes = {}
         node = this.apiResponse[nodeName]
-        for (var resourceTypeName in node) {
-          resource = node[resourceTypeName][0]
-          metricsObj = {}
-          this.totalMemory = resource['mem_total']
-          for (var metricName in resource) {
-            if (!isNaN(resource[metricName]) && resource[metricName] !== null && metricName !== 'mem_total') {
-              metric = this.createMetric(nodeName, resourceTypeName, metricName)
-              metricsObj[metricName] = metric
+        if (node !== null) {
+          for (var resourceTypeName in node) {
+            resourceType = node[resourceTypeName]
+            if (resourceType !== null) {
+              metrics = this.findMetrics(resourceType)
+              resourceTypes[resourceTypeName] = {
+                metrics: metrics,
+                uniqueMetricNames: this.uniqueMetrics
+              }
             }
           }
-          resourceTypes[resourceTypeName] = metricsObj
         }
         this.chartDatasets[nodeName] = resourceTypes
       }
     },
 
-    createMetric  (nodeName, resourceType, name) {
+    findMetrics: function (resourceType) {
+      var resource, metric, metrics, tempResource, resources, tempMetrics
+      resources = []
+      this.uniqueMetrics = {}
+      tempMetrics = {}
+      for (var resourceUUID in resourceType) {
+        metrics = []
+        resource = resourceType[resourceUUID]
+        for (var metricName in resource.metrics) {
+          if (isNaN(resource.metrics[metricName])) {
+            metric = resource.metrics[metricName]
+            metric['visible'] = this.isVisible(resource.metrics[metricName], metricName)
+          } else {
+            metric = {
+              value: resource.metrics[metricName],
+              unit: '',
+              visible: this.isVisible(resource.metrics[metricName], metricName)
+            }
+          }
+          if (this.uniqueMetrics.hasOwnProperty(metricName)) {
+            if (this.uniqueMetrics[metricName].visible === false) {
+              this.uniqueMetrics[metricName] = metric
+            }
+          } else {
+            this.uniqueMetrics[metricName] = metric
+          }
+          metrics.push(metric)
+        }
+        tempResource = {
+          resourceUUID: resourceUUID,
+          resourceName: resourceType[resourceUUID].name,
+          resourceIndex: resourceType[resourceUUID].index,
+          metrics: metrics
+        }
+        resources.push(tempResource)
+      }
+      for (var uniqueMetricName in this.uniqueMetrics) {
+        if (this.uniqueMetrics[uniqueMetricName].visible === true) {
+          tempMetrics[uniqueMetricName] = this.createMetric(resourceType, uniqueMetricName)
+        }
+      }
+      return tempMetrics
+    },
+
+    createMetric: function (resourceType, metricName) {
       var labels = []
       for (var i = (this.chartLength - 1) * this.time / 1000; i >= 0; i -= this.time / 1000) {
         if (i % ((this.space + 1) * this.time / 1000) === 0) {
@@ -117,32 +164,42 @@ export default {
         }
       }
       var datasets = []
-      for (i = 0; i < this.apiResponse[nodeName][resourceType].length; i++) {
-        datasets.push(
-          this.createDataset(
-            this.apiResponse[nodeName][resourceType][i].name + ' ' + resourceType + i,
-            this.setColor(i + 1),
-            this.apiResponse[nodeName][resourceType][i][name]
+      var totalMemory
+      var value
+      for (var resourceUUID in resourceType) {
+        if (resourceType[resourceUUID].metrics[metricName] !== null) {
+          value = isNaN(resourceType[resourceUUID].metrics[metricName]) ? resourceType[resourceUUID].metrics[metricName].value : resourceType[resourceUUID].metrics[metricName]
+          totalMemory = resourceType[resourceUUID].metrics['mem_total'].value
+          datasets.push(
+            this.createDataset(
+              resourceUUID,
+              this.setColor(resourceType[resourceUUID].index + 1),
+              value
+            )
           )
-        )
+        }
       }
       var obj = {
-        metricName: name,
+        metricName: metricName,
         data: {
           labels: labels,
           datasets: datasets
         },
-        options: this.createOptions(name)
+        options: this.createOptions(totalMemory, metricName)
       }
       return obj
     },
 
-    createDataset (label, color, data) {
+    createDataset: function (label, color, data) {
       var defaultData = []
       for (var i = 0; i < this.chartLength - 1; i++) {
         defaultData.push(0)
       }
-      defaultData.push(data)
+      if (data !== null) {
+        defaultData.push(data)
+      } else {
+        defaultData.push(-1)
+      }
       var obj = {
         label: label,
         fill: true,
@@ -154,7 +211,7 @@ export default {
       return obj
     },
 
-    createOptions (metricName) {
+    createOptions: function (totalMemory, metricName) {
       var obj = {
         responsive: true,
         maintainAspectRatio: true,
@@ -186,59 +243,41 @@ export default {
           }]
         }
       }
-      switch (metricName) {
-        case 'gpu_util' :
-          obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = '%'
-          break
-        case 'mem_free' :
-          obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = 'MiB'
-          break
-        case 'mem_used' :
-          obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = 'MiB'
-          break
-        case 'mem_util' :
-          obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = '%'
-          break
-        case 'power' :
-          obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = 'W'
-          break
-        case 'temp' :
-          obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = ''
-          break
-        default :
-          break
-      }
+      obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = this.uniqueMetrics[metricName].unit
       if (metricName === 'mem_util' || metricName === 'gpu_util') {
         obj['scales']['yAxes'][0]['ticks'] = {
-          min: 0,
+          suggestedMin: 0,
           max: 100
         }
       }
       if (metricName === 'mem_used' || metricName === 'mem_free') {
         obj['scales']['yAxes'][0]['ticks'] = {
-          min: 0,
-          suggestedMax: this.totalMemory
+          suggestedMin: 0,
+          suggestedMax: totalMemory
         }
       }
       return obj
     },
 
-    changeData () {
-      var node, metric, resourceType
+    changeData: function () {
+      var node, metric, resourceType, value
       var data = []
       for (var nodeName in this.chartDatasets) {
         node = this.chartDatasets[nodeName]
         api
-          .request('get', '/nodes/' + nodeName + '/metrics/gpu')
+          .request('get', '/nodes/' + nodeName + '/gpu/metrics')
           .then(response => {
             data = response.data
             for (var resourceTypeName in node) {
               resourceType = node[resourceTypeName]
-              for (var metricName in resourceType) {
-                metric = resourceType[metricName]
+              for (var metricName in resourceType.metrics) {
+                metric = resourceType.metrics[metricName]
                 for (var i = 0; i < metric.data.datasets.length; i++) {
+                  value = isNaN(data[metric.data.datasets[i].label][metric.metricName])
+                    ? data[metric.data.datasets[i].label][metric.metricName].value
+                    : data[metric.data.datasets[i].label][metric.metricName]
                   metric.data.datasets[i].data.shift()
-                  metric.data.datasets[i].data.push(data[i][metric.metricName])
+                  metric.data.datasets[i].data.push(value)
                 }
               }
             }
@@ -250,23 +289,8 @@ export default {
       }
     },
 
-    addChart () {
-      var chart
-      if (this.lines[this.lines.length - 1].charts.length < 3) {
-        chart = {
-          name: 'chart ' + (this.lines.length) + ':' + (this.lines[this.lines.length - 1].charts.length + 1)
-        }
-        this.lines[this.lines.length - 1].charts.push(chart)
-      } else {
-        chart = {
-          name: 'chart ' + (this.lines.length + 1) + ':' + 1
-        }
-        var line = {
-          name: 'line ' + (this.lines.length + 1),
-          charts: [chart]
-        }
-        this.lines.push(line)
-      }
+    addChart: function () {
+      this.charts.push({ index: this.charts.length })
     }
   }
 }
@@ -275,6 +299,11 @@ export default {
 <style>
 .chart_table{
   display: flex;
-  justify-content: left;
+  flex-wrap: wrap;
+}
+.chart_box{
+  height: 40vh;
+  width: 25vw;
+  margin-left: 3vh;
 }
 </style>
