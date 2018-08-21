@@ -100,7 +100,7 @@ class ServicesConfig():
         ], interval=1.0),
         # Not production-ready
         ProtectionService(handler=ProtectionHandler(behaviour=MessageSendingBehaviour()),
-                          interval=2.5)
+                          interval=10.0)
         # Add more services here
     ]
 
