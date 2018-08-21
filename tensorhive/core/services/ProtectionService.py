@@ -151,7 +151,7 @@ class ProtectionService(Service):
             node_processes = self.node_gpu_processes(hostname)
             reserved_gpu_process_owners = self.gpu_users(node_processes, uuid)
 
-            # 3. Any session that does not belong to a priviliged user should be rembered
+            # 3. Any session that does not belong to a priviliged user should be remembered
             unauthorized_sessions = []
             for session in node_sessions:
                 if (session['USER'] != username) and (session['USER'] in reserved_gpu_process_owners):
