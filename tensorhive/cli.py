@@ -3,6 +3,7 @@ import tensorhive
 from tensorhive.config import CONFIG
 from tensorhive.config import LogConfig
 import logging
+import time
 '''
 Current CLI Structure: (update regularly)
 
@@ -91,7 +92,21 @@ def init(ctx):
 @click.pass_context
 def example(ctx):
     '''Initialize dataSet'''
+    from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
+    from tensorhive.core.services.MonitoringService import MonitoringService
+    from tensorhive.core.monitors.Monitor import Monitor
+    from tensorhive.core.monitors.GPUMonitoringBehaviour import GPUMonitoringBehaviour
     from tensorhive.db_seeds import init_set
+
+    manager = TensorHiveManager()
+    manager.configure_services([MonitoringService(monitors=[Monitor(GPUMonitoringBehaviour())], interval=1.0)])
+    manager.start()
+
+    time.sleep(5)
+
     click.echo('[•] Initializing data set...')
-    init_set()
+    init_set(manager)
     click.echo('[✔] Done.')
+
+    manager.shutdown()
+    manager.join()

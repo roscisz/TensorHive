@@ -4,13 +4,15 @@ import random
 from datetime import datetime, timedelta
 
 
-def init_set():
-    gpu_dict = {}
+def init_set(manager):
 
-    for x in range(0, 4):
-        gpu_dict['GPU' + str(x)] = "GPU" + str(random.choices("0123456789ABCDEF", k=8)) + "-" + str(
-            random.choices("0123456789ABCDEF", k=4)) + "-" + str(random.choices("0123456789ABCDEF", k=4)) + "-" + str(
-            random.choices("0123456789ABCDEF", k=4)) + "-" + str(random.choices("0123456789ABCDEF", k=12))
+    gpu_dict = {}
+    gpu_index = 0
+    for host_data in manager.infrastructure_manager.infrastructure.values():
+        if 'GPU' in host_data:
+            for gpu in host_data['GPU']:
+                gpu_dict['GPU{}'.format(gpu_index)] = gpu['uuid']
+                gpu_index += 1
 
     user_list = [{'username': 'admin'}
     ]
