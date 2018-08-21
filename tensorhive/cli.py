@@ -14,6 +14,7 @@ tensorhive
 |   └── --log-level <level> (e.g. debug, info, warning, error, critical)
 └── db
     └── init
+    └── example
 '''
 AVAILABLE_LOG_LEVELS = {
     'debug': logging.DEBUG,
@@ -55,13 +56,9 @@ def main():
               help='Log level to apply.')
 @click.pass_context
 def run(ctx, log_level):
-    # from gevent import monkey
-    # monkey.patch_all()
-    
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
     from tensorhive.api.APIServer import APIServer
     from tensorhive.config import SERVICES_CONFIG
-    
     LogConfig.apply(log_level)
 
     manager = TensorHiveManager()
@@ -80,7 +77,6 @@ def run(ctx, log_level):
 def db(ctx):
     pass
 
-
 @db.command()
 @click.pass_context
 def init(ctx):
@@ -89,4 +85,13 @@ def init(ctx):
     click.echo('[•] Initializing database...')
     # TODO Check if init_db can fail and if so, print that error
     init_db()
+    click.echo('[✔] Done.')
+
+@db.command()
+@click.pass_context
+def example(ctx):
+    '''Initialize dataSet'''
+    from tensorhive.db_seeds import init_set
+    click.echo('[•] Initializing data set...')
+    init_set()
     click.echo('[✔] Done.')
