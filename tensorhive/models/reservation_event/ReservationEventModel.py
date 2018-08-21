@@ -29,7 +29,7 @@ class ReservationEventModel(Base):
                 description={description}, \n \
                 created_at={created_at}>'.format(id=self.id,
                                                  title=self.title,
-                                                 node_id=self.node_id,
+                                                 resource_id=self.resource_id,
                                                  user_id=self.user_id,
                                                  description=self.description,
                                                  created_at=self.created_at)

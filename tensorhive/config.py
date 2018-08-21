@@ -25,7 +25,7 @@ class APIConfig():
 
     SPECIFICATION_FILE = 'api_specification.yml'
     # Indicates the location of folder containing api implementation (RustyResolver)
-    VERSION_FOLDER = 'tensorhive.api.api'
+    VERSION_FOLDER = 'tensorhive.api.controllers'
     TITLE = 'TensorHive API'
     VERSION = '1.0'
 
@@ -99,8 +99,8 @@ class ServicesConfig():
 
         ], interval=1.0),
         # Not production-ready
-        # ProtectionService(handler=ProtectionHandler(behaviour=MessageSendingBehaviour()),
-        #                   interval=2.5)
+        ProtectionService(handler=ProtectionHandler(behaviour=MessageSendingBehaviour()),
+                          interval=10.0)
         # Add more services here
     ]
 

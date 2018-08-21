@@ -7,8 +7,8 @@ class Monitor():
     _monitoring_behaviour = None
     _gathered_data = {}
 
-    def __init__(self, injected_behaviour: MonitoringBehaviour):
-        self._monitoring_behaviour = injected_behaviour
+    def __init__(self, behaviour: MonitoringBehaviour):
+        self._monitoring_behaviour = behaviour
 
     @property
     def gathered_data(self) -> Dict:

@@ -7,7 +7,10 @@ log = logging.getLogger(__name__)
 
 class MessageSendingBehaviour():
 
-    message = 'You are violating someone else\'s reservation! Please, log out!'
+    message = '''
+    You are violating {leigitimate_owner_username}\'s reservation!
+    Please, stop all your computations on {gpu_uuid}.
+    '''
     command_body = 'echo "{msg}" | write {username} {tty_name}'
 
     def _merged_command(self, sessions: List):
@@ -20,8 +23,12 @@ class MessageSendingBehaviour():
 
         def formatted_command(session):
             '''Example: 'echo "Example message" | write example_username pts/1' '''
+            formatted_message = self.message.format(
+                leigitimate_owner_username=session['LEGITIMATE_USER'],
+                gpu_uuid=session['GPU_UUID'])
+
             return self.command_body.format(
-                msg=self.message,
+                msg=formatted_message,
                 username=session['USER'],
                 tty_name=session['TTY'])
 
