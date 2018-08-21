@@ -1,40 +1,41 @@
 <template>
-  <!-- Main content -->
   <div>
-    <button v-on:click="addChart">Add chart</button>
-    <div class="chart_table" >
-      <ChartBox
-        class="chart_box"
-        v-for="chart in charts"
-        :key="chart.index"
-        :api-response="apiResponse"
+    <button v-on:click="addWatch">Add watch</button>
+    <div class="watch_table" >
+      <WatchBox
+        class="watch_box"
+        v-for="watch in watches"
+        :key="watch.index"
+        :resources-indexes="resourcesIndexes"
         :chart-datasets="chartDatasets"
         :update-chart="updateChart"
+        :time="time"
       />
     </div>
   </div>
 </template>
 
 <script>
-import ChartBox from './ChartBox.vue'
+import WatchBox from './WatchBox.vue'
 import api from '../../../api'
+import _ from 'lodash'
 export default {
   components: {
-    ChartBox
+    WatchBox
   },
 
   data () {
     return {
-      charts: [],
+      watches: [],
       chartDatasets: {},
       time: 5000,
       chartLength: 25,
       space: 2,
       interval: null,
-      apiResponse: null,
       errors: [],
       updateChart: false,
-      uniqueMetrics: {}
+      uniqueMetrics: {},
+      resourcesIndexes: {}
     }
   },
 
@@ -67,13 +68,12 @@ export default {
       api
         .request('get', '/nodes/metrics')
         .then(response => {
-          this.apiResponse = response.data
-          this.charts = [
+          this.watches = [
             {
               index: 0
             }
           ]
-          this.parseData()
+          this.parseData(response.data)
         })
         .catch(e => {
           this.errors.push(e)
@@ -89,11 +89,11 @@ export default {
       }
     },
 
-    parseData: function () {
+    parseData: function (apiResponse) {
       var node, resourceType, metrics, resourceTypes
-      for (var nodeName in this.apiResponse) {
+      for (var nodeName in apiResponse) {
         resourceTypes = {}
-        node = this.apiResponse[nodeName]
+        node = apiResponse[nodeName]
         if (node !== null) {
           for (var resourceTypeName in node) {
             resourceType = node[resourceTypeName]
@@ -111,12 +111,11 @@ export default {
     },
 
     findMetrics: function (resourceType) {
-      var resource, metric, metrics, tempResource, resources, tempMetrics
-      resources = []
+      var resource, metric, tempMetrics
       this.uniqueMetrics = {}
       tempMetrics = {}
       for (var resourceUUID in resourceType) {
-        metrics = []
+        this.resourcesIndexes[resourceUUID] = resourceType[resourceUUID].index
         resource = resourceType[resourceUUID]
         for (var metricName in resource.metrics) {
           if (isNaN(resource.metrics[metricName])) {
@@ -136,15 +135,7 @@ export default {
           } else {
             this.uniqueMetrics[metricName] = metric
           }
-          metrics.push(metric)
         }
-        tempResource = {
-          resourceUUID: resourceUUID,
-          resourceName: resourceType[resourceUUID].name,
-          resourceIndex: resourceType[resourceUUID].index,
-          metrics: metrics
-        }
-        resources.push(tempResource)
       }
       for (var uniqueMetricName in this.uniqueMetrics) {
         if (this.uniqueMetrics[uniqueMetricName].visible === true) {
@@ -155,7 +146,8 @@ export default {
     },
 
     createMetric: function (resourceType, metricName) {
-      var labels = []
+      var labels, totalMemory, value, datasets, orderedDatasets
+      labels = []
       for (var i = (this.chartLength - 1) * this.time / 1000; i >= 0; i -= this.time / 1000) {
         if (i % ((this.space + 1) * this.time / 1000) === 0) {
           labels.push(i)
@@ -163,9 +155,7 @@ export default {
           labels.push('')
         }
       }
-      var datasets = []
-      var totalMemory
-      var value
+      datasets = []
       for (var resourceUUID in resourceType) {
         if (resourceType[resourceUUID].metrics[metricName] !== null) {
           value = isNaN(resourceType[resourceUUID].metrics[metricName]) ? resourceType[resourceUUID].metrics[metricName].value : resourceType[resourceUUID].metrics[metricName]
@@ -173,24 +163,26 @@ export default {
           datasets.push(
             this.createDataset(
               resourceUUID,
+              'GPU' + resourceType[resourceUUID].index,
               this.setColor(resourceType[resourceUUID].index + 1),
               value
             )
           )
         }
       }
+      orderedDatasets = _.orderBy(datasets, 'label')
       var obj = {
         metricName: metricName,
         data: {
           labels: labels,
-          datasets: datasets
+          datasets: orderedDatasets
         },
         options: this.createOptions(totalMemory, metricName)
       }
       return obj
     },
 
-    createDataset: function (label, color, data) {
+    createDataset: function (uuid, label, color, data) {
       var defaultData = []
       for (var i = 0; i < this.chartLength - 1; i++) {
         defaultData.push(0)
@@ -201,6 +193,7 @@ export default {
         defaultData.push(-1)
       }
       var obj = {
+        uuid: uuid,
         label: label,
         fill: true,
         borderColor: color,
@@ -214,7 +207,7 @@ export default {
     createOptions: function (totalMemory, metricName) {
       var obj = {
         responsive: true,
-        maintainAspectRatio: true,
+        maintainAspectRatio: false,
         legend: {
           position: 'bottom',
           display: true
@@ -273,9 +266,9 @@ export default {
               for (var metricName in resourceType.metrics) {
                 metric = resourceType.metrics[metricName]
                 for (var i = 0; i < metric.data.datasets.length; i++) {
-                  value = isNaN(data[metric.data.datasets[i].label][metric.metricName])
-                    ? data[metric.data.datasets[i].label][metric.metricName].value
-                    : data[metric.data.datasets[i].label][metric.metricName]
+                  value = isNaN(data[metric.data.datasets[i].uuid][metric.metricName])
+                    ? data[metric.data.datasets[i].uuid][metric.metricName].value
+                    : data[metric.data.datasets[i].uuid][metric.metricName]
                   metric.data.datasets[i].data.shift()
                   metric.data.datasets[i].data.push(value)
                 }
@@ -289,19 +282,19 @@ export default {
       }
     },
 
-    addChart: function () {
-      this.charts.push({ index: this.charts.length })
+    addWatch: function () {
+      this.watches.push({ index: this.watches.length })
     }
   }
 }
 </script>
 
 <style>
-.chart_table{
+.watch_table{
   display: flex;
   flex-wrap: wrap;
 }
-.chart_box{
+.watch_box{
   height: 40vh;
   width: 25vw;
   margin-left: 3vh;

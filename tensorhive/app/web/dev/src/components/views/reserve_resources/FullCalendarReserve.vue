@@ -17,7 +17,7 @@
           v-model="checkbox.checked"
           :disabled="checkbox.disabled"
         >
-        {{ checkbox.name }} {{ checkbox.uuid }}
+        GPU{{ checkbox.index }} {{ checkbox.name }}
       </div>
       <label class="form-label">
         Start and end time
@@ -39,6 +39,12 @@
         @click="reservation()"
       >
         Reserve
+      </button>
+      <button
+        class="modal-default-button"
+        @click="close()"
+      >
+        Cancel
       </button>
     </div>
   </BaseModal>

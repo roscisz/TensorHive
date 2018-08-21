@@ -22,7 +22,7 @@
             v-model="resource.metrics.checked"
             @change="loadCalendar"
           >
-          GPU{{ resource.resourceIndex }} {{ resource.resourceName }} {{resource.resourceUUID}}
+          GPU{{ resource.resourceIndex }} {{ resource.resourceName }}
         </div>
       </div>
     </div>
@@ -32,6 +32,7 @@
 
 <script>
 import api from '../../api'
+import _ from 'lodash'
 import FullCalendar from './reserve_resources/FullCalendar.vue'
 export default {
   components: {
@@ -61,7 +62,7 @@ export default {
 
   methods: {
     parseData () {
-      var node, resourceType, resources, resourceTypes, tempResource, tempResourceType, tempNode
+      var node, resourceType, resources, resourceTypes, tempResource, tempResourceType, tempNode, orderedResources
       for (var nodeName in this.nodes) {
         resourceTypes = []
         node = this.nodes[nodeName]
@@ -78,9 +79,10 @@ export default {
             tempResource.metrics['checked'] = false
             resources.push(tempResource)
           }
+          orderedResources = _.orderBy(resources, 'resourceIndex')
           tempResourceType = {
             name: resourceTypeName,
-            resources: resources
+            resources: orderedResources
           }
           resourceTypes.push(tempResourceType)
         }
@@ -104,7 +106,8 @@ export default {
             if (resource.metrics.checked) {
               obj = {
                 name: resource.resourceName,
-                uuid: resource.resourceUUID
+                uuid: resource.resourceUUID,
+                index: resource.resourceIndex
               }
               this.selectedResources.push(obj)
             }

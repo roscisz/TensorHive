@@ -58,6 +58,7 @@ export default {
         obj = {
           name: this.selectedResources[i].name,
           uuid: this.selectedResources[i].uuid,
+          index: this.selectedResources[i].index,
           checked: false,
           disabled: false
         }
@@ -203,4 +204,9 @@ export default {
 </script>
 <style>
   @import '../../../../static/fullcalendar/fullcalendar.css';
+  .fc-event{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
 </style>

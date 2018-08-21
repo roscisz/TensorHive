@@ -19,7 +19,7 @@
         :items="metrics"
       ></v-select>
     </div>
-    <div v-if="showProcesses === true" class="content_box">
+    <div v-if="showProcesses === true" class="table_box">
       <v-data-table
         :headers="headers"
         :items="processes"
@@ -29,21 +29,26 @@
       >
         <template slot="items" slot-scope="props">
           <tr @click="props.expanded = !props.expanded">
+            <td class="text-xs-right">{{ props.item.index }}</td>
             <td class="text-xs-right">{{ props.item.owner }}</td>
             <td class="text-xs-right">{{ props.item.pid }}</td>
             <td class="text-xs-right">{{ props.item.command }}</td>
-            <td class="text-xs-right">{{ props.item.GPU }}</td>
           </tr>
         </template>
         <template slot="expand" slot-scope="props">
           <v-card flat>
-            <v-card-text>GPU: {{ props.item.GPU }}</v-card-text>
+            <v-card-text>GPU UUID: {{ props.item.uuid }}</v-card-text>
           </v-card>
         </template>
       </v-data-table>
     </div>
-    <div v-else class="content_box">
-      <LineChart :chart-data="metricData" :options="metricOptions" :rerender-chart="rerenderChart" :update-chart="updateChart"/>
+    <div v-else>
+      <LineChart
+         class="chart_box"
+        :chart-data="metricData"
+        :options="metricOptions"
+        :rerender-chart="rerenderChart"
+        :update-chart="updateChart"/>
     </div>
   </div>
 </template>
@@ -57,9 +62,10 @@ export default {
   },
 
   props: {
+    resourcesIndexes: Object,
     chartDatasets: Object,
-    apiResponse: Object,
-    updateChart: Boolean
+    updateChart: Boolean,
+    time: Number
   },
 
   data () {
@@ -76,10 +82,10 @@ export default {
       showProcesses: false,
       interval: null,
       headers: [
+        { text: 'GPU index', value: 'index' },
         { text: 'owner', value: 'owner' },
         { text: 'pid', value: 'pid' },
-        { text: 'command', value: 'command' },
-        { text: 'GPU', value: 'GPU' }
+        { text: 'command', value: 'command' }
       ],
       processes: []
     }
@@ -130,7 +136,8 @@ export default {
           for (var resourceUUID in data) {
             for (var i = 0; i < data[resourceUUID].length; i++) {
               tempProcess = data[resourceUUID][i]
-              tempProcess['GPU'] = resourceUUID
+              tempProcess['index'] = this.resourcesIndexes[resourceUUID]
+              tempProcess['uuid'] = resourceUUID
               processes.push(tempProcess)
             }
           }
@@ -148,6 +155,9 @@ export default {
       this.metricData = this.loadData()
       this.metricOptions = this.loadOptions()
       this.rerenderChart = !(this.rerenderChart)
+      if (this.interval !== null) {
+        clearInterval(this.interval)
+      }
     },
     selectedResourceType () {
       this.fillMetrics()
@@ -155,16 +165,26 @@ export default {
       this.metricOptions = this.loadOptions()
       this.metrics.push('processes')
       this.rerenderChart = !(this.rerenderChart)
+      if (this.interval !== null) {
+        clearInterval(this.interval)
+      }
     },
     selectedMetric () {
       if (this.selectedMetric === 'processes') {
         this.checkProcesses()
+        let self = this
+        this.interval = setInterval(function () {
+          self.checkProcesses()
+        }, this.time)
         this.showProcesses = true
       } else {
         this.showProcesses = false
         this.metricData = this.loadData()
         this.metricOptions = this.loadOptions()
         this.rerenderChart = !(this.rerenderChart)
+        if (this.interval !== null) {
+          clearInterval(this.interval)
+        }
       }
     }
   },
@@ -193,7 +213,13 @@ export default {
   width: 30%;
   position: sticky;
 }
-.content_box{
+.chart_box{
+  width: 25vw;
+  height: 34vh;
+  position: relative;
+}
+.table_box{
+  width: 25vw;
   height: 34vh;
   position: relative;
   overflow-y: scroll;
