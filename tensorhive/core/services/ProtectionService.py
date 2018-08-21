@@ -34,9 +34,9 @@ class ProtectionService(Service):
         elif isinstance(injected_object, SSHConnectionManager):
             self.connection_manager = injected_object
 
-    def node_tty_sessions(self, connection, username: str = '') -> Dict[str, str]:
+    def node_tty_sessions(self, connection) -> Dict[str, str]:
         '''Executes shell command in order to fetch all active terminal sessions'''
-        command = 'who | grep {}'.format(username)
+        command = 'who'
         output = connection.run_command(command)
 
         # FIXME Assumes that only one node is in connection
