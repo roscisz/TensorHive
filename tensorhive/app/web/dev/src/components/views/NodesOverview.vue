@@ -1,15 +1,14 @@
 <template>
-  <!-- Main content -->
   <section class="content">
-    <ChartsOverview/>
+    <WatchGenerator/>
   </section>
 </template>
 
 <script>
-import ChartsOverview from './nodes_overview/ChartsGenerator.vue'
+import WatchGenerator from './nodes_overview/WatchGenerator.vue'
 export default {
   components: {
-    ChartsOverview
+    WatchGenerator
   }
 }
 </script>

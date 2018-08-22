@@ -13,7 +13,13 @@
         class="modal-default-button"
         @click="cancelReservation()"
       >
-        Cancel
+        Yes
+      </button>
+      <button
+        class="modal-default-button"
+        @click="close()"
+      >
+        No
       </button>
     </div>
   </BaseModal>

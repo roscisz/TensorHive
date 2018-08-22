@@ -15,13 +15,14 @@
         <div
           class="paragraph"
           v-for="resource in resourceType.resources"
-          :key="resource.uuid"
+          :key="resource.resourceIndex"
         >
           <input
             type="checkbox"
-            v-model="resource.checked"
+            v-model="resource.metrics.checked"
             @change="loadCalendar"
-          >{{ resource.name }} {{ resource.uuid }}
+          >
+          GPU{{ resource.resourceIndex }} {{ resource.resourceName }}
         </div>
       </div>
     </div>
@@ -31,6 +32,7 @@
 
 <script>
 import api from '../../api'
+import _ from 'lodash'
 import FullCalendar from './reserve_resources/FullCalendar.vue'
 export default {
   components: {
@@ -60,27 +62,35 @@ export default {
 
   methods: {
     parseData () {
-      var node, resourceType, resources, obj
-      var resourceTypes = []
+      var node, resourceType, resources, resourceTypes, tempResource, tempResourceType, tempNode, orderedResources
       for (var nodeName in this.nodes) {
         resourceTypes = []
         node = this.nodes[nodeName]
         for (var resourceTypeName in node) {
-          resources = node[resourceTypeName]
-          for (var resource in resources) {
-            resources[resource]['checked'] = false
+          resources = []
+          resourceType = node[resourceTypeName]
+          for (var resourceUUID in resourceType) {
+            tempResource = {
+              resourceUUID: resourceUUID,
+              resourceName: resourceType[resourceUUID].name,
+              resourceIndex: resourceType[resourceUUID].index,
+              metrics: resourceType[resourceUUID].metrics
+            }
+            tempResource.metrics['checked'] = false
+            resources.push(tempResource)
           }
-          resourceType = {
+          orderedResources = _.orderBy(resources, 'resourceIndex')
+          tempResourceType = {
             name: resourceTypeName,
-            resources: resources
+            resources: orderedResources
           }
-          resourceTypes.push(resourceType)
+          resourceTypes.push(tempResourceType)
         }
-        obj = {
+        tempNode = {
           nodeName: nodeName,
           resourceTypes: resourceTypes
         }
-        this.parsedNodes.push(obj)
+        this.parsedNodes.push(tempNode)
       }
     },
 
@@ -93,10 +103,11 @@ export default {
           resourceType = node.resourceTypes[j]
           for (var k = 0; k < resourceType.resources.length; k++) {
             resource = resourceType.resources[k]
-            if (resource.checked) {
+            if (resource.metrics.checked) {
               obj = {
-                name: resource.name,
-                uuid: resource.uuid
+                name: resource.resourceName,
+                uuid: resource.resourceUUID,
+                index: resource.resourceIndex
               }
               this.selectedResources.push(obj)
             }
