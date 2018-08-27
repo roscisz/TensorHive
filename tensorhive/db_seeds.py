@@ -28,7 +28,7 @@ def init_set(manager):
     start = now_time - timedelta(days=150 + random.randint(-10,10))
     end = start + timedelta(days=random.randint(2,18))
 
-    z = 1;
+    indexCounter = 1;
 
     for x in range(1, 150):
         start = start + (end - start) * random.random()
@@ -36,7 +36,7 @@ def init_set(manager):
         user_random_id = random.randint(0,user_count-1)
         random_date = start + (end - start) * random.random()
 
-        title = 'Reservation no. ' + str(z)
+        title = 'Reservation no. ' + str(indexCounter)
         old_user_random_id = 0
         old_title = ''
         for y in range(0, 3):
@@ -46,8 +46,8 @@ def init_set(manager):
                     user_random_id = random.randint(0, user_count - 1)
                     start = datetime.now() - timedelta(days=150)
                     old_title = title
-                    z+=1;
-                    title = 'Reservation no. ' + str(z)
+                    indexCounter+=1;
+                    title = 'Reservation no. ' + str(indexCounter)
 
                 reservation_event = {'title': title ,
                     'description': '' ,

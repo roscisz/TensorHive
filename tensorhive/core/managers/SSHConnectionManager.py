@@ -46,3 +46,4 @@ class SSHConnectionManager():
     @property
     def connections(self):
         return self._connection_group
+    
