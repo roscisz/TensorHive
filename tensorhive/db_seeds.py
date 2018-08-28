@@ -31,10 +31,12 @@ def init_set(manager):
     indexCounter = 1;
 
     for x in range(1, 150):
-        start = start + (end - start) * random.random()
-        end = start + (end - start) * random.random()
+        timeRange = generate_random_time_period(start,end)
+        start = timeRange[0]
+        end = timeRange[1]
+
         user_random_id = random.randint(0,user_count-1)
-        random_date = start + (end - start) * random.random()
+        random_date = generate_random_time_period(start,end)
 
         title = 'Reservation no. ' + str(indexCounter)
         old_user_random_id = 0
@@ -68,3 +70,7 @@ def init_set(manager):
 
         end = start + timedelta(days=random.randint(2, 18))
 
+def generate_random_time_period(start,end):
+    start = start + (end - start) * random.random()
+    end = start + (end - start) * random.random()
+    return (start,end)
