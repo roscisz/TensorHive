@@ -1,5 +1,5 @@
 diff --git a/DeepSpeech.py b/DeepSpeech.py
-index 8e1b529..edc6636 100755
+index 8e1b529..598b4be 100755
 --- a/DeepSpeech.py
 +++ b/DeepSpeech.py
 @@ -22,6 +22,7 @@ from six.moves import zip, range, filter, urllib, BaseHTTPServer
@@ -15,9 +15,9 @@ index 8e1b529..edc6636 100755
  tf.app.flags.DEFINE_string  ('initialize_from_frozen_model', '', 'path to frozen model to initialize from. This behaves like a checkpoint, loading the weights from the frozen model and starting training with those weights. The optimizer parameters aren\'t restored, so remember to adjust the learning rate.')
  
 +# Benchmarking
-+tf.app.flags.DEFINE_integer ('benchmark_steps',     0,       'number of benchmark steps - if 0, normal training will be run')
-+tf.app.flags.DEFINE_integer ('benchmark_log_steps', 1,       'period of benchmark logging in steps - if 0, only final result will be displayed')
-+tf.app.flags.DEFINE_integer ('warmup_steps',        1,       'number of warmup steps before benchmarking, works only if benchmark_steps > 0')
++tf.app.flags.DEFINE_integer ('benchmark_steps',               0, 'number of benchmark steps - if 0, normal training will be run')
++tf.app.flags.DEFINE_integer ('benchmark_log_steps',           1, 'period of benchmark logging in steps - if 0, only final result will be displayed')
++tf.app.flags.DEFINE_integer ('benchmark_warmup_steps',        1, 'number of warmup steps before benchmarking, works only if benchmark_steps > 0')
 +
  for var in ['b1', 'h1', 'b2', 'h2', 'b3', 'h3', 'b5', 'h5', 'b6', 'h6']:
      tf.app.flags.DEFINE_float('%s_stddev' % var, None, 'standard deviation to use when initialising %s' % var)
@@ -41,7 +41,12 @@ index 8e1b529..edc6636 100755
            top_paths=top_paths, merge_repeated=merge_repeated))
  
    return (
-@@ -1555,10 +1564,16 @@ def train(server=None):
+@@ -1551,14 +1560,21 @@ def train(server=None):
+         hooks.append(optimizer.make_session_run_hook(is_chief))
+ 
+     # Hook to save TensorBoard summaries
+-    if FLAGS.summary_secs > 0:
++    if FLAGS.summary_secs > 0 and FLAGS.benchmark_steps == 0:
          hooks.append(tf.train.SummarySaverHook(save_secs=FLAGS.summary_secs, output_dir=FLAGS.summary_dir, summary_op=merge_all_summaries_op))
  
      # Hook wih number of checkpoint files to save in checkpoint_dir
@@ -53,13 +58,14 @@ index 8e1b529..edc6636 100755
 +    chief_only_hooks = []
 +
 +    if FLAGS.benchmark_steps > 0:
-+        chief_only_hooks.append(BenchmarkHook(FLAGS.benchmark_steps, FLAGS.warmup_steps, FLAGS.benchmark_log_steps,
-+                                              global_step, FLAGS.train_batch_size))
++        chief_only_hooks.append(BenchmarkHook(FLAGS.benchmark_steps, FLAGS.benchmark_warmup_steps,
++                                              FLAGS.benchmark_log_steps, global_step, len(available_devices) *
++                                              max(1, FLAGS.replicas_to_agg) * FLAGS.train_batch_size))
 +
      if len(FLAGS.initialize_from_frozen_model) > 0:
          with tf.gfile.FastGFile(FLAGS.initialize_from_frozen_model, 'rb') as fin:
              graph_def = tf.GraphDef()
-@@ -1595,6 +1610,7 @@ def train(server=None):
+@@ -1595,6 +1611,7 @@ def train(server=None):
          with tf.train.MonitoredTrainingSession(master='' if server is None else server.target,
                                                 is_chief=is_chief,
                                                 hooks=hooks,
@@ -67,7 +73,7 @@ index 8e1b529..edc6636 100755
                                                 checkpoint_dir=FLAGS.checkpoint_dir,
                                                 save_checkpoint_secs=None, # already taken care of by a hook
                                                 config=session_config) as session:
-@@ -1864,7 +1880,7 @@ def main(_) :
+@@ -1864,7 +1881,7 @@ def main(_) :
          do_single_file_inference(FLAGS.one_shot_infer)
  
      # Stopping the coordinator
