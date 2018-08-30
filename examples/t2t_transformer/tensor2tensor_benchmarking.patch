@@ -1,0 +1,211 @@
+diff --git a/tensor2tensor/bin/t2t_trainer.py b/tensor2tensor/bin/t2t_trainer.py
+index 09cba70..1f850c4 100644
+--- a/tensor2tensor/bin/t2t_trainer.py
++++ b/tensor2tensor/bin/t2t_trainer.py
+@@ -64,13 +64,15 @@ flags.DEFINE_integer("inter_op_parallelism_threads", 0,
+ flags.DEFINE_integer("intra_op_parallelism_threads", 0,
+                      "Number of intra_op_parallelism_threads to use for CPU. "
+                      "See TensorFlow config.proto for details.")
++flags.DEFINE_integer("log_level", tf.logging.INFO,
++                     "Sets the threshold for what messages will be logged - default 20 (INFO)")
+ 
+ # To maintain compatibility with some internal libs, we guard against these flag
+ # definitions possibly erroring. Apologies for the ugliness.
+ try:
+   flags.DEFINE_string("master", "", "Address of TensorFlow master.")
+   flags.DEFINE_string("output_dir", "", "Base output directory for run.")
+-  flags.DEFINE_string("schedule", "continuous_train_and_eval",
++  flags.DEFINE_string("schedule", "train",
+                       "Method of Experiment to run.")
+   flags.DEFINE_integer("eval_steps", 100,
+                        "Number of steps in evaluation. By default, eval will "
+@@ -122,6 +124,14 @@ flags.DEFINE_integer("log_step_count_steps", 100,
+                      "Number of local steps after which progress is printed "
+                      "out")
+ 
++# benchmarking
++flags.DEFINE_integer("benchmark_steps", 0,
++                     "Number of benchmark steps - if 0 normal training will be run")
++flags.DEFINE_integer("benchmark_log_steps", 1,
++                     "Period of benchmark logging in steps - if 0 only final result will be displayed")
++flags.DEFINE_integer("warmup_steps", 10,
++                     "Number of warmup steps before benchmarking, works only if benchmark_steps > 0")
++
+ 
+ def set_hparams_from_args(args):
+   """Set hparams overrides from unparsed args list."""
+@@ -181,6 +191,9 @@ def create_experiment_fn(**kwargs):
+       use_tpu_estimator=FLAGS.use_tpu_estimator,
+       use_xla=FLAGS.xla_compile,
+       warm_start_from=FLAGS.warm_start_from,
++      benchmark_steps=FLAGS.benchmark_steps,
++      benchmark_log_steps=FLAGS.benchmark_log_steps,
++      warmup_steps=FLAGS.warmup_steps,
+       **kwargs)
+ 
+ 
+@@ -192,10 +205,15 @@ def create_run_config(hp):
+   Returns:
+     a run config
+   """
+-  save_ckpt_steps = max(FLAGS.iterations_per_loop, FLAGS.local_eval_frequency)
+-  save_ckpt_secs = FLAGS.save_checkpoints_secs or None
+-  if save_ckpt_secs:
++  if FLAGS.benchmark_steps > 0:
+     save_ckpt_steps = None
++    save_ckpt_secs = None
++  else:
++    save_ckpt_steps = max(FLAGS.iterations_per_loop, FLAGS.local_eval_frequency)
++    save_ckpt_secs = FLAGS.save_checkpoints_secs or None
++    if save_ckpt_secs:
++      save_ckpt_steps = None
++
+   assert FLAGS.output_dir or FLAGS.checkpoint_path
+   tpu_config_extra_kwargs = {}
+ 
+@@ -356,7 +374,7 @@ def run_std_server():
+ 
+ 
+ def main(argv):
+-  tf.logging.set_verbosity(tf.logging.INFO)
++  tf.logging.set_verbosity(FLAGS.log_level)
+   if FLAGS.schedule == "run_std_server":
+     run_std_server()
+   trainer_lib.set_random_seed(FLAGS.random_seed)
+diff --git a/tensor2tensor/utils/benchmark_hook.py b/tensor2tensor/utils/benchmark_hook.py
+new file mode 100644
+index 0000000..c866396
+--- /dev/null
++++ b/tensor2tensor/utils/benchmark_hook.py
+@@ -0,0 +1,59 @@
++#!/usr/bin/env python
++# -*- coding: utf-8 -*-
++
++from __future__ import absolute_import, division, print_function
++
++import time
++import tensorflow as tf
++
++
++class BenchmarkHook(tf.train.SessionRunHook):
++    def __init__(self, steps, warmup_steps, log_steps, batch_size):
++        self.steps = steps
++        self.warmup_steps = warmup_steps
++        self.log_steps = log_steps
++        self.global_step_tensor = None
++        self.batch_size = batch_size
++
++        self.start_time = None
++        self.last_time = None
++        self.start_global_step = None
++        self.benchmark_global_step = None
++        self.benchmarking = False
++
++    def begin(self):
++        self.global_step_tensor = tf.train.get_global_step()
++        if self.global_step_tensor is None:
++            raise RuntimeError("Global step must be created to use BenchmarkHook.")
++
++    def before_run(self, run_context):
++        return tf.train.SessionRunArgs(self.global_step_tensor)
++
++    def after_run(self, run_context, run_values):
++        current_global_step = run_values.results
++
++        if self.start_global_step is None:
++            self.start_global_step = current_global_step
++            self.benchmark_global_step = self.start_global_step + self.warmup_steps
++            print('B Starting warm up')
++            print('batch_size = {}'.format(self.batch_size))
++        elif current_global_step >= self.benchmark_global_step:
++            if not self.benchmarking:
++                print('B Done warm up')
++                if self.log_steps != 0:
++                    print('B Step\tsentence_translations/sec')
++                self.last_time = self.start_time = time.time()
++                self.benchmarking = True
++            else:
++                current_time = time.time()
++                if self.log_steps != 0 and not (current_global_step - self.benchmark_global_step) % self.log_steps:
++                    speed = self.log_steps * self.batch_size / (current_time - self.last_time)
++                    self.last_time = current_time
++                    print('B {}\t{:.2f}'.format(current_global_step - self.benchmark_global_step, speed))
++
++                if current_global_step - self.benchmark_global_step == self.steps:
++                    speed = self.steps * self.batch_size / (current_time - self.start_time)
++                    print('-' * 64)
++                    print('B total sentence_translations/sec: {:.2f}'.format(speed))
++                    print('-' * 64)
++                    run_context.request_stop()
+diff --git a/tensor2tensor/utils/trainer_lib.py b/tensor2tensor/utils/trainer_lib.py
+index 03f9b38..a4bab02 100644
+--- a/tensor2tensor/utils/trainer_lib.py
++++ b/tensor2tensor/utils/trainer_lib.py
+@@ -28,6 +28,7 @@ from tensor2tensor.utils import devices
+ from tensor2tensor.utils import metrics_hook
+ from tensor2tensor.utils import registry
+ from tensor2tensor.utils import t2t_model
++from tensor2tensor.utils import benchmark_hook
+ 
+ import tensorflow as tf
+ 
+@@ -267,7 +268,9 @@ def create_hooks(use_tfdbg=False,
+                  use_validation_monitor=False,
+                  validation_monitor_kwargs=None,
+                  use_early_stopping=False,
+-                 early_stopping_kwargs=None):
++                 early_stopping_kwargs=None,
++                 use_benchmark=False,
++                 benchmark_kwargs=None):
+   """Create train and eval hooks for Experiment."""
+   train_hooks = []
+   eval_hooks = []
+@@ -298,6 +301,11 @@ def create_hooks(use_tfdbg=False,
+     train_hooks.append(hook)
+     eval_hooks.append(hook)
+ 
++  if use_benchmark:
++    tf.logging.info("Using BenchmarkHook")
++    hook = benchmark_hook.BenchmarkHook(**benchmark_kwargs)
++    train_hooks.append(hook)
++
+   return train_hooks, eval_hooks
+ 
+ 
+@@ -430,7 +438,11 @@ def create_experiment(
+     use_xla=False,
+     additional_train_hooks=None,
+     additional_eval_hooks=None,
+-    warm_start_from=None):
++    warm_start_from=None,
++    benchmark_steps=None,
++    benchmark_log_steps=None,
++    warmup_steps=None):
++
+   """Create Experiment."""
+   # HParams
+   hparams.add_hparam("model_dir", run_config.model_dir)
+@@ -488,6 +500,12 @@ def create_experiment(
+       plateau_decrease=eval_early_stopping_metric_minimize,
+       plateau_delta=eval_early_stopping_metric_delta,
+       every_n_steps=min_eval_frequency)
++  benchmark_kwargs = dict(
++      steps=benchmark_steps,
++      warmup_steps=warmup_steps,
++      log_steps=benchmark_log_steps,
++      batch_size=hparams.batch_size
++  )
+ 
+   # Eval on TPU Pods is not supported yet
+   if use_tpu and run_config.tpu_config.num_shards > 8 and "eval" in schedule:
+@@ -510,7 +528,9 @@ def create_experiment(
+       use_validation_monitor=use_validation_monitor,
+       validation_monitor_kwargs=validation_monitor_kwargs,
+       use_early_stopping=use_early_stopping,
+-      early_stopping_kwargs=early_stopping_kwargs)
++      early_stopping_kwargs=early_stopping_kwargs,
++      use_benchmark=benchmark_steps > 0,
++      benchmark_kwargs=benchmark_kwargs)
+   train_hooks += t2t_model.T2TModel.get_train_hooks(model_name)
+   eval_hooks += t2t_model.T2TModel.get_eval_hooks(model_name)
+   if additional_train_hooks:

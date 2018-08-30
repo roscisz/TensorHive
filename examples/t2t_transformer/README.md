@@ -1,0 +1,146 @@
+# T2T Transformer benchmarks
+
+In this example we provide experimental results and steps to reproduce for benchmarking performance of training the
+Transformer model (from [Attention is All You Need](https://arxiv.org/abs/1706.03762) paper) for automatic language translation.
+
+The example is based on [Tensor2Tensor](https://github.com/tensorflow/tensor2tensor) (T2T), which is an open-source library,
+that implements various models for various problems using TensorFlow background. We benchmark its Transformer implementation
+for single-machine as well as in distributed training scenario.
+
+## Table of contents
+- [x] [Installation instructions](#installation)
+- [ ] [Instructions for running the benchmarks](#running-the-benchmarks)
+  - [x] [Manually](#running-manually)
+  - [ ] [Using TensorHive](#running-using-tensorhive)
+- [ ] [Experimental results](#experimental-results):
+  - [x] [Batch size influence on training performance on various GPUs](#batch-size)
+  - [ ] Scalability on multiple GPUs
+  - [ ] Scalability on multiple nodes
+
+## Installation
+
+In this section we describe installation steps for T2T Transformer that we used in our setup.
+For detailed instructions for training this or other T2T models, go to
+[Tensor2Tensor](https://github.com/tensorflow/tensor2tensor) project.
+
+### Prerequisites
+
+* GNU/Linux, kernel v. 4.4
+* Python 3, Pip3
+* CUDA 9.0 with CuDNN 7
+* TensorFlow 1.10.0
+* git
+* wget
+
+**Running on nvidia-docker**
+```bash
+nvidia-docker pull nvidia/cuda:9.0-cudnn7-devel
+nvidia-docker run -it nvidia/cuda:9.0-cudnn7-devel
+apt-get update
+apt-get install -y python3 python3-pip git wget
+pip3 install 'tensorflow-gpu==1.10.0'
+```
+
+### Installing Tensor2Tensor with the benchmarking patch
+
+
+**Clone the proper version of tensor2tensor**
+```bash
+git clone https://github.com/tensorflow/tensor2tensor.git
+cd tensor2tensor
+git checkout 178738d
+```
+
+**Apply the benchmarking patch**
+
+```bash
+wget https://raw.githubusercontent.com/roscisz/TensorHive/feature/t2t_transformer_example/examples/t2t/tensor2tensor_benchmarking.patch
+git apply tensor2tensor_benchmarking.patch
+```
+
+**Installing tensor2tensor with pip3**
+
+(from tensor2tensor directory)
+```bash
+pip3 install .
+```
+
+
+### Download a dataset
+
+For benchmarking purposes, you can download a minimal subset of the original
+dataset for English-German translation task:
+
+```bash
+cd $HOME
+wget https://raw.githubusercontent.com/roscisz/TensorHive/feature/t2t_transformer_example/examples/t2t/t2t_data.tar.gz
+tar xzf t2t_data.tar.gz
+rm t2t_data.tar.gz
+```
+
+If you need the whole `translate_ende_wmt32k` dataset, you can obtain it with the following
+(takes some time):
+
+```bash
+PROBLEM=translate_ende_wmt32k
+DATA_DIR=$HOME/t2t_data
+TMP_DIR=/tmp/t2t_datagen
+
+mkdir -p $DATA_DIR $TMP_DIR
+
+# Generate data
+t2t-datagen \
+  --data_dir=$DATA_DIR \
+  --tmp_dir=$TMP_DIR \
+  --problem=$PROBLEM
+```
+
+
+## Running the benchmarks
+
+In this section we describe the steps to reproduce the
+[experimental results](#experimental-results),
+assuming that Tensor2Tensor with the benchmarking patch is installed.
+
+### Running manually
+
+To run the benchmark, specify the number of "global steps" to be benchmarked
+using the `benchmark_steps` parameter:
+
+```bash
+PROBLEM=translate_ende_wmt32k
+MODEL=transformer
+HPARAMS=transformer_base_single_gpu
+
+DATA_DIR=$HOME/t2t_data
+TRAIN_DIR=$HOME/t2t_train/$PROBLEM/$MODEL-$HPARAMS
+
+CUDA_VISIBLE_DEVICES=0 t2t-trainer --data_dir=$DATA_DIR --problem=$PROBLEM \
+    --model=$MODEL --hparams_set=$HPARAMS --output_dir=$TRAIN_DIR \
+    --log_level=30 --benchmark_steps=50
+
+```
+
+**Testing batch size on one GPU**
+
+To check the performance for various batch sizes, modify the `batch_size`
+hyperparameter under `hparams` argument. For example, to use batch size of 512
+run:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 t2t-trainer --data_dir=$DATA_DIR --problem=$PROBLEM \
+    --model=$MODEL --hparams_set=$HPARAMS --output_dir=$TRAIN_DIR \
+    --log_level=30 --benchmark_steps=50 --hparams='batch_size=512'
+```
+
+
+### Running using TensorHive
+
+## Experimental results
+
+### Batch size
+
+![batch_size_v100](https://raw.githubusercontent.com/roscisz/TensorHive/feature/deepspeech_example/examples/deepspeech/img/batch_size_v100.png)
+TODO: repeat v100 tests when other GPUs, CPU and PCI are not used
+![batch_size_gtx1060](https://raw.githubusercontent.com/roscisz/TensorHive/feature/deepspeech_example/examples/deepspeech/img/batch_size_gtx1060.png)
+
