@@ -1,11 +1,8 @@
 from builtins import len
-
-from tensorhive.controllers.user.CreateUserController import CreateUserController
-from tensorhive.controllers.reservation_event.CreateReservationEventController import CreateReservationEventController
+from tensorhive.models.reservation_event.ReservationEventModel import ReservationEventModel
 from tensorhive.models.user.UserModel import UserModel
 import random
 from datetime import datetime, timedelta
-
 
 def init_set(manager):
 
@@ -23,13 +20,13 @@ def init_set(manager):
 
     for x in range(1, 80):
         time_range = generate_random_time_period(start,end)
-
         user_random_id = 0
 
         for gpuIndex in range(0, len(gpu_dict)):
             start = time_range[0]
             end = time_range[1]
             title = 'Reservation no. ' + str(reservation_index_current_position)
+
             #reservation on resource or not
             if (random.randint(0,15) <= 12):
                 user_random_id = random.randint(0, user_count - 1)
@@ -47,7 +44,7 @@ def init_set(manager):
                     'end': str(end.isoformat())[:23]+'Z'
                     }
 
-                CreateReservationEventController.create(reservation_event)
+                create_reservation_event(reservation_event)
 
         #gap period or not
         if (random.randint(0, 1) == 1):
@@ -103,3 +100,34 @@ def change_datetime_with_days(current_time,days):
 
 def change_time(current_time,period):
     return current_time + period
+
+def create_reservation_event(reservation_event):
+    def parsed_datetime(input_datetime: str) -> str:
+        return datetime.strptime(input_datetime, '%Y-%m-%dT%H:%M:%S.%fZ')
+
+    if not UserModel.find_by_id(reservation_event['userId']):
+        return None
+
+    start_time = parsed_datetime(reservation_event['start'])
+    end_time = parsed_datetime(reservation_event['end'])
+    resource_id = reservation_event['resourceId']
+    user_id = reservation_event['userId']
+
+    if (not UserModel.find_by_id(user_id)):
+        return None
+
+    if (ReservationEventModel.find_resource_events_between(start_time, end_time, resource_id) is not None):
+        return None
+
+    new_reservation_model = ReservationEventModel(
+        title=reservation_event['title'],
+        description=reservation_event['description'],
+        resource_id=resource_id,
+        user_id=user_id,
+        start=start_time,
+        end=end_time
+    )
+
+    if not new_reservation_model.save_to_db():
+        return None
+    return new_reservation_model.as_dict
