@@ -1,31 +1,19 @@
 from tensorhive.controllers.user.CreateUserController import CreateUserController
 from tensorhive.controllers.reservation_event.CreateReservationEventController import CreateReservationEventController
+from tensorhive.models.user.UserModel import UserModel
 import random
 from datetime import datetime, timedelta
 
 
 def init_set(manager):
 
-    gpu_dict = {}
-    gpu_index = 0
-    for host_data in manager.infrastructure_manager.infrastructure.values():
-        if 'GPU' in host_data:
-            for gpu in host_data['GPU']:
-                gpu_dict['GPU{}'.format(gpu_index)] = gpu['uuid']
-                gpu_index += 1
+    gpu_dict = get_gpu_uuid(manager)
 
-    user_list = [{'username': 'admin'}
-    ]
-
-    CreateUserController.register(user_list[0])
     user_count = 4
-
-    for x in range(1, user_count):
-        user_list.append({'username': 'user' + str(x)})
-        CreateUserController.register(user_list[x])
+    user_count = create_users(user_count)
 
     now_time = datetime.utcnow()
-    start = now_time - timedelta(days=150 + random.randint(-10,10))
+    start = now_time - timedelta(days=150)
     end = start + timedelta(days=random.randint(2,18))
 
     indexCounter = 1;
@@ -69,6 +57,42 @@ def init_set(manager):
             start = end + timedelta(days=random.randint(2, 8))
 
         end = start + timedelta(days=random.randint(2, 18))
+
+def create_user(username):
+    if UserModel.find_by_username(username):
+        return 1
+
+    new_user = UserModel(
+        username=username
+    )
+    try:
+        new_user.save_to_db()
+    except:
+        return 0
+    return 1
+
+def create_users(user_count):
+    made_users_count = 0
+    user_list = ['admin'
+                ]
+
+    made_users_count += create_user(user_list[0])
+
+    for x in range(1, user_count):
+        user_list.append('user' + str(x))
+        made_users_count += create_user(user_list[x])
+
+    return made_users_count
+
+def get_gpu_uuid(manager):
+    gpu_dict = {}
+    gpu_index = 0
+    for host_data in manager.infrastructure_manager.infrastructure.values():
+        if 'GPU' in host_data:
+            for gpu in host_data['GPU']:
+                gpu_dict['GPU{}'.format(gpu_index)] = gpu['uuid']
+                gpu_index += 1
+    return gpu_dict
 
 def generate_random_time_period(start,end):
     start = start + (end - start) * random.random()
