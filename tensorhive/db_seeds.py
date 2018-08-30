@@ -16,31 +16,28 @@ def init_set(manager):
 
     now_time = datetime.utcnow()
 
-    start = change_datetime_with_days(now_time,-1*(150 + random.randint(-10,10)))
+    start = change_datetime_with_days(now_time,-1*(320 + random.randint(-10,10)))
     end = change_datetime_with_days(start, random.randint(6,18))
 
-    index_current_counter = 1;
+    reservation_index_current_position = 1;
 
-    for x in range(1, 150):
-        timeRange = generate_random_time_period(start,end)
-        start = timeRange[0]
-        end = timeRange[1]
+    for x in range(1, 80):
+        time_range = generate_random_time_period(start,end)
 
-        user_random_id = random.randint(0,user_count-1)
-        random_date = generate_random_time_period(start,end)
+        user_random_id = 0
 
-        title = 'Reservation no. ' + str(index_current_counter)
-        old_user_random_id = 0
-        old_title = ''
         for gpuIndex in range(0, len(gpu_dict)):
-            if (random.randint(0, 1) == 1):
-                if (random.randint(0,3) < 1):
-                    old_user_random_id = user_random_id
-                    user_random_id = random.randint(0, user_count - 1)
-                    start = datetime.now() - timedelta(days=150)
-                    old_title = title
-                    index_current_counter+=1;
-                    title = 'Reservation no. ' + str(index_current_counter)
+            start = time_range[0]
+            end = time_range[1]
+            title = 'Reservation no. ' + str(reservation_index_current_position)
+            #reservation on resource or not
+            if (random.randint(0,15) <= 12):
+                user_random_id = random.randint(0, user_count - 1)
+                reservation_index_current_position += 1;
+                if (random.randint(0,10) <= 3):
+                    new_time_random_subrange = timeRange = generate_random_time_period(start,end)
+                    start = new_time_random_subrange[0]
+                    end = new_time_random_subrange[1]
 
                 reservation_event = {'title': title ,
                     'description': '' ,
@@ -50,16 +47,15 @@ def init_set(manager):
                     'end': str(end.isoformat())[:23]+'Z'
                     }
 
-                user_random_id = old_user_random_id
-                title = old_title
                 CreateReservationEventController.create(reservation_event)
 
+        #gap period or not
         if (random.randint(0, 1) == 1):
-            start = end + timedelta(seconds = random.randint(1, 32))
+            start = change_time(end, timedelta(seconds = random.randint(1, 32)))
         else:
-            start = end + timedelta(days=random.randint(2, 8))
+            start = change_datetime_with_days(end, random.randint(2, 8))
 
-        end = start + timedelta(days=random.randint(2, 18))
+        end = change_datetime_with_days(start, random.randint(7, 10))
 
 def create_user(username):
     if UserModel.find_by_username(username):
@@ -98,9 +94,9 @@ def get_gpu_uuid(manager):
     return gpu_dict
 
 def generate_random_time_period(start,end):
-    start = start + (end - start) * random.random()
-    end = start + (end - start) * random.random()
-    return (start,end)
+    new_start_time = start + (end - start) * random.random()
+    end = new_start_time + (end - new_start_time) * random.random()
+    return (new_start_time,end)
 
 def change_datetime_with_days(current_time,days):
     return change_time(current_time,timedelta(days = days))
