@@ -54,7 +54,7 @@ git checkout 178738d
 **Apply the benchmarking patch**
 
 ```bash
-wget https://raw.githubusercontent.com/roscisz/TensorHive/feature/t2t_transformer_example/examples/t2t/tensor2tensor_benchmarking.patch
+wget https://raw.githubusercontent.com/roscisz/TensorHive/feature/t2t_transformer_example/examples/t2t_transformer/tensor2tensor_benchmarking.patch
 git apply tensor2tensor_benchmarking.patch
 ```
 
@@ -73,7 +73,7 @@ dataset for English-German translation task:
 
 ```bash
 cd $HOME
-wget https://raw.githubusercontent.com/roscisz/TensorHive/feature/t2t_transformer_example/examples/t2t/t2t_data.tar.gz
+wget https://raw.githubusercontent.com/roscisz/TensorHive/feature/t2t_transformer_example/examples/t2t_transformer/t2t_data.tar.gz
 tar xzf t2t_data.tar.gz
 rm t2t_data.tar.gz
 ```
@@ -101,6 +101,9 @@ t2t-datagen \
 In this section we describe the steps to reproduce the
 [experimental results](#experimental-results),
 assuming that Tensor2Tensor with the benchmarking patch is installed.
+Results were obtained on the subset of the original `translate_ende_wmt32k` problem,
+provided above.
+
 
 ### Running manually
 
@@ -140,7 +143,7 @@ CUDA_VISIBLE_DEVICES=0 t2t-trainer --data_dir=$DATA_DIR --problem=$PROBLEM \
 
 ### Batch size
 
-![batch_size_v100](https://raw.githubusercontent.com/roscisz/TensorHive/feature/deepspeech_example/examples/deepspeech/img/batch_size_v100.png)
+![batch_size_v100](https://raw.githubusercontent.com/roscisz/TensorHive/feature/t2t_transformer_example/examples/t2t_transformer/img/bs_v100_single.png)
 TODO: repeat v100 tests when other GPUs, CPU and PCI are not used
-![batch_size_gtx1060](https://raw.githubusercontent.com/roscisz/TensorHive/feature/deepspeech_example/examples/deepspeech/img/batch_size_gtx1060.png)
+![batch_size_gtx1060](https://raw.githubusercontent.com/roscisz/TensorHive/feature/t2t_transformer_example/examples/t2t_transformer/img/bs_gtx1060_single.png)
 
