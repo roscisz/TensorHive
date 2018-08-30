@@ -1,3 +1,5 @@
+from builtins import len
+
 from tensorhive.controllers.user.CreateUserController import CreateUserController
 from tensorhive.controllers.reservation_event.CreateReservationEventController import CreateReservationEventController
 from tensorhive.models.user.UserModel import UserModel
@@ -13,10 +15,11 @@ def init_set(manager):
     user_count = create_users(user_count)
 
     now_time = datetime.utcnow()
-    start = now_time - timedelta(days=150)
-    end = start + timedelta(days=random.randint(2,18))
 
-    indexCounter = 1;
+    start = change_datetime_with_days(now_time,-1*(150 + random.randint(-10,10)))
+    end = change_datetime_with_days(start, random.randint(6,18))
+
+    index_current_counter = 1;
 
     for x in range(1, 150):
         timeRange = generate_random_time_period(start,end)
@@ -26,22 +29,22 @@ def init_set(manager):
         user_random_id = random.randint(0,user_count-1)
         random_date = generate_random_time_period(start,end)
 
-        title = 'Reservation no. ' + str(indexCounter)
+        title = 'Reservation no. ' + str(index_current_counter)
         old_user_random_id = 0
         old_title = ''
-        for y in range(0, 3):
+        for gpuIndex in range(0, len(gpu_dict)):
             if (random.randint(0, 1) == 1):
                 if (random.randint(0,3) < 1):
                     old_user_random_id = user_random_id
                     user_random_id = random.randint(0, user_count - 1)
                     start = datetime.now() - timedelta(days=150)
                     old_title = title
-                    indexCounter+=1;
-                    title = 'Reservation no. ' + str(indexCounter)
+                    index_current_counter+=1;
+                    title = 'Reservation no. ' + str(index_current_counter)
 
                 reservation_event = {'title': title ,
                     'description': '' ,
-                    'resourceId': gpu_dict['GPU'+str(y)],
+                    'resourceId': gpu_dict['GPU'+str(gpuIndex)],
                     'userId': user_random_id,
                     'start': str(start.isoformat())[:23]+'Z',
                     'end': str(end.isoformat())[:23]+'Z'
@@ -98,3 +101,9 @@ def generate_random_time_period(start,end):
     start = start + (end - start) * random.random()
     end = start + (end - start) * random.random()
     return (start,end)
+
+def change_datetime_with_days(current_time,days):
+    return change_time(current_time,timedelta(days = days))
+
+def change_time(current_time,period):
+    return current_time + period
