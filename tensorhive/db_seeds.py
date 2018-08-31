@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 def init_set(manager):
 
-    gpu_dict = get_gpu_uuid(manager)
+    gpus_uuids = get_gpu_uuid(manager)
 
     user_count = 4
     user_count = create_users(user_count)
@@ -16,12 +16,13 @@ def init_set(manager):
     start = change_datetime_with_days(now_time,-1*(320 + random.randint(-10,10)))
     end = change_datetime_with_days(start, random.randint(6,18))
 
-    reservation_index_current_position = 1;
+    reservation_index_current_position = 1
 
+    #Distribute random events for about half year before and after now
     for _ in range(1, 80):
         time_range = generate_random_time_period(start,end)
 
-        for gpu_index in range(len(gpu_dict)):
+        for gpu_uuid in gpus_uuids:
             start = time_range[0]
             end = time_range[1]
             title = 'Reservation no. ' + str(reservation_index_current_position)
@@ -38,7 +39,7 @@ def init_set(manager):
 
                 reservation_event = {'title': title ,
                     'description': '' ,
-                    'resourceId': gpu_dict['GPU'+str(gpu_index)],
+                    'resourceId': gpu_uuid,
                     'userId': user_random_id,
                     #FORMAT UTC PROPER FORMAT DATES FROM STRING
                     'start': str(start.isoformat())[:23]+'Z',
@@ -47,7 +48,7 @@ def init_set(manager):
 
                 create_reservation_event(reservation_event)
 
-        #gap period or not
+        #Draw lots for gap period or not
         if (random.randint(0, 1) == 1):
             start = change_time(end, timedelta(seconds = random.randint(1, 32)))
         else:
@@ -68,28 +69,29 @@ def create_user(username):
         return 0
     return 1
 
-def create_users(user_count):
-    made_users_count = 0
-    user_list = ['admin'
-                ]
+def create_users(users_to_create: int, create_admin=True) -> int:
+    '''
+    Creates a given amount of users and optionally an admin account,
+    then it returns the number of successful operations.
+    '''
+    created_records = 0
+    if create_admin:
+        created_records += create_user('admin')
 
-    made_users_count += create_user(user_list[0])
-
-    for x in range(1, user_count):
-        user_list.append('user' + str(x))
-        made_users_count += create_user(user_list[x])
-
-    return made_users_count
+    username_template = 'user_{}'
+    usernames = [username_template.format(idx) for idx in range(users_to_create)]
+    results = [create_user(username) for username in usernames]
+    created_users = sum(results)
+    created_records += created_users
+    return created_records
 
 def get_gpu_uuid(manager):
-    gpu_dict = {}
-    gpu_index = 0
+    gpus_uuids = []
     for host_data in manager.infrastructure_manager.infrastructure.values():
         if 'GPU' in host_data:
             for gpu in host_data['GPU']:
-                gpu_dict['GPU{}'.format(gpu_index)] = gpu['uuid']
-                gpu_index += 1
-    return gpu_dict
+                gpus_uuids.append(gpu['uuid'])
+    return gpus_uuids
 
 def generate_random_time_period(start,end):
     new_start_time = start + (end - start) * random.random()
