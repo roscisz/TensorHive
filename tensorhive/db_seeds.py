@@ -102,6 +102,7 @@ def change_datetime_with_days(current_time,days):
 def change_time(current_time,period):
     return current_time + period
 
+#TODO models triggers!
 def create_reservation_event(reservation_event):
     def parsed_datetime(input_datetime: str) -> str:
         return datetime.strptime(input_datetime, '%Y-%m-%dT%H:%M:%S.%fZ')
