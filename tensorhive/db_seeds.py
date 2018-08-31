@@ -18,19 +18,19 @@ def init_set(manager):
 
     reservation_index_current_position = 1;
 
-    for x in range(1, 80):
+    for _ in range(1, 80):
         time_range = generate_random_time_period(start,end)
-        user_random_id = 0
 
-        for gpu_index in range(0, len(gpu_dict)):
+        for gpu_index in range(len(gpu_dict)):
             start = time_range[0]
             end = time_range[1]
             title = 'Reservation no. ' + str(reservation_index_current_position)
 
-            #reservation on resource or not
-            if (random.randint(0,15) <= 12):
+            #Reservation on resource with 0.8 chance
+            if (random.randint(0,10) <= 8):
                 user_random_id = random.randint(0, user_count - 1)
                 reservation_index_current_position += 1;
+                #Change to random subtime range with 0.3 chance
                 if (random.randint(0,10) <= 3):
                     new_time_random_subrange = timeRange = generate_random_time_period(start,end)
                     start = new_time_random_subrange[0]
@@ -40,6 +40,7 @@ def init_set(manager):
                     'description': '' ,
                     'resourceId': gpu_dict['GPU'+str(gpu_index)],
                     'userId': user_random_id,
+                    #FORMAT UTC PROPER FORMAT DATES FROM STRING
                     'start': str(start.isoformat())[:23]+'Z',
                     'end': str(end.isoformat())[:23]+'Z'
                     }
