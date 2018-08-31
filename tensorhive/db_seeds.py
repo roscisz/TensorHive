@@ -22,7 +22,7 @@ def init_set(manager):
         time_range = generate_random_time_period(start,end)
         user_random_id = 0
 
-        for gpuIndex in range(0, len(gpu_dict)):
+        for gpu_index in range(0, len(gpu_dict)):
             start = time_range[0]
             end = time_range[1]
             title = 'Reservation no. ' + str(reservation_index_current_position)
@@ -38,7 +38,7 @@ def init_set(manager):
 
                 reservation_event = {'title': title ,
                     'description': '' ,
-                    'resourceId': gpu_dict['GPU'+str(gpuIndex)],
+                    'resourceId': gpu_dict['GPU'+str(gpu_index)],
                     'userId': user_random_id,
                     'start': str(start.isoformat())[:23]+'Z',
                     'end': str(end.isoformat())[:23]+'Z'
