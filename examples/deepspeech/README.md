@@ -107,16 +107,16 @@ Mozilla DeepSpeech will be used.
 
 ### Batch size
 
-![batch_size_v100](https://raw.githubusercontent.com/roscisz/TensorHive/feature/deepspeech_example/examples/deepspeech/img/batch_size_v100.png)
-![batch_size_gtx1060](https://raw.githubusercontent.com/roscisz/TensorHive/feature/deepspeech_example/examples/deepspeech/img/batch_size_gtx1060.png)
+![batch_size_v100](https://raw.githubusercontent.com/roscisz/TensorHive/develop/examples/deepspeech/img/batch_size_v100.png)
+![batch_size_gtx1060](https://raw.githubusercontent.com/roscisz/TensorHive/develop/examples/deepspeech/img/batch_size_gtx1060.png)
 
 ### MultiGPU scalability
 
 The following results show performance results on NVIDIA® DGX Station™, depending on the choice utilized GPUs. The
 results are marked with ID's of the used GPUs, for example '013' means that CUDA_VISIBLE_DEVICES was set to 0,1,3.
 
-![multigpu_128](https://raw.githubusercontent.com/roscisz/TensorHive/feature/deepspeech_example/examples/deepspeech/img/multigpu_128.png)
-![multigpu_64](https://raw.githubusercontent.com/roscisz/TensorHive/feature/deepspeech_example/examples/deepspeech/img/multigpu_64.png)
+![multigpu_128](https://raw.githubusercontent.com/roscisz/TensorHive/develop/examples/deepspeech/img/multigpu_128.png)
+![multigpu_64](https://raw.githubusercontent.com/roscisz/TensorHive/develop/examples/deepspeech/img/multigpu_64.png)
 
 Two interesting facts can be seen in the charts. First, in the cases of utilizing two GPUs, it is significant which
 GPUs are used exactly. For example, combining GPUs 0 and 1 or 2 and 3 results in worse performance. This is probably
