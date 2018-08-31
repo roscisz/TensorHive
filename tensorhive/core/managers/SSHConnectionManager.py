@@ -23,7 +23,7 @@ class SSHConnectionManager():
         '''
         Appends a host (as hostname + config) directly into parallel ssh client instance.
 
-        Expected dict structure: 
+        Expected dict structure:
         host_config = {'<some_hostname>': {'user': '<some_username>'}}
         '''
         hostname = [*host_config][0]

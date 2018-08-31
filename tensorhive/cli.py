@@ -3,6 +3,7 @@ import tensorhive
 from tensorhive.config import CONFIG
 from tensorhive.config import LogConfig
 import logging
+import time
 '''
 Current CLI Structure: (update regularly)
 
@@ -14,6 +15,7 @@ tensorhive
 |   └── --log-level <level> (e.g. debug, info, warning, error, critical)
 └── db
     └── init
+    └── example
 '''
 AVAILABLE_LOG_LEVELS = {
     'debug': logging.DEBUG,
@@ -55,13 +57,9 @@ def main():
               help='Log level to apply.')
 @click.pass_context
 def run(ctx, log_level):
-    # from gevent import monkey
-    # monkey.patch_all()
-    
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
     from tensorhive.api.APIServer import APIServer
     from tensorhive.config import SERVICES_CONFIG
-    
     LogConfig.apply(log_level)
 
     manager = TensorHiveManager()
@@ -80,7 +78,6 @@ def run(ctx, log_level):
 def db(ctx):
     pass
 
-
 @db.command()
 @click.pass_context
 def init(ctx):
@@ -90,3 +87,26 @@ def init(ctx):
     # TODO Check if init_db can fail and if so, print that error
     init_db()
     click.echo('[✔] Done.')
+
+@db.command()
+@click.pass_context
+def example(ctx):
+    '''Initialize dataSet'''
+    from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
+    from tensorhive.core.services.MonitoringService import MonitoringService
+    from tensorhive.core.monitors.Monitor import Monitor
+    from tensorhive.core.monitors.GPUMonitoringBehaviour import GPUMonitoringBehaviour
+    from tensorhive.db_seeds import init_set
+
+    manager = TensorHiveManager()
+    manager.configure_services([MonitoringService(monitors=[Monitor(GPUMonitoringBehaviour())], interval=1.0)])
+    manager.start()
+
+    time.sleep(5)
+
+    click.echo('[•] Initializing data set...')
+    init_set(manager)
+    click.echo('[✔] Done.')
+
+    manager.shutdown()
+    manager.join()
