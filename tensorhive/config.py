@@ -27,21 +27,7 @@ class APIConfig():
     # Indicates the location of folder containing api implementation (RustyResolver)
     VERSION_FOLDER = 'tensorhive.api.controllers'
     TITLE = 'TensorHive API'
-    VERSION = '1.0'
-
-
-class SSHConfig():
-    '''
-    Replace with your own config, see docs:
-    https://parallel-ssh.readthedocs.io/en/latest/advanced.html#per-host-configuration
-    '''
-    AVAILABLE_NODES = {
-        # 'example_host_0': {'user': 'example_username'},
-        # 'example_host_1': {'user': 'example_username'}
-    }
-    CONNECTION_TIMEOUT = 1.0
-    CONNECTION_NUM_RETRIES = 0
-
+    VERSION = '0.2'
 
 class DBConfig():
     SQLALCHEMY_DATABASE_URI = 'sqlite:///tensorhive.db'
@@ -75,6 +61,7 @@ class LogConfig():
 
 
 # Objects to be imported by application modules
+from tensorhive.ssh_config import SSHConfig
 CONFIG = DevelopmentConfig()
 SSH_CONFIG = SSHConfig()
 API_CONFIG = APIConfig()
