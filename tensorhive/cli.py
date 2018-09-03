@@ -65,7 +65,7 @@ def run(ctx, log_level):
     click.echo('TensorHive {}'.format(tensorhive.__version__))
 
     LogConfig.apply(log_level)
-
+    init_db()
     manager = TensorHiveManager()
     manager.configure_services(SERVICES_CONFIG.ENABLED_SERVICES)
     manager.start()
@@ -74,20 +74,3 @@ def run(ctx, log_level):
 
     manager.shutdown()
     manager.join()
-
-
-@main.group()
-@click.pass_context
-def db(ctx):
-    pass
-
-
-@db.command()
-@click.pass_context
-def init(ctx):
-    '''Initialize database'''
-    from tensorhive.database import init_db
-    click.echo('[•] Initializing database...')
-    # TODO Check if init_db can fail and if so, print that error
-    init_db()
-    click.echo('[✔] Done.')
