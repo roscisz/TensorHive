@@ -1,10 +1,10 @@
 swagger: "2.0"
 
 info:
-  title: "{{title}} v{{version}}"
+  title: "{{title}} {{version}}"
   version: "{{version}}"
 
-basePath: "/v{{version}}"
+basePath: "/{{url_prefix}}"
 
 paths:
   /users:

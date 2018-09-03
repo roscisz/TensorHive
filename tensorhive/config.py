@@ -8,8 +8,7 @@ class BaseConfig():
 
 class DevelopmentConfig(BaseConfig):
     '''Default config, can overwrite BaseConfig'''
-    VERSION = 'v0.2'
-
+    pass
 
 class ProductionConfig(BaseConfig):
     '''Production use only, can overwrite BaseConfig'''
@@ -27,7 +26,8 @@ class APIConfig():
     # Indicates the location of folder containing api implementation (RustyResolver)
     VERSION_FOLDER = 'tensorhive.api.controllers'
     TITLE = 'TensorHive API'
-    VERSION = '0.2'
+    VERSION = 0.2
+    URL_PREFIX = 'api/{version}'.format(version=VERSION)
 
 class DBConfig():
     SQLALCHEMY_DATABASE_URI = 'sqlite:///tensorhive.db'

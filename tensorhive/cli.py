@@ -61,14 +61,15 @@ def run(ctx, log_level):
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
     from tensorhive.api.APIServer import APIServer
     from tensorhive.config import SERVICES_CONFIG
-    
+    from tensorhive.database import init_db
+    click.echo('TensorHive {}'.format(tensorhive.__version__))
+
     LogConfig.apply(log_level)
 
     manager = TensorHiveManager()
     manager.configure_services(SERVICES_CONFIG.ENABLED_SERVICES)
     manager.start()
 
-    click.echo('API server has started...')
     APIServer().start()
 
     manager.shutdown()
