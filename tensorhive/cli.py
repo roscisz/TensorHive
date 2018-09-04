@@ -62,15 +62,20 @@ def run(ctx, log_level):
     from tensorhive.api.APIServer import APIServer
     from tensorhive.config import SERVICES_CONFIG
     from tensorhive.database import init_db
+    from tensorhive.app.web.AppServer import start_server
+    from multiprocessing import Process
     click.echo('TensorHive {}'.format(tensorhive.__version__))
 
     LogConfig.apply(log_level)
     init_db()
     manager = TensorHiveManager()
     manager.configure_services(SERVICES_CONFIG.ENABLED_SERVICES)
-    manager.start()
+    webapp_server = Process(target=start_server)
 
+    manager.start()
+    webapp_server.start()
     APIServer().start()
 
     manager.shutdown()
+    webapp_server.join()
     manager.join()

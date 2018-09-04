@@ -29,6 +29,13 @@ class APIConfig():
     VERSION = 0.2
     URL_PREFIX = 'api/{version}'.format(version=VERSION)
 
+class WebAppConfig():
+    SERVER_BACKEND = 'gunicorn'
+    SERVER_HOST = '0.0.0.0'
+    SERVER_PORT = 5000
+    SERVER_LOGLEVEL = 'warning'
+    NUM_WORKERS = 8
+
 class DBConfig():
     SQLALCHEMY_DATABASE_URI = 'sqlite:///tensorhive.db'
 
@@ -65,8 +72,8 @@ from tensorhive.ssh_config import SSHConfig
 CONFIG = DevelopmentConfig()
 SSH_CONFIG = SSHConfig()
 API_CONFIG = APIConfig()
+APP_CONFIG = WebAppConfig()
 DB_CONFIG = DBConfig()
-
 
 class ServicesConfig():
     '''
