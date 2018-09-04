@@ -66,6 +66,12 @@ class LogConfig():
         # May want to disable logging completely
         # logging.getLogger('werkzeug').disabled = True
 
+        # Colored logs can be easily disabled by commenting this single line
+        import coloredlogs
+        coloredlogs.install(level=log_level, fmt=cls.FORMAT)
+
+        
+
 
 # Objects to be imported by application modules
 from tensorhive.ssh_config import SSHConfig

@@ -5,7 +5,7 @@ setup(
     name = 'tensorhive',
     version = tensorhive.__version__,
     packages = find_packages(),
-    package_data = {'tensorhive': ['scripts/*', 'static/*', 'api/*', 'app/web/*']},
+    include_package_data=True,
     entry_points = {
         'console_scripts': [
             'tensorhive = tensorhive.__main__:main'
@@ -17,7 +17,16 @@ setup(
     url = 'https://github.com/roscisz/TensorHive',
     download_url = 'https://github.com/roscisz/TensorHive/archive/0.1.1.tar.gz',
     keywords = 'distributed machine learning tensorflow resource management',
-    install_requires=['parallel-ssh', 'passlib', 'sqlalchemy', 'sqlalchemy-utils', 'click', 'connexion', 'flask_cors'],
-    include_package_data=True,
+    install_requires=[
+        'parallel-ssh', 
+        'passlib', 
+        'sqlalchemy', 
+        'sqlalchemy-utils', 
+        'click', 
+        'connexion', 
+        'flask_cors', 
+        'gunicorn', 
+        'coloredlogs'
+    ],
     zip_safe=False
 )
