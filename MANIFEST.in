@@ -1,0 +1,4 @@
+include README.md
+graft tensorhive/app/web/dev
+graft tensorhive/app/web/dist
+global-exclude *.py[co]
