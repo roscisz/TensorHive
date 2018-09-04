@@ -69,16 +69,29 @@ class SSHConnectionManager():
 
         # 2. Execute and gather output
         command = 'uname'
-        message_template = '{host:20} {msg}'
+        message_template = '[{icon}] {host:20} {msg}'
         output = connections.run_command(command, stop_on_errors=False)
         connections.join(output)
 
         # 3. Log appropriate messages based on command's result
+        num_failed = 0
         for host, host_output in output.items():
             if host_output.exception is None and host_output.exit_code == 0:
-                log.info(message_template.format(host=host, msg='OK ✔'))
+                log.info(message_template.format(
+                    icon='✔',
+                    host=host,
+                    msg='OK'))
             else:
-                error_message = 'FAILED ✘ (exit code: {}, exception: {})'.format(
-                    host_output.exit_code, host_output.exception.__class__.__name__)
+                num_failed += 1
+                error_message = 'FAILED (exit code: {}, exception: {})'.format(
+                    host_output.exit_code,
+                    host_output.exception.__class__.__name__)
                 log.critical(message_template.format(
-                    host=host, msg=error_message))
+                    icon='✘',
+                    host=host,
+                    msg=error_message))
+
+        if num_failed > 0:
+            log.critical('Summary: {failed}/{all} failed to connect.'.format(
+                failed=num_failed, 
+                all=len(output)))
