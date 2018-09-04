@@ -18,6 +18,12 @@ class ProductionConfig(BaseConfig):
 class APIConfig():
     # Available backends: 'flask', 'gevent', 'tornado', 'aiohttp'
     SERVER_BACKEND = 'gevent'
+
+    '''WARNING
+    If you make any changes to host address or port, you need to:
+    - update api URI for Vue web app at tensorhive/app/web/dev/src/config/index.js
+    - rebuild web app (cd tensorhive/app/web/dev; rm -rf ../dist; npm run build)
+    '''
     SERVER_HOST = '0.0.0.0'
     SERVER_PORT = 1111
     SERVER_DEBUG = False
