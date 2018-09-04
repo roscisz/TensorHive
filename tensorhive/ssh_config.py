@@ -10,5 +10,6 @@ class SSHConfig():
         # 'example_host_0': {'user': 'example_username'}
         # 'example_host_1': {'user': 'example_username'}
     }
+    TEST_CONNECTIONS_ON_STARTUP = True
     CONNECTION_TIMEOUT = 1.0
     CONNECTION_NUM_RETRIES = 0
