@@ -5,7 +5,7 @@ setup(
     name = 'tensorhive',
     version = tensorhive.__version__,
     packages = find_packages(),
-    package_data = {'tensorhive': ['scripts/*', 'static/*', 'api/*']},
+    package_data = {'tensorhive': ['scripts/*', 'static/*', 'api/*', 'app/web/*']},
     entry_points = {
         'console_scripts': [
             'tensorhive = tensorhive.__main__:main'
