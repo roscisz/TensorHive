@@ -9,9 +9,17 @@ def post(reservation_event):
     '''Create new'''
     return CreateReservationEventController.create(reservation_event)
 
-def search(resources_ids, start, end):
-    '''Get selected'''
-    return ListReservationEventsController.get(resources_ids, start, end)
+def search(resources_ids=None, start=None, end=None):
+    args = [resources_ids, start, end]
+    all_args_none = all(a is None for a in args)
+
+    if all_args_none:
+        return ListReservationEventsController.all()
+    else:
+        # Filter reservations
+        return ListReservationEventsController.get(resources_ids, start, end)
+
+
 
 def delete(id):
     '''Remove if exists'''

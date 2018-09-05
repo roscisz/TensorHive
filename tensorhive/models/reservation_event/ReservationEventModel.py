@@ -62,8 +62,11 @@ class ReservationEventModel(Base):
         return cls.query.all()
 
     @classmethod
-    def return_selected(cls, resources_ids, start, end):
-        return cls.query.filter(and_(cls.resource_id.in_(resources_ids), cls.start<=end, cls.end>=start)).all()
+    def filter_by_uuids_and_time_range(cls, uuids, start, end):
+        match_uuids = cls.resource_id.in_(uuids)
+        match_after_start = cls.start <= end
+        match_before_end = start <= cls.end
+        return cls.query.filter(and_(match_uuids, match_after_start, match_before_end)).all()
 
     @classmethod
     def delete_by_id(cls, id):
