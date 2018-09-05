@@ -24,8 +24,8 @@ def init_db() -> None:
     from tensorhive.models.reservation_event import ReservationEventModel
 
     if database_exists(DB_CONFIG.SQLALCHEMY_DATABASE_URI):
-        log.info('[•] Database exists')
+        log.info('[•] Database found ({path})'.format(path=DB_CONFIG.SQLALCHEMY_DATABASE_URI))
     else:
         # Double check via checkfirst=True (does not execute CREATE query on tables which already exist)
         Base.metadata.create_all(bind=engine, checkfirst=True)
-        log.info('[✔] Database created')
+        log.info('[✔] Database created ({path})'.format(path=DB_CONFIG.SQLALCHEMY_DATABASE_URI))

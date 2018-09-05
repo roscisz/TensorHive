@@ -43,7 +43,11 @@ class WebAppConfig():
     NUM_WORKERS = 8
 
 class DBConfig():
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///tensorhive.db'
+    import tensorhive
+    from pathlib import PurePosixPath
+    tensorhive_module_path = tensorhive.__file__
+    db_absolute_path = PurePosixPath(tensorhive_module_path).parent / 'tensorhive.db'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///{abs_path}'.format(abs_path=db_absolute_path)
 
 
 class LogConfig():
