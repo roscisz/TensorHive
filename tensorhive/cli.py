@@ -71,10 +71,11 @@ def run(ctx, log_level):
     manager = TensorHiveManager()
     manager.configure_services(SERVICES_CONFIG.ENABLED_SERVICES)
     webapp_server = Process(target=start_server)
+    api_server = APIServer()
 
     manager.start()
     webapp_server.start()
-    APIServer().start()
+    api_server.start()
 
     manager.shutdown()
     webapp_server.join()
