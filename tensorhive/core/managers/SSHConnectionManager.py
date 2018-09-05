@@ -11,9 +11,7 @@ class SSHConnectionManager():
     connection_group = None
     connection_container = {}
 
-    def __init__(self, config: Dict, run_connection_test=False):
-        if run_connection_test:
-            SSHConnectionManager.test_all_connections(config)
+    def __init__(self, config: Dict):
         hostnames = config.keys()
         self._connection_group = ParallelSSHClient(
             hosts=hostnames,
@@ -53,9 +51,9 @@ class SSHConnectionManager():
     @staticmethod
     def test_all_connections(config):
         '''
-        Executed on startup.
         It checks if all of the defined hosts are accessible via SSH.
-        Calling this static method can be disabled in ssh_config.py
+        Typically runs on each TensorHive startup.
+        You can turn it off (TEST_CONNECTIONS_ON_STARTUP = False in ssh_config.py).
         '''
         log.info('Testing SSH configuration...')
 
@@ -90,7 +88,8 @@ class SSHConnectionManager():
                     icon='✘',
                     host=host,
                     msg=error_message))
-
+                    
+        # 4. Show simple summary of failed connections
         if num_failed > 0:
             log.critical('Summary: {failed}/{all} failed to connect.'.format(
                 failed=num_failed, 
