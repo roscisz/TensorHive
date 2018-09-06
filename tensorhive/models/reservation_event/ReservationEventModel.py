@@ -1,41 +1,49 @@
 import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, and_
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, CheckConstraint, and_
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from sqlalchemy.orm import validates
 from tensorhive.database import Base, db_session
+from tensorhive.models.user.UserModel import UserModel
+import logging
+log = logging.getLogger(__name__)
 
 
 class ReservationEventModel(Base):
     __tablename__ = 'reservation_events'
     id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
     title = Column(String(60), unique=False, nullable=False)
     description = Column(String(200), nullable=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
     resource_id = Column(String(60), nullable=False)
+
+    # Stored as UTC time
     start = Column(DateTime, nullable=False)
     end = Column(DateTime, nullable=False)
-
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    # TODO Relation with user
 
     __display_datetime_format = '%Y-%m-%dT%H:%M:%S'
     __server_timezone = '+00:00'
+    __min_reservation_time = datetime.timedelta(minutes=30)
 
     def __repr__(self):
-        return '<ReservationEvent: id={id}, \n \
+        return '<ReservationEvent id={id}, user={user}, \n \
                 title={title}, \n \
-                resource_id={resource_id}, \n \
-                user_id={user_id}, \n \
                 description={description}, \n \
+                resource_id={resource_id}, \n \
+                start={start}, \n \
+                end={end}, \n \
                 created_at={created_at}>'.format(id=self.id,
                                                  title=self.title,
                                                  resource_id=self.resource_id,
-                                                 user_id=self.user_id,
+                                                 user=self.user,
                                                  description=self.description,
-                                                 created_at=self.created_at)
+                                                 created_at=self.created_at,
+                                                 start=self.start,
+                                                 end=self.end)
 
     @classmethod
-    def find_resource_events_between(cls, start, end, resource_id):
+    def find_resource_events_between(cls, resource_id, start, end):
         return cls.query.filter(and_(cls.start >= start, cls.end <= end, cls.resource_id == resource_id)).first()
 
     @classmethod
@@ -46,12 +54,58 @@ class ReservationEventModel(Base):
 
     def save_to_db(self):
         try:
+            self._parse_client_time_format()
+            self._validate_user_existence()
+            self._validate_time_range()
+            self._check_for_collisions()
+
             db_session.add(self)
             db_session.commit()
-        except:
+            log.debug('Created {}'.format(self))
+        except IntegrityError as e:
             db_session.rollback()
+            log.error(e.__cause__)
+            return False
+        except (AssertionError, TypeError, ValueError) as e:
+            log.error(e)
             return False
         return True
+
+    def _validate_user_existence(self):
+        if not UserModel.find_by_id(self.user_id):
+            raise AssertionError(
+                'User with id={} does not exist'.format(self.user_id))
+
+    def _validate_time_range(self):
+        if not isinstance(self.start, datetime.date) or not isinstance(self.end, datetime.date):
+            raise TypeError(
+                '\'start\' and \'end\' must be of type datetime.datetime')
+
+        if self.start > self.end:
+            raise AssertionError('Invalid time range (start >= end)')
+
+        if self.start + self.__min_reservation_time >= self.end:
+            raise AssertionError('Reservation time is shorter than {}'.format(
+                self.__min_reservation_time))
+
+    def _check_for_collisions(self):
+        '''Assures that there are no other reservations for the same resource in that time'''
+        if self.find_resource_events_between(self.resource_id, self.start, self.end):
+            raise AssertionError('{uuid} is already reserved from {start} to {end}'.format(
+                uuid=self.resource_id,
+                start=self.start,
+                end=self.end))
+
+    def _parse_client_time_format(self):
+        client_datetime_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+
+        def parsed_datetime(t): return datetime.datetime.strptime(
+            t, client_datetime_format)
+        try:
+            self.start = parsed_datetime(self.start)
+            self.end = parsed_datetime(self.end)
+        except ValueError:
+            raise ValueError('Datetime parsing error')
 
     @classmethod
     def find_by_id(cls, id):
@@ -89,10 +143,10 @@ class ReservationEventModel(Base):
                     userId=self.user_id,
                     start=self.start.strftime(
                         self.__display_datetime_format)
-                        +self.__server_timezone,
+                    + self.__server_timezone,
                     end=self.end.strftime(
                         self.__display_datetime_format)
-                        +self.__server_timezone,
+                    + self.__server_timezone,
                     createdAt=self.created_at.strftime(
                         self.__display_datetime_format)
                     )
