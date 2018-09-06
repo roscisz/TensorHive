@@ -259,3 +259,9 @@ parameters:
       - mem_util
       - temp
       - power
+
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
