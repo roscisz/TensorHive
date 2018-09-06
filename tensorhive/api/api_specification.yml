@@ -86,8 +86,8 @@ paths:
       responses:
         '201':
           description: Successfully created.
-        '500':
-          $ref: '#/responses/InternalError'
+        '400':
+          $ref: '#/responses/BadRequest'
   /reservations/{id}:
     delete:
       tags: 
@@ -238,6 +238,8 @@ responses:
     description: Unauthorized
   InternalError:
     description: Internal Server Error
+  BadRequest:
+    description: Bad Request
 
 parameters:
   hostnameParam:
