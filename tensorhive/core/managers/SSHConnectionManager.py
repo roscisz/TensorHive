@@ -56,6 +56,8 @@ class SSHConnectionManager():
         You can turn it off (TEST_CONNECTIONS_ON_STARTUP = False in ssh_config.py).
         '''
         log.info('Testing SSH configuration...')
+        if not config:
+            log.warning('Empty ssh configuration. Please check {}'.format(SSH_CONFIG.CONFIG_PATH))
 
         # 1. Establish connection
         hostnames = config.keys()

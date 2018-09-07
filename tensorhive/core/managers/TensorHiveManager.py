@@ -19,8 +19,6 @@ class TensorHiveManager(Thread, metaclass=Singleton):
     def __init__(self):
         super().__init__()
         self.infrastructure_manager = InfrastructureManager()
-        if not SSH_CONFIG.AVAILABLE_NODES:
-            log.warning('You need to replace hostnames and usernames to your own in tensorhive/ssh_config.py')
         if SSH_CONFIG.TEST_CONNECTIONS_ON_STARTUP:
             SSHConnectionManager.test_all_connections(config=SSH_CONFIG.AVAILABLE_NODES)
         self.connection_manager = SSHConnectionManager(config=SSH_CONFIG.AVAILABLE_NODES)

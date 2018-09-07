@@ -1,7 +1,7 @@
 import click
 import tensorhive
 from tensorhive.config import CONFIG
-from tensorhive.config import LogConfig
+from tensorhive.config import LogConfig, SSHConfig
 import logging
 '''
 Current CLI Structure: (update regularly)
@@ -60,13 +60,15 @@ def run(ctx, log_level):
     
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
     from tensorhive.api.APIServer import APIServer
-    from tensorhive.config import SERVICES_CONFIG
+    from tensorhive.config import SERVICES_CONFIG, SSH_CONFIG
     from tensorhive.database import init_db
     from tensorhive.app.web.AppServer import start_server
     from multiprocessing import Process
     click.echo('TensorHive {}'.format(tensorhive.__version__))
 
     LogConfig.apply(log_level)
+    SSH_CONFIG.load_configuration_file()
+
     init_db()
     manager = TensorHiveManager()
     manager.configure_services(SERVICES_CONFIG.ENABLED_SERVICES)

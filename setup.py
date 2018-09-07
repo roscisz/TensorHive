@@ -1,6 +1,21 @@
 from setuptools import setup, find_packages
 import tensorhive
 
+
+def copy_configuration_files():
+    import shutil
+    from pathlib import PosixPath
+    target_dir = PosixPath.home() / '.config/TensorHive'
+    relative_config_path = 'tensorhive/ssh_config.ini'
+    try:
+        target_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy(relative_config_path, str(target_dir))
+        # FIXME Prints are only visible with `pip install foobar --verbose`
+        print('Configuration .ini file copied to {}'.format(target_dir))
+    except:
+        print('Unable to copy {} to {}'.format(relative_config_path, target_dir))
+
+# TODO Add platform and license
 setup(
     name = 'tensorhive',
     version = tensorhive.__version__,
@@ -30,3 +45,5 @@ setup(
     ],
     zip_safe=False
 )
+
+copy_configuration_files()
