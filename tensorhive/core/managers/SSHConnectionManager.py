@@ -57,7 +57,7 @@ class SSHConnectionManager():
         '''
         log.info('Testing SSH configuration...')
         if not config:
-            log.warning('Empty ssh configuration. Please check {}'.format(SSH.HOST_CONFIG_FILE))
+            log.warning('Empty ssh configuration. Please check {}'.format(SSH.HOSTS_CONFIG_FILE))
 
         # 1. Establish connection
         hostnames = config.keys()
