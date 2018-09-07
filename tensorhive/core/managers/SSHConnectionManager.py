@@ -53,7 +53,7 @@ class SSHConnectionManager():
         '''
         It checks if all of the defined hosts are accessible via SSH.
         Typically runs on each TensorHive startup.
-        You can turn it off (TEST_CONNECTIONS_ON_STARTUP = False in ssh_config.py).
+        You can turn it off (INI config -> [ssh] -> test_on_startup = off 
         '''
         log.info('Testing SSH configuration...')
         if not config:
