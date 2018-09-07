@@ -19,6 +19,7 @@ def copy_configuration_files():
 setup(
     name = 'tensorhive',
     version = tensorhive.__version__,
+    license='Apache License 2.0',
     packages = find_packages(),
     include_package_data=True,
     entry_points = {
