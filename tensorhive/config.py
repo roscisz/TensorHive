@@ -10,6 +10,7 @@ class DevelopmentConfig(BaseConfig):
     '''Default config, can overwrite BaseConfig'''
     pass
 
+
 class ProductionConfig(BaseConfig):
     '''Production use only, can overwrite BaseConfig'''
     pass
@@ -35,6 +36,7 @@ class APIConfig():
     VERSION = 0.2
     URL_PREFIX = 'api/{version}'.format(version=VERSION)
 
+
 class WebAppConfig():
     SERVER_BACKEND = 'gunicorn'
     SERVER_HOST = '0.0.0.0'
@@ -42,12 +44,46 @@ class WebAppConfig():
     SERVER_LOGLEVEL = 'warning'
     NUM_WORKERS = 8
 
+
 class DBConfig():
     import tensorhive
     from pathlib import PurePosixPath
     tensorhive_module_path = tensorhive.__file__
     db_absolute_path = PurePosixPath(tensorhive_module_path).parent / 'tensorhive.db'
     SQLALCHEMY_DATABASE_URI = 'sqlite:///{abs_path}'.format(abs_path=db_absolute_path)
+
+
+class SSHConfig():
+    CONFIG_PATH = '~/.config/TensorHive/ssh_config.ini'
+    # TODO Refactor
+    TEST_CONNECTIONS_ON_STARTUP = True
+    CONNECTION_TIMEOUT = 1.0
+    CONNECTION_NUM_RETRIES = 0
+    AVAILABLE_NODES = {}
+
+    def load_configuration_file(self):
+        import configparser
+        import os
+        log = logging.getLogger(__name__)
+
+        # 1. Try reading the file
+        config = configparser.ConfigParser()
+        path = os.path.expanduser(self.CONFIG_PATH)
+
+        if config.read(path):
+            log.info('Reading ssh configuration from {}'.format(path))
+        else:
+            log.critical('Missing ssh configuration file ({})!'.format(path))
+
+        # 2. Parse configuration file
+        host_config = {}
+        for hostname in config.sections():
+            # TODO Handle more options (https://github.com/ParallelSSH/parallel-ssh/blob/2e9668cf4b58b38316b1d515810d7e6c595c76f3/pssh/clients/base_pssh.py#L119)
+            username = config.get(hostname, 'user')
+            host_config[hostname] = {
+                'user': username
+            }
+        self.AVAILABLE_NODES = host_config
 
 
 class LogConfig():
@@ -80,16 +116,14 @@ class LogConfig():
         import coloredlogs
         coloredlogs.install(level=log_level, fmt=cls.FORMAT)
 
-        
-
 
 # Objects to be imported by application modules
-from tensorhive.ssh_config import SSHConfig
 CONFIG = DevelopmentConfig()
 SSH_CONFIG = SSHConfig()
 API_CONFIG = APIConfig()
 APP_CONFIG = WebAppConfig()
 DB_CONFIG = DBConfig()
+
 
 class ServicesConfig():
     '''
