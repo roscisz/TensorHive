@@ -3,8 +3,8 @@ from tensorhive.models.auth import RevokedTokenModel
 jwt = JWTManager()
 
 def init_jwt(app, API_CONFIG):
-    for key in API_CONFIG.JWT:
-        app.config = key
+    #for key,value in API_CONFIG.JWT.items():
+    #    app.config["test"] = value
 
     jwt = JWTManager(app)
 

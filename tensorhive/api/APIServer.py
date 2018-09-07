@@ -12,7 +12,7 @@ class APIServer():
     def start(self):
 
         app = connexion.FlaskApp(__name__)
-        init_jwt(app,API_CONFIG)
+        init_jwt(app.create_app(),API_CONFIG)
 
         log.info('API docs (Swagger UI) available at: http://{host}:{port}/v1.0/ui/'.format(
             host=API_CONFIG.SERVER_HOST, port=API_CONFIG.SERVER_PORT))
