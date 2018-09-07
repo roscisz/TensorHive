@@ -29,6 +29,18 @@ class APIConfig():
     TITLE = 'TensorHive API'
     VERSION = '1.0'
 
+    JWT = {}
+    JWT['SECRET_KEY'] = 'jwt-some-secret'
+
+    # Default values
+    # JWT['JWT_ACCESS_TOKEN_EXPIRES'] = dt.datetime.utcnow() + dt.timedelta(minutes=15)
+    # JWT['JWT_REFRESH_TOKEN_EXPIRES'] = dt.datetime.utcnow() + dt.timedelta(days=30)
+    JWT['JWT_BLACKLIST_ENABLED'] = True
+    JWT['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
+    JWT['JWT_TOKEN_LOCATION'] = ['cookies']
+
+    JWT['BUNDLE_ERRORS'] = True
+
 
 class SSHConfig():
     '''

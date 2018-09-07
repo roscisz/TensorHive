@@ -3,12 +3,17 @@ import connexion
 from tensorhive.config import API_CONFIG
 from tensorhive.database import db_session
 from flask_cors import CORS
+from authorization import init_jwt
+
 log = logging.getLogger(__name__)
 
 
 class APIServer():
     def start(self):
+
         app = connexion.FlaskApp(__name__)
+        init_jwt(app,API_CONFIG)
+
         log.info('API docs (Swagger UI) available at: http://{host}:{port}/v1.0/ui/'.format(
             host=API_CONFIG.SERVER_HOST, port=API_CONFIG.SERVER_PORT))
 
