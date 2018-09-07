@@ -6,14 +6,17 @@ def copy_configuration_files():
     import shutil
     from pathlib import PosixPath
     target_dir = PosixPath.home() / '.config/TensorHive'
-    relative_config_path = 'tensorhive/ssh_config.ini'
+    hosts_config_path = {'src': 'tensorhive/hosts_config.ini', 'dst': str(target_dir / 'hosts_config.ini')}
+    config_path = {'src': 'tensorhive/default_config.ini', 'dst': str(target_dir / 'config.ini')}
+    
     try:
         target_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copy(relative_config_path, str(target_dir))
+        shutil.copy(hosts_config_path['src'], hosts_config_path['dst'])
+        shutil.copy(config_path['src'], config_path['dst'])
         # FIXME Prints are only visible with `pip install foobar --verbose`
-        print('Configuration .ini file copied to {}'.format(target_dir))
+        print('Configuration .ini files copied to {}'.format(target_dir))
     except:
-        print('Unable to copy {} to {}'.format(relative_config_path, target_dir))
+        print('Unable to copy configuration files to {}'.format(target_dir))
 
 # TODO Add platform and license
 setup(

@@ -1,150 +1,104 @@
+from pathlib import PosixPath
+import configparser
+from typing import Dict
 import logging
+log = logging.getLogger(__name__)
+MAIN_CONFIG_PATH = '~/.config/TensorHive/config.ini'
 
 
-class BaseConfig():
-    '''Contains ALL configuration constants'''
-    pass
-
-
-class DevelopmentConfig(BaseConfig):
-    '''Default config, can overwrite BaseConfig'''
-    pass
-
-
-class ProductionConfig(BaseConfig):
-    '''Production use only, can overwrite BaseConfig'''
-    pass
-
-
-class APIConfig():
-    # Available backends: 'flask', 'gevent', 'tornado', 'aiohttp'
-    SERVER_BACKEND = 'gevent'
-
-    '''WARNING
-    If you make any changes to host address or port, you need to:
-    - update api URI for Vue web app at tensorhive/app/web/dev/src/config/index.js
-    - rebuild web app (cd tensorhive/app/web/dev; rm -rf ../dist; npm run build)
-    '''
-    SERVER_HOST = '0.0.0.0'
-    SERVER_PORT = 1111
-    SERVER_DEBUG = False
-
-    SPECIFICATION_FILE = 'api_specification.yml'
-    # Indicates the location of folder containing api implementation (RustyResolver)
-    VERSION_FOLDER = 'tensorhive.api.controllers'
-    TITLE = 'TensorHive API'
-    VERSION = 0.2
-    URL_PREFIX = 'api/{version}'.format(version=VERSION)
-
-
-class WebAppConfig():
-    SERVER_BACKEND = 'gunicorn'
-    SERVER_HOST = '0.0.0.0'
-    SERVER_PORT = 5000
-    SERVER_LOGLEVEL = 'warning'
-    NUM_WORKERS = 8
-
-
-class DBConfig():
-    from pathlib import PosixPath
-    CONFIG_PATH = '~/.config/TensorHive/database.sqlite'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///{abs_path}'.format(abs_path=PosixPath(CONFIG_PATH).expanduser())
-
-
-class SSHConfig():
-    CONFIG_PATH = '~/.config/TensorHive/ssh_config.ini'
-    # TODO Refactor
-    TEST_CONNECTIONS_ON_STARTUP = True
-    CONNECTION_TIMEOUT = 1.0
-    CONNECTION_NUM_RETRIES = 0
-    AVAILABLE_NODES = {}
-
-    def load_configuration_file(self):
+class ConfigLoader:
+    @staticmethod
+    def load(path):
         import configparser
-        from pathlib import PosixPath
-        log = logging.getLogger(__name__)
-
-        # 1. Try reading the file
-        config = configparser.ConfigParser()
-        path = str(PosixPath(self.CONFIG_PATH).expanduser())
-
-        if config.read(path):
-            log.info('Reading ssh configuration from {}'.format(path))
+        config = configparser.ConfigParser(strict=False)
+        full_path = PosixPath(path).expanduser()
+        if config.read(str(full_path)):
+            log.info('Reading configuration from {}'.format(path))
         else:
-            log.critical('Missing ssh configuration file ({})!'.format(path))
+            log.warning('Missing configuration file ({})'.format(path))
+            log.warning('Using defaults defined in config.py')
+        return config
 
-        # 2. Parse configuration file
-        host_config = {}
-        for hostname in config.sections():
+
+config = ConfigLoader.load(MAIN_CONFIG_PATH)
+
+
+def display_config(cls):
+    '''
+    Displays all uppercase class atributes (class must be defined first)
+    Example usage: display_config(API_SERVER)
+    '''
+    print('[{class_name}]'.format(class_name=cls.__name__))
+    for key, value in cls.__dict__.items():
+        if key.isupper():
+            print('{} = {}'.format(key, value))
+
+
+class SSH:
+    section = 'ssh'
+    HOSTS_CONFIG_FILE = config.get(section, 'hosts_config_file', fallback='~/.config/TensorHive/hosts_config.ini')
+    TEST_ON_STARTUP = config.getboolean(section, 'test_on_startup', fallback=True)
+    TIMEOUT = config.getfloat(section, 'timeout', fallback=2.0)
+    NUM_RETRIES = config.getint(section, 'number_of_retries', fallback=1)
+
+    def hosts_config_to_dict(path: str) -> Dict:
+        hosts_config = ConfigLoader.load(path)
+        result = {}
+        for hostname in hosts_config.sections():
             # TODO Handle more options (https://github.com/ParallelSSH/parallel-ssh/blob/2e9668cf4b58b38316b1d515810d7e6c595c76f3/pssh/clients/base_pssh.py#L119)
-            username = config.get(hostname, 'user')
-            host_config[hostname] = {
+            username = hosts_config.get(hostname, 'user')
+            result[hostname] = {
                 'user': username
             }
-        self.AVAILABLE_NODES = host_config
+        return result
+    AVAILABLE_NODES = hosts_config_to_dict(HOSTS_CONFIG_FILE)
 
 
-class LogConfig():
-    DEFAULT_LEVEL = logging.INFO
-    FORMAT = '%(levelname)-8s | %(asctime)s | %(threadName)-30s | MSG: %(message)-79s | FROM: %(name)s'
+class DB:
+    section = 'database'
+    default_path = '~/.config/TensorHive/database.sqlite'
 
-    @classmethod
-    def apply(cls, log_level):
-        # Remove existing configuration first (otherwise basicConfig won't be applied for the second time)
-        for handler in logging.root.handlers[:]:
-            logging.root.removeHandler(handler)
+    def uri_for_path(path: str) -> str:
+        return 'sqlite:///{}'.format(PosixPath(path).expanduser())
 
-        # TODO May want to add file logger
-        # TODO May want use dictConfig instead of basicConfig (must import separately: logging.config)
-
-        # Apply new config
-        logging.basicConfig(level=log_level, format=cls.FORMAT)
-
-        # May want to restrict logging from external modules (must be imported first!)
-        # import pssh
-        logging.getLogger('pssh').setLevel(logging.CRITICAL)
-        logging.getLogger('werkzeug').setLevel(logging.CRITICAL)
-        logging.getLogger('connexion').setLevel(logging.CRITICAL)
-        logging.getLogger('swagger_spec_validator').setLevel(logging.CRITICAL)
-
-        # May want to disable logging completely
-        # logging.getLogger('werkzeug').disabled = True
-
-        # Colored logs can be easily disabled by commenting this single line
-        import coloredlogs
-        coloredlogs.install(level=log_level, fmt=cls.FORMAT)
+    SQLALCHEMY_DATABASE_URI = uri_for_path(config.get(section, 'path', fallback=default_path))
 
 
-# Objects to be imported by application modules
-CONFIG = DevelopmentConfig()
-SSH_CONFIG = SSHConfig()
-API_CONFIG = APIConfig()
-APP_CONFIG = WebAppConfig()
-DB_CONFIG = DBConfig()
+class API:
+    section = 'api'
+    TITLE = config.get(section, 'title', fallback='TensorHive API')
+    VERSION = config.getfloat(section, 'version', fallback=0.2)
+    URL_PREFIX = config.get(section, 'url_prefix', fallback='api/{}'.format(VERSION))
+    SPEC_FILE = config.get(section, 'spec_file', fallback='api_specification.yml')
+    IMPL_LOCATION = config.get(section, 'impl_location', fallback='tensorhive.api.controllers')
 
 
-class ServicesConfig():
-    '''
-    WARNING! This class must be defined after SSH_CONFIG
-    because instances below are depending on it
-    '''
-    from tensorhive.core.services.MonitoringService import MonitoringService
-    from tensorhive.core.services.ProtectionService import ProtectionService
-    from tensorhive.core.monitors.Monitor import Monitor
-    from tensorhive.core.monitors.GPUMonitoringBehaviour import GPUMonitoringBehaviour
-    from tensorhive.core.violation_handlers.ProtectionHandler import ProtectionHandler
-    from tensorhive.core.violation_handlers.MessageSendingBehaviour import MessageSendingBehaviour
-    ENABLED_SERVICES = [
-        MonitoringService(monitors=[
-            Monitor(GPUMonitoringBehaviour())
-            # Add more monitors here
-
-        ], interval=1.0),
-        # Not production-ready
-        ProtectionService(handler=ProtectionHandler(behaviour=MessageSendingBehaviour()),
-                          interval=10.0)
-        # Add more services here
-    ]
+class APP_SERVER:
+    section = 'web_app.server'
+    BACKEND = config.get(section, 'backend', fallback='gunicorn')
+    HOST = config.get(section, 'host', fallback='0.0.0.0')
+    PORT = config.getint(section, 'port', fallback=5000)
+    WORKERS = config.getint(section, 'workers', fallback=4)
+    LOG_LEVEL = config.get(section, 'loglevel', fallback='warning')
 
 
-SERVICES_CONFIG = ServicesConfig()
+class API_SERVER:
+    section = 'api.server'
+    BACKEND = config.get(section, 'backend', fallback='gevent')
+    HOST = config.get(section, 'host', fallback='0.0.0.0')
+    PORT = config.getint(section, 'port', fallback=1111)
+    DEBUG = config.getboolean(section, 'debug', fallback=False)
+
+
+class MONITORING_SERVICE:
+    section = 'monitoring_service'
+    ENABLED = config.getboolean(section, 'enabled', fallback=True)
+    ENABLE_GPU_MONITOR = config.getboolean(section, 'enable_gpu_monitor', fallback=True)
+    UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=2.0)
+
+
+class PROTECTION_SERVICE:
+    section = 'protection_service'
+    ENABLED = config.getboolean(section, 'enabled', fallback=True)
+    UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=2.0)
+    NOTIFY_ON_PTY = config.getboolean(section, 'notify_on_pty', fallback=True)

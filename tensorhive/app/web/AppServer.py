@@ -1,7 +1,7 @@
 from gunicorn.app.base import BaseApplication
 from flask import Flask, render_template
 from flask_cors import CORS
-from tensorhive.config import APP_CONFIG
+from tensorhive.config import APP_SERVER
 import logging
 log = logging.getLogger(__name__)
 
@@ -39,13 +39,13 @@ class GunicornStandaloneApplication(BaseApplication):
 
 def start_server():
     log.info('[•] Starting Vue web app with {} backend'.format(
-        APP_CONFIG.SERVER_BACKEND))
+        APP_SERVER.BACKEND))
     
-    if APP_CONFIG.SERVER_BACKEND == 'gunicorn':
+    if APP_SERVER.BACKEND == 'gunicorn':
         options = {
-            'bind': '{addr}:{port}'.format(addr=APP_CONFIG.SERVER_HOST, port=APP_CONFIG.SERVER_PORT),
-            'workers': APP_CONFIG.NUM_WORKERS,
-            'loglevel': APP_CONFIG.SERVER_LOGLEVEL
+            'bind': '{addr}:{port}'.format(addr=APP_SERVER.HOST, port=APP_SERVER.PORT),
+            'workers': APP_SERVER.WORKERS,
+            'loglevel': APP_SERVER.LOG_LEVEL
         }
         log.info('[✔] Web App avaliable at: http://{} '.format(options['bind']))
         GunicornStandaloneApplication(app, options).run()
