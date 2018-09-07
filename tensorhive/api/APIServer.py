@@ -14,7 +14,7 @@ class APIServer():
         def shutdown_session(exception=None):
             db_session.remove()
 
-        app.add_api(API.SPEC_FILE_PATH,
+        app.add_api(API.SPEC_FILE,
                     arguments={
                         'title': API.TITLE, 
                         'version': API.VERSION,

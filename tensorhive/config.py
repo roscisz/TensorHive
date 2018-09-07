@@ -1,8 +1,10 @@
 from pathlib import PosixPath
 import configparser
+from typing import Dict
 import logging
 log = logging.getLogger(__name__)
-CONFIG_PATH = '~/.config/TensorHive/default_config.ini'
+MAIN_CONFIG_PATH = '~/.config/TensorHive/config.ini'
+
 
 class ConfigLoader:
     @staticmethod
@@ -17,11 +19,13 @@ class ConfigLoader:
             log.warning('Using defaults defined in config.py')
         return config
 
-config = ConfigLoader.load(CONFIG_PATH)
+
+config = ConfigLoader.load(MAIN_CONFIG_PATH)
+
 
 def display_config(cls):
     '''
-    Displays all uppercase class atributes
+    Displays all uppercase class atributes (class must be defined first)
     Example usage: display_config(API_SERVER)
     '''
     print('[{class_name}]'.format(class_name=cls.__name__))
@@ -29,29 +33,45 @@ def display_config(cls):
         if key.isupper():
             print('{} = {}'.format(key, value))
 
-class API_SERVER:
-    section = 'api.server'
-    BACKEND = config.get(section, 'backend', fallback='gevent')
-    HOST = config.get(section, 'host', fallback='0.0.0.0')
-    PORT = config.getint(section, 'port', fallback=1111)
-    DEBUG = config.getboolean(section, 'debug', fallback=False)
+
+class SSH:
+    section = 'ssh'
+    HOSTS_CONFIG_FILE = config.get(section, 'hosts_config_file', fallback='~/.config/TensorHive/hosts_config.ini')
+    TEST_ON_STARTUP = config.getboolean(section, 'test_on_startup', fallback=True)
+    TIMEOUT = config.getfloat(section, 'timeout', fallback=2.0)
+    NUM_RETRIES = config.getint(section, 'number_of_retries', fallback=1)
+
+    def hosts_config_to_dict(path: str) -> Dict:
+        hosts_config = ConfigLoader.load(path)
+        result = {}
+        for hostname in hosts_config.sections():
+            # TODO Handle more options (https://github.com/ParallelSSH/parallel-ssh/blob/2e9668cf4b58b38316b1d515810d7e6c595c76f3/pssh/clients/base_pssh.py#L119)
+            username = hosts_config.get(hostname, 'user')
+            result[hostname] = {
+                'user': username
+            }
+        return result
+    AVAILABLE_NODES = hosts_config_to_dict(HOSTS_CONFIG_FILE)
+
+
+class DB:
+    section = 'database'
+    default_path = '~/.config/TensorHive/database.sqlite'
+
+    def uri_for_path(path: str) -> str:
+        return 'sqlite:///{}'.format(PosixPath(path).expanduser())
+
+    SQLALCHEMY_DATABASE_URI = uri_for_path(config.get(section, 'path', fallback=default_path))
+
 
 class API:
     section = 'api'
     TITLE = config.get(section, 'title', fallback='TensorHive API')
     VERSION = config.getfloat(section, 'version', fallback=0.2)
     URL_PREFIX = config.get(section, 'url_prefix', fallback='api/{}'.format(VERSION))
-    SPEC_FILE_PATH = config.get(section, 'spec_file_path', fallback='api_specification.yml')
+    SPEC_FILE = config.get(section, 'spec_file', fallback='api_specification.yml')
     IMPL_LOCATION = config.get(section, 'impl_location', fallback='tensorhive.api.controllers')
 
-class DB:
-    section = 'database'
-    default_path = '~/.config/TensorHive/database.sqlite'
-
-    def uri_for_path(path) -> str:
-        return 'sqlite:///{}'.format(PosixPath(path).expanduser())
-
-    SQLALCHEMY_DATABASE_URI = uri_for_path(config.get(section, 'path', fallback=default_path))
 
 class APP_SERVER:
     section = 'web_app.server'
@@ -61,38 +81,14 @@ class APP_SERVER:
     WORKERS = config.getint(section, 'workers', fallback=4)
     LOG_LEVEL = config.get(section, 'loglevel', fallback='warning')
 
-class SSHConfig():
-    CONFIG_PATH = '~/.config/TensorHive/ssh_config.ini'
-    # TODO Refactor
-    TEST_CONNECTIONS_ON_STARTUP = True
-    CONNECTION_TIMEOUT = 1.0
-    CONNECTION_NUM_RETRIES = 0
-    AVAILABLE_NODES = {}
 
-    def load_configuration_file(self):
-        import configparser
-        from pathlib import PosixPath
-        log = logging.getLogger(__name__)
+class API_SERVER:
+    section = 'api.server'
+    BACKEND = config.get(section, 'backend', fallback='gevent')
+    HOST = config.get(section, 'host', fallback='0.0.0.0')
+    PORT = config.getint(section, 'port', fallback=1111)
+    DEBUG = config.getboolean(section, 'debug', fallback=False)
 
-        # 1. Try reading the file
-        config = configparser.ConfigParser()
-        path = str(PosixPath(self.CONFIG_PATH).expanduser())
-
-        if config.read(path):
-            log.info('Reading ssh configuration from {}'.format(path))
-        else:
-            log.critical('Missing ssh configuration file ({})!'.format(path))
-
-        # 2. Parse configuration file
-        host_config = {}
-        for hostname in config.sections():
-            # TODO Handle more options (https://github.com/ParallelSSH/parallel-ssh/blob/2e9668cf4b58b38316b1d515810d7e6c595c76f3/pssh/clients/base_pssh.py#L119)
-            username = config.get(hostname, 'user')
-            host_config[hostname] = {
-                'user': username
-            }
-        self.AVAILABLE_NODES = host_config
-SSH_CONFIG = SSHConfig()
 
 class MONITORING_SERVICE:
     section = 'monitoring_service'

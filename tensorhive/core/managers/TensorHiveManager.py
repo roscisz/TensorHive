@@ -6,7 +6,7 @@ from tensorhive.core.managers.ServiceManager import ServiceManager
 from tensorhive.core.services.Service import Service
 from typing import List, Dict
 from tensorhive.core.utils.decorators.override import override
-from tensorhive.config import SSH_CONFIG, MONITORING_SERVICE, PROTECTION_SERVICE
+from tensorhive.config import SSH, MONITORING_SERVICE, PROTECTION_SERVICE
 from tensorhive.api.APIServer import APIServer
 from tensorhive.core.utils.StoppableThread import StoppableThread
 from tensorhive.core.monitors.Monitor import Monitor
@@ -25,9 +25,9 @@ class TensorHiveManager(Thread, metaclass=Singleton):
     def __init__(self):
         super().__init__()
         self.infrastructure_manager = InfrastructureManager()
-        if SSH_CONFIG.TEST_CONNECTIONS_ON_STARTUP:
-            SSHConnectionManager.test_all_connections(config=SSH_CONFIG.AVAILABLE_NODES)
-        self.connection_manager = SSHConnectionManager(config=SSH_CONFIG.AVAILABLE_NODES)
+        if SSH.TEST_ON_STARTUP:
+            SSHConnectionManager.test_all_connections(config=SSH.AVAILABLE_NODES)
+        self.connection_manager = SSHConnectionManager(config=SSH.AVAILABLE_NODES)
         self.service_manager = None
 
         # Thread name

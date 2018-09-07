@@ -1,5 +1,5 @@
 
-from tensorhive.config import SSH_CONFIG
+from tensorhive.config import SSH
 from pssh.clients.native import ParallelSSHClient
 from typing import Dict
 import logging
@@ -16,8 +16,8 @@ class SSHConnectionManager():
         self._connection_group = ParallelSSHClient(
             hosts=hostnames,
             host_config=config,
-            timeout=SSH_CONFIG.CONNECTION_TIMEOUT,
-            num_retries=SSH_CONFIG.CONNECTION_NUM_RETRIES
+            timeout=SSH.TIMEOUT,
+            num_retries=SSH.NUM_RETRIES
         )
 
     def add_host(self, host_config: Dict):
@@ -34,7 +34,7 @@ class SSHConnectionManager():
         }
 
     def single_connection(self, hostname: str):
-        host_config = {hostname: SSH_CONFIG.AVAILABLE_NODES[hostname]}
+        host_config = {hostname: SSH.AVAILABLE_NODES[hostname]}
 
         if self.connection_container.get(hostname) is None:
             # Create and store in cache
@@ -57,7 +57,7 @@ class SSHConnectionManager():
         '''
         log.info('Testing SSH configuration...')
         if not config:
-            log.warning('Empty ssh configuration. Please check {}'.format(SSH_CONFIG.CONFIG_PATH))
+            log.warning('Empty ssh configuration. Please check {}'.format(SSH.HOST_CONFIG_FILE))
 
         # 1. Establish connection
         hostnames = config.keys()
