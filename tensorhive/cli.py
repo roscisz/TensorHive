@@ -45,6 +45,7 @@ def setup_logging(log_level):
 
     # May want to restrict logging from external modules (must be imported first!)
     # import pssh
+    logging.getLogger('passlib').setLevel(logging.CRITICAL)
     logging.getLogger('pssh').setLevel(logging.CRITICAL)
     logging.getLogger('werkzeug').setLevel(logging.CRITICAL)
     logging.getLogger('connexion').setLevel(logging.CRITICAL)
@@ -83,7 +84,6 @@ def main():
 def run(ctx, log_level):
     click.echo('TensorHive {}'.format(tensorhive.__version__))
     setup_logging(log_level)
-    from tensorhive.config import SERVICES_CONFIG, SSH_CONFIG
     # from gevent import monkey
     # monkey.patch_all()
     
@@ -93,11 +93,18 @@ def run(ctx, log_level):
     from tensorhive.app.web.AppServer import start_server
     from multiprocessing import Process
 
-    SSH_CONFIG.load_configuration_file()
-
     init_db()
     manager = TensorHiveManager()
-    manager.configure_services(SERVICES_CONFIG.ENABLED_SERVICES)
+
+    from tensorhive.config import MONITORING_SERVICE, PROTECTION_SERVICE
+    from tensorhive.core.monitors.Monitor import Monitor
+    from tensorhive.core.monitors.GPUMonitoringBehaviour import GPUMonitoringBehaviour
+    from tensorhive.core.services.MonitoringService import MonitoringService
+    from tensorhive.core.services.ProtectionService import ProtectionService
+    from tensorhive.core.violation_handlers.ProtectionHandler import ProtectionHandler
+    from tensorhive.core.violation_handlers.MessageSendingBehaviour import MessageSendingBehaviour
+    
+    manager.configure_services_from_config()
     webapp_server = Process(target=start_server)
     api_server = APIServer()
 
