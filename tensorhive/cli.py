@@ -1,7 +1,5 @@
 import click
 import tensorhive
-from tensorhive.config import CONFIG
-from tensorhive.config import LogConfig, SSHConfig
 import logging
 '''
 Current CLI Structure: (update regularly)
@@ -31,13 +29,41 @@ def print_version(ctx, param, value):
     ctx.exit()
 
 
+def setup_logging(log_level):
+    DEFAULT_LEVEL = logging.INFO
+    FORMAT = '%(levelname)-8s | %(asctime)s | %(threadName)-30s | MSG: %(message)-79s | FROM: %(name)s'
+
+    # Remove existing configuration first (otherwise basicConfig won't be applied for the second time)
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+
+    # TODO May want to add file logger
+    # TODO May want use dictConfig instead of basicConfig (must import separately: logging.config)
+
+    # Apply new config
+    logging.basicConfig(level=log_level, format=FORMAT)
+
+    # May want to restrict logging from external modules (must be imported first!)
+    # import pssh
+    logging.getLogger('pssh').setLevel(logging.CRITICAL)
+    logging.getLogger('werkzeug').setLevel(logging.CRITICAL)
+    logging.getLogger('connexion').setLevel(logging.CRITICAL)
+    logging.getLogger('swagger_spec_validator').setLevel(logging.CRITICAL)
+
+    # May want to disable logging completely
+    # logging.getLogger('werkzeug').disabled = True
+
+    # Colored logs can be easily disabled by commenting this single line
+    import coloredlogs
+    coloredlogs.install(level=log_level, fmt=FORMAT)
+
 def log_level_mapping(ctx, param, value: str) -> int:
     '''
     Callback function which takes care of mapping
     from cli string param to int log level
     '''
     if value is None:
-        return LogConfig.DEFAULT_LEVEL
+        return logging.INFO
     return AVAILABLE_LOG_LEVELS[value]
 
 
@@ -55,18 +81,18 @@ def main():
               help='Log level to apply.')
 @click.pass_context
 def run(ctx, log_level):
+    click.echo('TensorHive {}'.format(tensorhive.__version__))
+    setup_logging(log_level)
+    from tensorhive.config import SERVICES_CONFIG, SSH_CONFIG
     # from gevent import monkey
     # monkey.patch_all()
     
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
     from tensorhive.api.APIServer import APIServer
-    from tensorhive.config import SERVICES_CONFIG, SSH_CONFIG
     from tensorhive.database import init_db
     from tensorhive.app.web.AppServer import start_server
     from multiprocessing import Process
-    click.echo('TensorHive {}'.format(tensorhive.__version__))
 
-    LogConfig.apply(log_level)
     SSH_CONFIG.load_configuration_file()
 
     init_db()

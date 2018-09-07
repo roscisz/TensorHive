@@ -1,20 +1,20 @@
+from pathlib import PosixPath
+import configparser
 import logging
+log = logging.getLogger(__name__)
+CONFIG_PATH = '/home/miczi/Projects/TensorHive_CleaningForRelease02/tensorhive/default_config.ini'
 
-
-class BaseConfig():
-    '''Contains ALL configuration constants'''
-    pass
-
-
-class DevelopmentConfig(BaseConfig):
-    '''Default config, can overwrite BaseConfig'''
-    pass
-
-
-class ProductionConfig(BaseConfig):
-    '''Production use only, can overwrite BaseConfig'''
-    pass
-
+class ConfigLoader:
+    @staticmethod
+    def load(path):
+        import configparser
+        config = configparser.ConfigParser()
+        if config.read(path):
+            log.info('Reading configuration from {}'.format(path))
+        else:
+            print('Missing configuration file ({})'.format(path))
+        return config
+config = ConfigLoader.load(CONFIG_PATH)
 
 class APIConfig():
     # Available backends: 'flask', 'gevent', 'tornado', 'aiohttp'
@@ -45,10 +45,12 @@ class WebAppConfig():
     NUM_WORKERS = 8
 
 
-class DBConfig():
-    from pathlib import PosixPath
-    CONFIG_PATH = '~/.config/TensorHive/database.sqlite'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///{abs_path}'.format(abs_path=PosixPath(CONFIG_PATH).expanduser())
+class DB:
+    section = 'database'
+    def uri_for_path(path) -> str:
+        return 'sqlite:///{}'.format(PosixPath(path).expanduser())
+
+    SQLALCHEMY_DATABASE_URI = uri_for_path(config.get(section, 'path'))
 
 
 class SSHConfig():
@@ -84,43 +86,41 @@ class SSHConfig():
         self.AVAILABLE_NODES = host_config
 
 
-class LogConfig():
-    DEFAULT_LEVEL = logging.INFO
-    FORMAT = '%(levelname)-8s | %(asctime)s | %(threadName)-30s | MSG: %(message)-79s | FROM: %(name)s'
+# class LogConfig():
+#     DEFAULT_LEVEL = logging.INFO
+#     FORMAT = '%(levelname)-8s | %(asctime)s | %(threadName)-30s | MSG: %(message)-79s | FROM: %(name)s'
 
-    @classmethod
-    def apply(cls, log_level):
-        # Remove existing configuration first (otherwise basicConfig won't be applied for the second time)
-        for handler in logging.root.handlers[:]:
-            logging.root.removeHandler(handler)
+#     @classmethod
+#     def apply(cls, log_level):
+#         # Remove existing configuration first (otherwise basicConfig won't be applied for the second time)
+#         for handler in logging.root.handlers[:]:
+#             logging.root.removeHandler(handler)
 
-        # TODO May want to add file logger
-        # TODO May want use dictConfig instead of basicConfig (must import separately: logging.config)
+#         # TODO May want to add file logger
+#         # TODO May want use dictConfig instead of basicConfig (must import separately: logging.config)
 
-        # Apply new config
-        logging.basicConfig(level=log_level, format=cls.FORMAT)
+#         # Apply new config
+#         logging.basicConfig(level=log_level, format=cls.FORMAT)
 
-        # May want to restrict logging from external modules (must be imported first!)
-        # import pssh
-        logging.getLogger('pssh').setLevel(logging.CRITICAL)
-        logging.getLogger('werkzeug').setLevel(logging.CRITICAL)
-        logging.getLogger('connexion').setLevel(logging.CRITICAL)
-        logging.getLogger('swagger_spec_validator').setLevel(logging.CRITICAL)
+#         # May want to restrict logging from external modules (must be imported first!)
+#         # import pssh
+#         logging.getLogger('pssh').setLevel(logging.CRITICAL)
+#         logging.getLogger('werkzeug').setLevel(logging.CRITICAL)
+#         logging.getLogger('connexion').setLevel(logging.CRITICAL)
+#         logging.getLogger('swagger_spec_validator').setLevel(logging.CRITICAL)
 
-        # May want to disable logging completely
-        # logging.getLogger('werkzeug').disabled = True
+#         # May want to disable logging completely
+#         # logging.getLogger('werkzeug').disabled = True
 
-        # Colored logs can be easily disabled by commenting this single line
-        import coloredlogs
-        coloredlogs.install(level=log_level, fmt=cls.FORMAT)
+#         # Colored logs can be easily disabled by commenting this single line
+#         import coloredlogs
+#         coloredlogs.install(level=log_level, fmt=cls.FORMAT)
 
 
 # Objects to be imported by application modules
-CONFIG = DevelopmentConfig()
 SSH_CONFIG = SSHConfig()
 API_CONFIG = APIConfig()
 APP_CONFIG = WebAppConfig()
-DB_CONFIG = DBConfig()
 
 
 class ServicesConfig():
