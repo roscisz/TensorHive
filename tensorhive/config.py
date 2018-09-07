@@ -46,11 +46,9 @@ class WebAppConfig():
 
 
 class DBConfig():
-    import tensorhive
-    from pathlib import PurePosixPath
-    tensorhive_module_path = tensorhive.__file__
-    db_absolute_path = PurePosixPath(tensorhive_module_path).parent / 'tensorhive.db'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///{abs_path}'.format(abs_path=db_absolute_path)
+    from pathlib import PosixPath
+    CONFIG_PATH = '~/.config/TensorHive/database.sqlite'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///{abs_path}'.format(abs_path=PosixPath(CONFIG_PATH).expanduser())
 
 
 class SSHConfig():
@@ -63,12 +61,12 @@ class SSHConfig():
 
     def load_configuration_file(self):
         import configparser
-        import os
+        from pathlib import PosixPath
         log = logging.getLogger(__name__)
 
         # 1. Try reading the file
         config = configparser.ConfigParser()
-        path = os.path.expanduser(self.CONFIG_PATH)
+        path = str(PosixPath(self.CONFIG_PATH).expanduser())
 
         if config.read(path):
             log.info('Reading ssh configuration from {}'.format(path))
