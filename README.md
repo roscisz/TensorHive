@@ -1,6 +1,4 @@
 # TensorHive
-
-## About
 TensorHive is a work in progress project with the objective to develop a **lightweight computing resource management tool for executing machine learning applications in distributed [TensorFlow](https://github.com/tensorflow/tensorflow).**
 
 Core feature of TensorHive is to allow for easy execution of distributed trainings without the need for manual logging into every worker node or installing and configuring resource management daemons.
@@ -8,6 +6,52 @@ Core feature of TensorHive is to allow for easy execution of distributed trainin
 Further plans include: 
 * task and hardware queuing
 * support for machine learning applications in frameworks other than TensorFlow
+
+## Getting started
+### Prerequisites
+* cluster nodes should be accessible by SSH without password
+* GPUs should support utilization monitoring through ```nvidia-smi```
+
+### Installation
+#### Via pip
+```shell
+pip install tensorhive
+```
+#### Via conda
+```shell
+conda install TODO
+```
+#### From source
+```shell
+git clone https://github.com/roscisz/TensorHive.git
+cd TensorHive
+pip install .
+```
+If you want to also build the web app:
+```shell
+(cd tensorhive/app/web/dev && npm install && npm run build)
+```
+### Usage
+#### Required configuration
+At first, you must tell TensorHive how it can establish SSH connections to hosts you want to work with.
+
+You can do this by editing `~/.config/TensorHive/hosts_config.ini` [(see example)](https://github.com/roscisz/TensorHive/blob/feature/fixes_and_cleanups_before_release/tensorhive/hosts_config.ini)
+
+#### Run TensorHive
+```shell
+tensorhive run
+```
+
+Dashboard: http://0.0.0.0:5000
+
+Full API documentation (Swagger UI): http://0.0.0.0:1111/v0.2/ui
+
+#### Optional configuration
+You can fully customize TensorHive behaviour from `~/.config/TensorHive/config.ini`
+[(see example)](https://github.com/roscisz/TensorHive/blob/feature/fixes_and_cleanups_before_release/tensorhive/default_config.ini)
+
+
+
 
 ## Roadmap:
 (Due to funding delays, the milestones have been modified)
