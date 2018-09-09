@@ -1,7 +1,7 @@
 TODO Generate logo
 
 TODO Generate svg badges with https://shields.io/#/examples/monitoring
-
+TODO Separate sections with horizontal lines
 # TensorHive
 TODO Redesign description
 
