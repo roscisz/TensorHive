@@ -47,5 +47,6 @@ class MessageSendingBehaviour():
                 username=session['USER'],
                 tty_name=session['TTY']))
 
+    @override
     def trigger_action(self, connection, unauthorized_sessions):
         self._send_message_to_ttys(connection, unauthorized_sessions)
