@@ -1,11 +1,13 @@
+TODO Generate logo
+
+TODO Generate svg badges with https://shields.io/#/examples/monitoring
+
 # TensorHive
-TensorHive is a work in progress project with the objective to develop a **lightweight computing resource management tool for executing machine learning applications in distributed [TensorFlow](https://github.com/tensorflow/tensorflow).**
+TODO Redesign description
 
-Core feature of TensorHive is to allow for easy execution of distributed trainings without the need for manual logging into every worker node or installing and configuring resource management daemons.
-
-Further plans include: 
-* task and hardware queuing
-* support for machine learning applications in frameworks other than TensorFlow
+## Advantages
+## Demo
+(See full gallery)[TODO link to screenshots of API docs and web app]
 
 ## Getting started
 ### Prerequisites
@@ -49,30 +51,34 @@ Full API documentation (Swagger UI): http://0.0.0.0:1111/v0.2/ui
 #### Optional configuration
 You can fully customize TensorHive behaviour from `~/.config/TensorHive/config.ini`
 [(see example)](https://github.com/roscisz/TensorHive/blob/feature/fixes_and_cleanups_before_release/tensorhive/default_config.ini)
-
-
-
-
-## Roadmap:
-(Due to funding delays, the milestones have been modified)
-
-### Resource reservation module
-  * Beta: **31.07.2018**
-  * Final release: **31.12.2018**
   
-### Executing distributed TensorFlow applications
-  * Beta: **30.09.2018**
-  
-## Current features
-- [x] Connect to multiple nodes via SSH
-- [x] Monitor basic GPU parameters on every host
-- [x] Define very basic OpenAPI specification
-- [x] Command Line interface
-- [ ] Users can make reservations using calendar
-- [ ] Priviliged users can view resource utilization on charts (CPU, GPU, mem, disk)
-- [ ] During the reservation period users can freely access declared resources
-- [ ] When reservation time expires (or before it starts), user processes are stopped
-- [ ] Admin dashboard (ban users, edit/reject reservations)
+### Features
+#### Core
+- [x] Monitor GPU parameters on each host
+- [x] Protection of reserved resources
+    - [x] Send warning messages to terminal of users who violate the rules
+    - [ ] Send e-mail warnings
+    - [ ] Kill unwated processes
+- [ ] Automatic execution of user's predefined command
+- [ ] Tracking wasted reservation time (idle)
+    - [ ] Reservation start/end reminders
+    - [ ] Send e-mail if idle for too long
+#### Dashboard
+- [x] Configurable charts view
+    - [x] GPU metrics and active processes
+    - [ ] CPU, RAM, HDD metrics
+- [x] Calendar view
+    - [x] Allow making reservations for selected GPUs
+    - [x] Cancel reservations
+- [ ] Detailed hardware specification view
+- [ ] Admin panel
+    - [ ] User banning
+    - [ ] Accept/reject user's reservation
+
+#### API
+- [x] OpenAPI 2.0 specification with Swagger UI
+- [ ] User authentication via JWT
+
 
 ## Demo
 
@@ -92,28 +98,3 @@ You can fully customize TensorHive behaviour from `~/.config/TensorHive/config.i
 </tr>
 </tbody>
 </table>
-
-## Requirements
-
-* cluster nodes should be accessible by SSH without password
-* GPUs should support utilization monitoring through ```nvidia-smi```
-
-## Installation
-```shell
-git clone https://github.com/roscisz/TensorHive.git
-cd TensorHive
-pip install .
-```
-
-## Usage
-1. Run TensorHive core:
-```shell
-# You need to modify info about your ssh-available hosts in SSHConfig (tensorhive/config.py)
-tensorhive run core
-```
-2. Run TensorHive API server
-```shell
-tensorhive db init
-tensorhive run api
-```
-Explore full API documentation with examples at http://0.0.0.0:9876/v1.0/ui/#/default 
