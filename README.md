@@ -68,8 +68,8 @@ Features
     - [ ] :mailbox_with_no_mail: Send e-mail warnings
     - [ ] :bomb: Kill unwated processes
 - [ ] Automatic execution of user's predefined command
-- [ ] Tracking wasted reservation time (idle)
-    - [ ] Reservation start/end reminders
+- [ ] Track wasted reservation time (idle)
+    - [ ] Remind user when his reservation starts and ends
     - [ ] Send e-mail if idle for too long
 #### Dashboard
 - [x] :chart_with_downwards_trend: Configurable charts view
@@ -81,7 +81,7 @@ Features
 - [ ] Detailed hardware specification view
 - [ ] Admin panel
     - [ ] User banning
-    - [ ] Accept/reject user's reservation
+    - [ ] Accept/reject reservation requests
 
 #### API
 - [x] OpenAPI 2.0 specification with Swagger UI
