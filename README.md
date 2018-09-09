@@ -59,13 +59,14 @@ Open **API docs** http://0.0.0.0:1111/v0.2/ui
 You can fully customize TensorHive behaviour from `~/.config/TensorHive/config.ini`
 [(see example)](https://github.com/roscisz/TensorHive/blob/feature/fixes_and_cleanups_before_release/tensorhive/default_config.ini)
   
-### Features
+Features
+--------
 #### Core
 - [x] Monitor GPU parameters on each host
-- [x] Protection of reserved resources
-    - [x] Send warning messages to terminal of users who violate the rules
-    - [ ] :email:	Send e-mail warnings
-    - [ ] Kill unwated processes
+- [x] :customs: Protection of reserved resources
+    - [x] :warning:	Send warning messages to terminal of users who violate the rules
+    - [ ] :mailbox_with_no_mail: Send e-mail warnings
+    - [ ] :bomb: Kill unwated processes
 - [ ] Automatic execution of user's predefined command
 - [ ] Tracking wasted reservation time (idle)
     - [ ] Reservation start/end reminders
@@ -87,28 +88,16 @@ You can fully customize TensorHive behaviour from `~/.config/TensorHive/config.i
 - [ ] User authentication via JWT
 
 
-### Conti
+Contibution and feedback
+------------------------
+TODO Encourage to sending issues and pull requests
 
-### Credits
+Credits
+-------
+Project created and maintained by:
 
-###
+TODO Add authors
 
-## Demo
-
-[![asciicast](https://asciinema.org/a/hzQMCvvZMqtv8mtCafQ0l4TFk.png)](https://asciinema.org/a/hzQMCvvZMqtv8mtCafQ0l4TFk)
-
-<table>
-<thead>
-<tr>
-<th>tensorhive run core</th>
-<th>tensorhive run api</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="https://i.imgur.com/lkTv5xH.png" alt="tensorhive run core - screenshot"></td>
-<td><img src="https://i.imgur.com/sR4PAbZ.png" alt="tensorhive run api - screenshot"></td>
-</tr>
-</tbody>
-</table>
-
+License
+-------
+[Apache License 2.0](https://github.com/roscisz/TensorHive/blob/master/LICENSE)
