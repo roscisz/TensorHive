@@ -5,7 +5,7 @@ from tensorhive.core.utils.decorators.override import override
 from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.managers.SSHConnectionManager import SSHConnectionManager
 from pssh.clients.native import ParallelSSHClient
-from typing import Generator, Dict, List
+from typing import Generator, Dict, List, Optional
 import datetime
 import time
 import gevent
@@ -49,31 +49,35 @@ class ProtectionService(Service):
 
         Example result:
         {
+            # Most common example
             "GPU-c6d01ed6-8240-2e11-efe9-aa32794b8273": [
                 {
                     "pid": 1979,
                     "command": "X",
                     "owner": "root"
                 }
-            ]
+            ],
+
+            # If GPU has no processes
+            "GPU-abcdefg6-8240-2e11-efe9-abcdefgb8273": [],
+
+            # If GPU does not support `nvidia-smi pmon`
+            "GPU-abcdefg6-8240-2e11-efe9-abcdefgb8273": None
         }
         '''
         infrastructure = self.infrastructure_manager.infrastructure
-        node_processes = {}
 
         # Make sure we can fetch GPU data first.
-        # Example reason: node could be unreachable, nvidia-smi failed to work
+        # Example reasons: node is unreachable, nvidia-smi failed
         if infrastructure.get(hostname, {}).get('GPU') is None:
-            log.debug('There is no data for {}'.format(hostname))
+            log.debug('There is no GPU data for host: {}'.format(hostname))
             return {}
 
         # Loop through each GPU on node
+        node_processes = {}
         for uuid, gpu_data in infrastructure[hostname]['GPU'].items():
-            # We need to make sure that this GPU supports process monitoring, hence .get()
-            single_gpu_processes = infrastructure[hostname]['GPU'][uuid].get('processes')
-            if single_gpu_processes is not None:
-                # We want to avoid 2D list, hence +=
-                node_processes[uuid] = single_gpu_processes
+            single_gpu_processes = infrastructure[hostname]['GPU'][uuid]['processes']
+            node_processes[uuid] = single_gpu_processes
         return node_processes
 
     def _parse_output(self, stdout: Generator) -> Dict[str, str]:
@@ -97,13 +101,13 @@ class ProtectionService(Service):
 
         return [as_dict(line) for line in stdout_lines]
 
-    def find_hostname(self, uuid: str) -> str:
-        '''Seeks the hostname of node with GPU given by UUID'''
+    def find_hostname(self, uuid: str) -> Optional[str]:
+        '''Seeks the hostname of node which has GPU with given UUID'''
         infrastructure = self.infrastructure_manager.infrastructure
-        for hostname, data in infrastructure.items():
-            if data.get('GPU') and data['GPU'].get(uuid):
+        for hostname, node_data in infrastructure.items():
+            if node_data.get('GPU', {}).get(uuid):
                 return hostname
-        log.info('GPU with UUID="{}" was not found'.format(uuid))
+        log.warning('GPU with UUID="{}" was not found'.format(uuid))
         return None
 
     @property
@@ -114,9 +118,14 @@ class ProtectionService(Service):
         ]
 
     def gpu_users(self, node_processes, uuid) -> List[str]:
-        '''Finds all users who are using this specific GPU'''
+        '''Finds all users who are using GPU with given UUID'''
         owners = []
-        gpu_processes = node_processes[uuid]
+        gpu_processes = node_processes.get(uuid)
+
+        # None -> GPU does not support `nvidia-smi pmon`
+        if not gpu_processes:
+            return []
+
         for process in gpu_processes:
             if process['command'] not in self.ignored_processes:
                 owners.append(process['owner'])
@@ -154,12 +163,12 @@ class ProtectionService(Service):
             # 3. Any session that does not belong to a priviliged user should be remembered
             unauthorized_sessions = []
             for session in node_sessions:
-                if (session['USER'] != username) and (session['USER'] in reserved_gpu_process_owners):
-                    # TODO Need to refactor (session shouldn't be used for that purpose, but it's the easiest)
+                session_opened_by_unpriviliged_user = session['USER'] != username
+                unpriviliged_user_has_active_gpu_processes = session['USER'] in reserved_gpu_process_owners
+                if session_opened_by_unpriviliged_user and unpriviliged_user_has_active_gpu_processes:
                     # Inject additional data for handler
                     session['LEGITIMATE_USER'] = username
                     session['GPU_UUID'] = uuid
-
                     unauthorized_sessions.append(session)
 
             # 4. Execute handler's behaviour on unauthorized ttys
