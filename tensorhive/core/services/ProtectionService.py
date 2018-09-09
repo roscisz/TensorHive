@@ -20,12 +20,12 @@ class ProtectionService(Service):
     '''
     infrastructure_manager = None
     connection_manager = None
-    handler = None
+    violation_handlers = None
 
-    def __init__(self, handler, interval=0.0):
+    def __init__(self, handlers, interval=0.0):
         super().__init__()
         self.interval = interval
-        self.handler = handler
+        self.violation_handlers = handlers
 
     @override
     def inject(self, injected_object):
@@ -164,7 +164,8 @@ class ProtectionService(Service):
 
             # 4. Execute handler's behaviour on unauthorized ttys
             if len(unauthorized_sessions) > 0:
-                self.handler.trigger_action(node_connection, unauthorized_sessions)
+                for handler in self.violation_handlers:
+                    handler.trigger_action(node_connection, unauthorized_sessions)
 
         end_time = time_func()
         execution_time = end_time - start_time

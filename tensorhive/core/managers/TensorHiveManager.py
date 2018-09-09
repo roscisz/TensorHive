@@ -48,10 +48,13 @@ class TensorHiveManager(Thread, metaclass=Singleton):
                 interval=MONITORING_SERVICE.UPDATE_INTERVAL
             )
             services.append(monitoring_service)
-        if PROTECTION_SERVICE.ENABLED and PROTECTION_SERVICE.NOTIFY_ON_PTY:
-            # TODO Must refactor ProtectionService when new behaviours will be added
+        if PROTECTION_SERVICE.ENABLED:
+            violation_handlers = []
+            if PROTECTION_SERVICE.NOTIFY_ON_PTY:
+                message_sending_handler = ProtectionHandler(behaviour=MessageSendingBehaviour())
+                violation_handlers.append(message_sending_handler)
             protection_service = ProtectionService(
-                handler=ProtectionHandler(behaviour=MessageSendingBehaviour()), 
+                handlers=violation_handlers, 
                 interval=PROTECTION_SERVICE.UPDATE_INTERVAL
             )
             services.append(protection_service)
