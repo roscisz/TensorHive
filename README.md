@@ -10,8 +10,15 @@ TensorHive
 ![](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=popout-square)
 
+TensorHive is an open source system for managing and monitoring your computing resources across multiple hosts.
+It solves the most common problems and nightmares about accessing and sharing your AI-focused infrastructure across multiple, often competing users.
+
+It's designed with __flexibility, lightness and configuration-friendliness__ in mind. 
+
+Our test bed consists of [**NVIDIA DGX STATION (4x NVIDIA Tesla® V100 32GB)**](https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/dgx-station/dgx-station-print-dgx-station-32GB-infographic-final-LR.pdf) and a bunch of nodes with GTX 1060 on board.
+
 TODO
-- Put updated description
+- Maybe expand description
 - Put GIF here
 - (See full gallery)[TODO link to screenshots of API docs and web app]
 
