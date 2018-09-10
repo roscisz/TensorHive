@@ -97,7 +97,9 @@ Features
 
 Contibution and feedback
 ------------------------
-TODO Encourage to sending issues and pull requests
+We'd :heart: to collect your observations, issues and pull requests.
+
+You can do this by making use of our [**issue template**](https://gist.github.com/micmarty/396c649bf693688245731f35854bf971).
 
 Credits
 -------
