@@ -60,7 +60,7 @@ tensorhive run
 ```
 Open **Dashboard** http://0.0.0.0:5000
 
-Open **API docs** http://0.0.0.0:1111/v0.2/ui
+Open **API docs** http://0.0.0.0:1111/api/0.2/ui
 
 #### Optional configuration
 You can fully customize TensorHive behaviour from `~/.config/TensorHive/config.ini`
