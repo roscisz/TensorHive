@@ -3,24 +3,24 @@ import configparser
 from typing import Dict, Optional
 import logging
 log = logging.getLogger(__name__)
-MAIN_CONFIG_PATH = '~/.config/TensorHive/config.ini'
+MAIN_CONFIG_PATH = '~/.config/TensorHive/main_config.ini'
 
 
 class ConfigLoader:
     @staticmethod
-    def load(path):
+    def load(path, displayed_title=''):
         import configparser
         config = configparser.ConfigParser(strict=False)
         full_path = PosixPath(path).expanduser()
         if config.read(str(full_path)):
-            log.info('Reading configuration from {}'.format(path))
+            log.info('[•] Reading {} config from {}'.format(displayed_title, path))
         else:
-            log.warning('Missing configuration file ({})'.format(path))
-            log.warning('Using defaults defined in config.py')
+            log.warning('[✘] Missing configuration file ({})'.format(path))
+            log.warning('Using default settings from config.py')
         return config
 
 
-config = ConfigLoader.load(MAIN_CONFIG_PATH)
+config = ConfigLoader.load(MAIN_CONFIG_PATH, displayed_title='main')
 
 
 def display_config(cls):
@@ -44,7 +44,7 @@ class SSH:
 
     def hosts_config_to_dict(path: str) -> Dict:
         '''Parses sections containing hostnames'''
-        hosts_config = ConfigLoader.load(path)
+        hosts_config = ConfigLoader.load(path, displayed_title='hosts')
         result = {}
         for section in hosts_config.sections():
             # We want to parse only sections which describe target hosts
@@ -61,7 +61,7 @@ class SSH:
 
     def proxy_config_to_dict(path: str) -> Optional[Dict]:
         '''Parses [proxy_tunneling] section'''
-        config = ConfigLoader.load(path)
+        config = ConfigLoader.load(path, displayed_title='proxy')
         section = 'proxy_tunneling'
 
         # Check if section is present and if yes, check if tunneling is enabled
