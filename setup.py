@@ -6,8 +6,9 @@ def copy_configuration_files():
     import shutil
     from pathlib import PosixPath
     target_dir = PosixPath.home() / '.config/TensorHive'
-    hosts_config_path = {'src': 'tensorhive/hosts_config.ini', 'dst': str(target_dir / 'hosts_config.ini')}
-    config_path = {'src': 'tensorhive/main_config.ini', 'dst': str(target_dir / 'main_config.ini')}
+    # destination is given explicitely, just in case we'd want to rename file during the installation process
+    hosts_config_path = {'src': 'hosts_config.ini', 'dst': str(target_dir / 'hosts_config.ini')}
+    config_path = {'src': 'main_config.ini', 'dst': str(target_dir / 'main_config.ini')}
     
     try:
         target_dir.mkdir(parents=True, exist_ok=True)
