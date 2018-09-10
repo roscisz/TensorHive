@@ -69,13 +69,13 @@ You can fully customize TensorHive behaviour from `~/.config/TensorHive/config.i
 Features
 --------
 #### Core
-- [x] Monitor GPU parameters on each host
+- [x] :mag_right: Monitor GPU parameters on each host
 - [x] :customs: Protection of reserved resources
     - [x] :warning:	Send warning messages to terminal of users who violate the rules
     - [ ] :mailbox_with_no_mail: Send e-mail warnings
     - [ ] :bomb: Kill unwated processes
-- [ ] Automatic execution of user's predefined command
-- [ ] Track wasted reservation time (idle)
+- [ ] :rocket: Automatic execution of user's predefined command
+- [ ] :watch: Track wasted reservation time (idle)
     - [ ] Remind user when his reservation starts and ends
     - [ ] Send e-mail if idle for too long
 #### Dashboard
@@ -85,8 +85,8 @@ Features
 - [x] :calendar: Calendar view
     - [x] Allow making reservations for selected GPUs
     - [x] Cancel reservations
-- [ ] Detailed hardware specification view
-- [ ] Admin panel
+- [ ] :scroll: Detailed hardware specification view
+- [ ] :penguin: Admin panel
     - [ ] User banning
     - [ ] Accept/reject reservation requests
 
