@@ -15,7 +15,14 @@ It solves the most common problems and nightmares about accessing and sharing yo
 
 It's designed with __flexibility, lightness and configuration-friendliness__ in mind. 
 
-Our test bed consists of [**NVIDIA DGX STATION (4x NVIDIA Tesla® V100 32GB)**](https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/dgx-station/dgx-station-print-dgx-station-32GB-infographic-final-LR.pdf) and a bunch of nodes with GTX 1060 on board.
+Test bed and benchmarks
+--------
+[**NVIDIA DGX STATION (4x NVIDIA Tesla® V100 32GB)**](https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/dgx-station/dgx-station-print-dgx-station-32GB-infographic-final-LR.pdf) and a bunch of nodes with GTX 1060 on board.
+
+You can check out our **unique** benchamark results with a full set instructions to reproduce (both in Distributed TensorFlow):
+- [**DeepSpeech README**](https://github.com/roscisz/TensorHive/tree/develop/examples/deepspeech#deepspeech-benchmarks)
+- [**T2T Transformer README**](https://github.com/roscisz/TensorHive/tree/develop/examples/t2t_transformer#t2t-transformer-benchmarks)
+<hr/>
 
 TODO
 - Maybe expand description
