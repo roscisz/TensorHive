@@ -68,7 +68,7 @@ class TensorHiveManager(Thread, metaclass=Singleton):
 
     @override
     def run(self):
-        log.info('[•] Starting {}'.format(self.name))
+        log.info('[⚙] Starting {}'.format(self.name))
         self.service_manager.start_all_services()
 
     @override

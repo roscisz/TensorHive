@@ -23,7 +23,7 @@ class APIServer():
                     resolver=connexion.RestyResolver(API.IMPL_LOCATION),
                     strict_validation=True)
         CORS(app.app)
-        log.info('[•] Starting API server with {} backend'.format(API_SERVER.BACKEND))
+        log.info('[⚙] Starting API server with {} backend'.format(API_SERVER.BACKEND))
         log.info('[✔] API documentation (Swagger UI) available at: http://{host}:{port}/{url_prefix}/ui/'.format(
             host=API_SERVER.HOST, 
             port=API_SERVER.PORT,

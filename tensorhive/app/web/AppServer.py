@@ -38,7 +38,7 @@ class GunicornStandaloneApplication(BaseApplication):
 
 
 def start_server():
-    log.info('[•] Starting Vue web app with {} backend'.format(
+    log.info('[⚙] Starting Vue web app with {} backend'.format(
         APP_SERVER.BACKEND))
     
     if APP_SERVER.BACKEND == 'gunicorn':
