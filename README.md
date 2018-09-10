@@ -102,8 +102,10 @@ TODO Encourage to sending issues and pull requests
 Credits
 -------
 Project created and maintained by:
-
-TODO Add authors
+- Paweł Rościszewski
+- ![](https://avatars2.githubusercontent.com/u/12485656?s=22&v=4) [Michał Martyniak](http://martyniak.me)
+- Filip Schodowski
+- Tomasz Menet
 
 License
 -------
