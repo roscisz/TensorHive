@@ -1,6 +1,6 @@
 from pathlib import PosixPath
 import configparser
-from typing import Dict
+from typing import Dict, Optional
 import logging
 log = logging.getLogger(__name__)
 MAIN_CONFIG_PATH = '~/.config/TensorHive/config.ini'
@@ -38,20 +38,44 @@ class SSH:
     section = 'ssh'
     HOSTS_CONFIG_FILE = config.get(section, 'hosts_config_file', fallback='~/.config/TensorHive/hosts_config.ini')
     TEST_ON_STARTUP = config.getboolean(section, 'test_on_startup', fallback=True)
-    TIMEOUT = config.getfloat(section, 'timeout', fallback=2.0)
+    TIMEOUT = config.getfloat(section, 'timeout', fallback=10.0)
     NUM_RETRIES = config.getint(section, 'number_of_retries', fallback=1)
+    
 
     def hosts_config_to_dict(path: str) -> Dict:
+        '''Parses sections containing hostnames'''
         hosts_config = ConfigLoader.load(path)
         result = {}
-        for hostname in hosts_config.sections():
+        for section in hosts_config.sections():
+            # We want to parse only sections which describe target hosts
+            if section == 'proxy_tunneling':
+                continue
+
             # TODO Handle more options (https://github.com/ParallelSSH/parallel-ssh/blob/2e9668cf4b58b38316b1d515810d7e6c595c76f3/pssh/clients/base_pssh.py#L119)
-            username = hosts_config.get(hostname, 'user')
+            hostname = section
             result[hostname] = {
-                'user': username
+                'user': hosts_config.get(hostname, 'user'),
+                'port': hosts_config.getint(hostname, 'port', fallback=22)
             }
         return result
+
+    def proxy_config_to_dict(path: str) -> Optional[Dict]:
+        '''Parses [proxy_tunneling] section'''
+        config = ConfigLoader.load(path)
+        section = 'proxy_tunneling'
+
+        # Check if section is present and if yes, check if tunneling is enabled
+        if config.has_section(section) and config.getboolean(section, 'enabled', fallback=False):
+            return {
+                'proxy_host': config.get(section, 'proxy_host'),
+                'proxy_user': config.get(section, 'proxy_user'),
+                'proxy_port': config.getint(section, 'proxy_port', fallback=22)
+            }
+        else:
+            return None
+
     AVAILABLE_NODES = hosts_config_to_dict(HOSTS_CONFIG_FILE)
+    PROXY = proxy_config_to_dict(HOSTS_CONFIG_FILE)
 
 
 class DB:
