@@ -114,6 +114,7 @@ class ProtectionService(Service):
     def ignored_processes(self):
         return [
             '/usr/lib/xorg/Xorg',
+            '/usr/bin/X',
             'X'
         ]
 
