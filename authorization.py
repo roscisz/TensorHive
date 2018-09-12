@@ -4,7 +4,7 @@ jwt = JWTManager()
 
 def init_jwt(app, API_CONFIG):
     for key,value in API_CONFIG.JWT.items():
-        app.config["test"] = value
+        app.config[key] = value
 
     jwt = JWTManager(app)
 

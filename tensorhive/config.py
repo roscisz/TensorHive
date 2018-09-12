@@ -37,7 +37,8 @@ class APIConfig():
     # JWT['JWT_REFRESH_TOKEN_EXPIRES'] = dt.datetime.utcnow() + dt.timedelta(days=30)
     JWT['JWT_BLACKLIST_ENABLED'] = True
     JWT['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
-    JWT['JWT_TOKEN_LOCATION'] = ['cookies']
+    #JWT['JWT_TOKEN_LOCATION'] = ['cookies']
+
 
     JWT['BUNDLE_ERRORS'] = True
 
