@@ -105,22 +105,35 @@ export default {
       this.body = ''
     },
 
-    reservation: function () {
-      var tempReservation
-      for (var i = 0; i < this.numberOfResources; i++) {
-        if (this.resourcesCheckboxes[i].checked) {
-          tempReservation = {
-            title: 'Reserved',
-            description: 'Resource ' + (i + 1).toString(),
-            start: this.reservationTime[0].toISOString(),
-            end: this.reservationTime[1].toISOString(),
-            resourceId: this.resourcesCheckboxes[i].uuid,
-            userId: 1
-          }
-          this.addReservation(tempReservation)
+    anyChecked: function () {
+      var anyChecked = false
+      for (var checkbox in this.resourcesCheckboxes) {
+        if (this.resourcesCheckboxes[checkbox].checked) {
+          anyChecked = true
+          break
         }
       }
-      this.close()
+      return anyChecked
+    },
+
+    reservation: function () {
+      var tempReservation
+      if (this.anyChecked()) {
+        for (var i = 0; i < this.numberOfResources; i++) {
+          if (this.resourcesCheckboxes[i].checked) {
+            tempReservation = {
+              title: 'Reserved',
+              description: 'Resource ' + (i + 1).toString(),
+              start: this.reservationTime[0].toISOString(),
+              end: this.reservationTime[1].toISOString(),
+              resourceId: this.resourcesCheckboxes[i].uuid,
+              userId: 1
+            }
+            this.addReservation(tempReservation)
+          }
+        }
+        this.close()
+      }
     }
   }
 }
