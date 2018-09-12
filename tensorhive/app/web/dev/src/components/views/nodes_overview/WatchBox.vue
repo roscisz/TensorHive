@@ -62,6 +62,7 @@ export default {
   },
 
   props: {
+    defaultMetric: String,
     resourcesIndexes: Object,
     chartDatasets: Object,
     updateChart: Boolean,
@@ -101,6 +102,7 @@ export default {
     },
 
     fillNodes () {
+      this.nodes = []
       var nodes = this.chartDatasets
       for (var nodeName in nodes) {
         this.nodes.push(nodeName)
@@ -110,6 +112,7 @@ export default {
     },
 
     fillResourceTypes () {
+      this.resourceTypes = []
       var resourceTypes = this.chartDatasets[this.selectedNode]
       for (var resourceTypeName in resourceTypes) {
         this.resourceTypes.push(resourceTypeName)
@@ -125,7 +128,11 @@ export default {
         this.metrics.push(metrics[metricIndex])
       }
       this.metrics.push('processes')
-      this.selectedMetric = this.metrics[0]
+      if (this.defaultMetric === '') {
+        this.selectedMetric = this.metrics[0]
+      } else {
+        this.selectedMetric = this.defaultMetric
+      }
     },
 
     checkProcesses: function () {

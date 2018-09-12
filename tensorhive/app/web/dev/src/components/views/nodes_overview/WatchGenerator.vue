@@ -6,6 +6,7 @@
         class="watch_box"
         v-for="watch in watches"
         :key="watch.index"
+        :defaultMetric="watch.default"
         :resources-indexes="resourcesIndexes"
         :chart-datasets="chartDatasets"
         :update-chart="updateChart"
@@ -69,7 +70,16 @@ export default {
         .then(response => {
           this.watches = [
             {
-              index: 0
+              index: 0,
+              default: 'gpu_util'
+            },
+            {
+              index: 1,
+              default: 'mem_used'
+            },
+            {
+              index: 2,
+              default: 'processes'
             }
           ]
           this.parseData(response.data)
@@ -271,20 +281,20 @@ export default {
               for (var metricName in resourceType.metrics) {
                 metric = resourceType.metrics[metricName]
                 for (var i = 0; i < metric.data.datasets.length; i++) {
-                  value = isNaN(data[metric.data.datasets[i].uuid][metric.metricName])
-                    ? data[metric.data.datasets[i].uuid][metric.metricName].value
-                    : data[metric.data.datasets[i].uuid][metric.metricName]
+                  value = isNaN(data[nodeName][resourceTypeName][metric.data.datasets[i].uuid].metrics[metric.metricName])
+                    ? data[nodeName][resourceTypeName][metric.data.datasets[i].uuid].metrics[metric.metricName].value
+                    : data[nodeName][resourceTypeName][metric.data.datasets[i].uuid].metrics[metric.metricName]
                   metric.data.datasets[i].data.shift()
                   metric.data.datasets[i].data.push(value)
                 }
               }
             }
-            this.updateChart = !(this.updateChart)
           })
           .catch(e => {
             this.errors.push(e)
           })
       }
+      this.updateChart = !(this.updateChart)
     },
 
     addWatch: function () {
