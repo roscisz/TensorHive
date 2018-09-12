@@ -106,6 +106,7 @@ export default {
         this.nodes.push(nodeName)
       }
       this.selectedNode = this.nodes[0]
+      this.fillResourceTypes()
     },
 
     fillResourceTypes () {
@@ -114,15 +115,16 @@ export default {
         this.resourceTypes.push(resourceTypeName)
       }
       this.selectedResourceType = this.resourceTypes[0]
+      this.fillMetrics()
     },
 
     fillMetrics () {
+      this.metrics = []
       var metrics = this.chartDatasets[this.selectedNode][this.selectedResourceType].uniqueMetricNames
-      for (var metricName in metrics) {
-        if (metrics[metricName].visible) {
-          this.metrics.push(metricName)
-        }
+      for (var metricIndex in metrics) {
+        this.metrics.push(metrics[metricIndex])
       }
+      this.metrics.push('processes')
       this.selectedMetric = this.metrics[0]
     },
 
@@ -152,22 +154,9 @@ export default {
   watch: {
     selectedNode () {
       this.fillResourceTypes()
-      this.metricData = this.loadData()
-      this.metricOptions = this.loadOptions()
-      this.rerenderChart = !(this.rerenderChart)
-      if (this.interval !== null) {
-        clearInterval(this.interval)
-      }
     },
     selectedResourceType () {
       this.fillMetrics()
-      this.metricData = this.loadData()
-      this.metricOptions = this.loadOptions()
-      this.metrics.push('processes')
-      this.rerenderChart = !(this.rerenderChart)
-      if (this.interval !== null) {
-        clearInterval(this.interval)
-      }
     },
     selectedMetric () {
       if (this.selectedMetric === 'processes') {
@@ -191,11 +180,6 @@ export default {
 
   created () {
     this.fillNodes()
-    this.fillResourceTypes()
-    this.fillMetrics()
-    this.metrics.push('processes')
-    this.metricData = this.loadData()
-    this.metricOptions = this.loadOptions()
   }
 }
 </script>
