@@ -26,7 +26,7 @@ paths:
         - users
       summary: Create new user
       parameters:
-        - description: Object with username
+        - description: User object
           in: body
           name: user
           required: true
@@ -204,6 +204,7 @@ definitions:
     type: object
     properties:
       username: { type: string }
+      password: { type: string }
   User:
     type: object
     properties:

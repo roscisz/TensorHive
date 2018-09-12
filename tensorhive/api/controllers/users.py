@@ -4,7 +4,6 @@ from flask_jwt_extended import jwt_required
 from tensorhive.controllers.user.CreateUserController import CreateUserController
 from tensorhive.controllers.user.ListUsersController import ListUsersController
 
-@jwt_required
 def post(user):
     '''Create new user'''
     return CreateUserController.register(user)
