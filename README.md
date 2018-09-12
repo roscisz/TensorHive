@@ -36,6 +36,7 @@ Getting started
 * Only NVIDIA GPUs are supported (```nvidia-smi``` is required)
 
 ### Installation
+(we recommend using `miniconda`/`conda`/`virtualenv`)
 #### Via pip
 ```shell
 pip install tensorhive
