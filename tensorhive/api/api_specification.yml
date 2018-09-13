@@ -21,10 +21,12 @@ paths:
               $ref: '#/definitions/User'
       security:
           - Bearer: []
+  /user/register:
     post:
       tags: 
         - users
       summary: Create new user
+      operationId: 'tensorhive.api.controllers.user.post_register'
       parameters:
         - description: User object
           in: body
@@ -39,8 +41,67 @@ paths:
           description: Duplication error.
         '500':
           $ref: '#/responses/InternalError'
+  /user/logout:
+    delete:
+      tags:
+        - users
+      summary: Logout user
+      operationId: 'tensorhive.api.controllers.user.post_logout_access_token'
+      responses:
+        '201':
+          description: Successfully deleted.
+        '500':
+          $ref: '#/responses/InternalError'
       security:
           - Bearer: []
+  /user/logout1:
+    delete:
+      tags:
+        - users
+      summary: Logout user
+      operationId: 'tensorhive.api.controllers.user.post_logout_refresh_token'
+      responses:
+        '201':
+          description: Successfully deleted.
+        '500':
+          $ref: '#/responses/InternalError'
+      security:
+          - Bearer: []
+  /user/refresh:
+    get:
+      tags:
+        - users
+      summary: Refresh users token
+      operationId: 'tensorhive.api.controllers.user.get_refreshed_access_token'
+      responses:
+        '201':
+          description: Successfully refreshed.
+        '500':
+          $ref: '#/responses/InternalError'
+      security:
+          - Bearer: []
+  /user/login:
+    post:
+      tags:
+        - users
+      summary: Login user
+      operationId: 'tensorhive.api.controllers.user.post_login'
+      parameters:
+        - description: User object
+          in: body
+          name: user
+          required: true
+          schema:
+            $ref: '#/definitions/UserLoginController'
+      responses:
+        '201':
+          description: Successfully loged in.
+        '401':
+          description: Incorrect credentials.
+        '404':
+          description: User does not exist.
+        '500':
+          $ref: '#/responses/InternalError'
   /reservations:
     get:
       tags: 
@@ -201,6 +262,11 @@ paths:
           - Bearer: []
 definitions:
   CreateUserController:
+    type: object
+    properties:
+      username: { type: string }
+      password: { type: string }
+  UserLoginController:
     type: object
     properties:
       username: { type: string }
