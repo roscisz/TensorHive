@@ -19,9 +19,16 @@ Description:
 2. Put this file anywhere within tensorhive package (root is preferred)
 3. Fill in SET_OF_GPU_UUIDS to suit your needs
 
-Commands:
-pip -m tensorhive.snippet generate both
+How to run from CLI examples:
+pip -m tensorhive.snippet generate both 
+pip -m tensorhive.snippet drop
 
+Commands:
+```
+# Remove database file
+drop    
+
+# `generate` commands will automatically create database if it does not exist
 generate users
 generate users --amount 100
 
@@ -30,6 +37,7 @@ generate events --amount 10
 
 generate both
 generate both --amount 10
+```
 '''
 SET_OF_GPU_UUIDS = [
     # These would be picked randomly
