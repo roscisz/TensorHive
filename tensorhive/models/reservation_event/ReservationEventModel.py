@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, CheckConstraint, and_
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, CheckConstraint, and_, not_, or_
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.orm import validates
 from tensorhive.database import Base, db_session
@@ -42,9 +42,6 @@ class ReservationEventModel(Base):
                                                  start=self.start,
                                                  end=self.end)
 
-    @classmethod
-    def find_resource_events_between(cls, resource_id, start, end):
-        return cls.query.filter(and_(cls.start >= start, cls.end <= end, cls.resource_id == resource_id)).first()
 
     @classmethod
     def current_events(cls):
@@ -84,13 +81,27 @@ class ReservationEventModel(Base):
         if self.start > self.end:
             raise AssertionError('Invalid time range (start >= end)')
 
-        if self.start + self.__min_reservation_time >= self.end:
+        if self.start + self.__min_reservation_time > self.end:
             raise AssertionError('Reservation time is shorter than {}'.format(
                 self.__min_reservation_time))
 
+    @classmethod
+    def collision_found(cls, start, end, resource_id):
+        return cls.query.filter(
+            # Two events overlap and concern the same resource
+            and_(
+                # There are no such two events that overlap
+                not_(
+                    # Two events overlap
+                    or_(end < cls.start, start > cls.end)
+                ), 
+                # Case concerns the same resource
+                cls.resource_id == resource_id)
+            ).first()
+
     def _check_for_collisions(self):
         '''Assures that there are no other reservations for the same resource in that time'''
-        if self.find_resource_events_between(self.resource_id, self.start, self.end):
+        if self.collision_found(self.start, self.end, self.resource_id):
             raise AssertionError('{uuid} is already reserved from {start} to {end}'.format(
                 uuid=self.resource_id,
                 start=self.start,
