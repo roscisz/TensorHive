@@ -16,4 +16,5 @@ def init_db():
     # you will have to import them first before calling init_db()
     from tensorhive.models.user import UserModel
     from tensorhive.models.reservation_event import ReservationEventModel
+    from tensorhive.models.auth import RevokedTokenModel
     return Base.metadata.create_all(bind=engine)
