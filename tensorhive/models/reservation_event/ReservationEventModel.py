@@ -108,15 +108,14 @@ class ReservationEventModel(Base):
                 end=self.end))
 
     def _parse_client_time_format(self):
-        client_datetime_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-
-        def parsed_datetime(t): return datetime.datetime.strptime(
-            t, client_datetime_format)
-        try:
-            self.start = parsed_datetime(self.start)
-            self.end = parsed_datetime(self.end)
-        except ValueError:
-            raise ValueError('Datetime parsing error')
+        if isinstance(self.start, str) and isinstance(self.start, str): 
+            client_datetime_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+            parsed_datetime = lambda t: datetime.datetime.strptime(t, client_datetime_format)
+            try:
+                self.start = parsed_datetime(self.start)
+                self.end = parsed_datetime(self.end)
+            except ValueError:
+                raise ValueError('Datetime parsing error')
 
     @classmethod
     def find_by_id(cls, id):
