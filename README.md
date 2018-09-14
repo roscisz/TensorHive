@@ -1,4 +1,12 @@
-<img src="https://i.imgur.com/7GtwA5G.png" width="400">
+
+<div class="row">
+  <div class="column">
+    <img src="https://i.imgur.com/wPmx9yq.png" height="200" hspace="20">
+  </div>
+  <div class="column">
+    <img src="https://i.imgur.com/7GtwA5G.png" height="200">
+  </div>
+</div>
 
 TensorHive
 ===
