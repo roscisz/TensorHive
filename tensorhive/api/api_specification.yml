@@ -1,10 +1,10 @@
 swagger: "2.0"
 
 info:
-  title: "{{title}} v{{version}}"
+  title: "{{title}} {{version}}"
   version: "{{version}}"
 
-basePath: "/v{{version}}"
+basePath: "/{{url_prefix}}"
 
 paths:
   /users:
@@ -46,21 +46,21 @@ paths:
         - description: Array of uuids
           in: query
           name: resources_ids
-          required: true
+          required: false
           type: array
           items: {
               type: string
             }
-        - description: Start of time period
+        - description: UTC ISO (e.g. 2019-10-22T19:23:45Z)
           in: query
           name: start
-          required: true
+          required: false
           type: string
           format: date-time
-        - description: End of time period
+        - description: UTC ISO
           in: query
           name: end
-          required: true
+          required: false
           type: string
           format: date-time
       responses:
@@ -70,6 +70,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/ReservationEvent'
+        '400':
+          description: Bad request. You have to specifiy either all parameters or none
     post:
       tags: 
         - reservations
@@ -84,8 +86,8 @@ paths:
       responses:
         '201':
           description: Successfully created.
-        '500':
-          $ref: '#/responses/InternalError'
+        '400':
+          $ref: '#/responses/BadRequest'
   /reservations/{id}:
     delete:
       tags: 
@@ -236,6 +238,8 @@ responses:
     description: Unauthorized
   InternalError:
     description: Internal Server Error
+  BadRequest:
+    description: Bad Request
 
 parameters:
   hostnameParam:

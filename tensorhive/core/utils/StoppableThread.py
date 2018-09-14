@@ -27,7 +27,7 @@ class StoppableThread(Thread):
         self.after_execution()
 
     def before_execution(self):
-        log.info('[•] Starting {}'.format(self.name))
+        log.info('[⚙] Starting {}'.format(self.name))
 
     def after_execution(self):
         log.info('[✔] Stopped {}'.format(self.name))

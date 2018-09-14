@@ -5,28 +5,33 @@ from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from tensorhive.database import Base, db_session
-
+import logging
+log = logging.getLogger(__name__)
 
 class UserModel(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    reservation_events = relationship("ReservationEventModel", backref="user")
+    reservations = relationship('ReservationEventModel', backref='user')
+    # TODO updated_at, role
 
     def __repr__(self):
-        return '<User: id={self.id}, username={self.username}, created_at={self.created_at}>'
+        return '<User id={id}, username={username}>'.format(
+            id=self.id, 
+            username=self.username)
 
-    # TODO updated_at timestamp, role and more
 
     def save_to_db(self):
         try:
             db_session.add(self)
             db_session.commit()
-        #FIXME SQLAlchemyError is a base class for all other, handle all errors in some way
-        except IntegrityError:
+            log.debug('Created {}'.format(self))
+            return True
+        except SQLAlchemyError as e:
             db_session.rollback()
-            raise
+            log.error(e.__cause__)
+            return False
             
 
     @classmethod

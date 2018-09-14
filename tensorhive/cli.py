@@ -1,8 +1,8 @@
 import click
 import tensorhive
-from tensorhive.config import CONFIG
-from tensorhive.config import LogConfig
 import logging
+import signal
+import sys
 '''
 Current CLI Structure: (update regularly)
 
@@ -31,13 +31,42 @@ def print_version(ctx, param, value):
     ctx.exit()
 
 
+def setup_logging(log_level):
+    DEFAULT_LEVEL = logging.INFO
+    FORMAT = '%(levelname)-8s | %(asctime)s | %(threadName)-30s | MSG: %(message)-79s | FROM: %(name)s'
+
+    # Remove existing configuration first (otherwise basicConfig won't be applied for the second time)
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+
+    # TODO May want to add file logger
+    # TODO May want use dictConfig instead of basicConfig (must import separately: logging.config)
+
+    # Apply new config
+    logging.basicConfig(level=log_level, format=FORMAT)
+
+    # May want to restrict logging from external modules (must be imported first!)
+    # import pssh
+    logging.getLogger('passlib').setLevel(logging.CRITICAL)
+    logging.getLogger('pssh').setLevel(logging.CRITICAL)
+    logging.getLogger('werkzeug').setLevel(logging.CRITICAL)
+    logging.getLogger('connexion').setLevel(logging.CRITICAL)
+    logging.getLogger('swagger_spec_validator').setLevel(logging.CRITICAL)
+
+    # May want to disable logging completely
+    # logging.getLogger('werkzeug').disabled = True
+
+    # Colored logs can be easily disabled by commenting this single line
+    import coloredlogs
+    coloredlogs.install(level=log_level, fmt=FORMAT)
+
 def log_level_mapping(ctx, param, value: str) -> int:
     '''
     Callback function which takes care of mapping
     from cli string param to int log level
     '''
     if value is None:
-        return LogConfig.DEFAULT_LEVEL
+        return logging.INFO
     return AVAILABLE_LOG_LEVELS[value]
 
 
@@ -55,38 +84,27 @@ def main():
               help='Log level to apply.')
 @click.pass_context
 def run(ctx, log_level):
-    # from gevent import monkey
-    # monkey.patch_all()
-    
+    click.echo('TensorHive {}'.format(tensorhive.__version__))
+    setup_logging(log_level)
+
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
     from tensorhive.api.APIServer import APIServer
-    from tensorhive.config import SERVICES_CONFIG
-    
-    LogConfig.apply(log_level)
-
-    manager = TensorHiveManager()
-    manager.configure_services(SERVICES_CONFIG.ENABLED_SERVICES)
-    manager.start()
-
-    click.echo('API server has started...')
-    APIServer().start()
-
-    manager.shutdown()
-    manager.join()
-
-
-@main.group()
-@click.pass_context
-def db(ctx):
-    pass
-
-
-@db.command()
-@click.pass_context
-def init(ctx):
-    '''Initialize database'''
     from tensorhive.database import init_db
-    click.echo('[•] Initializing database...')
-    # TODO Check if init_db can fail and if so, print that error
-    init_db()
-    click.echo('[✔] Done.')
+    from tensorhive.app.web.AppServer import start_server
+    from multiprocessing import Process
+
+    try:
+        init_db()
+        manager = TensorHiveManager()
+        api_server = APIServer()
+        webapp_server = Process(target=start_server)
+
+        manager.configure_services_from_config()
+        manager.init()
+        webapp_server.start()       # Separate process
+        api_server.run_forever()    # Will block (runs on main thread)
+    except KeyboardInterrupt:
+        click.echo('[⚙] Shutting down TensorHive...')
+        manager.shutdown()
+        webapp_server.join()
+        sys.exit()
