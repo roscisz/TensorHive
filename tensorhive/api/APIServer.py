@@ -7,7 +7,7 @@ log = logging.getLogger(__name__)
 
 
 class APIServer():
-    def start(self):
+    def run_forever(self):
         app = connexion.FlaskApp(__name__)
         
         @app.app.teardown_appcontext
@@ -35,7 +35,7 @@ class APIServer():
 
 
 def start_api_server():
-    APIServer().start()
+    APIServer().run_forever()
 
 if __name__ == '__main__':
     start_api_server()

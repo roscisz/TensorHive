@@ -1,6 +1,8 @@
 import click
 import tensorhive
 import logging
+import signal
+import sys
 '''
 Current CLI Structure: (update regularly)
 
@@ -27,6 +29,11 @@ def print_version(ctx, param, value):
         return
     click.echo('TensorHive {ver}'.format(ver=tensorhive.__version__))
     ctx.exit()
+
+
+def service_shutdown(signum, frame):
+    print('Caught signal {}'.format(signum))
+    raise KeyboardInterrupt
 
 
 def setup_logging(log_level):
@@ -82,36 +89,30 @@ def main():
               help='Log level to apply.')
 @click.pass_context
 def run(ctx, log_level):
+    signal.signal(signal.SIGTERM, service_shutdown)
+    signal.signal(signal.SIGINT, service_shutdown)
+
     click.echo('TensorHive {}'.format(tensorhive.__version__))
     setup_logging(log_level)
-    # from gevent import monkey
-    # monkey.patch_all()
-    
+
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
     from tensorhive.api.APIServer import APIServer
     from tensorhive.database import init_db
     from tensorhive.app.web.AppServer import start_server
     from multiprocessing import Process
 
-    init_db()
-    manager = TensorHiveManager()
+    try:
+        init_db()
+        manager = TensorHiveManager()
+        api_server = APIServer()
+        webapp_server = Process(target=start_server)
 
-    from tensorhive.config import MONITORING_SERVICE, PROTECTION_SERVICE
-    from tensorhive.core.monitors.Monitor import Monitor
-    from tensorhive.core.monitors.GPUMonitoringBehaviour import GPUMonitoringBehaviour
-    from tensorhive.core.services.MonitoringService import MonitoringService
-    from tensorhive.core.services.ProtectionService import ProtectionService
-    from tensorhive.core.violation_handlers.ProtectionHandler import ProtectionHandler
-    from tensorhive.core.violation_handlers.MessageSendingBehaviour import MessageSendingBehaviour
-    
-    manager.configure_services_from_config()
-    webapp_server = Process(target=start_server)
-    api_server = APIServer()
-
-    manager.start()
-    webapp_server.start()
-    api_server.start()
-
-    manager.shutdown()
-    webapp_server.join()
-    manager.join()
+        manager.configure_services_from_config()
+        manager.init()
+        webapp_server.start()       # Separate process
+        api_server.run_forever()    # Will block (runs on main thread)
+    except KeyboardInterrupt:
+        click.echo('[⚙] Shutting down TensorHive...')
+        manager.shutdown()
+        webapp_server.join()
+        sys.exit()
