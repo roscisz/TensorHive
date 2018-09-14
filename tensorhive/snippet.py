@@ -108,19 +108,24 @@ def create_new_user():
     persist(new_user)
 
 
-def create_new_reservation(user, min_duration=30, max_duration=40):
-    '''Creates reservation for a random user. It lasts <min_duration, max_duration> minutes'''
+def create_new_reservation(user, min_duration=30, max_duration=40, start_from_now=(-60, 60)):
+    '''
+    Makes new reservation for a random user and random UUID. 
+    Event begins <-60, 60> minutes from now and lasts <min_duration, max_duration> minutes
+    '''
     
     event_duration_in_minutes = random.randint(min_duration, max_duration)
-    current_time = datetime.datetime.utcnow()
-    event_end_time = current_time + datetime.timedelta(minutes=event_duration_in_minutes)
+    start_offset = datetime.timedelta(minutes=random.randint(*start_from_now))
+
+    event_start_time = datetime.datetime.utcnow() + start_offset
+    event_end_time = event_start_time + datetime.timedelta(minutes=event_duration_in_minutes)
 
     new_reservation = ReservationEventModel(
         title='Title for {}'.format(user.username),
         user_id=user.id,
         description='Example description',
         resource_id=random.choice(SET_OF_GPU_UUIDS),
-        start=current_time,
+        start=event_start_time,
         end=event_end_time
     )
     persist(new_reservation)
