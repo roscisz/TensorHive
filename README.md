@@ -115,10 +115,11 @@ You can do this by making use of our [**issue template**](https://gist.github.co
 Credits
 -------
 Project created and maintained by:
-- Paweł Rościszewski
-- ![](https://avatars2.githubusercontent.com/u/12485656?s=22&v=4) [Michał Martyniak](http://martyniak.me)
-- Filip Schodowski
-- Tomasz Menet
+- Paweł Rościszewski [(@roscisz)](https://github.com/roscisz)
+- ![](https://avatars2.githubusercontent.com/u/12485656?s=22&v=4) [Michał Martyniak (@micmarty)](http://martyniak.me)
+- Filip Schodowski [(@filschod)](https://github.com/filschod)
+- Tomasz Menet [(@tomenet)](https://github.com/tomenet)
+- Karol Draszawka [(@szarakawka)](https://github.com/szarakawka)
 
 License
 -------
