@@ -31,11 +31,6 @@ def print_version(ctx, param, value):
     ctx.exit()
 
 
-def service_shutdown(signum, frame):
-    print('Caught signal {}'.format(signum))
-    raise KeyboardInterrupt
-
-
 def setup_logging(log_level):
     DEFAULT_LEVEL = logging.INFO
     FORMAT = '%(levelname)-8s | %(asctime)s | %(threadName)-30s | MSG: %(message)-79s | FROM: %(name)s'
@@ -89,9 +84,6 @@ def main():
               help='Log level to apply.')
 @click.pass_context
 def run(ctx, log_level):
-    signal.signal(signal.SIGTERM, service_shutdown)
-    signal.signal(signal.SIGINT, service_shutdown)
-
     click.echo('TensorHive {}'.format(tensorhive.__version__))
     setup_logging(log_level)
 
