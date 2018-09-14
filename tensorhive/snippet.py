@@ -12,7 +12,7 @@ import datetime
 Description:
 
 1. pip install names
-2. Put this file anywhere within tensorhive package (root is preferred)
+2. Put this file anywhere within tensorhive package (tensorhive/ is preffered)
 3. Fill in SET_OF_GPU_UUIDS to suit your needs
 
 How to run from CLI examples:
