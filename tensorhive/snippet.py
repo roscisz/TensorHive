@@ -16,8 +16,8 @@ Description:
 3. Fill in SET_OF_GPU_UUIDS to suit your needs
 
 How to run from CLI examples:
-pip -m tensorhive.snippet generate both 
-pip -m tensorhive.snippet drop
+python -m tensorhive.snippet generate both 
+python -m tensorhive.snippet drop
 
 Commands:
 ```
