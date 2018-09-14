@@ -1,16 +1,12 @@
-from sqlalchemy import create_engine, Column, DateTime, Integer, CheckConstraint, ForeignKey
-from sqlalchemy.orm import sessionmaker, validates, relationship
-from sqlalchemy.ext.declarative import declarative_base
-import datetime
-import sqlalchemy
-from sqlalchemy_utils import create_database, drop_database, database_exists
 from tensorhive.models.reservation_event.ReservationEventModel import ReservationEventModel
 from tensorhive.models.user.UserModel import UserModel
 from tensorhive.database import Base, engine, init_db, db_session as session
+from sqlalchemy_utils import drop_database
 
 import names
 import random
 import click
+import datetime
 
 '''
 Description:
@@ -99,8 +95,8 @@ def drop():
 def persist(model_instance):
     if model_instance.save_to_db():
         print('Successfully created: ', model_instance)
-    else:
-        print('Failed to create: ', model_instance)
+    # else:
+    #     print('Failed to create: ', model_instance)
 
 
 def create_new_user():
