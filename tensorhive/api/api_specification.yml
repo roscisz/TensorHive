@@ -153,15 +153,12 @@ paths:
       responses:
         '201':
           description: Successfully created.
-<<<<<<< HEAD
         '400':
           $ref: '#/responses/BadRequest'
-=======
         '500':
           $ref: '#/responses/InternalError'
       security:
           - Bearer: []
->>>>>>> auth
   /reservations/{id}:
     delete:
       tags: 

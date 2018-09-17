@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 class APIServer():
     def run_forever(self):
         app = connexion.FlaskApp(__name__)
-        init_jwt(app.app,API_CONFIG)
+        init_jwt(app.app)
 
         @app.app.teardown_appcontext
         def shutdown_session(exception=None):
