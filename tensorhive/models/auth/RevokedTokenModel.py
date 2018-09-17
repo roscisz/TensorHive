@@ -12,7 +12,7 @@ class RevokedTokenModel(Base):
 
 
     def __repr__(self):
-        return '<RevokedToken: id={self.jti}, jti={self.jti}>'
+        return '<RevokedToken: id={self.id}, jti={self.jti}>'
 
 
     def save_to_db(self):
