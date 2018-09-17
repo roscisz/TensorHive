@@ -50,10 +50,11 @@ class UserModel(Base):
     @property
     def as_dict(self):
         '''Serializes model instance into dict (which is interpreted as json automatically)'''
-        return dict(id=self.id,
-                    username=self.username,
-                    createdAt=self.created_at.isoformat()
-                    )
+        return {
+            'id': self.id,
+            'username': self.username,
+            'createdAt': self.created_at.isoformat()
+        }
     # TODO We may need deserialzer
     
     # Not implemented yet
