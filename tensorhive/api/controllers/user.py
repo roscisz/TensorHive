@@ -19,12 +19,12 @@ def get_refreshed_access_token():
 @jwt_required
 def post_logout_access_token():
     '''Revoking the current users access token'''
-    return LogoutUserController.delete_logout("Access")
+    return LogoutUserController.delete_logout('Access')
 
 @jwt_refresh_token_required
 def post_logout_refresh_token():
     '''Revoking the refresh users access token'''
-    return LogoutUserController.delete_logout("Refresh")
+    return LogoutUserController.delete_logout('Refresh')
 
 def post_register(user):
     '''Create new user'''

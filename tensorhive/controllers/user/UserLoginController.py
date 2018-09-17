@@ -17,11 +17,11 @@ class LoginUserController():
             access_token = create_access_token(identity=user['username'])
             refresh_token = create_refresh_token(identity=user['username'])
             return {
-                       'message': 'Logged in as {}'.format(current_user.username),
-                       'access_token': access_token,
-                       'refresh_token': refresh_token
-                   }, 200
+                'msg': 'Logged in as {}'.format(current_user.username),
+                'access_token': access_token,
+                'refresh_token': refresh_token
+            }, 200
         else:
             return {
-                       'message': 'Incorrect credentials!'
-                   }, 401
+                'msg': 'Incorrect credentials!'
+            }, 401
