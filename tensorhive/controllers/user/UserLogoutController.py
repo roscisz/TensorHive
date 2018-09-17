@@ -8,7 +8,7 @@ class LogoutUserController():
         jti = get_raw_jwt()['jti']
         try:
             revoked_token = RevokedTokenModel(jti=jti)
-            revoked_token.add()
+            revoked_token.save_to_db()
             return {
                 'message': ' {} token has been revoked.'.format(type)
             }, 201
