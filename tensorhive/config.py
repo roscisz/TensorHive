@@ -129,14 +129,15 @@ class PROTECTION_SERVICE:
 
 
 class AUTH:
+    from datetime import datetime, timedelta
     # FIXME Refactor, use .ini instead
     FLASK_JWT = {
         'SECRET_KEY': 'jwt-some-secret',
         'JWT_BLACKLIST_ENABLED': True,
         'JWT_BLACKLIST_TOKEN_CHECKS': ['access', 'refresh'],
         'BUNDLE_ERRORS': True,
-        # 'JWT_ACCESS_TOKEN_EXPIRES'] = dt.datetime.utcnow() + dt.timedelta(minutes=15),
-        # 'JWT_REFRESH_TOKEN_EXPIRES'] = dt.datetime.utcnow() + dt.timedelta(days=30),
-        # 'JWT_TOKEN_LOCATION'] = ['cookies'],
+        'JWT_ACCESS_TOKEN_EXPIRES': datetime.utcnow() + timedelta(minutes=15),
+        'JWT_REFRESH_TOKEN_EXPIRES': datetime.utcnow() + timedelta(days=30),
+        'JWT_TOKEN_LOCATION': ['headers']
     }
 
