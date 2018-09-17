@@ -126,3 +126,17 @@ class PROTECTION_SERVICE:
     ENABLED = config.getboolean(section, 'enabled', fallback=True)
     UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=2.0)
     NOTIFY_ON_PTY = config.getboolean(section, 'notify_on_pty', fallback=True)
+
+
+class AUTH:
+    # FIXME Refactor, use .ini instead
+    FLASK_JWT = {
+        'SECRET_KEY': 'jwt-some-secret',
+        'JWT_BLACKLIST_ENABLED': True,
+        'JWT_BLACKLIST_TOKEN_CHECKS': ['access', 'refresh'],
+        'BUNDLE_ERRORS': True,
+        # 'JWT_ACCESS_TOKEN_EXPIRES'] = dt.datetime.utcnow() + dt.timedelta(minutes=15),
+        # 'JWT_REFRESH_TOKEN_EXPIRES'] = dt.datetime.utcnow() + dt.timedelta(days=30),
+        # 'JWT_TOKEN_LOCATION'] = ['cookies'],
+    }
+

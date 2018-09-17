@@ -12,6 +12,7 @@ class UserModel(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
+    password = Column(String(120), nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     reservations = relationship('ReservationEventModel', backref='user')
     # TODO updated_at, role
@@ -74,10 +75,10 @@ class UserModel(Base):
     #     except:
     #         return {'message': 'Deleting all users operation failed'}
 
-    # @staticmethod
-    # def generate_hash(password):
-    #     return sha256.hash(password)
+    @staticmethod
+    def generate_hash(password):
+        return sha256.hash(password)
 
-    # @staticmethod
-    # def verify_hash(password, hash):
-    #     return sha256.verify(password, hash)
+    @staticmethod
+    def verify_hash(password, hash):
+        return sha256.verify(password, hash)

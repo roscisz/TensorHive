@@ -38,14 +38,15 @@ setup(
     download_url = 'https://github.com/roscisz/TensorHive/archive/0.1.1.tar.gz',
     keywords = 'distributed machine learning tensorflow resource management',
     install_requires=[
-        'parallel-ssh', 
-        'passlib', 
-        'sqlalchemy', 
-        'sqlalchemy-utils', 
-        'click', 
-        'connexion', 
-        'flask_cors', 
-        'gunicorn', 
+        'parallel-ssh',
+        'passlib',
+        'sqlalchemy',
+        'sqlalchemy-utils',
+        'click',
+        'connexion',
+        'flask_cors',
+        'flask_jwt_extended',
+        'gunicorn',
         'coloredlogs'
     ],
     zip_safe=False
