@@ -14,7 +14,7 @@ class LoginUserController():
             return NoContent, 404
 
         if UserModel.verify_hash(user['password'], current_user.password):
-            access_token = create_access_token(identity=current_user.id)
+            access_token = create_access_token(identity=current_user.id, fresh=True)
             refresh_token = create_refresh_token(identity=current_user.id)
             return {
                 'msg': 'Logged in as {}'.format(current_user.username),
