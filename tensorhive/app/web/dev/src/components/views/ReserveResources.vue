@@ -1,11 +1,27 @@
 <template>
   <section class="content">
     <section id="calendar_section">
-      <a href="#filter_section">Adjust filters</a>
+      <v-btn
+        color= "info"
+        small
+        outline
+        round
+        href="#filter_section"
+      >
+        Adjust filters
+      </v-btn>
       <FullCalendar :selected-resources="selectedResources"/>
     </section>
     <section id="filter_section">
-      <a href="#calendar_section">Jump up</a>
+      <v-btn
+        color= "info"
+        small
+        outline
+        round
+        href="#calendar_section"
+      >
+        Jump up
+      </v-btn>
       <div style="text-align: center">Select visible resources</div>
       <div class="infrastructure_table">
         <div
@@ -16,38 +32,54 @@
           <div
             class="paragraph"
           >
-            <input
-              type="checkbox"
+            <v-checkbox
+              :label="node.nodeName"
               v-model="node.checked"
               @change="changeNode(node)"
             >
-            {{ node.nodeName }}
-            <button @click="toggle(node)">[{{ node.open ? '-' : '+' }}]</button>
+            </v-checkbox>
+            <v-btn
+              color="indigo"
+              fab
+              dark
+              small
+              outline
+              @click="toggle(node)"
+            >
+              <v-icon dark>{{ node.open ? 'remove' : 'add' }}</v-icon>
+            </v-btn>
             <div
               class="paragraph"
               v-show="node.open"
               v-for="resourceType in node.resourceTypes"
               :key="resourceType.name"
             >
-              <input
-                type="checkbox"
+              <v-checkbox
+                :label="resourceType.name"
                 v-model="resourceType.checked"
                 @change="changeResourceType(resourceType, node)"
+              ></v-checkbox>
+              <v-btn
+                color="indigo"
+                fab
+                dark
+                small
+                outline
+                @click="toggle(resourceType)"
               >
-              {{ resourceType.name }}
-              <button @click="toggle(resourceType)">[{{ resourceType.open ? '-' : '+' }}]</button>
+                <v-icon dark>{{ resourceType.open ? 'remove' : 'add' }}</v-icon>
+              </v-btn>
               <div
                 class="paragraph"
                 v-show="resourceType.open"
                 v-for="resource in resourceType.resources"
                 :key="resource.resourceIndex"
               >
-                <input
-                  type="checkbox"
+                <v-checkbox
+                  :label="`GPU${ resource.resourceIndex } ${ resource.resourceName }`"
                   v-model="resource.metrics.checked"
                   @change="changeResource(resource, resourceType, node)"
-                >
-                GPU{{ resource.resourceIndex }} {{ resource.resourceName }}
+                ></v-checkbox>
               </div>
             </div>
           </div>

@@ -1,6 +1,14 @@
 <template>
   <div>
-    <button v-on:click="addWatch">Add watch</button>
+    <v-btn
+      color="info"
+      small
+      outline
+      round
+      v-on:click="addWatch"
+    >
+      Add watch
+    </v-btn>
     <div class="watch_table" >
       <WatchBox
         class="watch_box"

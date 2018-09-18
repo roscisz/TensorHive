@@ -24,10 +24,13 @@
             v-model="password"
           >
         </div>
-        <button
+        <v-btn
+          color="success"
           type="submit"
           :class="'btn btn-primary btn-lg ' + loading"
-        >Submit</button>
+        >
+          Login
+        </v-btn>
       </form>
 
       <!-- errors -->
