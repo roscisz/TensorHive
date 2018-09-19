@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from tensorhive.database import Base, db_session
 import logging
-log = loging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 class RevokedTokenModel(Base):
     __tablename__ = 'revoked_tokens'
