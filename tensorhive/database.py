@@ -23,6 +23,7 @@ def init_db() -> None:
     from tensorhive.models.user import UserModel
     from tensorhive.models.reservation_event import ReservationEventModel
     from tensorhive.models.auth import RevokedTokenModel
+    from tensorhive.models.role import RoleModel
     
     if database_exists(DB.SQLALCHEMY_DATABASE_URI):
         log.info('[•] Database found ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
