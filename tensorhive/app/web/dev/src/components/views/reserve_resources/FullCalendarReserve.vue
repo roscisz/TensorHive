@@ -1,57 +1,65 @@
 <template>
-  <BaseModal
-    :show="showModal"
-    @close="close"
-  >
-    <div class="modal-header">
-      <h3>Which resources do you want to reserve?</h3>
-    </div>
-    <div class="modal-body">
-      <div
-        class="row"
-        v-for="checkbox in resourcesCheckboxes"
-        :key="checkbox.uuid"
-      >
-        <input
-          type="checkbox"
-          v-model="checkbox.checked"
-          :disabled="checkbox.disabled"
-        >
-        GPU{{ checkbox.index }} {{ checkbox.name }}
-      </div>
-      <label class="form-label">
-        Start and end time
-        <date-picker
-          id="reservationTime"
-          v-model="reservationTime"
-          range type="datetime"
-          lang="en"
-          format="YYYY-MM-DD HH:mm"
-          :not-before="minReservationTime"
-          :not-after="maxReservationTime"
-          :time-picker-options="timePickerOptions"
-        ></date-picker>
-      </label>
-    </div>
-    <div class="modal-footer text-right">
-      <button
-        class="modal-default-button"
-        @click="reservation()"
-      >
-        Reserve
-      </button>
-      <button
-        class="modal-default-button"
-        @click="close()"
-      >
-        Cancel
-      </button>
-    </div>
-  </BaseModal>
+  <v-layout row justify-center>
+    <v-dialog
+      persistent
+      width="50vw"
+      v-model="showModal"
+    >
+      <v-card>
+        <v-card-title>
+          <span class="headline">Which resources do you want to reserve?</span>
+        </v-card-title>
+        <v-card-text>
+          <div
+            class="row"
+            v-for="checkbox in resourcesCheckboxes"
+            :key="checkbox.uuid"
+          >
+            <v-checkbox
+              :label="`${checkbox.nodeName} GPU${ checkbox.index } ${ checkbox.name }`"
+              v-model="checkbox.checked"
+              :disabled="checkbox.disabled"
+            >
+            </v-checkbox>
+          </div>
+          <label class="form-label">
+            Start and end time
+            <date-picker
+              id="reservationTime"
+              v-model="reservationTime"
+              range type="datetime"
+              lang="en"
+              format="YYYY-MM-DD HH:mm"
+              :not-before="minReservationTime"
+              :not-after="maxReservationTime"
+              :time-picker-options="timePickerOptions"
+            ></date-picker>
+          </label>
+          <div class="modal-footer text-right">
+            <v-btn
+              color="error"
+              small
+              outline
+              round
+              @click="close()"
+            >
+              Cancel
+            </v-btn>
+            <v-btn
+              color="success"
+              round
+              @click="reservation()"
+            >
+              Reserve
+            </v-btn>
+          </div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-layout>
 </template>
 
 <script>
-import BaseModal from './BaseModal.vue'
 import DatePicker from 'vue2-datepicker'
 export default {
   name: 'FullCalendarReserve',
@@ -81,15 +89,12 @@ export default {
   },
 
   components: {
-    BaseModal,
     DatePicker
   },
 
   data () {
     return {
-      title: '',
       reservationTime: '',
-      body: '',
       timePickerOptions: {
         start: '00:00',
         step: '00:30',
@@ -101,26 +106,37 @@ export default {
   methods: {
     close: function () {
       this.$emit('close')
-      this.title = ''
-      this.body = ''
+    },
+
+    anyChecked: function () {
+      var anyChecked = false
+      for (var checkbox in this.resourcesCheckboxes) {
+        if (this.resourcesCheckboxes[checkbox].checked) {
+          anyChecked = true
+          break
+        }
+      }
+      return anyChecked
     },
 
     reservation: function () {
       var tempReservation
-      for (var i = 0; i < this.numberOfResources; i++) {
-        if (this.resourcesCheckboxes[i].checked) {
-          tempReservation = {
-            title: 'Reserved',
-            description: 'Resource ' + (i + 1).toString(),
-            start: this.reservationTime[0].toISOString(),
-            end: this.reservationTime[1].toISOString(),
-            resourceId: this.resourcesCheckboxes[i].uuid,
-            userId: 1
+      if (this.anyChecked()) {
+        for (var i = 0; i < this.numberOfResources; i++) {
+          if (this.resourcesCheckboxes[i].checked) {
+            tempReservation = {
+              title: 'Reserved',
+              description: 'Resource ' + (i + 1).toString(),
+              start: this.reservationTime[0].toISOString(),
+              end: this.reservationTime[1].toISOString(),
+              resourceId: this.resourcesCheckboxes[i].uuid,
+              userId: 1
+            }
+            this.addReservation(tempReservation)
           }
-          this.addReservation(tempReservation)
         }
+        this.close()
       }
-      this.close()
     }
   }
 }

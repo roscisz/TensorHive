@@ -62,6 +62,7 @@ export default {
   },
 
   props: {
+    defaultMetric: String,
     resourcesIndexes: Object,
     chartDatasets: Object,
     updateChart: Boolean,
@@ -101,29 +102,37 @@ export default {
     },
 
     fillNodes () {
+      this.nodes = []
       var nodes = this.chartDatasets
       for (var nodeName in nodes) {
         this.nodes.push(nodeName)
       }
       this.selectedNode = this.nodes[0]
+      this.fillResourceTypes()
     },
 
     fillResourceTypes () {
+      this.resourceTypes = []
       var resourceTypes = this.chartDatasets[this.selectedNode]
       for (var resourceTypeName in resourceTypes) {
         this.resourceTypes.push(resourceTypeName)
       }
       this.selectedResourceType = this.resourceTypes[0]
+      this.fillMetrics()
     },
 
     fillMetrics () {
+      this.metrics = []
       var metrics = this.chartDatasets[this.selectedNode][this.selectedResourceType].uniqueMetricNames
-      for (var metricName in metrics) {
-        if (metrics[metricName].visible) {
-          this.metrics.push(metricName)
-        }
+      for (var metricIndex in metrics) {
+        this.metrics.push(metrics[metricIndex])
       }
-      this.selectedMetric = this.metrics[0]
+      this.metrics.push('processes')
+      if (this.defaultMetric === '') {
+        this.selectedMetric = this.metrics[0]
+      } else {
+        this.selectedMetric = this.defaultMetric
+      }
     },
 
     checkProcesses: function () {
@@ -152,22 +161,9 @@ export default {
   watch: {
     selectedNode () {
       this.fillResourceTypes()
-      this.metricData = this.loadData()
-      this.metricOptions = this.loadOptions()
-      this.rerenderChart = !(this.rerenderChart)
-      if (this.interval !== null) {
-        clearInterval(this.interval)
-      }
     },
     selectedResourceType () {
       this.fillMetrics()
-      this.metricData = this.loadData()
-      this.metricOptions = this.loadOptions()
-      this.metrics.push('processes')
-      this.rerenderChart = !(this.rerenderChart)
-      if (this.interval !== null) {
-        clearInterval(this.interval)
-      }
     },
     selectedMetric () {
       if (this.selectedMetric === 'processes') {
@@ -191,11 +187,6 @@ export default {
 
   created () {
     this.fillNodes()
-    this.fillResourceTypes()
-    this.fillMetrics()
-    this.metrics.push('processes')
-    this.metricData = this.loadData()
-    this.metricOptions = this.loadOptions()
   }
 }
 </script>
@@ -214,12 +205,12 @@ export default {
   position: sticky;
 }
 .chart_box{
-  width: 25vw;
+  width: 100%;
   height: 34vh;
   position: relative;
 }
 .table_box{
-  width: 25vw;
+  width: 100%;
   height: 34vh;
   position: relative;
   overflow-y: scroll;
