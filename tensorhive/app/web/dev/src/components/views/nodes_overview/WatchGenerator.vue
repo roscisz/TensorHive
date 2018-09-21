@@ -276,33 +276,42 @@ export default {
     },
 
     changeData: function () {
-      var node, metric, resourceType, value
-      var data = []
+      var node, counter
+      counter = Object.keys(this.chartDatasets).length
       for (var nodeName in this.chartDatasets) {
+        counter--
         node = this.chartDatasets[nodeName]
-        api
-          .request('get', '/nodes/' + nodeName + '/gpu/metrics')
-          .then(response => {
-            data = response.data
-            for (var resourceTypeName in node) {
-              resourceType = node[resourceTypeName]
-              for (var metricName in resourceType.metrics) {
-                metric = resourceType.metrics[metricName]
-                for (var i = 0; i < metric.data.datasets.length; i++) {
-                  value = isNaN(data[nodeName][resourceTypeName][metric.data.datasets[i].uuid].metrics[metric.metricName])
-                    ? data[nodeName][resourceTypeName][metric.data.datasets[i].uuid].metrics[metric.metricName].value
-                    : data[nodeName][resourceTypeName][metric.data.datasets[i].uuid].metrics[metric.metricName]
-                  metric.data.datasets[i].data.shift()
-                  metric.data.datasets[i].data.push(value)
-                }
+        this.apiRequest(node, nodeName, counter)
+      }
+    },
+
+    apiRequest: function (node, nodeName, counter) {
+      var metric, resourceType, value
+      var data = []
+      api
+        .request('get', '/nodes/' + nodeName + '/gpu/metrics')
+        .then(response => {
+          data = response.data
+          for (var resourceTypeName in node) {
+            resourceType = node[resourceTypeName]
+            for (var metricName in resourceType.metrics) {
+              metric = resourceType.metrics[metricName]
+              for (var i = 0; i < metric.data.datasets.length; i++) {
+                value = isNaN(data[metric.data.datasets[i].uuid][metric.metricName])
+                  ? data[metric.data.datasets[i].uuid][metric.metricName].value
+                  : data[metric.data.datasets[i].uuid][metric.metricName]
+                metric.data.datasets[i].data.shift()
+                metric.data.datasets[i].data.push(value)
               }
             }
-          })
-          .catch(e => {
-            this.errors.push(e)
-          })
-      }
-      this.updateChart = !(this.updateChart)
+          }
+          if (!counter) {
+            this.updateChart = !this.updateChart
+          }
+        })
+        .catch(e => {
+          this.errors.push(e)
+        })
     },
 
     addWatch: function () {
@@ -320,6 +329,7 @@ export default {
 .watch_box{
   height: 40vh;
   width: 25vw;
+  min-width: 300px;
   margin-left: 3vh;
 }
 </style>

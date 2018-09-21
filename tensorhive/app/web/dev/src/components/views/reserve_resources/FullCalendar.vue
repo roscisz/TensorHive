@@ -56,6 +56,7 @@ export default {
       this.resourcesCheckboxes = []
       for (i = 0; i < this.selectedResources.length; i++) {
         obj = {
+          nodeName: this.selectedResources[i].nodeName,
           name: this.selectedResources[i].name,
           uuid: this.selectedResources[i].uuid,
           index: this.selectedResources[i].index,
@@ -130,7 +131,7 @@ export default {
     })
     this.calendar.fullCalendar({
       allDaySlot: false,
-      height: 800,
+      height: 'auto',
       selectable: true,
       selectOverlap: true,
       slotEventOverlap: false,
@@ -144,7 +145,11 @@ export default {
         center: 'title',
         right: 'agendaWeek,agendaDay,month'
       },
-
+      views: {
+        week: {
+          columnHeaderFormat: 'ddd D/M'
+        }
+      },
       eventAfterRender: function (event, element, view) {
         var resourceIndex
         for (var i = 0; i < self.selectedResources.length; i++) {

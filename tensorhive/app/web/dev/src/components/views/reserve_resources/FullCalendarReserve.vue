@@ -16,7 +16,7 @@
             :key="checkbox.uuid"
           >
             <v-checkbox
-              :label="`GPU${ checkbox.index } ${ checkbox.name }`"
+              :label="`${checkbox.nodeName} GPU${ checkbox.index } ${ checkbox.name }`"
               v-model="checkbox.checked"
               :disabled="checkbox.disabled"
             >

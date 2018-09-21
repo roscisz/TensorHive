@@ -205,12 +205,12 @@ export default {
   position: sticky;
 }
 .chart_box{
-  width: 25vw;
+  width: 100%;
   height: 34vh;
   position: relative;
 }
 .table_box{
-  width: 25vw;
+  width: 100%;
   height: 34vh;
   position: relative;
   overflow-y: scroll;

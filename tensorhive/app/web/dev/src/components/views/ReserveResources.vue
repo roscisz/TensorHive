@@ -22,7 +22,6 @@
       >
         Jump up
       </v-btn>
-      <div style="text-align: center">Select visible resources</div>
       <div class="infrastructure_table">
         <div
           class="infrastructure_box"
@@ -226,6 +225,7 @@ export default {
             resource = resourceType.resources[k]
             if (resource.metrics.checked) {
               obj = {
+                nodeName: node.nodeName,
                 name: resource.resourceName,
                 uuid: resource.resourceUUID,
                 index: resource.resourceIndex
@@ -243,6 +243,8 @@ export default {
 <style>
 .paragraph{
   margin-left: 30px;
+  display:flex;
+  flex-wrap: wrap;
 }
 .infrastructure_table{
   display: flex;
