@@ -2,6 +2,7 @@ from pathlib import PosixPath
 import configparser
 from typing import Dict, Optional
 import logging
+
 log = logging.getLogger(__name__)
 MAIN_CONFIG_PATH = '~/.config/TensorHive/main_config.ini'
 
@@ -40,7 +41,6 @@ class SSH:
     TEST_ON_STARTUP = config.getboolean(section, 'test_on_startup', fallback=True)
     TIMEOUT = config.getfloat(section, 'timeout', fallback=10.0)
     NUM_RETRIES = config.getint(section, 'number_of_retries', fallback=1)
-    
 
     def hosts_config_to_dict(path: str) -> Dict:
         '''Parses sections containing hostnames'''
@@ -130,14 +130,14 @@ class PROTECTION_SERVICE:
 
 class AUTH:
     from datetime import timedelta
-    # FIXME Refactor, use .ini instead
+    section = 'auth'
     FLASK_JWT = {
-        'SECRET_KEY': 'jwt-some-secret',
-        'JWT_BLACKLIST_ENABLED': True,
-        'JWT_BLACKLIST_TOKEN_CHECKS': ['access', 'refresh'],
-        'BUNDLE_ERRORS': True,
-        'JWT_ACCESS_TOKEN_EXPIRES': timedelta(minutes=15),
-        'JWT_REFRESH_TOKEN_EXPIRES': timedelta(days=30),
-        'JWT_TOKEN_LOCATION': ['headers']
+        'SECRET_KEY': config.get(section, 'secrect_key', fallback='jwt-some-secret'),
+        'JWT_BLACKLIST_ENABLED': config.getboolean(section, 'jwt_blacklist_enabled', fallback=True),
+        'JWT_BLACKLIST_TOKEN_CHECKS': config.get(section, 'jwt_blacklist_token_checks', fallback=['access', 'refresh']),
+        'BUNDLE_ERRORS': config.getboolean(section, 'bundle_errors', fallback=True),
+        'JWT_ACCESS_TOKEN_EXPIRES': timedelta(minutes=config.getint(section, 'jwt_access_token_expires', fallback=15)),
+        'JWT_REFRESH_TOKEN_EXPIRES': timedelta(days=config.getint(section, 'jwt_refresh_token_expires', fallback=30)),
+        'JWT_TOKEN_LOCATION': config.get(section, 'jwt_token_location', fallback=['headers'])
     }
 
