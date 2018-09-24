@@ -54,7 +54,7 @@ paths:
           $ref: '#/responses/InternalError'
       security:
           - Bearer: []
-  /user/rtokenlogoutrash:
+  /user/logout/refresh_token:
     delete:
       tags:
         - users
