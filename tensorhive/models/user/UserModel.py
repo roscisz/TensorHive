@@ -12,6 +12,7 @@ class UserModel(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
+    password = Column(String(120), nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     reservations = relationship('ReservationEventModel', backref='user')
     # TODO updated_at, role
@@ -49,10 +50,11 @@ class UserModel(Base):
     @property
     def as_dict(self):
         '''Serializes model instance into dict (which is interpreted as json automatically)'''
-        return dict(id=self.id,
-                    username=self.username,
-                    createdAt=self.created_at.isoformat()
-                    )
+        return {
+            'id': self.id,
+            'username': self.username,
+            'createdAt': self.created_at.isoformat()
+        }
     # TODO We may need deserialzer
     
     # Not implemented yet
@@ -74,10 +76,10 @@ class UserModel(Base):
     #     except:
     #         return {'message': 'Deleting all users operation failed'}
 
-    # @staticmethod
-    # def generate_hash(password):
-    #     return sha256.hash(password)
+    @staticmethod
+    def generate_hash(password):
+        return sha256.hash(password)
 
-    # @staticmethod
-    # def verify_hash(password, hash):
-    #     return sha256.verify(password, hash)
+    @staticmethod
+    def verify_hash(password, hash):
+        return sha256.verify(password, hash)

@@ -19,12 +19,16 @@ paths:
             type: array
             items:
               $ref: '#/definitions/User'
+      security:
+          - Bearer: []
+  /user/register:
     post:
       tags: 
         - users
       summary: Create new user
+      operationId: 'tensorhive.api.controllers.user.post_register'
       parameters:
-        - description: Object with username
+        - description: User object
           in: body
           name: user
           required: true
@@ -35,6 +39,67 @@ paths:
           description: Successfully created.
         '409':
           description: Duplication error.
+        '500':
+          $ref: '#/responses/InternalError'
+  /user/logout:
+    delete:
+      tags:
+        - users
+      summary: Logout user with access token
+      operationId: 'tensorhive.api.controllers.user.post_logout_access_token'
+      responses:
+        '201':
+          description: Successfully deleted.
+        '500':
+          $ref: '#/responses/InternalError'
+      security:
+          - Bearer: []
+  /user/logout/refresh_token:
+    delete:
+      tags:
+        - users
+      summary: Logout user with refresh token
+      operationId: 'tensorhive.api.controllers.user.post_logout_refresh_token'
+      responses:
+        '201':
+          description: Successfully deleted.
+        '500':
+          $ref: '#/responses/InternalError'
+      security:
+          - Bearer: []
+  /user/refresh:
+    get:
+      tags:
+        - users
+      summary: Refresh users token
+      operationId: 'tensorhive.api.controllers.user.get_refreshed_access_token'
+      responses:
+        '201':
+          description: Successfully refreshed.
+        '500':
+          $ref: '#/responses/InternalError'
+      security:
+          - Bearer: []
+  /user/login:
+    post:
+      tags:
+        - users
+      summary: Login user
+      operationId: 'tensorhive.api.controllers.user.post_login'
+      parameters:
+        - description: User object
+          in: body
+          name: user
+          required: true
+          schema:
+            $ref: '#/definitions/UserLoginController'
+      responses:
+        '201':
+          description: Successfully loged in.
+        '401':
+          description: Incorrect credentials.
+        '404':
+          description: User does not exist.
         '500':
           $ref: '#/responses/InternalError'
   /reservations:
@@ -72,6 +137,8 @@ paths:
               $ref: '#/definitions/ReservationEvent'
         '400':
           description: Bad request. You have to specifiy either all parameters or none
+      security:
+          - Bearer: []
     post:
       tags: 
         - reservations
@@ -88,6 +155,10 @@ paths:
           description: Successfully created.
         '400':
           $ref: '#/responses/BadRequest'
+        '500':
+          $ref: '#/responses/InternalError'
+      security:
+          - Bearer: []
   /reservations/{id}:
     delete:
       tags: 
@@ -104,6 +175,8 @@ paths:
           description: Successfully deleted.
         '404':
           $ref: '#/responses/NotFound'
+      security:
+          - Bearer: []
   # TODO Nodes: Add more specific schemas, response codes + descriptions
   /nodes/hostnames:
     get:
@@ -118,6 +191,8 @@ paths:
             type: array
             items: 
               type: string
+      security:
+          - Bearer: []
   /nodes/metrics:
     get:
       tags: 
@@ -129,6 +204,8 @@ paths:
           description: 'Success'
           schema:
             type: object
+      security:
+          - Bearer: []
   /nodes/{hostname}/gpu/info:
     get:
       tags: 
@@ -146,6 +223,8 @@ paths:
               type: object
         '404':
           $ref: '#/responses/NotFound'
+      security:
+          - Bearer: []
   /nodes/{hostname}/gpu/metrics:
     get:
       tags: 
@@ -164,6 +243,8 @@ paths:
               type: object
         '404':
           $ref: '#/responses/NotFound'
+      security:
+          - Bearer: []
   /nodes/{hostname}/gpu/processes:
     get:
       tags: 
@@ -181,11 +262,19 @@ paths:
               type: object
         '404':
           $ref: '#/responses/NotFound'
+      security:
+          - Bearer: []
 definitions:
   CreateUserController:
     type: object
     properties:
       username: { type: string }
+      password: { type: string }
+  UserLoginController:
+    type: object
+    properties:
+      username: { type: string }
+      password: { type: string }
   User:
     type: object
     properties:
@@ -263,3 +352,9 @@ parameters:
       - mem_util
       - temp
       - power
+
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header

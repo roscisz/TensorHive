@@ -22,7 +22,8 @@ def init_db() -> None:
     # they could be registered properly on the metadata.
     from tensorhive.models.user import UserModel
     from tensorhive.models.reservation_event import ReservationEventModel
-
+    from tensorhive.models.auth import RevokedTokenModel
+    
     if database_exists(DB.SQLALCHEMY_DATABASE_URI):
         log.info('[•] Database found ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
     else:

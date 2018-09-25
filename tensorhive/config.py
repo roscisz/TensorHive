@@ -1,7 +1,8 @@
 from pathlib import PosixPath
 import configparser
-from typing import Dict, Optional
+from typing import Dict, Optional, Any, List
 import logging
+
 log = logging.getLogger(__name__)
 MAIN_CONFIG_PATH = '~/.config/TensorHive/main_config.ini'
 
@@ -40,7 +41,6 @@ class SSH:
     TEST_ON_STARTUP = config.getboolean(section, 'test_on_startup', fallback=True)
     TIMEOUT = config.getfloat(section, 'timeout', fallback=10.0)
     NUM_RETRIES = config.getint(section, 'number_of_retries', fallback=1)
-    
 
     def hosts_config_to_dict(path: str) -> Dict:
         '''Parses sections containing hostnames'''
@@ -126,3 +126,40 @@ class PROTECTION_SERVICE:
     ENABLED = config.getboolean(section, 'enabled', fallback=True)
     UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=2.0)
     NOTIFY_ON_PTY = config.getboolean(section, 'notify_on_pty', fallback=True)
+
+
+class AUTH:
+    from datetime import timedelta
+    section = 'auth'
+
+    def config_get_parsed(option: str, fallback: Any) -> List[str]:
+        '''
+        Parses value for option from string to a valid python list.
+        Fallback value is returned when anything goes wrong (e.g. option or value not present)
+
+        Example .ini file, function called with arguments: option='some_option', fallback=None
+        [some_section]
+        some_option = ['foo', 'bar']
+
+        Will return:
+        ['foo', 'bar']
+        '''
+        import ast
+        try:
+            raw_arguments = config.get('auth', option)
+            parsed_arguments = ast.literal_eval(raw_arguments)
+            return parsed_arguments
+        except (configparser.Error, ValueError) as e:
+            log.warning('Parsing [auth] config section failed for option "{}", using fallback value: {}'.format(
+                option, fallback))
+            return fallback
+
+    FLASK_JWT = {
+        'SECRET_KEY': config.get(section, 'secrect_key', fallback='jwt-some-secret'),
+        'JWT_BLACKLIST_ENABLED': config.getboolean(section, 'jwt_blacklist_enabled', fallback=True),
+        'JWT_BLACKLIST_TOKEN_CHECKS': config_get_parsed('jwt_blacklist_token_checks', fallback=['access', 'refresh']),
+        'BUNDLE_ERRORS': config.getboolean(section, 'bundle_errors', fallback=True),
+        'JWT_ACCESS_TOKEN_EXPIRES': timedelta(minutes=config.getint(section, 'jwt_access_token_expires', fallback=15)),
+        'JWT_REFRESH_TOKEN_EXPIRES': timedelta(days=config.getint(section, 'jwt_refresh_token_expires', fallback=30)),
+        'JWT_TOKEN_LOCATION': config_get_parsed('jwt_token_location', fallback=['headers'])
+    }

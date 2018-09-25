@@ -3,13 +3,16 @@ import connexion
 from tensorhive.config import API, API_SERVER
 from tensorhive.database import db_session
 from flask_cors import CORS
+from authorization import init_jwt
+
 log = logging.getLogger(__name__)
 
 
 class APIServer():
     def run_forever(self):
         app = connexion.FlaskApp(__name__)
-        
+        init_jwt(app.app)
+
         @app.app.teardown_appcontext
         def shutdown_session(exception=None):
             db_session.remove()
