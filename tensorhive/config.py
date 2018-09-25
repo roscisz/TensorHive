@@ -134,10 +134,10 @@ class AUTH:
     FLASK_JWT = {
         'SECRET_KEY': config.get(section, 'secrect_key', fallback='jwt-some-secret'),
         'JWT_BLACKLIST_ENABLED': config.getboolean(section, 'jwt_blacklist_enabled', fallback=True),
-        'JWT_BLACKLIST_TOKEN_CHECKS': config.get(section, 'jwt_blacklist_token_checks', fallback=['access', 'refresh']),
+        'JWT_BLACKLIST_TOKEN_CHECKS': config.get(section, 'jwt_blacklist_token_checks', fallback="'access', 'refresh'").split(','),
         'BUNDLE_ERRORS': config.getboolean(section, 'bundle_errors', fallback=True),
         'JWT_ACCESS_TOKEN_EXPIRES': timedelta(minutes=config.getint(section, 'jwt_access_token_expires', fallback=15)),
         'JWT_REFRESH_TOKEN_EXPIRES': timedelta(days=config.getint(section, 'jwt_refresh_token_expires', fallback=30)),
-        'JWT_TOKEN_LOCATION': config.get(section, 'jwt_token_location', fallback=['headers'])
+        'JWT_TOKEN_LOCATION': config.get(section, 'jwt_token_location', fallback="'headers'").split(',')
     }
 
