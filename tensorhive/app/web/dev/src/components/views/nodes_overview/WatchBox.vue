@@ -139,7 +139,7 @@ export default {
       var data, processes, tempProcess
       processes = []
       api
-        .request('get', '/nodes/' + this.selectedNode + '/gpu/processes')
+        .request('get', '/nodes/' + this.selectedNode + '/gpu/processes', this.$store.state.token)
         .then(response => {
           data = response.data
           for (var resourceUUID in data) {

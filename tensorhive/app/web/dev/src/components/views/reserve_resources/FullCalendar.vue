@@ -50,6 +50,7 @@ export default {
       this.calendar.fullCalendar('removeEventSources')
       this.calendar.fullCalendar('addEventSource', {
         url: config.serverURI + '/reservations?resources_ids=' + resourcesString,
+        headers: { Authorization: this.$store.state.token },
         cache: true
       })
       var obj
@@ -102,7 +103,7 @@ export default {
 
     cancelReservation: function (reservation) {
       api
-        .request('delete', '/reservations/' + reservation.id.toString())
+        .request('delete', '/reservations/' + reservation.id.toString(), this.$store.state.token)
         .then(response => {
           this.calendar.fullCalendar('removeEvents', reservation._id)
         })
@@ -113,7 +114,7 @@ export default {
 
     addReservation: function (reservation) {
       api
-        .request('post', '/reservations', reservation)
+        .request('post', '/reservations', this.$store.state.token, reservation)
         .then(response => {
           this.calendar.fullCalendar('refetchEvents')
         })
@@ -130,7 +131,6 @@ export default {
       self.calendar.fullCalendar('rerenderEvents')
     })
     this.calendar.fullCalendar({
-      allDaySlot: false,
       height: 'auto',
       selectable: true,
       selectOverlap: true,
@@ -200,8 +200,10 @@ export default {
       },
 
       eventClick: function (calEvent, jsEvent, view) {
-        self.showModalCancel = true
-        self.reservation = calEvent
+        if (calEvent.userId === self.$store.state.id) {
+          self.showModalCancel = true
+          self.reservation = calEvent
+        }
       }
     })
   }

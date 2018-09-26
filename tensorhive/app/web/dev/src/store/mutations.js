@@ -1,3 +1,4 @@
+import axios from 'axios'
 export default {
   TOGGLE_LOADING (state) {
     state.callingAPI = !state.callingAPI
@@ -7,6 +8,9 @@ export default {
   },
   SET_USER (state, user) {
     state.user = user
+  },
+  SET_ID (state, id) {
+    state.id = id
   },
   SET_TOKEN (state, token) {
     state.token = token

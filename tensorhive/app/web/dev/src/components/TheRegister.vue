@@ -1,9 +1,8 @@
 <template>
   <div id="login">
     <div class="text-center col-sm-12">
-      <!-- login form -->
       <form @submit.prevent="checkCreds">
-        Login to your account
+        Register new user
         <div class="input-group">
           <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
           <input
@@ -30,17 +29,17 @@
           small
           outline
           round
-          @click="register()"
+          @click="login()"
           :class="'btn btn-primary btn-lg ' + loading"
         >
-          Register
+          Login
         </v-btn>
         <v-btn
           color="success"
           type="submit"
           :class="'btn btn-primary btn-lg ' + loading"
         >
-          Login
+          Register
         </v-btn>
       </form>
 
@@ -54,11 +53,11 @@
 import api from '../api'
 
 export default {
-  name: 'Login',
+  name: 'Register',
 
   data (router) {
     return {
-      section: 'Login',
+      section: 'Register',
       loading: '',
       username: '',
       password: '',
@@ -67,8 +66,8 @@ export default {
   },
 
   methods: {
-    register () {
-      this.$router.push('/register')
+    login () {
+      this.$router.push('/login')
     },
 
     checkCreds () {
@@ -77,9 +76,10 @@ export default {
       this.toggleLoading()
       this.resetResponse()
       this.$store.commit('TOGGLE_LOADING')
+
       /* Making API call to authenticate a user */
       api
-        .request('post', '/user/login', this.$store.state.token, { 'username': username, 'password': password })
+        .request('post', '/user/register', this.$store.state.token, { 'username': username, 'password': password })
         .then(response => {
           this.toggleLoading()
 
@@ -98,16 +98,15 @@ export default {
 
             return
           }
-          /* Setting user in the state and caching record to the localStorage */
-          if (username) {
-            var token = 'Bearer ' + data.access_token
-            var id = JSON.parse(atob(data.access_token.split('.')[1])).identity
-            this.$store.commit('SET_USER', username)
-            this.$store.commit('SET_ID', id)
-            this.$store.commit('SET_TOKEN', token)
 
+          /* Setting user in the state and caching record to the localStorage */
+          if (data.username) {
+            var token = 'Bearer ' + data.access_token
+            this.$store.commit('SET_USER', data.username)
+            this.$store.commit('SET_ID', data.id)
+            this.$store.commit('SET_TOKEN', token)
             if (window.localStorage) {
-              window.localStorage.setItem('user', JSON.stringify(username))
+              window.localStorage.setItem('user', JSON.stringify(data.username))
               window.localStorage.setItem('token', token)
             }
             this.$router.push('/')

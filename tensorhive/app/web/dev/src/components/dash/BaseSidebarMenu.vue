@@ -4,11 +4,11 @@
     <router-link
       tag="li"
       class="pageLink"
-      to="/"
+      to="/reservations_overview"
     >
       <a>
         <i class="fa fa-table"></i>
-        <span class="page">Reserve resources</span>
+        <span class="page">Reservations Overview</span>
       </a>
     </router-link>
     <li class="header">RESOURCES</li>
@@ -33,11 +33,43 @@
         <span class="page"> Login</span>
       </a>
     </router-link>
+    <router-link
+      tag="li"
+      class="pageLink"
+      to="/register"
+    >
+      <a>
+        <i class="fa fa-circle-o text-green"></i>
+        <span class="page"> Register</span>
+      </a>
+    </router-link>
+    <li
+      class="pageLink"
+    >
+      <a>
+        <i class="fa fa-circle-o text-red"></i>
+        <span @click="logout()" class="page"> Logout</span>
+      </a>
+    </li>
   </ul>
 </template>
 <script>
 export default {
-  name: 'BaseSidebarMenu'
+  name: 'BaseSidebarMenu',
+
+  methods: {
+    logout: function () {
+      this.$store.commit('SET_USER', null)
+      this.$store.commit('SET_TOKEN', null)
+
+      if (window.localStorage) {
+        window.localStorage.setItem('user', null)
+        window.localStorage.setItem('token', null)
+      }
+
+      this.$router.push('/login')
+    }
+  }
 }
 </script>
 <style>

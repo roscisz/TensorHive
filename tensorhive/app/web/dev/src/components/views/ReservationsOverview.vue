@@ -111,7 +111,7 @@ export default {
 
   created () {
     api
-      .request('get', '/nodes/metrics')
+      .request('get', '/nodes/metrics', this.$store.state.token)
       .then(response => {
         this.nodes = response.data
         this.parseData()

@@ -74,7 +74,7 @@ export default {
 
     loadData: function () {
       api
-        .request('get', '/nodes/metrics')
+        .request('get', '/nodes/metrics', this.$store.state.token)
         .then(response => {
           this.watches = [
             {
@@ -260,7 +260,7 @@ export default {
         }
       }
       obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = unit
-      if (metricName === 'mem_util' || metricName === 'gpu_util') {
+      if (metricName === 'mem_util' || metricName === 'gpu_util' || metricName === 'fan_speed') {
         obj['scales']['yAxes'][0]['ticks'] = {
           suggestedMin: 0,
           max: 100
@@ -289,7 +289,7 @@ export default {
       var metric, resourceType, value
       var data = []
       api
-        .request('get', '/nodes/' + nodeName + '/gpu/metrics')
+        .request('get', '/nodes/' + nodeName + '/gpu/metrics', this.$store.state.token)
         .then(response => {
           data = response.data
           for (var resourceTypeName in node) {

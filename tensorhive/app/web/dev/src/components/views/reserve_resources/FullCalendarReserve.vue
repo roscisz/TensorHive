@@ -130,7 +130,7 @@ export default {
               start: this.reservationTime[0].toISOString(),
               end: this.reservationTime[1].toISOString(),
               resourceId: this.resourcesCheckboxes[i].uuid,
-              userId: 1
+              userId: this.$store.state.id
             }
             this.addReservation(tempReservation)
           }

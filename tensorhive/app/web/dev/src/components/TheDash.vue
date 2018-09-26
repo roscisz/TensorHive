@@ -17,11 +17,6 @@
         >
           <span class="sr-only">Toggle navigation</span>
         </a>
-        <!-- Navbar Right Menu -->
-        <div class="navbar-custom-menu">
-          <ul class="nav navbar-nav">
-          </ul>
-        </div>
       </nav>
     </header>
     <!-- Left side column. contains the logo and sidebar -->
