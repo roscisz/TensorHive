@@ -17,13 +17,12 @@ def init_jwt(app):
         return RevokedTokenModel.is_jti_blacklisted(jti)
 
     @jwt.user_claims_loader
-    def add_claims_to_access_token(current_user_name):
-        current_user = UserModel.find_by_username(current_user_name)
+    def add_claims_to_access_token(current_user_id):
+        #current_user = UserModel.find_by_username(current_user_name)
         roles = []
-        if current_user is not None:
-            current_user_id = current_user.id
+        if current_user_id is not None:
             found_users_roles = RoleModel.find_by_user_id(current_user_id)
-        if found_users_roles is not None:
-            for role in found_users_roles:
-                roles.append(role.name)
+            if found_users_roles is not None:
+                for role in found_users_roles:
+                    roles.append(role.name)
         return {'roles': roles}

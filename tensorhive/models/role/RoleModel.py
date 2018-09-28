@@ -28,7 +28,7 @@ class RoleModel(Base):
 		
     @classmethod
     def find_by_user_id(cls, user_id):
-        return cls.query.filter_by(user_id=user_id)
+        return cls.query.filter_by(user_id=user_id).all()
 
     @classmethod
     def delete_all(cls):
