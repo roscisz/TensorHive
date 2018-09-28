@@ -1,4 +1,5 @@
 from tensorhive.models.user.UserModel import UserModel
+from tensorhive.models.role.RoleModel import RoleModel
 from connexion import NoContent
 from flask_jwt_extended import create_access_token, create_refresh_token
 
@@ -13,12 +14,21 @@ class CreateUserController():
             return NoContent, 409
 
         new_user = UserModel(
-            username=user['username'],
-            password=UserModel.generate_hash(user['password'])
+            username = user['username'],
+            password = UserModel.generate_hash(user['password'])
+        )
+        new_role = RoleModel(
+            name = 'user',
+            user_id = new_user.id
         )
 
         try:
             new_user.save_to_db()
+        except:
+            return NoContent, 500
+
+        try:
+            new_role.save_to_db()
         except:
             return NoContent, 500
 

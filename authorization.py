@@ -22,7 +22,8 @@ def init_jwt(app):
         roles = []
         if current_user is not None:
             current_user_id = current_user.id
-            for role in RoleModel.find_by_user_id(current_user_id):
+            found_users_roles = RoleModel.find_by_user_id(current_user_id)
+        if found_users_roles is not None:
+            for role in found_users_roles:
                 roles.append(role.name)
-
         return {'roles': roles}
