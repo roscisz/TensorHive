@@ -3,7 +3,6 @@ from tensorhive.models.role.RoleModel import RoleModel
 from connexion import NoContent
 from flask_jwt_extended import create_access_token, create_refresh_token
 
-
 class CreateUserController():
     # TODO Add more user parameters
 

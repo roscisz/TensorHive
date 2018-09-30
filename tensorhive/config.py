@@ -2,8 +2,9 @@ from pathlib import PosixPath
 import configparser
 from typing import Dict, Optional
 import logging
+
 log = logging.getLogger(__name__)
-MAIN_CONFIG_PATH = '~/.config/TensorHive/main_config.ini'
+MAIN_CONFIG_PATH = 'C:/Users/Tomeq/pg8/TensorHive/main_config.ini'
 
 
 class ConfigLoader:
@@ -11,7 +12,7 @@ class ConfigLoader:
     def load(path, displayed_title=''):
         import configparser
         config = configparser.ConfigParser(strict=False)
-        full_path = PosixPath(path).expanduser()
+        full_path = 'C:/Users/Tomeq/pg8/TensorHive/main_config.ini'
         if config.read(str(full_path)):
             log.info('[•] Reading {} config from {}'.format(displayed_title, path))
         else:
@@ -29,6 +30,7 @@ def display_config(cls):
     Example usage: display_config(API_SERVER)
     '''
     print('[{class_name}]'.format(class_name=cls.__name__))
+    print('[{class_name}]'.format(class_name=cls.__name__))
     for key, value in cls.__dict__.items():
         if key.isupper():
             print('{} = {}'.format(key, value))
@@ -36,11 +38,10 @@ def display_config(cls):
 
 class SSH:
     section = 'ssh'
-    HOSTS_CONFIG_FILE = config.get(section, 'hosts_config_file', fallback='~/.config/TensorHive/hosts_config.ini')
+    HOSTS_CONFIG_FILE = 'C:/Users/Tomeq/pg8/TensorHive/hosts_config.ini'
     TEST_ON_STARTUP = config.getboolean(section, 'test_on_startup', fallback=True)
     TIMEOUT = config.getfloat(section, 'timeout', fallback=10.0)
     NUM_RETRIES = config.getint(section, 'number_of_retries', fallback=1)
-    
 
     def hosts_config_to_dict(path: str) -> Dict:
         '''Parses sections containing hostnames'''
@@ -54,8 +55,8 @@ class SSH:
             # TODO Handle more options (https://github.com/ParallelSSH/parallel-ssh/blob/2e9668cf4b58b38316b1d515810d7e6c595c76f3/pssh/clients/base_pssh.py#L119)
             hostname = section
             result[hostname] = {
-                'user': hosts_config.get(hostname, 'user'),
-                'port': hosts_config.getint(hostname, 'port', fallback=22)
+                'user': 'test',
+                'port': 22
             }
         return result
 
@@ -83,7 +84,7 @@ class DB:
     default_path = '~/.config/TensorHive/database.sqlite'
 
     def uri_for_path(path: str) -> str:
-        return 'sqlite:///{}'.format(PosixPath(path).expanduser())
+        return 'sqlite:///{}'.format('test')
 
     SQLALCHEMY_DATABASE_URI = uri_for_path(config.get(section, 'path', fallback=default_path))
 

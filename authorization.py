@@ -1,7 +1,7 @@
-from flask_jwt_extended import JWTManager,get_jwt_identity
+from flask_jwt_extended import JWTManager,verify_jwt_in_request,get_jwt_claims
 from tensorhive.models.auth.RevokedTokenModel import RevokedTokenModel
 from tensorhive.config import AUTH
-from tensorhive.models.user.UserModel import UserModel
+from functools import wraps
 from tensorhive.models.role.RoleModel import RoleModel
 
 
@@ -26,3 +26,15 @@ def init_jwt(app):
                 for role in found_users_roles:
                     roles.append(role.name)
         return {'roles': roles}
+
+# Decorator admin role jwt access only
+def admin_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        verify_jwt_in_request()
+        claims = get_jwt_claims()
+        for role in claims['roles']:
+            if role == 'admin':
+                return fn(*args, **kwargs)
+        return {'message': 'Admin required!'}, 401
+    return wrapper

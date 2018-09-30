@@ -5,6 +5,7 @@ from tensorhive.controllers.user.UserLoginController import LoginUserController
 from tensorhive.controllers.user.UserLogoutController import LogoutUserController
 from tensorhive.controllers.user.CreateUserController import CreateUserController
 from tensorhive.controllers.user.CreateRefreshedUserTokenController import CreateRefreshedUserTokenController
+from authorization import admin_required
 
 
 def post_login(user):
@@ -26,6 +27,7 @@ def post_logout_refresh_token():
     '''Revoking the refresh users access token'''
     return LogoutUserController.delete_logout('Refresh')
 
+@admin_required
 def post_register(user):
     '''Create new user'''
     return CreateUserController.register(user)
