@@ -33,6 +33,17 @@ class UserModel(Base):
             db_session.rollback()
             log.error(e.__cause__)
             return False
+
+    def delete_from_db(self):
+        try:
+            db_session.delete(self)
+            db_session.commit()
+            log.debug('Deleted {}'.format(self))
+            return True
+        except SQLAlchemyError as e:
+            db_session.rollback()
+            log.error(e.__cause__)
+            return False
             
 
     @classmethod

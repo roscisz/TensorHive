@@ -41,6 +41,29 @@ paths:
           description: Duplication error.
         '500':
           $ref: '#/responses/InternalError'
+      security:
+          - Bearer: []
+  /user/delete/{id}:
+    delete:
+      tags:
+        - users
+      summary: Delete user
+      operationId: 'tensorhive.api.controllers.user.delete_user'
+      parameters:
+        - description: Id of to be deleted event
+          in: path
+          name: id
+          required: true
+          type: integer
+      responses:
+        '204':
+          description: Successfully delete.
+        '404':
+          description: No found.
+        '500':
+          $ref: '#/responses/InternalError'
+      security:
+          - Bearer: []
   /user/logout:
     delete:
       tags:

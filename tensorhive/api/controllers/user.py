@@ -3,6 +3,7 @@ from tensorhive.controllers.user.UserLoginController import LoginUserController
 from tensorhive.controllers.user.UserLogoutController import LogoutUserController
 from tensorhive.controllers.user.CreateUserController import CreateUserController
 from tensorhive.controllers.user.CreateRefreshedUserTokenController import CreateRefreshedUserTokenController
+from tensorhive.controllers.user.DeleteUserController import DeleteUserController
 from tensorhive.authorization import admin_required
 
 
@@ -29,3 +30,8 @@ def post_logout_refresh_token():
 def post_register(user):
     '''Create new user'''
     return CreateUserController.register(user)
+
+@admin_required
+def delete_user(id):
+    '''Delete user'''
+    return DeleteUserController.delete(id)
