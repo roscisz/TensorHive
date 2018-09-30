@@ -3,7 +3,7 @@ import connexion
 from tensorhive.config import API, API_SERVER
 from tensorhive.database import db_session
 from flask_cors import CORS
-from authorization import init_jwt
+from tensorhive.authorization import init_jwt
 
 log = logging.getLogger(__name__)
 

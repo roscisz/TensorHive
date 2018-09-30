@@ -1,11 +1,9 @@
-import datetime
-
 from flask_jwt_extended import jwt_required,jwt_refresh_token_required
 from tensorhive.controllers.user.UserLoginController import LoginUserController
 from tensorhive.controllers.user.UserLogoutController import LogoutUserController
 from tensorhive.controllers.user.CreateUserController import CreateUserController
 from tensorhive.controllers.user.CreateRefreshedUserTokenController import CreateRefreshedUserTokenController
-from authorization import admin_required
+from tensorhive.authorization import admin_required
 
 
 def post_login(user):

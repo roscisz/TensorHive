@@ -1,10 +1,10 @@
 from pathlib import PosixPath
 import configparser
-from typing import Dict, Optional
+from typing import Dict, Optional, Any, List
 import logging
 
 log = logging.getLogger(__name__)
-MAIN_CONFIG_PATH = 'C:/Users/Tomeq/pg8/TensorHive/main_config.ini'
+MAIN_CONFIG_PATH = '~/.config/TensorHive/main_config.ini'
 
 
 class ConfigLoader:
@@ -12,7 +12,7 @@ class ConfigLoader:
     def load(path, displayed_title=''):
         import configparser
         config = configparser.ConfigParser(strict=False)
-        full_path = 'C:/Users/Tomeq/pg8/TensorHive/main_config.ini'
+        full_path = PosixPath(path).expanduser()
         if config.read(str(full_path)):
             log.info('[•] Reading {} config from {}'.format(displayed_title, path))
         else:
@@ -30,7 +30,6 @@ def display_config(cls):
     Example usage: display_config(API_SERVER)
     '''
     print('[{class_name}]'.format(class_name=cls.__name__))
-    print('[{class_name}]'.format(class_name=cls.__name__))
     for key, value in cls.__dict__.items():
         if key.isupper():
             print('{} = {}'.format(key, value))
@@ -38,7 +37,7 @@ def display_config(cls):
 
 class SSH:
     section = 'ssh'
-    HOSTS_CONFIG_FILE = 'C:/Users/Tomeq/pg8/TensorHive/hosts_config.ini'
+    HOSTS_CONFIG_FILE = config.get(section, 'hosts_config_file', fallback='~/.config/TensorHive/hosts_config.ini')
     TEST_ON_STARTUP = config.getboolean(section, 'test_on_startup', fallback=True)
     TIMEOUT = config.getfloat(section, 'timeout', fallback=10.0)
     NUM_RETRIES = config.getint(section, 'number_of_retries', fallback=1)
@@ -55,8 +54,8 @@ class SSH:
             # TODO Handle more options (https://github.com/ParallelSSH/parallel-ssh/blob/2e9668cf4b58b38316b1d515810d7e6c595c76f3/pssh/clients/base_pssh.py#L119)
             hostname = section
             result[hostname] = {
-                'user': 'test',
-                'port': 22
+                'user': hosts_config.get(hostname, 'user'),
+                'port': hosts_config.getint(hostname, 'port', fallback=22)
             }
         return result
 
@@ -84,7 +83,7 @@ class DB:
     default_path = '~/.config/TensorHive/database.sqlite'
 
     def uri_for_path(path: str) -> str:
-        return 'sqlite:///{}'.format('test')
+        return 'sqlite:///{}'.format(PosixPath(path).expanduser())
 
     SQLALCHEMY_DATABASE_URI = uri_for_path(config.get(section, 'path', fallback=default_path))
 
@@ -131,14 +130,34 @@ class PROTECTION_SERVICE:
 
 class AUTH:
     from datetime import timedelta
-    # FIXME Refactor, use .ini instead
-    FLASK_JWT = {
-        'SECRET_KEY': 'jwt-some-secret',
-        'JWT_BLACKLIST_ENABLED': True,
-        'JWT_BLACKLIST_TOKEN_CHECKS': ['access', 'refresh'],
-        'BUNDLE_ERRORS': True,
-        'JWT_ACCESS_TOKEN_EXPIRES': timedelta(minutes=15),
-        'JWT_REFRESH_TOKEN_EXPIRES': timedelta(days=30),
-        'JWT_TOKEN_LOCATION': ['headers']
-    }
+    section = 'auth'
 
+    def config_get_parsed(option: str, fallback: Any) -> List[str]:
+        '''
+        Parses value for option from string to a valid python list.
+        Fallback value is returned when anything goes wrong (e.g. option or value not present)
+        Example .ini file, function called with arguments: option='some_option', fallback=None
+        [some_section]
+        some_option = ['foo', 'bar']
+        Will return:
+        ['foo', 'bar']
+        '''
+        import ast
+        try:
+            raw_arguments = config.get('auth', option)
+            parsed_arguments = ast.literal_eval(raw_arguments)
+            return parsed_arguments
+        except (configparser.Error, ValueError) as e:
+            log.warning('Parsing [auth] config section failed for option "{}", using fallback value: {}'.format(
+                option, fallback))
+            return fallback
+
+    FLASK_JWT = {
+        'SECRET_KEY': config.get(section, 'secrect_key', fallback='jwt-some-secret'),
+        'JWT_BLACKLIST_ENABLED': config.getboolean(section, 'jwt_blacklist_enabled', fallback=True),
+        'JWT_BLACKLIST_TOKEN_CHECKS': config_get_parsed('jwt_blacklist_token_checks', fallback=['access', 'refresh']),
+        'BUNDLE_ERRORS': config.getboolean(section, 'bundle_errors', fallback=True),
+        'JWT_ACCESS_TOKEN_EXPIRES': timedelta(minutes=config.getint(section, 'jwt_access_token_expires', fallback=15)),
+        'JWT_REFRESH_TOKEN_EXPIRES': timedelta(days=config.getint(section, 'jwt_refresh_token_expires', fallback=30)),
+        'JWT_TOKEN_LOCATION': config_get_parsed('jwt_token_location', fallback=['headers'])
+    }
