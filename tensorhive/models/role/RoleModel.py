@@ -41,15 +41,6 @@ class RoleModel(Base):
 
     @classmethod
     def return_all(cls):
-        all_users = RoleModel.query.all()
-
-        def as_json(x):
-            return {
-                # FIXME delete id
-                # 'id': x.id,
-                'role': x.name,
-                'user_id': x.user_id
-            }
-
-        users_list = list(map(lambda user: as_json(user), all_users))
-        return {'users': users_list}
+        all_roles = RoleModel.query.all()
+        roles_list = users = [user.as_dict for user in list(all_roles)]
+        return {'users': roles_list}
