@@ -58,8 +58,8 @@ paths:
       responses:
         '204':
           description: Successfully deleted.
-        '404':
-          description: No found.
+        404:
+          $ref: '#/responses/NotFound'
         '500':
           $ref: '#/responses/InternalError'
       security:
