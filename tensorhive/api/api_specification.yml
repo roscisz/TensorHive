@@ -50,14 +50,14 @@ paths:
       summary: Delete user
       operationId: 'tensorhive.api.controllers.user.delete_user'
       parameters:
-        - description: Id of to be deleted event
+        - description: Delete user by id
           in: path
           name: id
           required: true
           type: integer
       responses:
         '204':
-          description: Successfully delete.
+          description: Successfully deleted.
         '404':
           description: No found.
         '500':
