@@ -17,18 +17,14 @@ class CreateUserController():
             password = UserModel.generate_hash(user['password'])
         )
 
-        try:
-            new_user.save_to_db()
+        if not new_user.save_to_db():
+            return NoContent, 500
             new_role = RoleModel(
                 name='user',
                 user_id=new_user.id
             )
-            try:
-                new_role.save_to_db()
-            except:
+            if not new_role.save_to_db():
                 return NoContent, 500
-        except:
-            return NoContent, 500
 
 
         access_token = create_access_token(identity=user['username'])
