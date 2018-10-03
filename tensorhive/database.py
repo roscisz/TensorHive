@@ -55,7 +55,7 @@ def create_admin():
                 user_id=new_user.id
             )
             if not new_role.save_to_db():
-                log.error('[•] Admin is not created due to role exception.')
+                log.warning('[•] Admin is not created due to role exception.')
     else:
         log.warning('[•] Admin is not created.')
 
