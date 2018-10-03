@@ -59,7 +59,7 @@ paths:
         '204':
           description: Successfully deleted.
         404:
-          $ref: '#/responses/NotFound'
+          $ref: '#/responses/NoPermission'
         '500':
           $ref: '#/responses/InternalError'
       security:
@@ -195,6 +195,8 @@ paths:
           type: integer
       responses:
         '204':
+          description: Successfully deleted.
+        '401':
           description: Successfully deleted.
         '404':
           $ref: '#/responses/NotFound'
@@ -352,6 +354,8 @@ responses:
     description: Internal Server Error
   BadRequest:
     description: Bad Request
+  NoPermission:
+    description: User can not do that.
 
 parameters:
   hostnameParam:
