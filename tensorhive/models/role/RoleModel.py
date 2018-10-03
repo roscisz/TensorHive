@@ -42,5 +42,13 @@ class RoleModel(Base):
     @classmethod
     def return_all(cls):
         all_roles = RoleModel.query.all()
-        roles_list = users = [user.as_dict for user in list(all_roles)]
-        return {'users': roles_list}
+        roles_list = [role.as_dict for role in list(all_roles)]
+        return {'roles': roles_list}
+
+    @property
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'user_id': self.user_id
+        }

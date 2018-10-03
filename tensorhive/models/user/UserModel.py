@@ -66,8 +66,7 @@ class UserModel(Base):
             'username': self.username,
             'createdAt': self.created_at.isoformat()
         }
-    # TODO We may need deserialzer
-    
+
     # Not implemented yet
     # @classmethod
     # def get_count(cls):
