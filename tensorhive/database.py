@@ -48,18 +48,15 @@ def create_admin():
         password=UserModel.generate_hash(admin_default_password)
     )
 
-    try:
-        new_user.save_to_db()
+    if new_user.save_to_db():
         for role_name in ['user', 'admin']:
             new_role = RoleModel(
                 name=role_name,
                 user_id=new_user.id
             )
-            try:
-                new_role.save_to_db()
-            except:
+            if not new_role.save_to_db():
                 log.error('[•] Admin is not created due to role exception.')
-    except:
-        log.error('[•] Admin is not created.')
+    else:
+        log.warning('[•] Admin is not created.')
 
     log.info('[•] Admin created. Login: {name} . Password : {password} .'.format(name=new_user.username, password=admin_default_password))
