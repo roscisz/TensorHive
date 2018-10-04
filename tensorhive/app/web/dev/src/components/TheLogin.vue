@@ -57,8 +57,8 @@ export default {
   },
 
   methods: {
-    register () {
-      this.$router.push('/register')
+    create () {
+      this.$router.push('/create')
     },
 
     checkCreds () {

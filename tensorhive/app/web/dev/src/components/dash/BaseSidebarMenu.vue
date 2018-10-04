@@ -53,11 +53,11 @@
     <router-link
       tag="li"
       class="pageLink"
-      to="/register"
+      to="/create"
     >
       <a>
         <i class="fa fa-circle-o text-green"></i>
-        <span class="page"> Register</span>
+        <span class="page"> Create</span>
       </a>
     </router-link>
     <li

@@ -81,6 +81,7 @@ if (window.localStorage) {
   if (localUser && store.state.user !== localUser) {
     store.commit('SET_USER', localUser)
     store.commit('SET_TOKEN', window.localStorage.getItem('token'))
+    store.commit('SET_ROLE', window.localStorage.getItem('role'))
   }
 }
 

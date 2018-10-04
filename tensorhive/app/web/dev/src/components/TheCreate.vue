@@ -1,8 +1,8 @@
 <template>
-  <div id="register">
+  <div id="create">
     <div class="text-center col-sm-12">
-      <form @submit.prevent="registerUser">
-        Register new user
+      <form @submit.prevent="createUser">
+        Create new user
         <div class="input-group">
           <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
           <input
@@ -38,7 +38,7 @@
           type="submit"
           :class="'btn btn-primary btn-lg ' + loading"
         >
-          Register
+          Create
         </v-btn>
       </form>
 
@@ -52,11 +52,11 @@
 import api from '../api'
 
 export default {
-  name: 'Register',
+  name: 'Create',
 
   data (router) {
     return {
-      section: 'Register',
+      section: 'Create',
       loading: '',
       username: '',
       password: '',
@@ -69,7 +69,7 @@ export default {
       this.$router.push('/users_overview')
     },
 
-    registerUser () {
+    createUser () {
       const { username, password } = this
 
       this.toggleLoading()
@@ -77,7 +77,7 @@ export default {
       this.$store.commit('TOGGLE_LOADING')
 
       api
-        .request('post', '/user/register', this.$store.state.token, { 'username': username, 'password': password })
+        .request('post', '/user/create', this.$store.state.token, { 'username': username, 'password': password })
         .then(response => {
           this.toggleLoading()
           this.$router.push('/users_overview')
@@ -109,7 +109,7 @@ export default {
 </script>
 
 <style scoped>
-#register {
+#create {
   padding: 10em;
 }
 

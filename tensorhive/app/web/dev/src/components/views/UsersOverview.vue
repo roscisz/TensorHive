@@ -2,7 +2,7 @@
   <section class="content">
     <div>
       <div class="text-xs-center pt-2">
-        <v-btn color="primary" @click="addUser()">Add user</v-btn>
+        <v-btn color="primary" @click="createUser()">Create user</v-btn>
       </div>
       <v-data-table
         :headers="headers"
@@ -74,8 +74,8 @@ export default {
     }, this.time)
   },
   methods: {
-    addUser: function () {
-      this.$router.push('/register')
+    createUser: function () {
+      this.$router.push('/create')
     },
     checkUsers: function () {
       api
