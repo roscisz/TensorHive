@@ -19,6 +19,11 @@ import Vuetify from 'vuetify'
 import 'vuetify/dist/vuetify.min.css'
 import 'material-design-icons-iconfont/dist/material-design-icons.css'
 
+import staticConfig from '../static/config'
+import config from './config'
+
+config.serverURI = staticConfig.apiPath
+
 Vue.use(Vuetify)
 
 // Import Install and register helper items
