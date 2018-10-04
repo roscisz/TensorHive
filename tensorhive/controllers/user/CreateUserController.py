@@ -7,7 +7,7 @@ class CreateUserController():
     # TODO Add more user parameters
 
     @staticmethod
-    def register(user):
+    def create(user):
         if UserModel.find_by_username(user['username']):
             # Duplicated resource
             return NoContent, 409

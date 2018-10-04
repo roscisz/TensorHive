@@ -27,9 +27,9 @@ def post_logout_refresh_token():
     return LogoutUserController.delete_logout('Refresh')
 
 @admin_required
-def post_register(user):
+def post_create(user):
     '''Create new user'''
-    return CreateUserController.register(user)
+    return CreateUserController.create(user)
 
 @admin_required
 def delete_user(id):

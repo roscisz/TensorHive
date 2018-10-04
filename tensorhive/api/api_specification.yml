@@ -21,12 +21,12 @@ paths:
               $ref: '#/definitions/User'
       security:
           - Bearer: []
-  /user/register:
+  /user/create:
     post:
       tags: 
         - users
       summary: Create new user
-      operationId: 'tensorhive.api.controllers.user.post_register'
+      operationId: 'tensorhive.api.controllers.user.post_create'
       parameters:
         - description: User object
           in: body
