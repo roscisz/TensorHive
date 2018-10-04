@@ -36,11 +36,12 @@ export default {
   },
 
   props: {
-    selectedResources: Array
+    selectedResources: Array,
+    updateCalendar: Boolean
   },
 
   watch: {
-    selectedResources () {
+    updateCalendar () {
       var resourcesString = ''
       if (this.selectedResources.length > 0) {
         resourcesString = this.selectedResources[0].uuid

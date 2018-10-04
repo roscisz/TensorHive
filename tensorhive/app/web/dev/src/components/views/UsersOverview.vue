@@ -41,7 +41,6 @@ import api from '../../api'
 export default {
   data () {
     return {
-      interval: null,
       search: '',
       pagination: {},
       selected: [],
@@ -67,15 +66,13 @@ export default {
     }
   },
 
-  created () {
-    let self = this
-    this.interval = setInterval(function () {
-      self.checkUsers()
-    }, this.time)
+  mounted () {
+    this.checkUsers()
   },
   methods: {
     createUser: function () {
       this.$router.push('/create')
+      this.checkUsers()
     },
     checkUsers: function () {
       api
@@ -94,6 +91,7 @@ export default {
       api
         .request('delete', '/user/delete/' + userId, this.$store.state.token)
         .then(response => {
+          this.checkUsers()
         })
         .catch(e => {
           this.errors.push(e)
