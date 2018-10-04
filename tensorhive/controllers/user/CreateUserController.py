@@ -27,11 +27,6 @@ class CreateUserController():
         else:
             return NoContent, 500
 
-        access_token = create_access_token(identity=new_user.id)
-        refresh_token = create_refresh_token(identity=new_user.id)
-
         return  {
-            'msg': 'User {} successfully created'.format(user['username']), **new_user.as_dict,
-            'access_token': access_token,
-            'refresh_token': refresh_token
+            'msg': 'User {} successfully created'.format(user['username']), **new_user.as_dict
         }, 201
