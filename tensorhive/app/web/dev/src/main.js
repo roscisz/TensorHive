@@ -18,6 +18,7 @@ import AppView from './components/App.vue'
 import Vuetify from 'vuetify'
 import 'vuetify/dist/vuetify.min.css'
 import 'material-design-icons-iconfont/dist/material-design-icons.css'
+
 Vue.use(Vuetify)
 
 // Import Install and register helper items
@@ -51,6 +52,15 @@ router.beforeEach((to, from, next) => {
       path: '/login',
       query: { redirect: to.fullPath }
     })
+  } else if (to.meta.role === 'admin') {
+    if (router.app.$store.state.role === 'admin') {
+      next()
+    } else {
+      next({
+        path: '/',
+        query: { redirect: to.fullPath }
+      })
+    }
   } else {
     next()
   }

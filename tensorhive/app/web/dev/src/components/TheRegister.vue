@@ -83,7 +83,6 @@ export default {
           this.$router.push('/users_overview')
         })
         .catch(error => {
-          debugger
           this.$store.commit('TOGGLE_LOADING')
           console.log(error)
           var status = error.response.status

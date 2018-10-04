@@ -22,6 +22,23 @@
         <span class="page">Nodes Overview</span>
       </a>
     </router-link>
+    <li
+      class="header"
+      v-if="$store.state.role === 'admin'"
+    >
+      ADMIN ZONE
+    </li>
+    <router-link
+      tag="li"
+      class="pageLink"
+      to="/users_overview"
+      v-if="$store.state.role === 'admin'"
+    >
+      <a>
+        <i class="fa fa-table"></i>
+        <span class="page">Users Overview</span>
+      </a>
+    </router-link>
     <li class="header">PAGES</li>
     <router-link
       tag="li"
