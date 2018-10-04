@@ -315,7 +315,7 @@ export default {
     },
 
     addWatch: function () {
-      this.watches.push({ index: this.watches.length })
+      this.watches.push({ index: this.watches.length, default: '' })
     }
   }
 }

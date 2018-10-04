@@ -230,7 +230,7 @@ export default {
       },
 
       eventClick: function (calEvent, jsEvent, view) {
-        if (calEvent.userId === self.$store.state.id && !calEvent.allDay) {
+        if ((calEvent.userId === self.$store.state.id || self.$store.state.role === 'admin') && !calEvent.allDay) {
           self.showModalCancel = true
           self.reservation = calEvent
         }

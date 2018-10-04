@@ -61,10 +61,12 @@ export default {
     logout: function () {
       this.$store.commit('SET_USER', null)
       this.$store.commit('SET_TOKEN', null)
+      this.$store.commit('SET_ROLE', null)
 
       if (window.localStorage) {
         window.localStorage.setItem('user', null)
         window.localStorage.setItem('token', null)
+        window.localStorage.setItem('role', null)
       }
 
       this.$router.push('/login')

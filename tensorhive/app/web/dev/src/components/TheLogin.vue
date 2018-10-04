@@ -26,16 +26,6 @@
           >
         </div>
         <v-btn
-          color="info"
-          small
-          outline
-          round
-          @click="register()"
-          :class="'btn btn-primary btn-lg ' + loading"
-        >
-          Register
-        </v-btn>
-        <v-btn
           color="success"
           type="submit"
           :class="'btn btn-primary btn-lg ' + loading"
@@ -101,14 +91,18 @@ export default {
           /* Setting user in the state and caching record to the localStorage */
           if (username) {
             var token = 'Bearer ' + data.access_token
-            var id = JSON.parse(atob(data.access_token.split('.')[1])).identity
+            var object = JSON.parse(atob(data.access_token.split('.')[1]))
+            var id = object.identity
+            var role = object.user_claims.roles.length === 2 ? 'admin' : 'user'
             this.$store.commit('SET_USER', username)
+            this.$store.commit('SET_ROLE', role)
             this.$store.commit('SET_ID', id)
             this.$store.commit('SET_TOKEN', token)
 
             if (window.localStorage) {
               window.localStorage.setItem('user', JSON.stringify(username))
               window.localStorage.setItem('token', token)
+              window.localStorage.setItem('role', role)
             }
             this.$router.push('/')
           }
@@ -133,37 +127,9 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 #login {
   padding: 10em;
-}
-
-html,
-body,
-.container-table {
-  height: 100%;
-  background-color: #282b30 !important;
-}
-.container-table {
-  display: table;
-  color: white;
-}
-.vertical-center-row {
-  display: table-cell;
-  vertical-align: middle;
-}
-.vertical-20p {
-  padding-top: 20%;
-}
-.vertical-10p {
-  padding-top: 10%;
-}
-.vertical-5p {
-  padding-top: 5%;
-}
-.logo {
-  width: 15em;
-  padding: 3em;
 }
 
 .input-group {

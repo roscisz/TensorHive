@@ -1,7 +1,7 @@
 <template>
-  <div id="login">
+  <div id="register">
     <div class="text-center col-sm-12">
-      <form @submit.prevent="checkCreds">
+      <form @submit.prevent="registerUser">
         Register new user
         <div class="input-group">
           <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
@@ -29,10 +29,9 @@
           small
           outline
           round
-          @click="login()"
-          :class="'btn btn-primary btn-lg ' + loading"
+          @click="cancel()"
         >
-          Login
+          Cancel
         </v-btn>
         <v-btn
           color="success"
@@ -66,57 +65,35 @@ export default {
   },
 
   methods: {
-    login () {
-      this.$router.push('/login')
+    cancel () {
+      this.$router.push('/users_overview')
     },
 
-    checkCreds () {
+    registerUser () {
       const { username, password } = this
 
       this.toggleLoading()
       this.resetResponse()
       this.$store.commit('TOGGLE_LOADING')
 
-      /* Making API call to authenticate a user */
       api
         .request('post', '/user/register', this.$store.state.token, { 'username': username, 'password': password })
         .then(response => {
           this.toggleLoading()
-
-          var data = response.data
-          /* Checking if error object was returned from the server */
-          if (data.error) {
-            var errorName = data.error.name
-            if (errorName) {
-              this.response =
-                errorName === 'InvalidCredentialsError'
-                  ? 'Username/Password incorrect. Please try again.'
-                  : errorName
-            } else {
-              this.response = data.error
-            }
-
-            return
-          }
-
-          /* Setting user in the state and caching record to the localStorage */
-          if (data.username) {
-            var token = 'Bearer ' + data.access_token
-            this.$store.commit('SET_USER', data.username)
-            this.$store.commit('SET_ID', data.id)
-            this.$store.commit('SET_TOKEN', token)
-            if (window.localStorage) {
-              window.localStorage.setItem('user', JSON.stringify(data.username))
-              window.localStorage.setItem('token', token)
-            }
-            this.$router.push('/')
-          }
+          this.$router.push('/users_overview')
         })
         .catch(error => {
+          debugger
           this.$store.commit('TOGGLE_LOADING')
           console.log(error)
-
-          this.response = 'Server appears to be offline'
+          var status = error.response.status
+          if (status === 401) {
+            this.response = 'Your access token expired. Login again'
+          } else if (status === 409) {
+            this.response = 'This username is used by other user'
+          } else {
+            this.response = 'Server appears to be offline'
+          }
           this.toggleLoading()
         })
     },
@@ -132,37 +109,9 @@ export default {
 }
 </script>
 
-<style>
-#login {
+<style scoped>
+#register {
   padding: 10em;
-}
-
-html,
-body,
-.container-table {
-  height: 100%;
-  background-color: #282b30 !important;
-}
-.container-table {
-  display: table;
-  color: white;
-}
-.vertical-center-row {
-  display: table-cell;
-  vertical-align: middle;
-}
-.vertical-20p {
-  padding-top: 20%;
-}
-.vertical-10p {
-  padding-top: 10%;
-}
-.vertical-5p {
-  padding-top: 5%;
-}
-.logo {
-  width: 15em;
-  padding: 3em;
 }
 
 .input-group {

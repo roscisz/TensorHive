@@ -16,24 +16,39 @@ const routes = [
         alias: '',
         component: CalendarView,
         name: 'Reservation Overview',
-        meta: {description: 'Calendar with reservations', requiresAuth: true}
+        meta: {
+          description: 'Calendar with reservations',
+          requiresAuth: true,
+          role: 'user'
+        }
       },
       {
         path: 'nodes_overview',
         alias: '',
         component: WatchView,
         name: 'Nodes overview',
-        meta: {description: 'Information about nodes', requiresAuth: true}
+        meta: {
+          description: 'Informations about nodes',
+          requiresAuth: true,
+          role: 'user'
+        }
       }
     ]
   },
   {
     path: '/login',
-    component: LoginView
+    component: LoginView,
+    meta: {
+      role: 'user'
+    }
   },
   {
     path: '/register',
-    component: RegisterView
+    component: RegisterView,
+    meta: {
+      requiresAuth: true,
+      role: 'admin'
+    }
   },
   {
     path: '*',
