@@ -7,7 +7,7 @@ class DestroyEventController():
     @staticmethod
     def delete(id):
         user_id = get_jwt_identity()
-        if (ReservationEventModel.find_by_id(id) == user_id):
+        if (ReservationEventModel.find_by_id(id).user_id == user_id):
             if not ReservationEventModel.delete_by_id(id):
                 return NoContent, 404
             return NoContent, 204
