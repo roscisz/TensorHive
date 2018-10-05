@@ -27,12 +27,6 @@ class RevokedTokenModel(Base):
             log.error(e.__cause__)
             return False
 
-
-    @classmethod
-    def return_all(cls):
-        return RevokedTokenModel.query.all()
-
-
     @classmethod
     def is_jti_blacklisted(cls, jti):
         query = cls.query.filter_by(jti=jti).first()

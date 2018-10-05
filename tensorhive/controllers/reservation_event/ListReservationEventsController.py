@@ -4,12 +4,13 @@ from tensorhive.models.reservation_event.ReservationEventModel import Reservatio
 class ListReservationEventsController():
     @staticmethod
     def all():
-        reservations = list(ReservationEventModel.return_all())
-        content = [reservation.as_dict for reservation in reservations]
-        return content, 200
+        return [
+            reservation.as_dict for reservation in ReservationEventModel.query.all()
+        ], 200
 
     @staticmethod
     def get(resources_ids, start, end):
+
         # All args are required at once, otherwise return 400
         all_not_none = resources_ids and start and end
         if all_not_none:

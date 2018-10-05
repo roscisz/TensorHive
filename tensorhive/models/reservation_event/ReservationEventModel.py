@@ -122,10 +122,6 @@ class ReservationEventModel(Base):
         return cls.query.get(id)
 
     @classmethod
-    def return_all(cls):
-        return cls.query.all()
-
-    @classmethod
     def filter_by_uuids_and_time_range(cls, uuids, start, end):
         match_uuids = cls.resource_id.in_(uuids)
         match_after_start = cls.start <= end

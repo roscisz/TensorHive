@@ -54,10 +54,6 @@ class UserModel(Base):
     def find_by_id(cls, id):
         return cls.query.filter_by(id=id).first()
 
-    @classmethod
-    def return_all(cls):
-        return UserModel.query.all()
-
     @property
     def as_dict(self):
         '''Serializes model instance into dict (which is interpreted as json automatically)'''

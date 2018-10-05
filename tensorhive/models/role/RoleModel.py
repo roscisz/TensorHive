@@ -39,11 +39,6 @@ class RoleModel(Base):
         except:
             return {'message': 'Deleting all roles operation failed'}
 
-    @classmethod
-    def return_all(cls):
-        all_roles = RoleModel.query.all()
-        roles_list = [role.as_dict for role in list(all_roles)]
-        return {'roles': roles_list}
 
     @property
     def as_dict(self):
