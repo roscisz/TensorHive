@@ -9,7 +9,7 @@ class DestroyEventController():
         user_id = get_jwt_identity()
         if (ReservationEventModel.find_by_id(id).user_id == user_id):
             if not ReservationEventModel.delete_by_id(id):
-                return NoContent, 404
+                return NoContent, 500
             return NoContent, 204
         else:
-            return NoContent, 401
+            return NoContent, 404

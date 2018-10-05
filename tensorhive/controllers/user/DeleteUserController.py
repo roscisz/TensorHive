@@ -9,10 +9,17 @@ class DeleteUserController():
     @staticmethod
     def delete(id):
         user = UserModel.find_by_id(id)
-        if (user.username == 'admin'):
-            return NoContent, 401
+        found_admin_roles = RoleModel.find_by_user_id(id)
+        if found_admin_roles is not None:
+            for role in found_admin_roles:
+                if (role.name == 'admin'):
+                    return NoContent, 403
+        else:
+            return NoContent, 500
+
         if user is not None:
-            user.delete_from_db()
+            if not user.delete_from_db():
+                return NoContent, 500
         else:
             return NoContent, 404
         return NoContent, 204

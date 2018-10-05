@@ -11,7 +11,7 @@ class LoginUserController():
         current_user = UserModel.find_by_username(user['username'])
         if not current_user:
             # Duplicated resource
-            return NoContent, 404
+            return NoContent, 405
 
         if UserModel.verify_hash(user['password'], current_user.password):
             access_token = create_access_token(identity=current_user.id, fresh=True)

@@ -58,8 +58,10 @@ paths:
       responses:
         '204':
           description: Successfully deleted.
-        404:
-          $ref: '#/responses/NoPermission'
+        '403':
+          description: Admin cannot be deleted.
+        '404':
+          $ref: '#/responses/NotFound'
         '500':
           $ref: '#/responses/InternalError'
       security:
@@ -117,12 +119,12 @@ paths:
           schema:
             $ref: '#/definitions/UserLoginController'
       responses:
-        '201':
+        '200':
           description: Successfully loged in.
         '401':
-          description: Incorrect credentials.
-        '404':
           description: User does not exist.
+        '405':
+          description: Duplicate username error.
         '500':
           $ref: '#/responses/InternalError'
   /reservations:
@@ -196,10 +198,10 @@ paths:
       responses:
         '204':
           description: Successfully deleted.
-        '401':
-          description: Successfully deleted.
         '404':
           $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalError'
       security:
           - Bearer: []
   # TODO Nodes: Add more specific schemas, response codes + descriptions
