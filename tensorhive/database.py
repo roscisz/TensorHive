@@ -40,23 +40,29 @@ def init_db() -> None:
         create_admin()
 
 def create_admin():
+    import click
     from tensorhive.models.user.UserModel import UserModel
     from tensorhive.models.role.RoleModel import RoleModel
-    admin_default_password  = 'tensorhive_admin'
-    new_user = UserModel(
-        username='admin',
-        password=UserModel.generate_hash(admin_default_password)
-    )
+    from sqlalchemy.orm.exc import NoResultFound
 
-    if new_user.save_to_db():
-        for role_name in ['user', 'admin']:
-            new_role = RoleModel(
-                name=role_name,
-                user_id=new_user.id
-            )
-            if not new_role.save_to_db():
-                log.warning('[•] Admin is not created due to role exception.')
-    else:
-        log.warning('[•] Admin is not created.')
+    try:
+        UserModel.query.one()
+    except NoResultFound:
+        # User table is empty
+        # TODO Add color output
+        if click.confirm('''Database has no users. Would you like to create Administrator account now?''', abort=False):
+            username = click.prompt('username', type=str)
+            password = click.prompt('password', type=str, hide_input=True)
 
-    log.info('[•] Admin created. Login: {name} . Password : {password} .'.format(name=new_user.username, password=admin_default_password))
+            new_user = UserModel(username=username, password=UserModel.generate_hash(password))
+            new_user.save_to_db()
+
+            # TODO Refactor roles, use only one role: admin (redundancy)
+            admin_role = RoleModel(name='admin', user_id=new_user.id)
+            user_role = RoleModel(name='user', user_id=new_user.id)
+
+            admin_role.save_to_db()
+            user_role.save_to_db()
+
+            # TODO Handle failures
+            click.echo('Account created successfully! Resuming...')
