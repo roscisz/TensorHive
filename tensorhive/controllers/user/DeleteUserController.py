@@ -9,6 +9,8 @@ class DeleteUserController():
     @staticmethod
     def delete(id):
         user = UserModel.find_by_id(id)
+        if (user.username == 'admin'):
+            return NoContent, 401
         if user is not None:
             user.delete_from_db()
         else:
