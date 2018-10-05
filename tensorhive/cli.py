@@ -5,13 +5,12 @@ import signal
 import sys
 '''
 Current CLI Structure: (update regularly)
-
 tensorhive 
 ├── -v/--version
 ├── --help
 ├── run
-|   ├── --help
-|   └── --log-level <level> (e.g. debug, info, warning, error, critical)
+|   ├── --help
+|   └── --log-level <level> (e.g. debug, info, warning, error, critical)
 └── db
     └── init
 '''

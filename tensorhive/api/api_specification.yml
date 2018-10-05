@@ -21,12 +21,12 @@ paths:
               $ref: '#/definitions/User'
       security:
           - Bearer: []
-  /user/register:
+  /user/create:
     post:
       tags: 
         - users
       summary: Create new user
-      operationId: 'tensorhive.api.controllers.user.post_register'
+      operationId: 'tensorhive.api.controllers.user.post_create'
       parameters:
         - description: User object
           in: body
@@ -41,6 +41,33 @@ paths:
           description: Duplication error.
         '500':
           $ref: '#/responses/InternalError'
+      security:
+          - Bearer: []
+  /user/delete/{id}:
+    delete:
+      tags:
+        - users
+      summary: Delete user
+      operationId: 'tensorhive.api.controllers.user.delete_user'
+      parameters:
+        - description: Delete user by id
+          in: path
+          name: id
+          required: true
+          type: integer
+      responses:
+        '204':
+          description: Successfully deleted.
+        '403':
+          description: Admin cannot be deleted.
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalError'
+        '501':
+          $ref: '#/responses/InternalError'
+      security:
+          - Bearer: []
   /user/logout:
     delete:
       tags:
@@ -51,6 +78,8 @@ paths:
         '201':
           description: Successfully deleted.
         '500':
+          $ref: '#/responses/InternalError'
+        '501':
           $ref: '#/responses/InternalError'
       security:
           - Bearer: []
@@ -64,6 +93,8 @@ paths:
         '201':
           description: Successfully deleted.
         '500':
+          $ref: '#/responses/InternalError'
+        '501':
           $ref: '#/responses/InternalError'
       security:
           - Bearer: []
@@ -94,12 +125,12 @@ paths:
           schema:
             $ref: '#/definitions/UserLoginController'
       responses:
-        '201':
+        '200':
           description: Successfully loged in.
         '401':
-          description: Incorrect credentials.
-        '404':
           description: User does not exist.
+        '405':
+          description: Duplicate username error.
         '500':
           $ref: '#/responses/InternalError'
   /reservations:
@@ -175,6 +206,8 @@ paths:
           description: Successfully deleted.
         '404':
           $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalError'
       security:
           - Bearer: []
   # TODO Nodes: Add more specific schemas, response codes + descriptions
@@ -329,6 +362,8 @@ responses:
     description: Internal Server Error
   BadRequest:
     description: Bad Request
+  NoPermission:
+    description: User can not do that.
 
 parameters:
   hostnameParam:

@@ -1,10 +1,10 @@
-import datetime
-
 from flask_jwt_extended import jwt_required,jwt_refresh_token_required
 from tensorhive.controllers.user.UserLoginController import LoginUserController
 from tensorhive.controllers.user.UserLogoutController import LogoutUserController
 from tensorhive.controllers.user.CreateUserController import CreateUserController
 from tensorhive.controllers.user.CreateRefreshedUserTokenController import CreateRefreshedUserTokenController
+from tensorhive.controllers.user.DeleteUserController import DeleteUserController
+from tensorhive.authorization import admin_required
 
 
 def post_login(user):
@@ -26,6 +26,12 @@ def post_logout_refresh_token():
     '''Revoking the refresh users access token'''
     return LogoutUserController.delete_logout('Refresh')
 
-def post_register(user):
+@admin_required
+def post_create(user):
     '''Create new user'''
-    return CreateUserController.register(user)
+    return CreateUserController.create(user)
+
+@admin_required
+def delete_user(id):
+    '''Delete user'''
+    return DeleteUserController.delete(id)
