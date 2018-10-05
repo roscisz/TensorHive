@@ -4,11 +4,11 @@
     <router-link
       tag="li"
       class="pageLink"
-      to="/"
+      to="/reservations_overview"
     >
       <a>
         <i class="fa fa-table"></i>
-        <span class="page">Reserve resources</span>
+        <span class="page">Reservations Overview</span>
       </a>
     </router-link>
     <li class="header">RESOURCES</li>
@@ -22,15 +22,21 @@
         <span class="page">Nodes Overview</span>
       </a>
     </router-link>
-    <li class="header">PAGES</li>
+    <li
+      class="header"
+      v-if="$store.state.role === 'admin'"
+    >
+      ADMIN ZONE
+    </li>
     <router-link
       tag="li"
       class="pageLink"
-      to="/login"
+      to="/users_overview"
+      v-if="$store.state.role === 'admin'"
     >
       <a>
-        <i class="fa fa-circle-o text-yellow"></i>
-        <span class="page"> Login</span>
+        <i class="fa fa-table"></i>
+        <span class="page">Users Overview</span>
       </a>
     </router-link>
   </ul>

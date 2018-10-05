@@ -10,7 +10,7 @@
       >
         Adjust filters
       </v-btn>
-      <FullCalendar :selected-resources="selectedResources"/>
+      <FullCalendar :update-calendar="updateCalendar" :selected-resources="selectedResources"/>
     </section>
     <section id="filter_section">
       <v-btn
@@ -102,6 +102,7 @@ export default {
       nodes: [],
       parsedNodes: [],
       errors: [],
+      updateCalendar: false,
       selectedResources: [],
       nodeCheckbox: false,
       resourceTypeCheckbox: false,
@@ -109,16 +110,21 @@ export default {
     }
   },
 
-  created () {
-    api
-      .request('get', '/nodes/metrics')
-      .then(response => {
-        this.nodes = response.data
-        this.parseData()
-      })
-      .catch(e => {
-        this.errors.push(e)
-      })
+  mounted () {
+    if (JSON.parse(window.localStorage.getItem('visibleResources')) === null) {
+      api
+        .request('get', '/nodes/metrics', this.$store.state.token)
+        .then(response => {
+          this.nodes = response.data
+          this.parseData()
+        })
+        .catch(e => {
+          this.errors.push(e)
+        })
+    } else {
+      this.parsedNodes = JSON.parse(window.localStorage.getItem('visibleResources'))
+      this.loadCalendar()
+    }
   },
 
   methods: {
@@ -235,6 +241,8 @@ export default {
           }
         }
       }
+      this.updateCalendar = !this.updateCalendar
+      window.localStorage.setItem('visibleResources', JSON.stringify(this.parsedNodes))
     }
   }
 }

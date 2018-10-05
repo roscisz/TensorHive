@@ -13,12 +13,18 @@
       <WatchBox
         class="watch_box"
         v-for="watch in watches"
-        :key="watch.index"
-        :defaultMetric="watch.default"
+        :key="watch.id"
+        :default-node="watch.defaultNode"
+        :default-resource-type="watch.defaultResourceType"
+        :default-metric="watch.defaultMetric"
         :resources-indexes="resourcesIndexes"
         :chart-datasets="chartDatasets"
         :update-chart="updateChart"
         :time="time"
+        @changeDefaultNode="changeDefaultNode(watch.id, ...arguments)"
+        @changeDefaultResourceType="changeDefaultResourceType(watch.id, ...arguments)"
+        @changeDefaultMetric="changeDefaultMetric(watch.id, ...arguments)"
+        @deleteWatch="deleteWatch(watch.id)"
       />
     </div>
   </div>
@@ -43,7 +49,8 @@ export default {
       interval: null,
       errors: [],
       updateChart: false,
-      resourcesIndexes: {}
+      resourcesIndexes: {},
+      watchIds: 3
     }
   },
 
@@ -56,6 +63,43 @@ export default {
   },
 
   methods: {
+    saveWatches: function () {
+      window.localStorage.setItem('watches', JSON.stringify(this.watches))
+      window.localStorage.setItem('watchIds', JSON.stringify(this.watchIds))
+    },
+    changeDefaultNode: function (id, name) {
+      for (var index in this.watches) {
+        if (this.watches[index].id === id) {
+          this.watches[index].defaultNode = name
+        }
+      }
+      this.saveWatches()
+    },
+    changeDefaultResourceType: function (id, name) {
+      for (var index in this.watches) {
+        if (this.watches[index].id === id) {
+          this.watches[index].defaultResourceType = name
+        }
+      }
+      this.saveWatches()
+    },
+    changeDefaultMetric: function (id, name) {
+      for (var index in this.watches) {
+        if (this.watches[index].id === id) {
+          this.watches[index].defaultMetric = name
+        }
+      }
+      this.saveWatches()
+    },
+    deleteWatch: function (id) {
+      for (var index in this.watches) {
+        if (this.watches[index].id === id) {
+          this.watches.splice(index, 1)
+        }
+      }
+      this.saveWatches()
+    },
+
     setColor: function (node) {
       var color = '#123456'
       var step = node * 123456
@@ -74,22 +118,33 @@ export default {
 
     loadData: function () {
       api
-        .request('get', '/nodes/metrics')
+        .request('get', '/nodes/metrics', this.$store.state.token)
         .then(response => {
-          this.watches = [
-            {
-              index: 0,
-              default: 'gpu_util'
-            },
-            {
-              index: 1,
-              default: 'mem_used'
-            },
-            {
-              index: 2,
-              default: 'processes'
-            }
-          ]
+          if (JSON.parse(window.localStorage.getItem('watches')) === null) {
+            this.watches = [
+              {
+                id: 0,
+                defaultNode: '',
+                defaultResourceType: '',
+                defaultMetric: 'gpu_util'
+              },
+              {
+                id: 1,
+                defaultNode: '',
+                defaultResourceType: '',
+                defaultMetric: 'mem_used'
+              },
+              {
+                id: 2,
+                defaultNode: '',
+                defaultResourceType: '',
+                defaultMetric: 'processes'
+              }
+            ]
+          } else {
+            this.watches = JSON.parse(window.localStorage.getItem('watches'))
+            this.watchIds = JSON.parse(window.localStorage.getItem('watchIds'))
+          }
           this.parseData(response.data)
         })
         .catch(e => {
@@ -260,7 +315,7 @@ export default {
         }
       }
       obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = unit
-      if (metricName === 'mem_util' || metricName === 'gpu_util') {
+      if (metricName === 'mem_util' || metricName === 'gpu_util' || metricName === 'fan_speed') {
         obj['scales']['yAxes'][0]['ticks'] = {
           suggestedMin: 0,
           max: 100
@@ -289,7 +344,7 @@ export default {
       var metric, resourceType, value
       var data = []
       api
-        .request('get', '/nodes/' + nodeName + '/gpu/metrics')
+        .request('get', '/nodes/' + nodeName + '/gpu/metrics', this.$store.state.token)
         .then(response => {
           data = response.data
           for (var resourceTypeName in node) {
@@ -315,7 +370,14 @@ export default {
     },
 
     addWatch: function () {
-      this.watches.push({ index: this.watches.length })
+      this.watches.push({
+        id: this.watchIds,
+        defaultNode: '',
+        defaultResourceType: '',
+        defaultMetric: ''
+      })
+      this.watchIds++
+      this.saveWatches()
     }
   }
 }

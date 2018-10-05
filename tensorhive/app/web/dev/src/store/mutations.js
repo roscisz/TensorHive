@@ -8,6 +8,12 @@ export default {
   SET_USER (state, user) {
     state.user = user
   },
+  SET_ROLE (state, role) {
+    state.role = role
+  },
+  SET_ID (state, id) {
+    state.id = id
+  },
   SET_TOKEN (state, token) {
     state.token = token
   }

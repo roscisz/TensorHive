@@ -1,37 +1,68 @@
 import DashView from './components/TheDash.vue'
 import LoginView from './components/TheLogin.vue'
+import CreateView from './components/TheCreate.vue'
 import NotFoundView from './components/404.vue'
-
 // Import Views - Dash
-import CalendarView from './components/views/ReserveResources.vue'
-import ChartsView from './components/views/NodesOverview.vue'
+import CalendarView from './components/views/ReservationsOverview.vue'
+import WatchView from './components/views/NodesOverview.vue'
+import UsersView from './components/views/UsersOverview.vue'
 // Routes
 const routes = [
-  {
-    path: '/login',
-    component: LoginView
-  },
   {
     path: '/',
     component: DashView,
     children: [
       {
-        path: 'reserve_resources',
+        path: '/reservations_overview',
         alias: '',
         component: CalendarView,
-        name: 'Reserve Resources',
-        meta: {description: 'Calendar with reservations'}
+        name: 'Reservation Overview',
+        meta: {
+          description: 'Calendar with reservations',
+          requiresAuth: true,
+          role: 'user'
+        }
       },
       {
         path: 'nodes_overview',
         alias: '',
-        component: ChartsView,
+        component: WatchView,
         name: 'Nodes overview',
-        meta: {description: 'Charts with nodes information'}
+        meta: {
+          description: 'Informations about nodes',
+          requiresAuth: true,
+          role: 'user'
+        }
+      },
+      {
+        path: 'users_overview',
+        alias: '',
+        component: UsersView,
+        name: 'Users overview',
+        meta: {
+          description: 'Table users view for admin',
+          requiresAuth: true,
+          role: 'admin'
+        }
       }
     ]
-  }, {
-    // not found handler
+  },
+  {
+    path: '/login',
+    component: LoginView,
+    meta: {
+      role: 'user'
+    }
+  },
+  {
+    path: '/create',
+    component: CreateView,
+    meta: {
+      requiresAuth: true,
+      role: 'admin'
+    }
+  },
+  {
     path: '*',
     component: NotFoundView
   }

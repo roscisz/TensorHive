@@ -35,6 +35,7 @@
               :time-picker-options="timePickerOptions"
             ></date-picker>
           </label>
+          <div v-show="showInfo===true" class="text-red"><p class="vertical-5p lead">You need to choose at least one resource to reserve</p></div>
           <div class="modal-footer text-right">
             <v-btn
               color="error"
@@ -99,12 +100,14 @@ export default {
         start: '00:00',
         step: '00:30',
         end: '23:30'
-      }
+      },
+      showInfo: false
     }
   },
 
   methods: {
     close: function () {
+      this.showInfo = false
       this.$emit('close')
     },
 
@@ -130,12 +133,14 @@ export default {
               start: this.reservationTime[0].toISOString(),
               end: this.reservationTime[1].toISOString(),
               resourceId: this.resourcesCheckboxes[i].uuid,
-              userId: 1
+              userId: this.$store.state.id
             }
             this.addReservation(tempReservation)
           }
         }
         this.close()
+      } else {
+        this.showInfo = true
       }
     }
   }
