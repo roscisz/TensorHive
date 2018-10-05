@@ -1,15 +1,30 @@
 <template>
   <div>
-    <button v-on:click="addWatch">Add watch</button>
+    <v-btn
+      color="info"
+      small
+      outline
+      round
+      v-on:click="addWatch"
+    >
+      Add watch
+    </v-btn>
     <div class="watch_table" >
       <WatchBox
         class="watch_box"
         v-for="watch in watches"
-        :key="watch.index"
+        :key="watch.id"
+        :default-node="watch.defaultNode"
+        :default-resource-type="watch.defaultResourceType"
+        :default-metric="watch.defaultMetric"
         :resources-indexes="resourcesIndexes"
         :chart-datasets="chartDatasets"
         :update-chart="updateChart"
         :time="time"
+        @changeDefaultNode="changeDefaultNode(watch.id, ...arguments)"
+        @changeDefaultResourceType="changeDefaultResourceType(watch.id, ...arguments)"
+        @changeDefaultMetric="changeDefaultMetric(watch.id, ...arguments)"
+        @deleteWatch="deleteWatch(watch.id)"
       />
     </div>
   </div>
@@ -34,8 +49,8 @@ export default {
       interval: null,
       errors: [],
       updateChart: false,
-      uniqueMetrics: {},
-      resourcesIndexes: {}
+      resourcesIndexes: {},
+      watchIds: 3
     }
   },
 
@@ -48,6 +63,43 @@ export default {
   },
 
   methods: {
+    saveWatches: function () {
+      window.localStorage.setItem('watches', JSON.stringify(this.watches))
+      window.localStorage.setItem('watchIds', JSON.stringify(this.watchIds))
+    },
+    changeDefaultNode: function (id, name) {
+      for (var index in this.watches) {
+        if (this.watches[index].id === id) {
+          this.watches[index].defaultNode = name
+        }
+      }
+      this.saveWatches()
+    },
+    changeDefaultResourceType: function (id, name) {
+      for (var index in this.watches) {
+        if (this.watches[index].id === id) {
+          this.watches[index].defaultResourceType = name
+        }
+      }
+      this.saveWatches()
+    },
+    changeDefaultMetric: function (id, name) {
+      for (var index in this.watches) {
+        if (this.watches[index].id === id) {
+          this.watches[index].defaultMetric = name
+        }
+      }
+      this.saveWatches()
+    },
+    deleteWatch: function (id) {
+      for (var index in this.watches) {
+        if (this.watches[index].id === id) {
+          this.watches.splice(index, 1)
+        }
+      }
+      this.saveWatches()
+    },
+
     setColor: function (node) {
       var color = '#123456'
       var step = node * 123456
@@ -66,13 +118,33 @@ export default {
 
     loadData: function () {
       api
-        .request('get', '/nodes/metrics')
+        .request('get', '/nodes/metrics', this.$store.state.token)
         .then(response => {
-          this.watches = [
-            {
-              index: 0
-            }
-          ]
+          if (JSON.parse(window.localStorage.getItem('watches')) === null) {
+            this.watches = [
+              {
+                id: 0,
+                defaultNode: '',
+                defaultResourceType: '',
+                defaultMetric: 'gpu_util'
+              },
+              {
+                id: 1,
+                defaultNode: '',
+                defaultResourceType: '',
+                defaultMetric: 'mem_used'
+              },
+              {
+                id: 2,
+                defaultNode: '',
+                defaultResourceType: '',
+                defaultMetric: 'processes'
+              }
+            ]
+          } else {
+            this.watches = JSON.parse(window.localStorage.getItem('watches'))
+            this.watchIds = JSON.parse(window.localStorage.getItem('watchIds'))
+          }
           this.parseData(response.data)
         })
         .catch(e => {
@@ -90,18 +162,23 @@ export default {
     },
 
     parseData: function (apiResponse) {
-      var node, resourceType, metrics, resourceTypes
+      var node, resourceType, metrics, resourceTypes, uniqueMetricNames
+      uniqueMetricNames = []
       for (var nodeName in apiResponse) {
         resourceTypes = {}
         node = apiResponse[nodeName]
         if (node !== null) {
           for (var resourceTypeName in node) {
+            uniqueMetricNames = []
             resourceType = node[resourceTypeName]
             if (resourceType !== null) {
               metrics = this.findMetrics(resourceType)
+              for (var metricName in metrics) {
+                uniqueMetricNames.push(metricName)
+              }
               resourceTypes[resourceTypeName] = {
                 metrics: metrics,
-                uniqueMetricNames: this.uniqueMetrics
+                uniqueMetricNames: uniqueMetricNames
               }
             }
           }
@@ -111,9 +188,9 @@ export default {
     },
 
     findMetrics: function (resourceType) {
-      var resource, metric, tempMetrics
-      this.uniqueMetrics = {}
+      var resource, metric, tempMetrics, uniqueMetrics
       tempMetrics = {}
+      uniqueMetrics = {}
       for (var resourceUUID in resourceType) {
         this.resourcesIndexes[resourceUUID] = resourceType[resourceUUID].index
         resource = resourceType[resourceUUID]
@@ -128,17 +205,17 @@ export default {
               visible: this.isVisible(resource.metrics[metricName], metricName)
             }
           }
-          if (this.uniqueMetrics.hasOwnProperty(metricName)) {
-            if (this.uniqueMetrics[metricName].visible === false) {
-              this.uniqueMetrics[metricName] = metric
+          if (uniqueMetrics.hasOwnProperty(metricName)) {
+            if (uniqueMetrics[metricName].visible === false) {
+              uniqueMetrics[metricName] = metric
             }
           } else {
-            this.uniqueMetrics[metricName] = metric
+            uniqueMetrics[metricName] = metric
           }
         }
       }
-      for (var uniqueMetricName in this.uniqueMetrics) {
-        if (this.uniqueMetrics[uniqueMetricName].visible === true) {
+      for (var uniqueMetricName in uniqueMetrics) {
+        if (uniqueMetrics[uniqueMetricName].visible === true) {
           tempMetrics[uniqueMetricName] = this.createMetric(resourceType, uniqueMetricName)
         }
       }
@@ -146,7 +223,7 @@ export default {
     },
 
     createMetric: function (resourceType, metricName) {
-      var labels, totalMemory, value, datasets, orderedDatasets
+      var labels, totalMemory, value, unit, datasets, orderedDatasets
       labels = []
       for (var i = (this.chartLength - 1) * this.time / 1000; i >= 0; i -= this.time / 1000) {
         if (i % ((this.space + 1) * this.time / 1000) === 0) {
@@ -157,8 +234,9 @@ export default {
       }
       datasets = []
       for (var resourceUUID in resourceType) {
-        if (resourceType[resourceUUID].metrics[metricName] !== null) {
+        if (resourceType[resourceUUID].metrics[metricName] !== null && this.isVisible(resourceType[resourceUUID].metrics[metricName], metricName)) {
           value = isNaN(resourceType[resourceUUID].metrics[metricName]) ? resourceType[resourceUUID].metrics[metricName].value : resourceType[resourceUUID].metrics[metricName]
+          unit = isNaN(resourceType[resourceUUID].metrics[metricName]) ? resourceType[resourceUUID].metrics[metricName].unit : ''
           totalMemory = resourceType[resourceUUID].metrics['mem_total'].value
           datasets.push(
             this.createDataset(
@@ -177,7 +255,7 @@ export default {
           labels: labels,
           datasets: orderedDatasets
         },
-        options: this.createOptions(totalMemory, metricName)
+        options: this.createOptions(totalMemory, metricName, unit)
       }
       return obj
     },
@@ -204,7 +282,7 @@ export default {
       return obj
     },
 
-    createOptions: function (totalMemory, metricName) {
+    createOptions: function (totalMemory, metricName, unit) {
       var obj = {
         responsive: true,
         maintainAspectRatio: false,
@@ -236,8 +314,8 @@ export default {
           }]
         }
       }
-      obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = this.uniqueMetrics[metricName].unit
-      if (metricName === 'mem_util' || metricName === 'gpu_util') {
+      obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = unit
+      if (metricName === 'mem_util' || metricName === 'gpu_util' || metricName === 'fan_speed') {
         obj['scales']['yAxes'][0]['ticks'] = {
           suggestedMin: 0,
           max: 100
@@ -253,37 +331,53 @@ export default {
     },
 
     changeData: function () {
-      var node, metric, resourceType, value
-      var data = []
+      var node, counter
+      counter = Object.keys(this.chartDatasets).length
       for (var nodeName in this.chartDatasets) {
+        counter--
         node = this.chartDatasets[nodeName]
-        api
-          .request('get', '/nodes/' + nodeName + '/gpu/metrics')
-          .then(response => {
-            data = response.data
-            for (var resourceTypeName in node) {
-              resourceType = node[resourceTypeName]
-              for (var metricName in resourceType.metrics) {
-                metric = resourceType.metrics[metricName]
-                for (var i = 0; i < metric.data.datasets.length; i++) {
-                  value = isNaN(data[metric.data.datasets[i].uuid][metric.metricName])
-                    ? data[metric.data.datasets[i].uuid][metric.metricName].value
-                    : data[metric.data.datasets[i].uuid][metric.metricName]
-                  metric.data.datasets[i].data.shift()
-                  metric.data.datasets[i].data.push(value)
-                }
-              }
-            }
-            this.updateChart = !(this.updateChart)
-          })
-          .catch(e => {
-            this.errors.push(e)
-          })
+        this.apiRequest(node, nodeName, counter)
       }
     },
 
+    apiRequest: function (node, nodeName, counter) {
+      var metric, resourceType, value
+      var data = []
+      api
+        .request('get', '/nodes/' + nodeName + '/gpu/metrics', this.$store.state.token)
+        .then(response => {
+          data = response.data
+          for (var resourceTypeName in node) {
+            resourceType = node[resourceTypeName]
+            for (var metricName in resourceType.metrics) {
+              metric = resourceType.metrics[metricName]
+              for (var i = 0; i < metric.data.datasets.length; i++) {
+                value = isNaN(data[metric.data.datasets[i].uuid][metric.metricName])
+                  ? data[metric.data.datasets[i].uuid][metric.metricName].value
+                  : data[metric.data.datasets[i].uuid][metric.metricName]
+                metric.data.datasets[i].data.shift()
+                metric.data.datasets[i].data.push(value)
+              }
+            }
+          }
+          if (!counter) {
+            this.updateChart = !this.updateChart
+          }
+        })
+        .catch(e => {
+          this.errors.push(e)
+        })
+    },
+
     addWatch: function () {
-      this.watches.push({ index: this.watches.length })
+      this.watches.push({
+        id: this.watchIds,
+        defaultNode: '',
+        defaultResourceType: '',
+        defaultMetric: ''
+      })
+      this.watchIds++
+      this.saveWatches()
     }
   }
 }
@@ -297,6 +391,7 @@ export default {
 .watch_box{
   height: 40vh;
   width: 25vw;
+  min-width: 300px;
   margin-left: 3vh;
 }
 </style>

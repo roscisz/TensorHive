@@ -136,9 +136,11 @@ class AUTH:
         '''
         Parses value for option from string to a valid python list.
         Fallback value is returned when anything goes wrong (e.g. option or value not present)
+
         Example .ini file, function called with arguments: option='some_option', fallback=None
         [some_section]
         some_option = ['foo', 'bar']
+
         Will return:
         ['foo', 'bar']
         '''

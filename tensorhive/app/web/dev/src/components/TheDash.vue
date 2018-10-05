@@ -17,11 +17,18 @@
         >
           <span class="sr-only">Toggle navigation</span>
         </a>
-        <!-- Navbar Right Menu -->
-        <div class="navbar-custom-menu">
-          <ul class="nav navbar-nav">
-          </ul>
-        </div>
+        <v-chip
+          class="user_chip"
+          close
+          v-model="loggedIn"
+          color="green"
+          text-color="white"
+        >
+          <v-avatar>
+            <v-icon>check_circle</v-icon>
+          </v-avatar>
+          {{displayName}}
+        </v-chip>
       </nav>
     </header>
     <!-- Left side column. contains the logo and sidebar -->
@@ -56,6 +63,7 @@
 import config from '../config'
 import BaseSidebar from './dash/BaseSidebar.vue'
 import 'hideseek'
+import api from '../api'
 
 export default {
   name: 'TheDash',
@@ -72,19 +80,56 @@ export default {
         fixed_layout: config.fixedLayout,
         hide_logo: config.hideLogoOnMobile
       },
-      error: ''
+      error: '',
+      loggedIn: true
+    }
+  },
+
+  computed: {
+    displayName () {
+      return this.$store.state.user
+    }
+  },
+
+  watch: {
+    loggedIn () {
+      if (this.loggedIn === false) {
+        this.logout()
+      }
     }
   },
 
   methods: {
     changeloading () {
       this.$store.commit('TOGGLE_SEARCHING')
+    },
+
+    logout: function () {
+      api
+        .request('delete', '/user/logout', this.$store.state.token)
+
+      this.$store.commit('SET_USER', null)
+      this.$store.commit('SET_TOKEN', null)
+      this.$store.commit('SET_ROLE', null)
+
+      if (window.localStorage) {
+        window.localStorage.setItem('user', null)
+        window.localStorage.setItem('token', null)
+        window.localStorage.setItem('role', null)
+        window.localStorage.setItem('visibleResources', null)
+        window.localStorage.setItem('watches', null)
+        window.localStorage.setItem('watchIds', null)
+      }
+      this.$router.push('/login')
     }
   }
 }
 </script>
 
 <style lang="scss">
+.user_chip {
+  margin-top: 8px;
+}
 .wrapper.fixed_layout {
   .main-header {
     position: fixed;

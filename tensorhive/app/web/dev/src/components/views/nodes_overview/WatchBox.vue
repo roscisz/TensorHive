@@ -18,6 +18,16 @@
         v-model="selectedMetric"
         :items="metrics"
       ></v-select>
+      <v-btn
+        color="indigo"
+        fab
+        dark
+        small
+        outline
+        @click="removeMe()"
+      >
+        <v-icon dark>delete</v-icon>
+      </v-btn>
     </div>
     <div v-if="showProcesses === true" class="table_box">
       <v-data-table
@@ -62,6 +72,9 @@ export default {
   },
 
   props: {
+    defaultNode: String,
+    defaultResourceType: String,
+    defaultMetric: String,
     resourcesIndexes: Object,
     chartDatasets: Object,
     updateChart: Boolean,
@@ -92,45 +105,74 @@ export default {
   },
 
   methods: {
-    loadData () {
+    sendDefaultNode: function (newDefault) {
+      this.$emit('changeDefaultNode', newDefault)
+    },
+    sendDefaultResourceType: function (newDefault) {
+      this.$emit('changeDefaultResourceType', newDefault)
+    },
+    sendDefaultMetric: function (newDefault) {
+      this.$emit('changeDefaultMetric', newDefault)
+    },
+    removeMe: function () {
+      this.$emit('deleteWatch')
+    },
+
+    loadData: function () {
       return this.chartDatasets[this.selectedNode][this.selectedResourceType].metrics[this.selectedMetric].data
     },
 
-    loadOptions () {
+    loadOptions: function () {
       return this.chartDatasets[this.selectedNode][this.selectedResourceType].metrics[this.selectedMetric].options
     },
 
-    fillNodes () {
+    fillNodes: function () {
+      this.nodes = []
       var nodes = this.chartDatasets
       for (var nodeName in nodes) {
         this.nodes.push(nodeName)
       }
-      this.selectedNode = this.nodes[0]
+      if (this.defaultNode === '') {
+        this.selectedNode = this.nodes[0]
+      } else {
+        this.selectedNode = this.defaultNode
+      }
+      this.fillResourceTypes()
     },
 
-    fillResourceTypes () {
+    fillResourceTypes: function () {
+      this.resourceTypes = []
       var resourceTypes = this.chartDatasets[this.selectedNode]
       for (var resourceTypeName in resourceTypes) {
         this.resourceTypes.push(resourceTypeName)
       }
-      this.selectedResourceType = this.resourceTypes[0]
+      if (this.defaultResourceType === '') {
+        this.selectedResourceType = this.resourceTypes[0]
+      } else {
+        this.selectedResourceType = this.defaultResourceType
+      }
+      this.fillMetrics()
     },
 
-    fillMetrics () {
+    fillMetrics: function () {
+      this.metrics = []
       var metrics = this.chartDatasets[this.selectedNode][this.selectedResourceType].uniqueMetricNames
-      for (var metricName in metrics) {
-        if (metrics[metricName].visible) {
-          this.metrics.push(metricName)
-        }
+      for (var metricIndex in metrics) {
+        this.metrics.push(metrics[metricIndex])
       }
-      this.selectedMetric = this.metrics[0]
+      this.metrics.push('processes')
+      if (this.defaultMetric === '') {
+        this.selectedMetric = this.metrics[0]
+      } else {
+        this.selectedMetric = this.defaultMetric
+      }
     },
 
     checkProcesses: function () {
       var data, processes, tempProcess
       processes = []
       api
-        .request('get', '/nodes/' + this.selectedNode + '/gpu/processes')
+        .request('get', '/nodes/' + this.selectedNode + '/gpu/processes', this.$store.state.token)
         .then(response => {
           data = response.data
           for (var resourceUUID in data) {
@@ -151,25 +193,15 @@ export default {
 
   watch: {
     selectedNode () {
+      this.sendDefaultNode(this.selectedNode)
       this.fillResourceTypes()
-      this.metricData = this.loadData()
-      this.metricOptions = this.loadOptions()
-      this.rerenderChart = !(this.rerenderChart)
-      if (this.interval !== null) {
-        clearInterval(this.interval)
-      }
     },
     selectedResourceType () {
+      this.sendDefaultResourceType(this.selectedResourceType)
       this.fillMetrics()
-      this.metricData = this.loadData()
-      this.metricOptions = this.loadOptions()
-      this.metrics.push('processes')
-      this.rerenderChart = !(this.rerenderChart)
-      if (this.interval !== null) {
-        clearInterval(this.interval)
-      }
     },
     selectedMetric () {
+      this.sendDefaultMetric(this.selectedMetric)
       if (this.selectedMetric === 'processes') {
         this.checkProcesses()
         let self = this
@@ -191,11 +223,6 @@ export default {
 
   created () {
     this.fillNodes()
-    this.fillResourceTypes()
-    this.fillMetrics()
-    this.metrics.push('processes')
-    this.metricData = this.loadData()
-    this.metricOptions = this.loadOptions()
   }
 }
 </script>
@@ -214,12 +241,12 @@ export default {
   position: sticky;
 }
 .chart_box{
-  width: 25vw;
+  width: 100%;
   height: 34vh;
   position: relative;
 }
 .table_box{
-  width: 25vw;
+  width: 100%;
   height: 34vh;
   position: relative;
   overflow-y: scroll;

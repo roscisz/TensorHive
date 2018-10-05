@@ -1,32 +1,37 @@
 <template>
-  <BaseModal
-    :show="showModal"
-    @close="close"
-  >
-    <div class="modal-header">
-      <h3>Do you want to cancel this reservation?</h3>
-    </div>
-    <div class="modal-body">
-    </div>
-    <div class="modal-footer text-right">
-      <button
-        class="modal-default-button"
-        @click="cancelReservation()"
-      >
-        Yes
-      </button>
-      <button
-        class="modal-default-button"
-        @click="close()"
-      >
-        No
-      </button>
-    </div>
-  </BaseModal>
+  <v-layout row justify-center>
+    <v-dialog
+      width="600px"
+      v-model="showModal"
+    >
+      <v-card>
+        <v-card-title>
+          Do you want to cancel this reservation?
+        </v-card-title>
+        <v-card-text>
+          <v-btn
+            color="error"
+            small
+            outline
+            round
+            @click="close()"
+          >
+            No
+          </v-btn>
+          <v-btn
+            color="success"
+            round
+            @click="cancelReservation()"
+          >
+            Yes
+          </v-btn>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-layout>
 </template>
 
 <script>
-import BaseModal from './BaseModal.vue'
 export default {
   name: 'FullCalendarCancel',
 
@@ -37,22 +42,9 @@ export default {
 
   },
 
-  components: {
-    BaseModal
-  },
-
-  data () {
-    return {
-      title: '',
-      body: ''
-    }
-  },
-
   methods: {
     close: function () {
       this.$emit('close')
-      this.title = ''
-      this.body = ''
     },
 
     cancelReservation: function () {

@@ -72,7 +72,7 @@ paths:
     delete:
       tags:
         - users
-      summary: Logout user
+      summary: Logout user with access token
       operationId: 'tensorhive.api.controllers.user.post_logout_access_token'
       responses:
         '201':
@@ -83,11 +83,11 @@ paths:
           $ref: '#/responses/InternalError'
       security:
           - Bearer: []
-  /user/logout1:
+  /user/logout/refresh_token:
     delete:
       tags:
         - users
-      summary: Logout user
+      summary: Logout user with refresh token
       operationId: 'tensorhive.api.controllers.user.post_logout_refresh_token'
       responses:
         '201':

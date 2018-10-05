@@ -15,11 +15,6 @@ import BaseSidebarMenu from './BaseSidebarMenu.vue'
 export default {
   name: 'BaseSidebar',
 
-  props: {
-    displayName: String,
-    pictureUrl: String
-  },
-
   components: { BaseSidebarMenu },
 
   mounted: function () {

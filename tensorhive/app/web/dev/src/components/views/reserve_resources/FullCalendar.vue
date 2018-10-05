@@ -26,6 +26,7 @@ import FullCalendarCancel from './FullCalendarCancel.vue'
 import api from '../../../api'
 import config from '../../../config'
 import $ from 'jquery'
+import _ from 'lodash'
 require('../../../../static/fullcalendar/fullcalendar.js')
 
 export default {
@@ -35,11 +36,12 @@ export default {
   },
 
   props: {
-    selectedResources: Array
+    selectedResources: Array,
+    updateCalendar: Boolean
   },
 
   watch: {
-    selectedResources () {
+    updateCalendar () {
       var resourcesString = ''
       if (this.selectedResources.length > 0) {
         resourcesString = this.selectedResources[0].uuid
@@ -50,12 +52,14 @@ export default {
       this.calendar.fullCalendar('removeEventSources')
       this.calendar.fullCalendar('addEventSource', {
         url: config.serverURI + '/reservations?resources_ids=' + resourcesString,
+        headers: { Authorization: this.$store.state.token },
         cache: true
       })
       var obj
       this.resourcesCheckboxes = []
       for (i = 0; i < this.selectedResources.length; i++) {
         obj = {
+          nodeName: this.selectedResources[i].nodeName,
           name: this.selectedResources[i].name,
           uuid: this.selectedResources[i].uuid,
           index: this.selectedResources[i].index,
@@ -64,6 +68,7 @@ export default {
         }
         this.resourcesCheckboxes[i] = obj
       }
+      this.addResourcesHeader()
     }
   },
 
@@ -83,6 +88,24 @@ export default {
   },
 
   methods: {
+    addResourcesHeader: function () {
+      var dayStart = _.cloneDeep(this.calendar.fullCalendar('getView').start)
+      for (var i = 0; i < 7; i++) {
+        for (var j = 0; j < this.selectedResources.length; j++) {
+          var tempReservation = {
+            title: 'GPU' + this.selectedResources[j].index,
+            description: this.selectedResources[j].nodeName,
+            start: dayStart,
+            allDay: true,
+            resourceId: this.selectedResources[j].uuid,
+            userId: this.$store.state.id
+          }
+          this.calendar.fullCalendar('renderEvent', tempReservation)
+        }
+        dayStart = dayStart.add(1, 'days')
+      }
+    },
+
     setColor: function (resourceIndex) {
       var color = '#123456'
       var step = resourceIndex * 123456
@@ -101,7 +124,7 @@ export default {
 
     cancelReservation: function (reservation) {
       api
-        .request('delete', '/reservations/' + reservation.id.toString())
+        .request('delete', '/reservations/' + reservation.id.toString(), this.$store.state.token)
         .then(response => {
           this.calendar.fullCalendar('removeEvents', reservation._id)
         })
@@ -112,7 +135,7 @@ export default {
 
     addReservation: function (reservation) {
       api
-        .request('post', '/reservations', reservation)
+        .request('post', '/reservations', this.$store.state.token, reservation)
         .then(response => {
           this.calendar.fullCalendar('refetchEvents')
         })
@@ -129,8 +152,9 @@ export default {
       self.calendar.fullCalendar('rerenderEvents')
     })
     this.calendar.fullCalendar({
-      allDaySlot: false,
-      height: 800,
+      allDaySlot: true,
+      allDayText: '',
+      height: 'auto',
       selectable: true,
       selectOverlap: true,
       slotEventOverlap: false,
@@ -142,9 +166,13 @@ export default {
       header: {
         left: 'prev,next today',
         center: 'title',
-        right: 'agendaWeek,agendaDay,month'
+        right: ''
       },
-
+      views: {
+        week: {
+          columnHeaderFormat: 'ddd D/M'
+        }
+      },
       eventAfterRender: function (event, element, view) {
         var resourceIndex
         for (var i = 0; i < self.selectedResources.length; i++) {
@@ -152,16 +180,20 @@ export default {
             resourceIndex = i + 1
           }
         }
-        if (view.type !== 'month') {
-          var hoursWidth = 42
-          var scrollWidth = 16
-          var width = view.el[0].clientWidth
-          var dayWidth = (width - scrollWidth - hoursWidth) / 7
-          var eventSlotWidth = dayWidth / self.selectedResources.length - 1
-          var margin = (Math.floor((resourceIndex - 1) * eventSlotWidth)).toString() + 'px'
-          var eventWidth = (Math.floor(eventSlotWidth)).toString() + 'px'
-          $(element).css('width', eventWidth)
-          $(element).css('margin-left', margin)
+        var hoursWidth = 42
+        var scrollWidth = 16
+        var width = view.el[0].clientWidth
+        var dayWidth = (width - scrollWidth - hoursWidth) / 7
+        var eventSlotWidth = dayWidth / self.selectedResources.length - 1
+        var margin = (Math.floor((resourceIndex - 1) * eventSlotWidth)).toString() + 'px'
+        var eventWidth = (Math.floor(eventSlotWidth)).toString() + 'px'
+        $(element).css('width', eventWidth)
+        $(element).css('margin-left', margin)
+        if (event.allDay) {
+          if (resourceIndex - 1) {
+            $(element).css('margin-top', '-36px')
+          }
+          $(element).css('height', 17 * 2)
         }
         var c = self.setColor(resourceIndex)
         if (event.color !== c) {
@@ -171,32 +203,41 @@ export default {
       },
 
       select: function (startDate, endDate) {
-        for (var i = 0; i < self.selectedResources.length; i++) {
-          self.resourcesCheckboxes[i].checked = false
-          self.resourcesCheckboxes[i].disabled = false
-        }
-        var events = self.calendar.fullCalendar('clientEvents')
-        var id
-        for (i = 0; i < events.length; i++) {
-          if (events[i].end > startDate && events[i].start < endDate) {
-            for (var j = 0; j < self.selectedResources.length; j++) {
-              if (self.selectedResources[j].uuid === events[i].resourceId) {
-                id = j
+        if (!startDate._ambigTime) {
+          for (var i = 0; i < self.selectedResources.length; i++) {
+            self.resourcesCheckboxes[i].checked = false
+            self.resourcesCheckboxes[i].disabled = false
+          }
+          var events = self.calendar.fullCalendar('clientEvents')
+          var id
+          for (i = 0; i < events.length; i++) {
+            if (!events[i].allDay) {
+              if (events[i].end > startDate && events[i].start < endDate) {
+                for (var j = 0; j < self.selectedResources.length; j++) {
+                  if (self.selectedResources[j].uuid === events[i].resourceId) {
+                    id = j
+                  }
+                }
+                self.resourcesCheckboxes[id].disabled = true
               }
             }
-            self.resourcesCheckboxes[id].disabled = true
           }
+          self.startDate = startDate.toDate()
+          self.endDate = endDate.toDate()
+          self.minReservationTime = startDate.format()
+          self.maxReservationTime = endDate.format()
+          self.showModalReserve = true
         }
-        self.startDate = startDate.toDate()
-        self.endDate = endDate.toDate()
-        self.minReservationTime = startDate.format()
-        self.maxReservationTime = endDate.format()
-        self.showModalReserve = true
       },
 
       eventClick: function (calEvent, jsEvent, view) {
-        self.showModalCancel = true
-        self.reservation = calEvent
+        if ((calEvent.userId === self.$store.state.id || self.$store.state.role === 'admin') && !calEvent.allDay) {
+          self.showModalCancel = true
+          self.reservation = calEvent
+        }
+      },
+      viewRender: function (view, element) {
+        self.addResourcesHeader()
       }
     })
   }

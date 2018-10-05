@@ -18,6 +18,12 @@ import AppView from './components/App.vue'
 import Vuetify from 'vuetify'
 import 'vuetify/dist/vuetify.min.css'
 import 'material-design-icons-iconfont/dist/material-design-icons.css'
+
+import staticConfig from '../static/config'
+import config from './config'
+
+config.serverURI = staticConfig.apiPath
+
 Vue.use(Vuetify)
 
 // Import Install and register helper items
@@ -51,6 +57,15 @@ router.beforeEach((to, from, next) => {
       path: '/login',
       query: { redirect: to.fullPath }
     })
+  } else if (to.meta.role === 'admin') {
+    if (router.app.$store.state.role === 'admin') {
+      next()
+    } else {
+      next({
+        path: '/',
+        query: { redirect: to.fullPath }
+      })
+    }
   } else {
     next()
   }
@@ -66,6 +81,7 @@ if (window.localStorage) {
   if (localUser && store.state.user !== localUser) {
     store.commit('SET_USER', localUser)
     store.commit('SET_TOKEN', window.localStorage.getItem('token'))
+    store.commit('SET_ROLE', window.localStorage.getItem('role'))
   }
 }
 
