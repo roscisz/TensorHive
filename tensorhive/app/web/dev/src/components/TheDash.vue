@@ -63,6 +63,7 @@
 import config from '../config'
 import BaseSidebar from './dash/BaseSidebar.vue'
 import 'hideseek'
+import api from '../api'
 
 export default {
   name: 'TheDash',
@@ -104,6 +105,9 @@ export default {
     },
 
     logout: function () {
+      api
+        .request('delete', '/user/logout', this.$store.state.token)
+
       this.$store.commit('SET_USER', null)
       this.$store.commit('SET_TOKEN', null)
       this.$store.commit('SET_ROLE', null)
@@ -116,7 +120,6 @@ export default {
         window.localStorage.setItem('watches', null)
         window.localStorage.setItem('watchIds', null)
       }
-
       this.$router.push('/login')
     }
   }

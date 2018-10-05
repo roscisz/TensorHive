@@ -39,56 +39,11 @@
         <span class="page">Users Overview</span>
       </a>
     </router-link>
-    <li class="header">PAGES</li>
-    <router-link
-      tag="li"
-      class="pageLink"
-      to="/login"
-    >
-      <a>
-        <i class="fa fa-circle-o text-yellow"></i>
-        <span class="page"> Login</span>
-      </a>
-    </router-link>
-    <router-link
-      tag="li"
-      class="pageLink"
-      to="/create"
-    >
-      <a>
-        <i class="fa fa-circle-o text-green"></i>
-        <span class="page"> Create</span>
-      </a>
-    </router-link>
-    <li
-      class="pageLink"
-    >
-      <a>
-        <i class="fa fa-circle-o text-red"></i>
-        <span @click="logout()" class="page"> Logout</span>
-      </a>
-    </li>
   </ul>
 </template>
 <script>
 export default {
-  name: 'BaseSidebarMenu',
-
-  methods: {
-    logout: function () {
-      this.$store.commit('SET_USER', null)
-      this.$store.commit('SET_TOKEN', null)
-      this.$store.commit('SET_ROLE', null)
-
-      if (window.localStorage) {
-        window.localStorage.setItem('user', null)
-        window.localStorage.setItem('token', null)
-        window.localStorage.setItem('role', null)
-      }
-
-      this.$router.push('/login')
-    }
-  }
+  name: 'BaseSidebarMenu'
 }
 </script>
 <style>
