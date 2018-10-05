@@ -77,6 +77,8 @@ paths:
           description: Successfully deleted.
         '500':
           $ref: '#/responses/InternalError'
+        '501':
+          $ref: '#/responses/InternalError'
       security:
           - Bearer: []
   /user/logout1:
@@ -89,6 +91,8 @@ paths:
         '201':
           description: Successfully deleted.
         '500':
+          $ref: '#/responses/InternalError'
+        '501':
           $ref: '#/responses/InternalError'
       security:
           - Bearer: []
