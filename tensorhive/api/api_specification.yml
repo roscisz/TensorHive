@@ -64,6 +64,8 @@ paths:
           $ref: '#/responses/NotFound'
         '500':
           $ref: '#/responses/InternalError'
+        '501':
+          $ref: '#/responses/InternalError'
       security:
           - Bearer: []
   /user/logout:
