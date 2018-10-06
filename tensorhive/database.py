@@ -24,7 +24,7 @@ def init_db() -> None:
     from tensorhive.models.User import User
     from tensorhive.models.reservation_event import ReservationEventModel
     from tensorhive.models.auth import RevokedTokenModel
-    from tensorhive.models.role import RoleModel
+    from tensorhive.models.Role import Role
     from tensorhive.cli import prompt_to_create_first_account
     
     if database_exists(DB.SQLALCHEMY_DATABASE_URI):

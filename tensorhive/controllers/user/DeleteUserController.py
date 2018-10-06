@@ -1,5 +1,5 @@
 from tensorhive.models.User import User
-from tensorhive.models.role.RoleModel import RoleModel
+from tensorhive.models.Role import Role
 from connexion import NoContent
 from flask_jwt_extended import get_raw_jwt
 from tensorhive.models.auth.RevokedTokenModel import RevokedTokenModel
@@ -9,7 +9,7 @@ class DeleteUserController():
     @staticmethod
     def delete(id):
         user = User.find_by_id(id)
-        found_admin_roles = RoleModel.find_by_user_id(id)
+        found_admin_roles = Role.find_by_user_id(id)
         if found_admin_roles is not None:
             for role in found_admin_roles:
                 if (role.name == 'admin'):

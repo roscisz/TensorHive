@@ -2,7 +2,7 @@ from flask_jwt_extended import JWTManager,verify_jwt_in_request,get_jwt_claims
 from tensorhive.models.auth.RevokedTokenModel import RevokedTokenModel
 from tensorhive.config import AUTH
 from functools import wraps
-from tensorhive.models.role.RoleModel import RoleModel
+from tensorhive.models.Role import Role
 
 
 def init_jwt(app):
@@ -21,7 +21,7 @@ def init_jwt(app):
         #current_user = UserModel.find_by_username(current_user_name)
         roles = []
         if current_user_id is not None:
-            found_users_roles = RoleModel.find_by_user_id(current_user_id)
+            found_users_roles = Role.find_by_user_id(current_user_id)
             if found_users_roles is not None:
                 for role in found_users_roles:
                     roles.append(role.name)

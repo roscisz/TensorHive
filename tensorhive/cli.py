@@ -115,7 +115,7 @@ def prompt_to_create_first_account():
     (called when the database has no users)
     '''
     from tensorhive.models.User import User
-    from tensorhive.models.role.RoleModel import RoleModel
+    from tensorhive.models.Role import Role
     import click
 
     # TODO Add color output
@@ -128,10 +128,10 @@ def prompt_to_create_first_account():
         new_user.save_to_db()
 
         # TODO Refactor roles, use only one role: admin (redundancy)
-        user_role = RoleModel(name='user', user_id=new_user.id)
+        user_role = Role(name='user', user_id=new_user.id)
         user_role.save_to_db()
         if make_admin:
-            admin_role = RoleModel(name='admin', user_id=new_user.id)
+            admin_role = Role(name='admin', user_id=new_user.id)
             admin_role.save_to_db()
 
         # TODO Handle failures
