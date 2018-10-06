@@ -1,5 +1,5 @@
-from flask_jwt_extended import JWTManager,verify_jwt_in_request,get_jwt_claims
-from tensorhive.models.auth.RevokedTokenModel import RevokedTokenModel
+from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_claims
+from tensorhive.models.RevokedToken import RevokedToken
 from tensorhive.config import AUTH
 from functools import wraps
 from tensorhive.models.Role import Role
@@ -14,7 +14,7 @@ def init_jwt(app):
     @jwt.token_in_blacklist_loader
     def is_token_on_blacklist(decrypted_token):
         jti = decrypted_token['jti']
-        return RevokedTokenModel.is_jti_blacklisted(jti)
+        return RevokedToken.is_jti_blacklisted(jti)
 
     @jwt.user_claims_loader
     def add_claims_to_access_token(current_user_id):

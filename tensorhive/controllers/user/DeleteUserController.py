@@ -2,7 +2,7 @@ from tensorhive.models.User import User
 from tensorhive.models.Role import Role
 from connexion import NoContent
 from flask_jwt_extended import get_raw_jwt
-from tensorhive.models.auth.RevokedTokenModel import RevokedTokenModel
+from tensorhive.models.RevokedToken import RevokedToken
 
 class DeleteUserController():
 
@@ -23,7 +23,7 @@ class DeleteUserController():
             else:
                 jti = get_raw_jwt()['jti']
                 try:
-                    revoked_token = RevokedTokenModel(jti=jti)
+                    revoked_token = RevokedToken(jti=jti)
                 except:
                     return {
                                'msg': 'Token has not been revoked due to error'

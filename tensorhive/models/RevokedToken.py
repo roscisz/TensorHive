@@ -5,7 +5,7 @@ from tensorhive.database import Base, db_session
 import logging
 log = logging.getLogger(__name__)
 
-class RevokedTokenModel(Base):
+class RevokedToken(Base):
     __tablename__ = 'revoked_tokens'
     id = Column(Integer, primary_key=True, autoincrement=True)
     jti = Column(String(120), unique=True, nullable=False)

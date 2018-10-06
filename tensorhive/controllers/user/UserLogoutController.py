@@ -1,5 +1,5 @@
 from flask_jwt_extended import get_raw_jwt
-from tensorhive.models.auth.RevokedTokenModel import RevokedTokenModel
+from tensorhive.models.RevokedToken import RevokedToken
 from connexion import NoContent
 
 class LogoutUserController():
@@ -8,7 +8,7 @@ class LogoutUserController():
     def delete_logout(token_type):
         jti = get_raw_jwt()['jti']
         try:
-            revoked_token = RevokedTokenModel(jti=jti)
+            revoked_token = RevokedToken(jti=jti)
         except:
             return {
                 'msg': '{} token has not been revoked due to error'.format(token_type)

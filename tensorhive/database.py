@@ -23,7 +23,7 @@ def init_db() -> None:
     # they could be registered properly on the metadata.
     from tensorhive.models.User import User
     from tensorhive.models.reservation_event import ReservationEventModel
-    from tensorhive.models.auth import RevokedTokenModel
+    from tensorhive.models.RevokedToken import RevokedToken
     from tensorhive.models.Role import Role
     from tensorhive.cli import prompt_to_create_first_account
     
