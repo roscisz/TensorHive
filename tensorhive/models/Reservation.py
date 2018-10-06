@@ -9,7 +9,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class ReservationEventModel(Base):
+class Reservation(Base):
     __tablename__ = 'reservation_events'
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id'))
@@ -123,10 +123,11 @@ class ReservationEventModel(Base):
 
     @classmethod
     def filter_by_uuids_and_time_range(cls, uuids, start, end):
-        match_uuids = cls.resource_id.in_(uuids)
-        match_after_start = cls.start <= end
-        match_before_end = start <= cls.end
-        return cls.query.filter(and_(match_uuids, match_after_start, match_before_end)).all()
+        uuid_filter = cls.resource_id.in_(uuids)
+        after_start_filter = cls.start <= end
+        before_end_filter = start <= cls.end
+        matching_conditions = and_(uuid_filter, after_start_filter, before_end_filter)
+        return cls.query.filter(matching_conditions).all()
 
     @classmethod
     def delete_by_id(cls, id):

@@ -14,7 +14,7 @@ class User(Base):
     username = Column(String(40), unique=True, nullable=False)
     password = Column(String(120), nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    reservations = relationship('ReservationEventModel', backref='user')
+    reservations = relationship('Reservation', backref='user')
     # TODO updated_at, role
 
     def __repr__(self):

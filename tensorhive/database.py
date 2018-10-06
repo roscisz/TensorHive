@@ -22,7 +22,7 @@ def init_db() -> None:
     # Import all modules that define models so that
     # they could be registered properly on the metadata.
     from tensorhive.models.User import User
-    from tensorhive.models.reservation_event import ReservationEventModel
+    from tensorhive.models.Reservation import Reservation
     from tensorhive.models.RevokedToken import RevokedToken
     from tensorhive.models.Role import Role
     from tensorhive.cli import prompt_to_create_first_account

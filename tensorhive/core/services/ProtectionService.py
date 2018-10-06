@@ -1,5 +1,5 @@
 from tensorhive.core.services.Service import Service
-from tensorhive.models.reservation_event.ReservationEventModel import ReservationEventModel
+from tensorhive.models.Reservation import Reservation
 from tensorhive.models.User import User
 from tensorhive.core.utils.decorators.override import override
 from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
@@ -139,7 +139,7 @@ class ProtectionService(Service):
         start_time = time_func()
 
         # 1. Get list of current reservations
-        current_reservations = ReservationEventModel.current_events()
+        current_reservations = Reservation.current_events()
 
         # DEBUG ONLY
         __reservations_as_dict = [r.as_dict for r in current_reservations]

@@ -1,4 +1,4 @@
-from tensorhive.models.reservation_event.ReservationEventModel import ReservationEventModel
+from tensorhive.models.Reservation import Reservation
 from tensorhive.models.User import User
 from connexion import NoContent
 from flask import jsonify
@@ -8,7 +8,7 @@ class CreateReservationEventController():
 
     @staticmethod
     def create(reservation):
-        new_reservation = ReservationEventModel(
+        new_reservation = Reservation(
             title=reservation['title'],
             description=reservation['description'],
             resource_id=reservation['resourceId'],
