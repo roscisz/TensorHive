@@ -159,7 +159,7 @@ class AUTH:
         'JWT_BLACKLIST_ENABLED': config.getboolean(section, 'jwt_blacklist_enabled', fallback=True),
         'JWT_BLACKLIST_TOKEN_CHECKS': config_get_parsed('jwt_blacklist_token_checks', fallback=['access', 'refresh']),
         'BUNDLE_ERRORS': config.getboolean(section, 'bundle_errors', fallback=True),
-        'JWT_ACCESS_TOKEN_EXPIRES': timedelta(minutes=config.getint(section, 'jwt_access_token_expires', fallback=15)),
-        'JWT_REFRESH_TOKEN_EXPIRES': timedelta(days=config.getint(section, 'jwt_refresh_token_expires', fallback=30)),
+        'JWT_ACCESS_TOKEN_EXPIRES': timedelta(minutes=config.getint(section, 'jwt_access_token_expires_minutes', fallback=1)),
+        'JWT_REFRESH_TOKEN_EXPIRES': timedelta(days=config.getint(section, 'jwt_refresh_token_expires_days', fallback=1)),
         'JWT_TOKEN_LOCATION': config_get_parsed('jwt_token_location', fallback=['headers'])
     }
