@@ -12,17 +12,6 @@ class Role(CRUDModel, Base):
     name = Column(String(40), nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'))
 
-    def save_to_db(self):
-        try:
-            db_session.add(self)
-            db_session.commit()
-            log.debug('Created {}'.format(self))
-            return True
-        except SQLAlchemyError as e:
-            db_session.rollback()
-            log.error(e.__cause__)
-            return False
-
     @classmethod
     def find_by_name(cls, name):
         return cls.query.filter_by(name=name).first()

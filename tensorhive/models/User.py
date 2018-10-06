@@ -43,28 +43,6 @@ class User(CRUDModel, Base):
     def password(self, raw_password: str):
         self._hashed_password = sha256.hash(raw_password)
 
-    def save_to_db(self):
-        try:
-            db_session.add(self)
-            db_session.commit()
-            log.debug('Created {}'.format(self))
-            return True
-        except SQLAlchemyError as e:
-            db_session.rollback()
-            log.error(e.__cause__)
-            return False
-
-    def delete_from_db(self):
-        try:
-            db_session.delete(self)
-            db_session.commit()
-            log.debug('Deleted {}'.format(self))
-            return True
-        except SQLAlchemyError as e:
-            db_session.rollback()
-            log.error(e.__cause__)
-            return False
-
     @classmethod
     def find_by_username(cls, username):
         return cls.query.filter_by(username=username).first()

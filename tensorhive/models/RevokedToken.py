@@ -17,17 +17,6 @@ class RevokedToken(CRUDModel, Base):
             id=self.id,
             jti=self.jti)
 
-
-    def save_to_db(self):
-        try:
-            db_session.add(self)
-            db_session.commit()
-            return True
-        except SQLAlchemyError as e:
-            db_session.rollback()
-            log.error(e.__cause__)
-            return False
-
     @classmethod
     def is_jti_blacklisted(cls, jti):
         query = cls.query.filter_by(jti=jti).first()

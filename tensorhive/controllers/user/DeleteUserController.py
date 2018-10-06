@@ -1,36 +1,35 @@
 from tensorhive.models.User import User
 from tensorhive.models.Role import Role
 from connexion import NoContent
-from flask_jwt_extended import get_raw_jwt
+from flask_jwt_extended import get_raw_jwt, get_jwt_identity
 from tensorhive.models.RevokedToken import RevokedToken
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 class DeleteUserController():
 
     @staticmethod
     def delete(id):
-        user = User.find_by_id(id)
-        found_admin_roles = Role.find_by_user_id(id)
-        if found_admin_roles is not None:
-            for role in found_admin_roles:
-                if (role.name == 'admin'):
-                    return NoContent, 403
-        else:
-            return NoContent, 500
+        try:
+            if id == get_jwt_identity():
+                # User is not allowed to delete his own account
+                raise AssertionError('Cannot delete current account')
 
-        if user is not None:
-            if not user.delete_from_db():
-                return NoContent, 500
-            else:
-                jti = get_raw_jwt()['jti']
-                try:
-                    revoked_token = RevokedToken(jti=jti)
-                except:
-                    return {
-                               'msg': 'Token has not been revoked due to error'
-                           }, 501
+            current_user = User.get(get_jwt_identity())
+            if not current_user.has_role('admin'):
+                # Admin priviliges are required
+                raise AssertionError('Must have admin rights')
 
-                if not revoked_token.save_to_db():
-                    return NoContent, 500
+            user = User.get(id)
+            user.destroy()
+            # FIXME Since we use JWT, there's no easy way to revoke tokens of deleted user
+        except AssertionError as error_message:
+            content, status = str(error_message), 403
+        except NoResultFound:
+            content, status = 'Not found', 404
+        except (MultipleResultsFound, SQLAlchemyError):
+            content, status = 'Internal error', 500
         else:
-            return NoContent, 404
-        return NoContent, 204
+            content, status = NoContent, 204
+        finally:
+            return content, status

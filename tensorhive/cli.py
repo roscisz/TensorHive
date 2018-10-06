@@ -114,6 +114,7 @@ def prompt_to_create_first_account():
     Asks whether a user wants to create an account
     (called when the database has no users)
     '''
+    from sqlalchemy.exc import SQLAlchemyError
     from tensorhive.models.User import User
     from tensorhive.models.Role import Role
     import click
@@ -124,15 +125,13 @@ def prompt_to_create_first_account():
         password = click.prompt('[2/3] password', type=str, hide_input=True)
         make_admin = click.confirm('[3/3] admin account?', default=False)
 
-        new_user = User(username=username, password=password)
-        new_user.save_to_db()
-
-        # TODO Refactor roles, use only one role: admin (redundancy)
-        user_role = Role(name='user', user_id=new_user.id)
-        user_role.save_to_db()
-        if make_admin:
-            admin_role = Role(name='admin', user_id=new_user.id)
-            admin_role.save_to_db()
-
-        # TODO Handle failures
-        click.echo('Account created successfully! Resuming...')
+        try:
+            # TODO Refactor roles, use only one role: admin (redundancy)
+            new_user = User.create(username=username, password=password)
+            Role.create(name='user', user_id=new_user.id)
+            if make_admin:
+                Role.create(name='admin', user_id=new_user.id)
+        except SQLAlchemyError:
+            click.echo('Account creation failed due to an error, resuming...')
+        else:
+            click.echo('Account created successfully, resuming...')
