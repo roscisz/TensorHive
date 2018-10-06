@@ -28,7 +28,7 @@ def init_db() -> None:
     from tensorhive.cli import prompt_to_create_first_account
     
     if database_exists(DB.SQLALCHEMY_DATABASE_URI):
-        if database_has_no_users():
+        if User.query.count() == 0:
             prompt_to_create_first_account()
         log.info('[•] Database found ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
     else:
@@ -36,13 +36,3 @@ def init_db() -> None:
         Base.metadata.create_all(bind=engine, checkfirst=True)
         log.info('[✔] Database created ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
         prompt_to_create_first_account()
-
-
-def database_has_no_users() -> bool:
-    from tensorhive.models.User import User
-    from sqlalchemy.orm.exc import NoResultFound
-    try:
-        User.query.one()
-        return False
-    except NoResultFound:
-        return True
