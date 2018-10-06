@@ -25,44 +25,24 @@ def init_db() -> None:
     from tensorhive.models.reservation_event import ReservationEventModel
     from tensorhive.models.auth import RevokedTokenModel
     from tensorhive.models.role import RoleModel
+    from tensorhive.cli import prompt_to_create_first_account
     
-
     if database_exists(DB.SQLALCHEMY_DATABASE_URI):
         if database_has_no_users():
-            log.info('[•] Admin has not been found.')
-            create_admin()
+            prompt_to_create_first_account()
         log.info('[•] Database found ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
-
     else:
         # Double check via checkfirst=True (does not execute CREATE query on tables which already exist)
         Base.metadata.create_all(bind=engine, checkfirst=True)
         log.info('[✔] Database created ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
-        create_admin()
+        prompt_to_create_first_account()
 
-def create_admin():
-    import click
-    from tensorhive.models.user.UserModel import UserModel
-    from tensorhive.models.role.RoleModel import RoleModel
+
+def database_has_no_users() -> bool:
+    from tensorhive.models.User import User
     from sqlalchemy.orm.exc import NoResultFound
-
     try:
-        UserModel.query.one()
+        User.query.one()
+        return False
     except NoResultFound:
-        # User table is empty
-        # TODO Add color output
-        if click.confirm('''Database has no users. Would you like to create Administrator account now?''', abort=False):
-            username = click.prompt('username', type=str)
-            password = click.prompt('password', type=str, hide_input=True)
-
-            new_user = UserModel(username=username, password=UserModel.generate_hash(password))
-            new_user.save_to_db()
-
-            # TODO Refactor roles, use only one role: admin (redundancy)
-            admin_role = RoleModel(name='admin', user_id=new_user.id)
-            user_role = RoleModel(name='user', user_id=new_user.id)
-
-            admin_role.save_to_db()
-            user_role.save_to_db()
-
-            # TODO Handle failures
-            click.echo('Account created successfully! Resuming...')
+        return True
