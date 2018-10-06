@@ -1,4 +1,4 @@
-from tensorhive.models.user.UserModel import UserModel
+from tensorhive.models.User import User
 from connexion import NoContent
 from flask_jwt_extended import create_access_token, create_refresh_token
 
@@ -8,12 +8,12 @@ class LoginUserController():
 
     @staticmethod
     def login(user):
-        current_user = UserModel.find_by_username(user['username'])
+        current_user = User.find_by_username(user['username'])
         if not current_user:
             # Duplicated resource
             return NoContent, 405
 
-        if UserModel.verify_hash(user['password'], current_user.password):
+        if User.verify_hash(user['password'], current_user.password):
             access_token = create_access_token(identity=current_user.id, fresh=True)
             refresh_token = create_refresh_token(identity=current_user.id)
             return {

@@ -1,4 +1,4 @@
-from tensorhive.models.user.UserModel import UserModel
+from tensorhive.models.User import User
 
 
 class ListUsersController():
@@ -6,5 +6,5 @@ class ListUsersController():
     @staticmethod
     def get():
         return [
-            user.as_dict for user in UserModel.query.all()
+            user.as_dict for user in User.query.all()
         ], 200

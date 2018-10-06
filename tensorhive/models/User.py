@@ -8,7 +8,7 @@ from tensorhive.database import Base, db_session
 import logging
 log = logging.getLogger(__name__)
 
-class UserModel(Base):
+class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
@@ -45,7 +45,6 @@ class UserModel(Base):
             log.error(e.__cause__)
             return False
             
-
     @classmethod
     def find_by_username(cls, username):
         return cls.query.filter_by(username=username).first()

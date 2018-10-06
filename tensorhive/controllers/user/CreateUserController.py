@@ -1,4 +1,4 @@
-from tensorhive.models.user.UserModel import UserModel
+from tensorhive.models.User import User
 from tensorhive.models.role.RoleModel import RoleModel
 from connexion import NoContent
 from flask_jwt_extended import create_access_token, create_refresh_token
@@ -8,13 +8,13 @@ class CreateUserController():
 
     @staticmethod
     def create(user):
-        if UserModel.find_by_username(user['username']):
+        if User.find_by_username(user['username']):
             # Duplicated resource
             return NoContent, 409
 
-        new_user = UserModel(
+        new_user = User(
             username = user['username'],
-            password = UserModel.generate_hash(user['password'])
+            password = User.generate_hash(user['password'])
         )
 
         if new_user.save_to_db():

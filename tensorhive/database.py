@@ -21,14 +21,14 @@ def init_db() -> None:
     '''Creates the database, tables (if they does not exist)'''
     # Import all modules that define models so that
     # they could be registered properly on the metadata.
-    from tensorhive.models.user import UserModel
+    from tensorhive.models.User import User
     from tensorhive.models.reservation_event import ReservationEventModel
     from tensorhive.models.auth import RevokedTokenModel
     from tensorhive.models.role import RoleModel
-    from tensorhive.models.user.UserModel import UserModel
+    
 
     if database_exists(DB.SQLALCHEMY_DATABASE_URI):
-        if not UserModel.find_by_username('admin'):
+        if database_has_no_users():
             log.info('[•] Admin has not been found.')
             create_admin()
         log.info('[•] Database found ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))

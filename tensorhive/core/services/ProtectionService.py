@@ -1,6 +1,6 @@
 from tensorhive.core.services.Service import Service
 from tensorhive.models.reservation_event.ReservationEventModel import ReservationEventModel
-from tensorhive.models.user.UserModel import UserModel
+from tensorhive.models.User import User
 from tensorhive.core.utils.decorators.override import override
 from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.managers.SSHConnectionManager import SSHConnectionManager
@@ -150,7 +150,7 @@ class ProtectionService(Service):
             # 1. Extract reservation info
             uuid = reservation.resource_id
             hostname = self.find_hostname(uuid)
-            username = UserModel.find_by_id(reservation.user_id).username
+            username = User.find_by_id(reservation.user_id).username
             if hostname is None or username is None:
                 log.warning('Unable to process the reservation ({}@{}), skipping...'.format(username, hostname))
                 continue

@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, CheckConst
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.orm import validates
 from tensorhive.database import Base, db_session
-from tensorhive.models.user.UserModel import UserModel
+from tensorhive.models.User import User
 import logging
 log = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ class ReservationEventModel(Base):
         return True
 
     def _validate_user_existence(self):
-        if not UserModel.find_by_id(self.user_id):
+        if not User.find_by_id(self.user_id):
             raise AssertionError(
                 'User with id={} does not exist'.format(self.user_id))
 
