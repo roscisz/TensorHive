@@ -15,12 +15,24 @@ class User(Base):
     _hashed_password = Column(String(120), nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     reservations = relationship('Reservation', backref='user')
-    # TODO updated_at, role
+    _roles = relationship('Role', cascade='all,delete', backref='user')
+    # TODO Default role
 
     def __repr__(self):
         return '<User id={id}, username={username}>'.format(
             id=self.id, 
             username=self.username)
+
+    @property
+    def roles(self):
+        return self._roles
+
+    @property
+    def role_names(self):
+        return [role.name for role in self._roles]
+
+    def has_role(self, role_name):
+        return bool(role_name in self.role_names)
 
     @property
     def password(self):
