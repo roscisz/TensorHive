@@ -12,7 +12,7 @@ class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
-    password = Column(String(120), nullable=False)
+    _hashed_password = Column(String(120), nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     reservations = relationship('Reservation', backref='user')
     # TODO updated_at, role
@@ -22,6 +22,13 @@ class User(Base):
             id=self.id, 
             username=self.username)
 
+    @property
+    def password(self):
+        return self._hashed_password
+
+    @password.setter
+    def password(self, raw_password: str):
+        self._hashed_password = sha256.hash(raw_password)
 
     def save_to_db(self):
         try:
@@ -44,7 +51,7 @@ class User(Base):
             db_session.rollback()
             log.error(e.__cause__)
             return False
-            
+
     @classmethod
     def find_by_username(cls, username):
         return cls.query.filter_by(username=username).first()
@@ -80,10 +87,6 @@ class User(Base):
     #         return {'message': '{} user(s) deleted'.format(num_rows_deleted)}
     #     except:
     #         return {'message': 'Deleting all users operation failed'}
-
-    @staticmethod
-    def generate_hash(password):
-        return sha256.hash(password)
 
     @staticmethod
     def verify_hash(password, hash):

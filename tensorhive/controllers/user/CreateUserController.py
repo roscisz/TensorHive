@@ -12,7 +12,7 @@ class CreateUserController():
             # Duplicated resource
             return NoContent, 409
 
-        new_user = User(username=user['username'], password=User.generate_hash(user['password']))
+        new_user = User(username=user['username'], password=user['password'])
 
         if new_user.save_to_db():
             new_role = Role(name='user', user_id=new_user.id)

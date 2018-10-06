@@ -124,7 +124,7 @@ def prompt_to_create_first_account():
         password = click.prompt('[2/3] password', type=str, hide_input=True)
         make_admin = click.confirm('[3/3] admin account?', default=False)
 
-        new_user = User(username=username, password=User.generate_hash(password))
+        new_user = User(username=username, password=password)
         new_user.save_to_db()
 
         # TODO Refactor roles, use only one role: admin (redundancy)
