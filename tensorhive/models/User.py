@@ -5,10 +5,11 @@ from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from tensorhive.database import Base, db_session
+from tensorhive.models.CRUDModel import CRUDModel
 import logging
 log = logging.getLogger(__name__)
 
-class User(Base):
+class User(CRUDModel, Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)

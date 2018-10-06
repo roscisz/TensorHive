@@ -1,11 +1,12 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.exc import SQLAlchemyError
 from tensorhive.database import Base, db_session
+from tensorhive.models.CRUDModel import CRUDModel
 import logging
 log = logging.getLogger(__name__)
 
 
-class Role(Base):
+class Role(CRUDModel, Base):
     __tablename__ = 'roles'
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(40), nullable=False)

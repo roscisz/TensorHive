@@ -150,7 +150,7 @@ class ProtectionService(Service):
             # 1. Extract reservation info
             uuid = reservation.resource_id
             hostname = self.find_hostname(uuid)
-            username = User.find_by_id(reservation.user_id).username
+            username = User.get(reservation.user_id).username
             if hostname is None or username is None:
                 log.warning('Unable to process the reservation ({}@{}), skipping...'.format(username, hostname))
                 continue

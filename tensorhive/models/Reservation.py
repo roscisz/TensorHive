@@ -69,7 +69,7 @@ class Reservation(Base):
         return True
 
     def _validate_user_existence(self):
-        if not User.find_by_id(self.user_id):
+        if not User.get(self.user_id):
             raise AssertionError(
                 'User with id={} does not exist'.format(self.user_id))
 
