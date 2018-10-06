@@ -107,3 +107,32 @@ def run(ctx, log_level):
         manager.shutdown()
         webapp_server.join()
         sys.exit()
+
+
+def prompt_to_create_first_account():
+    '''
+    Asks whether a user wants to create an account
+    (called when the database has no users)
+    '''
+    from tensorhive.models.User import User
+    from tensorhive.models.role.RoleModel import RoleModel
+    import click
+
+    # TODO Add color output
+    if click.confirm('Database has no users. Would you like to create an account now?', default=True):
+        username = click.prompt('[1/3] username', type=str)
+        password = click.prompt('[2/3] password', type=str, hide_input=True)
+        make_admin = click.confirm('[3/3] admin account?', default=False)
+
+        new_user = User(username=username, password=User.generate_hash(password))
+        new_user.save_to_db()
+
+        # TODO Refactor roles, use only one role: admin (redundancy)
+        user_role = RoleModel(name='user', user_id=new_user.id)
+        user_role.save_to_db()
+        if make_admin:
+            admin_role = RoleModel(name='admin', user_id=new_user.id)
+            admin_role.save_to_db()
+
+        # TODO Handle failures
+        click.echo('Account created successfully! Resuming...')
