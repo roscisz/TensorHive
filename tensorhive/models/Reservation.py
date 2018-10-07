@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 class Reservation(Base):
     __tablename__ = 'reservation_events'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     title = Column(String(60), unique=False, nullable=False)
     description = Column(String(200), nullable=True)
     resource_id = Column(String(60), nullable=False)
@@ -69,9 +69,8 @@ class Reservation(Base):
 
     def save_to_db(self):
         try:
-            self._parse_client_time_format()
-            self._validate_user_existence()
-            self._validate_time_range()
+            if not self.user_id:
+                raise AssertionError('Reservation has no user assigned!')
             self._check_for_collisions()
 
             db_session.add(self)
