@@ -1,10 +1,9 @@
-import logging
-import connexion
 from tensorhive.config import API, API_SERVER
 from tensorhive.database import db_session
 from flask_cors import CORS
 from tensorhive.authorization import init_jwt
-
+import connexion
+import logging
 log = logging.getLogger(__name__)
 
 
@@ -39,6 +38,7 @@ class APIServer():
 
 def start_api_server():
     APIServer().run_forever()
+
 
 if __name__ == '__main__':
     start_api_server()

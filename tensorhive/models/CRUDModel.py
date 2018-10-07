@@ -13,6 +13,7 @@ class CRUDModel:
         try:
             db_session.add(new_object)
             db_session.commit()
+        # OperationalError
         except SQLAlchemyError as e:
             db_session.rollback()
             log.error('{cause} with {data}'.format(cause=e.__cause__, data=new_object))
