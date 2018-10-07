@@ -3,8 +3,7 @@ import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-from tensorhive.database import Base, db_session
+from tensorhive.database import Base
 from tensorhive.models.CRUDModel import CRUDModel
 from sqlalchemy.orm import validates
 from usernames import is_safe_username
@@ -72,25 +71,6 @@ class User(CRUDModel, Base):
             'username': self.username,
             'createdAt': self.created_at.isoformat()
         }
-
-    # Not implemented yet
-    # @classmethod
-    # def get_count(cls):
-    #     count_q = self.statement.with_only_columns([func.count()]).order_by(None)
-    #     count = q.session.execute(count_q).scalar()
-    #     return count
-
-    #     users_list = list(map(lambda user: as_json(user), all_users))
-    #     return {'users': users_list}
-
-    # @classmethod
-    # def delete_all(cls):
-    #     try:
-    #         num_rows_deleted = db.session.query(cls).delete()
-    #         db.session.commit()
-    #         return {'message': '{} user(s) deleted'.format(num_rows_deleted)}
-    #     except:
-    #         return {'message': 'Deleting all users operation failed'}
 
     @staticmethod
     def verify_hash(password, hash):
