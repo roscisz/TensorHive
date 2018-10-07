@@ -5,6 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.orm import validates
 from tensorhive.database import Base, db_session
 from tensorhive.models.User import User
+from sqlalchemy.ext.hybrid import hybrid_property
 import logging
 log = logging.getLogger(__name__)
 
@@ -25,6 +26,10 @@ class Reservation(Base):
     __display_datetime_format = '%Y-%m-%dT%H:%M:%S'
     __server_timezone = '+00:00'
     __min_reservation_time = datetime.timedelta(minutes=30)
+
+    @hybrid_property
+    def duration(self):
+        return self.end - self.start
 
     def __repr__(self):
         return '<ReservationEvent id={id}, user={user}, \n \
