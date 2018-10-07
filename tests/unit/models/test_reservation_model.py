@@ -38,14 +38,14 @@ def test_valid_string_time_format(db_session, faker, valid_user):
     starts_at = starts_at.strftime(valid_format)  # type: str
     ends_at = ends_at.strftime(valid_format)  # type: str
 
-    Reservation(
+    Reservation.create(
         start=starts_at,
         end=ends_at,
         title='asd',
         description='',
         resource_id='UUID',
         user_id=valid_user.id
-    ).save_to_db()
+    ).save()
 
 
 @pytest.mark.usefixtures('faker')
@@ -76,13 +76,12 @@ def test_invalid_start_time_format(db_session, faker, valid_user):
 def test_valid_reservation_creation(db_session, faker, duration_in_minutes, valid_user):
     starts_at = faker.future_datetime()
     duration = datetime.timedelta(minutes=duration_in_minutes)
-    reservation = Reservation(
+    reservation = Reservation.create(
         start=starts_at,
         end=starts_at + duration,
         title='asd',
         description='',
         resource_id='UUID',
         user_id=valid_user.id
-    )
-    reservation.save_to_db()
+    ).save()
     assert reservation.duration == duration

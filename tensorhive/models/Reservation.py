@@ -32,8 +32,8 @@ class Reservation(CRUDModel, Base):
 
     @classmethod
     def validate_columns(cls, new_object):
-        return
-        raise AssertionError('Validate coumns example error')
+        if new_object.title == 'asd':
+            raise AssertionError('Validate coumns example error')
 
     @hybrid_property
     def duration(self):
