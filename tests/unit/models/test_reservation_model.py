@@ -13,7 +13,7 @@ def test_invalid_reservation_time_range(db_session, faker):
             end=faker.past_datetime(start_date='-1d'),
             title='asd',
             description='',
-            resource_id='UUID'
+            resource_id='UUID',
         )
     with pytest.raises(AssertionError):
         # Duration is too short
@@ -26,3 +26,63 @@ def test_invalid_reservation_time_range(db_session, faker):
             description='',
             resource_id='UUID'
         )
+
+
+@pytest.mark.usefixtures('faker')
+def test_valid_string_time_format(db_session, faker, valid_user):
+    starts_at = faker.future_datetime(end_date='+1d')
+    ends_at = starts_at + datetime.timedelta(minutes=400)
+
+    # Convert datetime to string
+    valid_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+    starts_at = starts_at.strftime(valid_format)  # type: str
+    ends_at = ends_at.strftime(valid_format)  # type: str
+
+    Reservation(
+        start=starts_at,
+        end=ends_at,
+        title='asd',
+        description='',
+        resource_id='UUID',
+        user_id=valid_user.id
+    ).save_to_db()
+
+
+@pytest.mark.usefixtures('faker')
+def test_invalid_start_time_format(db_session, faker, valid_user):
+    starts_at = faker.future_datetime()
+    ends_at = starts_at + datetime.timedelta(minutes=400)
+
+    # Convert datetime to string
+    invalid_format = '%Y_%m_%dT%H:%M:%S.%fZ'
+    starts_at = starts_at.strftime(invalid_format)  # type: str
+    ends_at = ends_at.strftime(invalid_format)  # type: str
+
+    with pytest.raises(ValueError):
+        Reservation(
+            start=starts_at,
+            end=ends_at,
+            title='asd',
+            description='',
+            resource_id='UUID',
+            #user_id=valid_user.id
+        )
+
+
+@pytest.mark.parametrize('duration_in_minutes', [
+    30, 31, 40, 120, 9999
+])
+@pytest.mark.usefixtures('faker')
+def test_valid_reservation_creation(db_session, faker, duration_in_minutes, valid_user):
+    starts_at = faker.future_datetime()
+    duration = datetime.timedelta(minutes=duration_in_minutes)
+    reservation = Reservation(
+        start=starts_at,
+        end=starts_at + duration,
+        title='asd',
+        description='',
+        resource_id='UUID',
+        user_id=valid_user.id
+    )
+    reservation.save_to_db()
+    assert reservation.duration == duration
