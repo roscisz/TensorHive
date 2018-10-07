@@ -39,3 +39,34 @@ def db_session(engine, tables):
     session.close()
     transaction.rollback()
     connection.close()
+
+
+@pytest.fixture
+@pytest.mark.usefixtures('db_session')
+def valid_user(db_session):
+    from tensorhive.models.User import User
+    user = User(username='foobar', password='irrelevent_password')
+    db_session.add(user)
+    db_session.commit()
+    return user
+
+
+@pytest.fixture
+@pytest.mark.usefixtures('db_session')
+def valid_reservation(db_session, valid_user):
+    from tensorhive.models.Reservation import Reservation
+    import datetime
+    starts_at = datetime.datetime.now()
+    duration = datetime.timedelta(minutes=30)
+
+    reservation = Reservation(
+        start=starts_at,
+        end=starts_at + duration,
+        title='asd',
+        description='',
+        resource_id='UUID',
+        user_id=valid_user.id
+    )
+    db_session.add(reservation)
+    db_session.commit()
+    return reservation
