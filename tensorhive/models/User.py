@@ -2,11 +2,12 @@ from passlib.hash import pbkdf2_sha256 as sha256
 import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from tensorhive.database import Base
 from tensorhive.models.CRUDModel import CRUDModel
 from sqlalchemy.orm import validates
 from usernames import is_safe_username
+from sqlalchemy.ext.hybrid import hybrid_property
 import logging
 log = logging.getLogger(__name__)
 
@@ -17,8 +18,8 @@ class User(CRUDModel, Base):
     username = Column(String(40), unique=True, nullable=False)
     _hashed_password = Column(String(120), nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    reservations = relationship('Reservation', backref='user')
-    _roles = relationship('Role', cascade='all,delete', backref='user')
+    reservations = relationship('Reservation', cascade='all,delete', backref=backref('user'))
+    _roles = relationship('Role', cascade='all,delete', backref=backref('user'))
     # TODO Default role
 
     def __repr__(self):
