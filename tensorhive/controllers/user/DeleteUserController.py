@@ -6,6 +6,7 @@ from tensorhive.models.RevokedToken import RevokedToken
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
+
 class DeleteUserController():
 
     @staticmethod
@@ -22,14 +23,13 @@ class DeleteUserController():
 
             user = User.get(id)
             user.destroy()
-            # FIXME Since we use JWT, there's no easy way to revoke tokens of deleted user
         except AssertionError as error_message:
             content, status = str(error_message), 403
         except NoResultFound:
-            content, status = 'Not found', 404
+            content, status = 'Not Found', 404
         except (MultipleResultsFound, SQLAlchemyError):
-            content, status = 'Internal error', 500
+            content, status = 'Internal Error.', 500
         else:
-            content, status = NoContent, 204
+            content, status = 'Successfully deleted.', 204
         finally:
-            return content, status
+            return {'msg': content}, status

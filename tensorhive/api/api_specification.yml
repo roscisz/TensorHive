@@ -107,6 +107,8 @@ paths:
       responses:
         '201':
           description: Successfully refreshed.
+        403:
+          $ref: '#/responses/Forbidden'
         '500':
           $ref: '#/responses/InternalError'
       security:
@@ -364,6 +366,8 @@ responses:
     description: Bad Request
   NoPermission:
     description: User can not do that.
+  Forbidden:
+    description: Forbidden
 
 parameters:
   hostnameParam:
