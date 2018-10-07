@@ -6,8 +6,11 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from tensorhive.database import Base, db_session
 from tensorhive.models.CRUDModel import CRUDModel
+from sqlalchemy.orm import validates
+from usernames import is_safe_username
 import logging
 log = logging.getLogger(__name__)
+
 
 class User(CRUDModel, Base):
     __tablename__ = 'users'
@@ -50,6 +53,16 @@ class User(CRUDModel, Base):
     @classmethod
     def find_by_id(cls, id):
         return cls.query.filter_by(id=id).first()
+
+    @validates('username')
+    def validate_username(self, key, username):
+        if not is_safe_username(username):
+            raise AssertionError('Invalid username')
+
+        if len(username) < 5 or len(username) > 20:
+            raise AssertionError('Username must be between 5 and 20 characters')
+
+        return username
 
     @property
     def as_dict(self):

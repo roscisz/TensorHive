@@ -3,15 +3,27 @@ from sqlalchemy.exc import OperationalError, IntegrityError
 from tensorhive.models.User import User
 
 
-# @pytest.mark.parametrize('test_username', [
-#     'foobar',
-#     '_____',
-#     'zzzzz',
-# ])
+@pytest.mark.parametrize('_reason, test_username', [
+    ('too_short', 'a'),
+    ('too_long', 'a' * 21),
+    ('empty', ''),
+    ('sneaky', '         '),
+    ('special', '!@#$%^&*()[]{};<>?/'),
+    ('blacklisted', 'nonurlfriendly!!!'),
+    ('blacklisted', 'jerk'),
+])
+@pytest.mark.usefixtures('db_session')
+def test_exception_on_creating_user_with_invalid_username(db_session, _reason, test_username):
+    with pytest.raises(AssertionError):        
+        new_user = User(username=test_username, password='irrelevent_password')
+        db_session.add(new_user)
+        db_session.commit()
+
+
 @pytest.mark.usefixtures('db_session')
 def test_exception_on_creating_user_with_no_password(db_session):
     with pytest.raises(IntegrityError):
-        new_user = User(username='foo')
+        new_user = User(username='valid_username')
 
         db_session.add(new_user)
         db_session.commit()
@@ -20,7 +32,7 @@ def test_exception_on_creating_user_with_no_password(db_session):
 @pytest.mark.usefixtures('db_session')
 def test_exception_on_creating_user_with_not_unique_username(db_session):
     with pytest.raises(IntegrityError):
-        duplicated_username = 'foo'
+        duplicated_username = 'valid_username'
         password = 'irrelevant_password'
 
         existing_user = User(username=duplicated_username, password=password)
