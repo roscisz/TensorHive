@@ -1,9 +1,10 @@
 from flask_jwt_extended import create_access_token, get_jwt_identity
 from tensorhive.models.User import User
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
-
 import logging
 log = logging.getLogger(__name__)
+
+
 class CreateRefreshedUserTokenController():
 
     @staticmethod

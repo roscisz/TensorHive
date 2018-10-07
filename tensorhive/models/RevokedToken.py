@@ -6,11 +6,11 @@ from tensorhive.models.CRUDModel import CRUDModel
 import logging
 log = logging.getLogger(__name__)
 
+
 class RevokedToken(CRUDModel, Base):
     __tablename__ = 'revoked_tokens'
     id = Column(Integer, primary_key=True, autoincrement=True)
     jti = Column(String(120), unique=True, nullable=False)
-
 
     def __repr__(self):
         return '<RevokedToken: id={id}, jti={jti}>'.format(
