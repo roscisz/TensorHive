@@ -1,1 +1,2 @@
 python-usernames
+pytest-faker

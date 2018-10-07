@@ -3,6 +3,7 @@ from sqlalchemy.exc import OperationalError, IntegrityError
 from tensorhive.models.User import User
 
 
+# TODO May want to use faker fixture everywhere
 @pytest.mark.parametrize('_reason, test_username', [
     ('too_short', 'a'),
     ('too_long', 'a' * 21),
