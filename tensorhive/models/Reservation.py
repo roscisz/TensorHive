@@ -49,6 +49,17 @@ class Reservation(Base):
         current_time = datetime.datetime.utcnow()
         return cls.query.filter(and_(cls.start <= current_time, current_time <= cls.end)).all()
 
+    @validates('user_id')
+    def validate_user(self, key, field):
+        '''Check if user exists'''
+        try:
+            User.get(field)
+        except (NoResultFound, MultipleResultsFound) as e:
+            raise AssertionError(e)
+        else:
+            return field
+        
+
     def save_to_db(self):
         try:
             self._parse_client_time_format()

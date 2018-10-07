@@ -41,10 +41,10 @@ class CRUDModel:
         except MultipleResultsFound as e:
             msg = 'There are multiple {} records with the same id={}!'.format(cls.__name__, id)
             log.error(msg)
-            raise e
+            raise MultipleResultsFound(msg)
         except NoResultFound as e:
-            msg = 'There is no record with id={}!'.format(id)
+            msg = 'There is no record {} with id={}!'.format(cls.__name__, id)
             log.error(msg)
-            raise e
+            raise NoResultFound(msg)
         else:
             return result
