@@ -27,18 +27,18 @@ class User(CRUDModel, Base):
             id=self.id, 
             username=self.username)
 
-    @property
+    @hybrid_property
     def roles(self):
         return self._roles
 
-    @property
+    @hybrid_property
     def role_names(self):
         return [role.name for role in self._roles]
 
     def has_role(self, role_name):
         return bool(role_name in self.role_names)
 
-    @property
+    @hybrid_property
     def password(self):
         return self._hashed_password
 
