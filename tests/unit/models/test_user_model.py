@@ -14,7 +14,7 @@ from tensorhive.models.User import User
 ])
 @pytest.mark.usefixtures('db_session')
 def test_exception_on_creating_user_with_invalid_username(db_session, _reason, test_username):
-    with pytest.raises(AssertionError):        
+    with pytest.raises(AssertionError):
         new_user = User(username=test_username, password='irrelevent_password')
         db_session.add(new_user)
         db_session.commit()
