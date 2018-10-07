@@ -1,13 +1,11 @@
-import datetime
-
 from flask_jwt_extended import jwt_required
 from tensorhive.controllers.reservation_event.CreateReservationEventController import CreateReservationEventController
 from tensorhive.controllers.reservation_event.ListReservationEventsController import ListReservationEventsController
 from tensorhive.controllers.reservation_event.DestroyEventController import DestroyEventController
 
+
 @jwt_required
 def post(reservation_event):
-    '''Create new'''
     return CreateReservationEventController.create(reservation_event)
 
 
