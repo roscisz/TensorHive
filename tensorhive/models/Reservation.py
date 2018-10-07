@@ -6,13 +6,14 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm import validates
 from tensorhive.database import Base, db_session
 from tensorhive.models.User import User
+from tensorhive.models.CRUDModel import CRUDModel
 from sqlalchemy.orm import validates
 from sqlalchemy.ext.hybrid import hybrid_property
 import logging
 log = logging.getLogger(__name__)
 
 
-class Reservation(Base):
+class Reservation(CRUDModel, Base):
     __tablename__ = 'reservation_events'
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
@@ -28,6 +29,11 @@ class Reservation(Base):
     __display_datetime_format = '%Y-%m-%dT%H:%M:%S'
     __server_timezone = '+00:00'
     __min_reservation_time = datetime.timedelta(minutes=30)
+
+    @classmethod
+    def validate_columns(cls, new_object):
+        return
+        raise AssertionError('Validate coumns example error')
 
     @hybrid_property
     def duration(self):
@@ -56,21 +62,9 @@ class Reservation(Base):
         current_time = datetime.datetime.utcnow()
         return cls.query.filter(and_(cls.start <= current_time, current_time <= cls.end)).all()
 
-    @validates('user_id')
-    def validate_user(self, key, field):
-        '''Check if user exists'''
-        try:
-            User.get(field)
-        except (NoResultFound, MultipleResultsFound) as e:
-            raise AssertionError(e)
-        else:
-            return field
-        
-
     def save_to_db(self):
         try:
-            if not self.user_id:
-                raise AssertionError('Reservation has no user assigned!')
+            User.get(self.user_id)
             self._check_for_collisions()
 
             db_session.add(self)
@@ -82,6 +76,10 @@ class Reservation(Base):
             return False
         except (AssertionError, TypeError, ValueError) as e:
             log.error(e)
+            return False
+        except (NoResultFound, MultipleResultsFound) as e:
+            log.error(e)
+            raise AssertionError('Reservation has no user assigned!')
             return False
         return True
 
@@ -148,15 +146,15 @@ class Reservation(Base):
                 start=self.start,
                 end=self.end))
 
-    def _parse_client_time_format(self):
-        if isinstance(self.start, str) and isinstance(self.start, str): 
-            client_datetime_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-            parsed_datetime = lambda t: datetime.datetime.strptime(t, client_datetime_format)
-            try:
-                self.start = parsed_datetime(self.start)
-                self.end = parsed_datetime(self.end)
-            except ValueError:
-                raise ValueError('Datetime parsing error')
+    # def _parse_client_time_format(self):
+    #     if isinstance(self.start, str) and isinstance(self.start, str): 
+    #         client_datetime_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+    #         parsed_datetime = lambda t: datetime.datetime.strptime(t, client_datetime_format)
+    #         try:
+    #             self.start = parsed_datetime(self.start)
+    #             self.end = parsed_datetime(self.end)
+    #         except ValueError:
+    #             raise ValueError('Datetime parsing error')
 
     @classmethod
     def find_by_id(cls, id):
@@ -198,9 +196,3 @@ class Reservation(Base):
                     createdAt=self.created_at.strftime(
                         self.__display_datetime_format)
                     )
-    # TODO We may need deserialzer
-
-    # Not implemented yet
-    # @classmethod
-    # def get_count(cls):
-    #     pass

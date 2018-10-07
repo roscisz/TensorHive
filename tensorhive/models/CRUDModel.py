@@ -8,19 +8,27 @@ log = logging.getLogger(__name__)
 class CRUDModel:
 
     @classmethod
-    def create(cls, **kw):
-        new_object = cls(**kw)
+    def create(cls, **kwargs):
         try:
-            db_session.add(new_object)
+            new_object = cls(**kwargs)
+            cls.validate_columns(new_object)
+        except AssertionError as e:
+            raise e
+        else:
+            return new_object
+
+    def save(self):
+        try:
+            db_session.add(self)
             db_session.commit()
         # OperationalError
         except SQLAlchemyError as e:
             db_session.rollback()
-            log.error('{cause} with {data}'.format(cause=e.__cause__, data=new_object))
+            log.error('{cause} with {data}'.format(cause=e.__cause__, data=self))
             raise e
         else:
-            log.debug('Created {}'.format(new_object))
-            return new_object
+            log.debug('Created {}'.format(self))
+            return self
 
     def destroy(self):
         try:
