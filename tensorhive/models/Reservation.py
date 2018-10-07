@@ -2,9 +2,11 @@ import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, CheckConstraint, and_, not_, or_
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm import validates
 from tensorhive.database import Base, db_session
 from tensorhive.models.User import User
+from sqlalchemy.orm import validates
 from sqlalchemy.ext.hybrid import hybrid_property
 import logging
 log = logging.getLogger(__name__)
@@ -84,22 +86,46 @@ class Reservation(Base):
             return False
         return True
 
-    def _validate_user_existence(self):
-        if not User.get(self.user_id):
-            raise AssertionError(
-                'User with id={} does not exist'.format(self.user_id))
+    @validates('resource_id')
+    def validate_resource(self, key, field):
+        if not isinstance(field, str):
+            raise AssertionError('Resource ID is not a string')
 
-    def _validate_time_range(self):
-        if not isinstance(self.start, datetime.date) or not isinstance(self.end, datetime.date):
-            raise TypeError(
-                '\'start\' and \'end\' must be of type datetime.datetime')
+        if len(field) < 4:
+            # TODO More realistic validation
+            raise AssertionError('Resource ID is too short')
 
-        if self.start > self.end:
-            raise AssertionError('Invalid time range (start >= end)')
+        return field
 
-        if self.start + self.__min_reservation_time > self.end:
-            raise AssertionError('Reservation time is shorter than {}'.format(
-                self.__min_reservation_time))
+    @validates('start', 'end')
+    def validate_time_range(self, key, field):
+        # Parse datetime if it's a string
+        if isinstance(field, str):
+            client_datetime_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+            try:
+                field = datetime.datetime.strptime(field, client_datetime_format)
+            except ValueError:
+                raise ValueError('Datetime parsing error')
+
+        # Check constraints
+        time_constraint_msg = 'Reservation must start before it ends. ' \
+            'Min. duration = {}'.format(self.__min_reservation_time)
+
+        time_collision_msg = '{uuid} is already reserved from {start} to {end}'.format(
+            uuid=self.resource_id,
+            start=self.start,
+            end=self.end
+        )
+
+        if key == 'end' and isinstance(self.start, datetime.datetime):
+            if self.start + self.__min_reservation_time > field:
+                raise AssertionError(time_constraint_msg)
+        elif key == 'start' and isinstance(self.end, datetime.datetime):
+            if field + self.__min_reservation_time > self.end:
+                raise AssertionError(time_constraint_msg)
+            #if self.collision_found(field, self.end, )    
+        
+        return field
 
     @classmethod
     def collision_found(cls, start, end, resource_id):
