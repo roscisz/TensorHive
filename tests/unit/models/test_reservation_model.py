@@ -83,7 +83,7 @@ def test_valid_string_time_format(db_session, faker, valid_user):
         description='',
         resource_id='UUID',
         user_id=valid_user.id
-    ).save(db_session=db_session)
+    ).save(session=db_session)
 
 
 @pytest.mark.usefixtures('faker')
@@ -121,5 +121,5 @@ def test_valid_reservation_creation(db_session, faker, duration_in_minutes, vali
         description='',
         resource_id='UUID',
         user_id=valid_user.id
-    ).save(db_session=db_session)
+    ).save(session=db_session)
     assert reservation.duration == duration
