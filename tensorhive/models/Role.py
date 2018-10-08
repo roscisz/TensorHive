@@ -13,6 +13,10 @@ class Role(CRUDModel, Base):
     user_id = Column(Integer, ForeignKey('users.id'))
 
     @classmethod
+    def check_assertions(cls, new_object):
+        pass
+
+    @classmethod
     def find_by_name(cls, name):
         return cls.query.filter_by(name=name).first()
 

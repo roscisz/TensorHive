@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, CheckConst
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm import validates
-from tensorhive.database import Base, db_session
+from tensorhive.database import Base#, db_session
 from tensorhive.models.User import User
 from tensorhive.models.CRUDModel import CRUDModel
 from sqlalchemy.orm import validates
@@ -31,9 +31,18 @@ class Reservation(CRUDModel, Base):
     __min_reservation_time = datetime.timedelta(minutes=30)
 
     @classmethod
-    def validate_columns(cls, new_object):
-        if new_object.title == 'asd':
-            raise AssertionError('Validate coumns example error')
+    def check_assertions(cls, new_object):
+        assert User.get(new_object.user_id), 'Reservation owner does not exist'
+        assert new_object.resource_id, 'Reservation must be related with some resource!'
+        assert new_object.start and new_object.end, 'Reservation has invalid time range!'
+        
+        print(new_object.title, new_object.start, new_object.end)
+        #[print(a.as_dict) for a in cls.query.all()]
+        print(len(cls.query.all()))
+        collision = cls.collision_found(new_object.start, new_object.end, new_object.resource_id)
+        print('collision: ', collision)
+        assert not collision, 'Reservation collides with {}'.format(collision)
+
 
     @hybrid_property
     def duration(self):
@@ -168,16 +177,16 @@ class Reservation(CRUDModel, Base):
         matching_conditions = and_(uuid_filter, after_start_filter, before_end_filter)
         return cls.query.filter(matching_conditions).all()
 
-    @classmethod
-    def delete_by_id(cls, id):
-        try:
-            num_rows_deleted = cls.query.filter_by(id=id).delete()
-            db_session.commit()
-        except:
-            db_session.rollback()
-            return False
-        # Check if any row were affected by deletion (otherwise -> not found)
-        return True if num_rows_deleted > 0 else False
+    # @classmethod
+    # def delete_by_id(cls, id):
+    #     try:
+    #         num_rows_deleted = cls.query.filter_by(id=id).delete()
+    #         db_session.commit()
+    #     except:
+    #         db_session.rollback()
+    #         return False
+    #     # Check if any row were affected by deletion (otherwise -> not found)
+    #     return True if num_rows_deleted > 0 else False
 
     @property
     def as_dict(self):

@@ -22,6 +22,11 @@ class User(CRUDModel, Base):
     _roles = relationship('Role', cascade='all,delete', backref=backref('user'))
     # TODO Default role
 
+
+    @classmethod
+    def check_assertions(cls, new_object):
+        pass
+     
     def __repr__(self):
         return '<User id={id}, username={username}>'.format(
             id=self.id, 

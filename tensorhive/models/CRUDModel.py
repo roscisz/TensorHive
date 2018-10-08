@@ -11,19 +11,19 @@ class CRUDModel:
     def create(cls, **kwargs):
         try:
             new_object = cls(**kwargs)
-            cls.validate_columns(new_object)
+            cls.check_assertions(new_object)
         except AssertionError as e:
             raise e
         else:
             return new_object
 
-    def save(self, db_session=db_session):
+    def save(self, session=db_session):
         try:
-            db_session.add(self)
-            db_session.commit()
+            session.add(self)
+            session.commit()
         # OperationalError
         except SQLAlchemyError as e:
-            db_session.rollback()
+            session.rollback()
             log.error('{cause} with {data}'.format(cause=e.__cause__, data=self))
             raise e
         else:
