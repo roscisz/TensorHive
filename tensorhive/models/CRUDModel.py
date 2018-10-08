@@ -17,7 +17,7 @@ class CRUDModel:
         else:
             return new_object
 
-    def save(self):
+    def save(self, db_session=db_session):
         try:
             db_session.add(self)
             db_session.commit()
