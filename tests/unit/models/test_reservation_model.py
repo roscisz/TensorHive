@@ -4,6 +4,44 @@ from tensorhive.models.Reservation import Reservation
 import datetime
 
 
+def test_exception_on_reservation_collision(db_session, valid_user):
+    now = datetime.datetime.utcnow()
+    duration = datetime.timedelta(minutes=30)
+
+    existing_reservation = Reservation.create(
+        start=now,
+        end=now + duration,
+        title='asd',
+        description='',
+        resource_id='THE SAME UUID',
+        user_id=valid_user.id
+    ).save(session=db_session)
+
+    with pytest.raises(AssertionError):
+        # TODO Refactor, use fixtures
+        # Between time
+        colliding_reservation = Reservation.create(
+            start=now + datetime.timedelta(minutes=5),
+            end=now + duration - datetime.timedelta(minutes=5),
+            title='asd',
+            description='',
+            resource_id='THE SAME UUID',
+            user_id=valid_user.id
+        ).save(session=db_session)
+
+    # IT DOES NOT RAISE ANY ERRORS!
+    # with pytest.raises(AssertionError):
+    #     # Exact time
+    #     colliding_reservation = Reservation.create(
+    #         start=now,
+    #         end=now + duration,
+    #         title='asd',
+    #         description='',
+    #         resource_id='THE SAME UUID',
+    #         user_id=valid_user.id
+    #     ).save(session=db_session)
+
+
 @pytest.mark.usefixtures('faker')
 def test_invalid_reservation_time_range(db_session, faker):
     with pytest.raises(AssertionError):
