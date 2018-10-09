@@ -40,16 +40,9 @@ class Reservation(CRUDModel, db.Model):
         assert 8 < len(self.description) < 200, 'Reservation description has incorrect length!'
         assert len(self.protected_resource_id) == 40, 'Protected resource UUID has incorrect length!'
 
-        #print([m.key for m in Reservation.__table__.columns])
         collision = self.would_interfere()
         assert not collision, 'Reservation would interfere with some other reservation!'
-        # TODO Check time collisions for the same resource
-        # print(obj.title, obj.start, obj.end)
-        #[print(a.as_dict) for a in .query.all()]
-        # print(len(cls.query.all()))
-        # collision = cls.collision_found(obj.start, obj.end, obj.protected_resource_id)
-        # print('collision: ', collision)
-        # assert not collision, 'Reservation collides with {}'.format(collision)
+
 
     @hybrid_property
     def duration(self):
@@ -95,23 +88,7 @@ class Reservation(CRUDModel, db.Model):
                 Reservation.protected_resource_id == self.protected_resource_id
             ).first()
 
-    # # def _check_for_collisions(self):
-    # #     '''Assures that there are no other reservations for the same resource in that time'''
-    # #     if self.collision_found(self.start, self.end, self.protected_resource_id):
-    # #         raise AssertionError('{uuid} is already reserved from {start} to {end}'.format(
-    # #             uuid=self.resource_id,
-    # #             start=self.start,
-    # #             end=self.end))
 
-    # # def _parse_client_time_format(self):
-    # #     if isinstance(self.start, str) and isinstance(self.start, str): 
-    # #         client_datetime_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-    # #         parsed_datetime = lambda t: datetime.datetime.strptime(t, client_datetime_format)
-    # #         try:
-    # #             self.start = parsed_datetime(self.start)
-    # #             self.end = parsed_datetime(self.end)
-    # #         except ValueError:
-    # #             raise ValueError('Datetime parsing error')
 
     # @classmethod
     # def find_by_id(cls, id):

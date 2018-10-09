@@ -10,21 +10,11 @@ class CRUDModel:
     def check_assertions(self):
         '''
         Purpose of this method is to run all necessary validation
-        before creating and saving model instance to the database.
+        before saving model instance to database.
 
         Validation methods should raise AssertionError on failure
         '''
-        # raise NotImplementedError('Method must be overriden')
-        pass
-
-    # @classmethod
-    # def create(cls, **kwargs):
-    #     try:
-    #         new_object = cls(**kwargs)
-    #     except AssertionError as e:
-    #         raise e
-    #     else:
-    #         return new_object
+        raise NotImplementedError('Subclass must override this method!')
 
     def save(self):
         try:
