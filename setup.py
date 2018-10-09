@@ -47,7 +47,8 @@ setup(
         'flask_cors',
         'flask_jwt_extended',
         'gunicorn',
-        'coloredlogs'
+        'coloredlogs',
+        'Safe'
     ],
     zip_safe=False
 )
