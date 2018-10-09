@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, CheckConst
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm import validates
-from tensorhive.database import db
+from tensorhive.database import db, flask_app
 from tensorhive.models.User import User
 from tensorhive.models.CRUDModel import CRUDModel
 from sqlalchemy.orm import validates
@@ -71,11 +71,19 @@ class Reservation(CRUDModel, db.Model):
             self.starts_at, self.ends_at,
             self.created_at)
 
-    # @classmethod
-    # def current_events(cls):
-    #     '''Returns only those events that should be currently respected by the users'''
-    #     current_time = datetime.datetime.utcnow()
-    #     return cls.query.filter(and_(cls.starts_at <= current_time, current_time <= cls.ends_at)).all()
+    @classmethod
+    def current_events(cls):
+        '''Returns only those events that should be currently respected by users'''
+        current_time = datetime.datetime.utcnow()
+        with flask_app.app_context():
+            return cls.query.filter(
+                and_(
+                    # Events that has already started
+                    cls.starts_at <= current_time, 
+                    # Events before their end 
+                    current_time <= cls.ends_at)
+                ).all()
+         
 
     # @validates('starts_at', 'ends_at')
     # def validate_time_range(self, key, field):

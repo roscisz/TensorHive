@@ -5,7 +5,6 @@ from sqlalchemy_utils import database_exists
 import logging
 log = logging.getLogger(__name__)
 
-db = flask_sqlalchemy.SQLAlchemy()
 
 def create_app():
     app = Flask(__name__)
@@ -13,6 +12,11 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
     return app
+
+
+db = flask_sqlalchemy.SQLAlchemy()
+flask_app = create_app()
+
 
 def init_db() -> None:
     '''Creates the database, tables (if they does not exist)'''
@@ -24,16 +28,12 @@ def init_db() -> None:
     from tensorhive.models.Role import Role
     from tensorhive.cli import prompt_to_create_first_account
     
-    flask_app = create_app()
-    ctx = flask_app.app_context()
-    ctx.push()
-
-    if database_exists(DB.SQLALCHEMY_DATABASE_URI):
-        log.info('[•] Database found ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
-        if db.session.query(User).count() == 0:
+    with flask_app.app_context():
+        if database_exists(DB.SQLALCHEMY_DATABASE_URI):
+            log.info('[•] Database found ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
+            if db.session.query(User).count() == 0:
+                prompt_to_create_first_account()
+        else:
+            db.create_all()
+            log.info('[✔] Database created ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
             prompt_to_create_first_account()
-    else:
-        db.create_all()
-        log.info('[✔] Database created ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
-        prompt_to_create_first_account()
-    ctx.pop()
