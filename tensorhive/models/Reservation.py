@@ -83,33 +83,17 @@ class Reservation(CRUDModel, db.Model):
                     # Events before their end 
                     current_time <= cls.ends_at)
                 ).all()
-         
 
-    # @validates('starts_at', 'ends_at')
-    # def validate_time_range(self, key, field):
-    #     '''Parse datetime if it's a string, otherwise do nothing'''
-    #     if isinstance(field, str):
-    #         client_datetime_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-    #         try:
-    #             field = datetime.datetime.strptime(field, client_datetime_format)
-    #         except ValueError:
-    #             raise ValueError('Datetime parsing error')
-    #     return field
-
-    # # @classmethod
-    # def would_interfere(self):
-    #     # TODO Double check
-    #     return Reservation.query.filter(
-    #         # Two events overlap and concern the same resource
-    #         and_(
-    #             # There are no such two events that overlap
-    #             not_(
-    #                 # Two events overlap
-    #                 or_(self.ends_at < Reservation.starts_at, self.starts_at > Reservation.ends_at)
-    #             ),
-    #             # Case concerns the same resource
-    #             Reservation.protected_resource_id == self.protected_resource_id)
-    #         ).first()
+    def would_interfere(self):
+        return Reservation.query.filter(
+                # Two events overlap in time domain
+                and_(
+                    self.starts_at <= Reservation.ends_at,
+                    self.ends_at >= Reservation.starts_at
+                ),
+                # Case concerns the same resource
+                Reservation.protected_resource_id == self.protected_resource_id
+            ).first()
 
     # # def _check_for_collisions(self):
     # #     '''Assures that there are no other reservations for the same resource in that time'''
