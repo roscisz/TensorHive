@@ -18,14 +18,22 @@ def init_jwt(app):
 
     @jwt.user_claims_loader
     def add_claims_to_access_token(current_user_id):
-        #current_user = User.find_by_username(current_user_name)
-        roles = []
-        if current_user_id is not None:
-            found_users_roles = Role.find_by_user_id(current_user_id)
-            if found_users_roles is not None:
-                for role in found_users_roles:
-                    roles.append(role.name)
-        return {'roles': roles}
+        # new
+        try:
+            roles = User.get(current_user_id).role_names
+        except:
+            roles = []
+        finally:
+            return {'roles':  roles}
+        
+        # # old
+        # roles = []
+        # if current_user_id is not None:
+        #     found_users_roles = Role.find_by_user_id(current_user_id)
+        #     if found_users_roles is not None:
+        #         for role in found_users_roles:
+        #             roles.append(role.name)
+        # return {'roles': roles}
 
 # Decorator admin role jwt access only
 def admin_required(fn):

@@ -12,10 +12,12 @@ class CreateRefreshedUserTokenController():
         try:
             current_user = User.get(id=get_jwt_identity())
             new_access_token = create_access_token(identity=current_user.id, fresh=False)
-        except NoResultFound:
+        except NoResultFound as e:
             content, status = 'User does not exist in database', 404
-        except MultipleResultsFound:
+            log.error(e)
+        except MultipleResultsFound as e:
             content, status = 'Internal error', 500
+            log.error(e)
         else:
             content = {
                 'msg': 'Refreshed token',
@@ -23,7 +25,6 @@ class CreateRefreshedUserTokenController():
             }
             status = 201
         finally:
-            log.error(content)
             if isinstance(content, str):
                 content = {'msg': content}, status
             return content, status

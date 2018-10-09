@@ -7,10 +7,11 @@ class DestroyEventController():
 
     @staticmethod
     def delete(id):
-        user_id = get_jwt_identity()
-        if Reservation.find_by_id(id).user_id == user_id:
-            if not Reservation.delete_by_id(id):
-                return NoContent, 500
-            return NoContent, 204
-        else:
-            return NoContent, 404
+        raise NotImplementedError
+        # user_id = get_jwt_identity()
+        # if Reservation.get(id).user_id == user_id:
+        #     if not Reservation.delete_by_id(id):
+        #         return NoContent, 500
+        #     return NoContent, 204
+        # else:
+        #     return NoContent, 404
