@@ -12,8 +12,7 @@ class Role(CRUDModel, db.Model):
     name = Column(String(40), nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'))
 
-    @classmethod
-    def check_assertions(cls, new_object):
+    def check_assertions(self):
         pass
 
     @classmethod

@@ -1,5 +1,5 @@
 from tensorhive.config import API, API_SERVER
-from tensorhive.database import db_session
+from tensorhive.database import db
 from flask_cors import CORS
 from tensorhive.authorization import init_jwt
 import connexion
@@ -14,7 +14,7 @@ class APIServer():
 
         @app.app.teardown_appcontext
         def shutdown_session(exception=None):
-            db_session.remove()
+            db.session.remove()
 
         app.add_api(API.SPEC_FILE,
                     arguments={

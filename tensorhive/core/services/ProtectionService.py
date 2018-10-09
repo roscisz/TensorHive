@@ -148,7 +148,7 @@ class ProtectionService(Service):
 
         for reservation in current_reservations:
             # 1. Extract reservation info
-            uuid = reservation.resource_id
+            uuid = reservation.protected_resource_id
             hostname = self.find_hostname(uuid)
             username = User.get(reservation.user_id).username
             if hostname is None or username is None:

@@ -35,6 +35,10 @@ class User(CRUDModel, db.Model):
     def roles(self):
         return self._roles
 
+    @roles.setter
+    def roles(self, new_roles):
+        self._roles = new_roles
+
     @hybrid_property
     def role_names(self):
         return [role.name for role in self._roles]
