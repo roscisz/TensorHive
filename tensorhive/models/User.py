@@ -2,42 +2,47 @@ from passlib.hash import pbkdf2_sha256 as sha256
 import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.orm import relationship
-from tensorhive.database import Base
+from sqlalchemy.orm import relationship, backref
+from tensorhive.database import db
 from tensorhive.models.CRUDModel import CRUDModel
 from sqlalchemy.orm import validates
 from usernames import is_safe_username
+from sqlalchemy.ext.hybrid import hybrid_property
 import logging
 log = logging.getLogger(__name__)
 
 
-class User(CRUDModel, Base):
+class User(CRUDModel, db.Model):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
     _hashed_password = Column(String(120), nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    reservations = relationship('Reservation', backref='user')
-    _roles = relationship('Role', cascade='all,delete', backref='user')
+    reservations = relationship('Reservation', cascade='all,delete', backref=backref('user'))
+    _roles = relationship('Role', cascade='all,delete', backref=backref('user'))
     # TODO Default role
 
+
+    # def check_assertions(self):
+    #     pass
+     
     def __repr__(self):
         return '<User id={id}, username={username}>'.format(
             id=self.id, 
             username=self.username)
 
-    @property
+    @hybrid_property
     def roles(self):
         return self._roles
 
-    @property
+    @hybrid_property
     def role_names(self):
         return [role.name for role in self._roles]
 
     def has_role(self, role_name):
         return bool(role_name in self.role_names)
 
-    @property
+    @hybrid_property
     def password(self):
         return self._hashed_password
 

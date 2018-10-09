@@ -1,16 +1,20 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.exc import SQLAlchemyError
-from tensorhive.database import Base, db_session
+from tensorhive.database import db
 from tensorhive.models.CRUDModel import CRUDModel
 import logging
 log = logging.getLogger(__name__)
 
 
-class Role(CRUDModel, Base):
+class Role(CRUDModel, db.Model):
     __tablename__ = 'roles'
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(40), nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'))
+
+    @classmethod
+    def check_assertions(cls, new_object):
+        pass
 
     @classmethod
     def find_by_name(cls, name):
