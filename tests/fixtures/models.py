@@ -3,12 +3,12 @@ from tensorhive.models.Reservation import Reservation
 from tensorhive.models.User import User
 from datetime import datetime, timedelta
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def new_user():
     return User(username='miczi', password='TEST PASSWORD')
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def new_reservation(new_user):
     now = datetime.utcnow()
     duration = timedelta(minutes=30)

@@ -28,7 +28,7 @@ def db_session(test_client, new_reservation):
     db.create_all()
 
     # Insert user data
-    # db.session.add(new_reservation)
+    db.session.add(new_reservation)
 
     # Commit the changes for the users
     db.session.commit()

@@ -31,8 +31,8 @@ class Reservation(CRUDModel, db.Model):
     __min_reservation_time = datetime.timedelta(minutes=30)
 
     def check_assertions(self):
-        assert User.get(self.user_id), 'Reservation owner does not exist!'
-        assert self.protected_resource_id, 'Reservation must be related with some resource!'
+        assert self.user_id, 'Reservation owner must be given!'
+        assert self.protected_resource_id, 'Reservation must be related with a resource!'
         assert self.starts_at and self.ends_at, 'Reservation time range is not specified!'
         assert self.duration >= self.__min_reservation_time, 'Reservation duration is too short!'
 
@@ -41,8 +41,8 @@ class Reservation(CRUDModel, db.Model):
         assert len(self.protected_resource_id) == 40, 'Protected resource UUID has incorrect length!'
 
         #print([m.key for m in Reservation.__table__.columns])
-        #collision = self.would_interfere()
-        #assert not collision, 'Reservation would interfere with some other reservation!'
+        collision = self.would_interfere()
+        assert not collision, 'Reservation would interfere with some other reservation!'
         # TODO Check time collisions for the same resource
         # print(obj.title, obj.start, obj.end)
         #[print(a.as_dict) for a in .query.all()]

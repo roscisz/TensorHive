@@ -1,15 +1,51 @@
 import pytest
 # from sqlalchemy.exc import OperationalError, IntegrityError
-# from tensorhive.models.Reservation import Reservation
+from tensorhive.models.Reservation import Reservation
 # from tensorhive.models.User import User
 # from tensorhive.models.Role import Role
-# import datetime
+from datetime import timedelta, datetime
 
 
 def test_reservation_creation(db_session, new_reservation):
     db_session.add(new_reservation)
     db_session.commit()
     print(new_reservation)
+
+
+def test_interference_detection(db_session, new_reservation):
+    # Create initial record
+    db_session.add(new_reservation)
+    db_session.commit()
+
+    # Try to trigger interference
+    offset = timedelta(minutes=5)
+    with pytest.raises(AssertionError):
+        # | A    A |
+        new_reservation.starts_at += offset
+        new_reservation.ends_at -= offset
+        new_reservation.check_assertions()
+
+    with pytest.raises(AssertionError):
+        # A |     A |
+        offset = timedelta(minutes=5)
+        new_reservation.starts_at -= offset
+        new_reservation.ends_at -= offset
+        new_reservation.check_assertions()
+
+    with pytest.raises(AssertionError):
+        # | A     | A
+        offset = timedelta(minutes=5)
+        new_reservation.starts_at += offset
+        new_reservation.ends_at += offset
+        new_reservation.check_assertions()
+
+    with pytest.raises(AssertionError):
+        # A |      | A
+        offset = timedelta(minutes=5)
+        new_reservation.starts_at -= offset
+        new_reservation.ends_at += offset
+        new_reservation.check_assertions()
+
 
 
 
