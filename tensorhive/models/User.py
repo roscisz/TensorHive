@@ -8,23 +8,30 @@ from tensorhive.models.CRUDModel import CRUDModel
 from sqlalchemy.orm import validates
 from usernames import is_safe_username
 from sqlalchemy.ext.hybrid import hybrid_property
+import safe
 import logging
 log = logging.getLogger(__name__)
 
+class PASS_COMPLEXITY:
+        TERRIBLE = 0
+        SIMPLE = 1
+        MEDIUM = 2
+        STRONG = 3
 
 class User(CRUDModel, db.Model):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
-    _hashed_password = Column(String(120), nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     reservations = relationship('Reservation', cascade='all,delete', backref=backref('user'))
+
+    # Managed via property getters and setters
+    _hashed_password = Column(String(120), nullable=False)
     _roles = relationship('Role', cascade='all,delete', backref=backref('user'))
-    # TODO Default role
 
-
-    # def check_assertions(self):
-    #     pass
+    def check_assertions(self):
+        # TODO Check if user has roles assigned
+        pass
      
     def __repr__(self):
         return '<User id={id}, username={username}>'.format(
@@ -51,8 +58,10 @@ class User(CRUDModel, db.Model):
         return self._hashed_password
 
     @password.setter
-    def password(self, raw_password: str):
-        self._hashed_password = sha256.hash(raw_password)
+    def password(self, raw: str):
+        result = safe.check(raw, length=8, freq=0, min_types=1, level=PASS_COMPLEXITY.TERRIBLE)
+        assert result, 'Incorrect password, reason: {}'.format(result.message)
+        self._hashed_password = sha256.hash(raw)
 
     @classmethod
     def find_by_username(cls, username):
