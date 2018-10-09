@@ -1,6 +1,28 @@
 # import pytest
 # from sqlalchemy.exc import OperationalError, IntegrityError
-# from tensorhive.models.User import User
+from tensorhive.models.User import User
+
+def test_user_creation(db_session, new_user, new_admin):
+    db_session.add(new_user)
+    db_session.commit()
+    assert new_user.id
+
+    db_session.add(new_admin)
+    db_session.commit()
+    assert new_admin.id
+
+    # TODO Move to test_role_model.py
+    try:
+        roles = db_session.query(User).filter_by(id=new_admin.id).one().role_names
+    except:
+        roles = []
+    finally:
+        assert set(roles) == set(['admin', 'user'])
+
+
+
+
+
 
 
 # # TODO May want to use faker fixture everywhere
