@@ -73,12 +73,8 @@ class User(CRUDModel, db.Model):
 
     @validates('username')
     def validate_username(self, key, username):
-        if not is_safe_username(username):
-            raise AssertionError('Invalid username')
-
-        if len(username) < 5 or len(username) > 20:
-            raise AssertionError('Username must be between 5 and 20 characters')
-
+        assert is_safe_username(username), 'Invalid username'
+        assert 4 < len(username) < 30, 'Username must be between 4 and 30 characters long!'
         return username
 
     @property
