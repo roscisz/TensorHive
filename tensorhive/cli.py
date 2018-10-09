@@ -132,7 +132,12 @@ def prompt_to_create_first_account():
             if make_admin:
                 new_user.roles.append(Role(name='admin'))
             new_user.save()
-        except:
-            click.echo('Account creation failed due to an error, resuming...')
+        except Exception as e:
+            click.echo('Account creation failed due to an error: {}, resuming...'.format(e))
+            status = False
         else:
             click.echo('Account created successfully, resuming...')
+            status = True
+        finally:
+            return status
+    return None
