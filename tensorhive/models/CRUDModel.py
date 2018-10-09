@@ -57,7 +57,7 @@ class CRUDModel:
     @classmethod
     def get(cls, id):
         try:
-            result = db.query(cls).filter_by(id=id).one()
+            result = db.session.query(cls).filter_by(id=id).one()
         except MultipleResultsFound as e:
             msg = 'There are multiple {} records with the same id={}!'.format(cls.__name__, id)
             log.error(msg)
