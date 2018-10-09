@@ -1,13 +1,13 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-from tensorhive.database import Base, db_session
+from tensorhive.database import db
 from tensorhive.models.CRUDModel import CRUDModel
 import logging
 log = logging.getLogger(__name__)
 
 
-class RevokedToken(CRUDModel, Base):
+class RevokedToken(CRUDModel, db.Model):
     __tablename__ = 'revoked_tokens'
     id = Column(Integer, primary_key=True, autoincrement=True)
     jti = Column(String(120), unique=True, nullable=False)

@@ -1,3 +1,6 @@
 import pytest
-# These fixtures are injected by pytest automatically
-from fixtures.db_session import engine, tables, db_session, valid_user, valid_reservation
+from tensorhive.database import create_app, db
+from tensorhive.models.Reservation import Reservation
+
+from fixtures.models import new_reservation, new_user
+from fixtures.database import db_session, test_client

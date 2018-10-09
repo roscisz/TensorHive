@@ -3,7 +3,7 @@ import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship, backref
-from tensorhive.database import Base
+from tensorhive.database import db
 from tensorhive.models.CRUDModel import CRUDModel
 from sqlalchemy.orm import validates
 from usernames import is_safe_username
@@ -12,7 +12,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class User(CRUDModel, Base):
+class User(CRUDModel, db.Model):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
@@ -23,9 +23,8 @@ class User(CRUDModel, Base):
     # TODO Default role
 
 
-    @classmethod
-    def check_assertions(cls, new_object):
-        pass
+    # def check_assertions(self):
+    #     pass
      
     def __repr__(self):
         return '<User id={id}, username={username}>'.format(
