@@ -46,6 +46,7 @@ setup(
         'connexion',
         'flask_cors',
         'flask_jwt_extended',
+        'flask_migrate',
         'gunicorn',
         'coloredlogs',
         'Safe'

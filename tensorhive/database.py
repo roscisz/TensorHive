@@ -18,6 +18,14 @@ db = flask_sqlalchemy.SQLAlchemy()
 flask_app = create_app()
 
 
+# TODO Refactor 
+from flask_migrate import Migrate
+from tensorhive.models.User import User
+from tensorhive.models.Reservation import Reservation
+from tensorhive.models.RevokedToken import RevokedToken
+from tensorhive.models.Role import Role
+migrate = Migrate(flask_app, db)
+
 def init_db() -> None:
     '''Creates the database, tables (if they does not exist)'''
     # Import all modules that define models so that
