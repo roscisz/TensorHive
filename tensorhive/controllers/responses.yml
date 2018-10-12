@@ -6,4 +6,13 @@ user:
     success: Logged in as {username}
     failure:
       credentials: Incorrect credentials
+  logout:
+    success: Logged out successfully
+token:
+  revoke:
+    success: '{token_type} has been revoked'
+  expired: Token has expired
+  missing_auth_header: Missing authorization header
+  only_refresh: Only refresh tokens are allowed
+
 

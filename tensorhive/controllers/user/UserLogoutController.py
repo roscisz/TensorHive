@@ -1,6 +1,9 @@
 from sqlalchemy.exc import SQLAlchemyError
 from flask_jwt_extended import get_raw_jwt
 from tensorhive.models.RevokedToken import RevokedToken
+from tensorhive.config import API
+R = API.RESPONSES['token']
+G = API.RESPONSES['general']
 
 
 class LogoutUserController():
@@ -9,11 +12,12 @@ class LogoutUserController():
     def delete_logout(token_type):
         jti = get_raw_jwt()['jti']
         try:
-            RevokedToken.create(jti=jti)
-        except SQLAlchemyError:
-            content = '{} token has not been revoked due to an error'.format(token_type)
+            RevokedToken(jti=jti).save()
+        except Exception as e:
+            content = {'msg': G['internal_error']}
             status = 500
         else:
-            content, status = '{} token has been revoked.'.format(token_type), 201
+            content = {'msg': R['revoke']['success'].format(token_type=token_type)}
+            status = 201
         finally:
-            return {'msg': content}, status
+            return content, status

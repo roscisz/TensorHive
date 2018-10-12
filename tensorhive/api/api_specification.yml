@@ -75,12 +75,12 @@ paths:
       summary: Logout user with access token
       operationId: 'tensorhive.api.controllers.user.post_logout_access_token'
       responses:
-        '201':
-          description: Successfully deleted.
-        '500':
-          $ref: '#/responses/InternalError'
-        '501':
-          $ref: '#/responses/InternalError'
+        201:
+          description: {{RESPONSES['user']['logout']['success']}}
+        401:
+          description: {{RESPONSES['token']['missing_auth_header']}} or {{RESPONSES['token']['expired']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
           - Bearer: []
   /user/logout/refresh_token:
