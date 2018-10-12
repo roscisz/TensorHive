@@ -1,0 +1,9 @@
+general:
+  internal_error: Internal server error
+user:
+  not_found: User with such username has not been found
+  login:
+    success: Logged in as {username}
+    failure:
+      credentials: Incorrect credentials
+

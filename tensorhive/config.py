@@ -96,6 +96,11 @@ class API:
     SPEC_FILE = config.get(section, 'spec_file', fallback='api_specification.yml')
     IMPL_LOCATION = config.get(section, 'impl_location', fallback='tensorhive.api.controllers')
 
+    import yaml
+    respones_file_path = str(PosixPath(__file__).parent / 'controllers/responses.yml')
+    with open(respones_file_path, 'r') as file:
+        RESPONSES = yaml.safe_load(file)
+
 
 class APP_SERVER:
     section = 'web_app.server'

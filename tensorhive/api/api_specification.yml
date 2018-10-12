@@ -127,14 +127,14 @@ paths:
           schema:
             $ref: '#/definitions/UserLoginController'
       responses:
-        '200':
-          description: Successfully loged in.
-        '401':
-          description: User does not exist.
-        '405':
-          description: Duplicate username error.
-        '500':
-          $ref: '#/responses/InternalError'
+        200:
+          description: {{RESPONSES['user']['login']['success']}}
+        401:
+          description: {{RESPONSES['user']['login']['failure']['credentials']}}
+        404:
+          description: {{RESPONSES['user']['not_found']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
   /reservations:
     get:
       tags: 

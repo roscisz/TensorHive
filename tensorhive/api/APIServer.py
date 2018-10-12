@@ -20,7 +20,8 @@ class APIServer():
                     arguments={
                         'title': API.TITLE, 
                         'version': API.VERSION,
-                        'url_prefix': API.URL_PREFIX
+                        'url_prefix': API.URL_PREFIX,
+                        'RESPONSES': API.RESPONSES
                     },
                     resolver=connexion.RestyResolver(API.IMPL_LOCATION),
                     strict_validation=True)
