@@ -16,18 +16,18 @@ class CreateRefreshedUserTokenController():
             current_user = User.get(id=get_jwt_identity())
             new_access_token = create_access_token(identity=current_user.id, fresh=False)
         except NoResultFound as e:
-            log.warning(e)
-            content = {'msg': R['user']['not_found']}
-            status = 404
+            log.error(e)
+            content = {'msg': R['refresh']['failure']}
+            status = 401
         except Exception as e:
             log.critical(e)
             content = {'msg': G['internal_error']}
             status = 500
         else:
             content = {
-                'msg': R['token']['refreshed'],
+                'msg': R['token']['refresh']['success'],
                 'access_token': new_access_token
             }
-            status = 201
+            status = 200
         finally:
             return content, status

@@ -35,5 +35,5 @@ def admin_required(fn):
         claims = get_jwt_claims()
         if 'admin' in claims['roles']:
             return fn(*args, **kwargs)
-        return {'msg': G['forbidden']}, 403
+        return {'msg': G['unauthorized']}, 401
     return wrapper

@@ -1,7 +1,8 @@
 general:
   internal_error: Internal server error
-  forbidden: Access forbidden
   success: Fetched successfully
+  unauthorized: Unauthorized
+  bad_request: Bad Request
 user:
   not_found: User has not been found
   login:
@@ -16,9 +17,14 @@ users:
 token:
   revoke:
     success: '{token_type} has been revoked'
+  refresh:
+    failure: Unable to refresh - unauthorized user
+    success: Token has been refreshed successfully
+    required: Only refresh tokens are allowed
+
+  revoked: Token has been revoked
   expired: Token has expired
-  missing_auth_header: Missing authorization header
-  only_refresh: Only refresh tokens are allowed
-  refreshed: Token has been refreshed
+  missing_auth_header: Missing Authorization Header
+
 
 
