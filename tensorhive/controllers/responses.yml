@@ -3,7 +3,7 @@ general:
   forbidden: Access forbidden
   success: Fetched successfully
 user:
-  not_found: User with such username has not been found
+  not_found: User has not been found
   login:
     success: Logged in as {username}
     failure:
@@ -19,5 +19,6 @@ token:
   expired: Token has expired
   missing_auth_header: Missing authorization header
   only_refresh: Only refresh tokens are allowed
+  refreshed: Token has been refreshed
 
 
