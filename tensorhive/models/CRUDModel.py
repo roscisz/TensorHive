@@ -50,15 +50,21 @@ class CRUDModel:
 
     @classmethod
     def get(cls, id):
-        try:
-            result = db.session.query(cls).filter_by(id=id).one()
-        except MultipleResultsFound as e:
-            msg = 'There are multiple {} records with the same id={}!'.format(cls.__name__, id)
-            log.error(msg)
-            raise MultipleResultsFound(msg)
-        except NoResultFound as e:
-            msg = 'There is no record {} with id={}!'.format(cls.__name__, id)
-            log.error(msg)
-            raise NoResultFound(msg)
-        else:
-            return result
+        with flask_app.app_context():
+            try:
+                result = db.session.query(cls).filter_by(id=id).one()
+            except MultipleResultsFound as e:
+                msg = 'There are multiple {} records with the same id={}!'.format(cls.__name__, id)
+                log.error(msg)
+                raise MultipleResultsFound(msg)
+            except NoResultFound as e:
+                msg = 'There is no record {} with id={}!'.format(cls.__name__, id)
+                log.error(msg)
+                raise NoResultFound(msg)
+            else:
+                return result
+
+    @classmethod
+    def all(cls):
+        with flask_app.app_context():
+            return db.session.query(cls).all()

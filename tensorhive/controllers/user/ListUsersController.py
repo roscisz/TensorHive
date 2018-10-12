@@ -6,5 +6,5 @@ class ListUsersController():
     @staticmethod
     def get():
         return [
-            user.as_dict for user in User.query.all()
+            user.as_dict for user in User.all()
         ], 200
