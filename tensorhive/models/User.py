@@ -3,7 +3,7 @@ import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship, backref
-from tensorhive.database import db
+from tensorhive.database import db, flask_app
 from tensorhive.models.CRUDModel import CRUDModel
 from sqlalchemy.orm import validates
 from usernames import is_safe_username
@@ -65,7 +65,8 @@ class User(CRUDModel, db.Model):
 
     @classmethod
     def find_by_username(cls, username):
-        return cls.query.filter_by(username=username).first()
+        with flask_app.app_context():
+            return cls.query.filter_by(username=username).first()
 
     # @classmethod
     # def find_by_id(cls, id):
