@@ -13,12 +13,16 @@ paths:
         - users
       summary: Get all users
       responses:
-        '200':
-          description: All fetched with success.
+        200:
+          description: {{RESPONSES['users']['get']['success']}}
           schema:
             type: array
             items:
               $ref: '#/definitions/User'
+        401:
+          description: {{RESPONSES['token']['missing_auth_header']}} or {{RESPONSES['token']['expired']}}
+        403:
+          description: {{RESPONSES['general']['forbidden']}}
       security:
           - Bearer: []
   /user/create:
@@ -96,6 +100,8 @@ paths:
           $ref: '#/responses/InternalError'
         '501':
           $ref: '#/responses/InternalError'
+        422:
+          description: {{RESPONSES['token']['only_refresh']}}
       security:
           - Bearer: []
   /user/refresh:
@@ -111,6 +117,8 @@ paths:
           $ref: '#/responses/Forbidden'
         '500':
           $ref: '#/responses/InternalError'
+        422:
+          description: {{RESPONSES['token']['only_refresh']}}
       security:
           - Bearer: []
   /user/login:

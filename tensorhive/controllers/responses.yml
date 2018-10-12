@@ -1,5 +1,7 @@
 general:
   internal_error: Internal server error
+  forbidden: Access forbidden
+  success: Fetched successfully
 user:
   not_found: User with such username has not been found
   login:
@@ -8,6 +10,9 @@ user:
       credentials: Incorrect credentials
   logout:
     success: Logged out successfully
+users:
+  get:
+    success: Fetched successfully
 token:
   revoke:
     success: '{token_type} has been revoked'
