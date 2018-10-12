@@ -1,4 +1,3 @@
-from sqlalchemy.exc import SQLAlchemyError
 from flask_jwt_extended import get_raw_jwt
 from tensorhive.models.RevokedToken import RevokedToken
 from tensorhive.config import API
@@ -7,7 +6,6 @@ G = API.RESPONSES['general']
 
 
 class LogoutUserController():
-    # TODO Use response mapping, e.g. token.revoke.error: some message
     @staticmethod
     def delete_logout(token_type):
         jti = get_raw_jwt()['jti']

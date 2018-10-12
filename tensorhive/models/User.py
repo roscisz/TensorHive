@@ -13,11 +13,13 @@ import safe
 import logging
 log = logging.getLogger(__name__)
 
+
 class PASS_COMPLEXITY:
         TERRIBLE = 0
         SIMPLE = 1
         MEDIUM = 2
         STRONG = 3
+
 
 class User(CRUDModel, db.Model):
     __tablename__ = 'users'
