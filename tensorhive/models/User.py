@@ -5,6 +5,7 @@ from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship, backref
 from tensorhive.database import db, flask_app
 from tensorhive.models.CRUDModel import CRUDModel
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm import validates
 from usernames import is_safe_username
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -66,7 +67,19 @@ class User(CRUDModel, db.Model):
     @classmethod
     def find_by_username(cls, username):
         with flask_app.app_context():
-            return cls.query.filter_by(username=username).first()
+            try:
+                result = db.session.query(cls).filter_by(username=username).one()
+            except MultipleResultsFound as e:
+                # Theoretically cannot happen because of model built-in constraints
+                msg = 'Multiple users with identical usernames has been found!'
+                log.critical(msg)
+                raise MultipleResultsFound(msg)
+            except NoResultFound as e:
+                msg = 'There is no user with username={}!'.format(username)
+                log.warning(msg)
+                raise NoResultFound(msg)
+            else:
+                return result
 
     # @classmethod
     # def find_by_id(cls, id):
