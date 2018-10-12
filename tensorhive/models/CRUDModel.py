@@ -1,6 +1,6 @@
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
-from tensorhive.database import db
+from tensorhive.database import db, flask_app
 import logging
 log = logging.getLogger(__name__)
 
@@ -17,20 +17,24 @@ class CRUDModel:
         raise NotImplementedError('Subclass must override this method!')
 
     def save(self):
-        try:
-            self.check_assertions()
-            db.session.add(self)
-            db.session.commit()
-        # OperationalError
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            log.error('{cause} with {data}'.format(cause=e.__cause__, data=self))
-            raise e
-        except AssertionError as e:
-            raise e
-        else:
-            log.debug('Created {}'.format(self))
-            return self
+        with flask_app.app_context():
+            try:
+                self.check_assertions()
+                db.session.add(self)
+                db.session.commit()
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                log.error('{cause} with {data}'.format(cause=e.__cause__, data=self))
+                raise
+            except AssertionError as e:
+                log.error(e)
+                raise
+            except Exception as e:
+                log.critical(type(e))
+                raise
+            else:
+                log.debug('Created {}'.format(self))
+                return self
 
     def destroy(self):
         try:
