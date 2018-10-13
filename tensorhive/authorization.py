@@ -3,6 +3,7 @@ from tensorhive.models.RevokedToken import RevokedToken
 from tensorhive.config import AUTH
 from functools import wraps
 from tensorhive.models.User import User
+from tensorhive.database import flask_app, db
 from tensorhive.config import API
 G = API.RESPONSES['general']
 
@@ -21,7 +22,12 @@ def init_jwt(app):
     @jwt.user_claims_loader
     def add_claims_to_access_token(current_user_id):
         try:
-            roles = User.get(current_user_id).role_names
+            current_user = User.get(current_user_id)
+
+            # ORM objects cannot be detached from session
+            with flask_app.app_context():
+                db.session.add(current_user)
+                roles = current_user.role_names
         except Exception as e:
             roles = []
         finally:
@@ -35,5 +41,5 @@ def admin_required(fn):
         claims = get_jwt_claims()
         if 'admin' in claims['roles']:
             return fn(*args, **kwargs)
-        return {'msg': G['unauthorized']}, 401
+        return {'msg': G['unpriviliged']}, 401
     return wrapper
