@@ -21,6 +21,8 @@ paths:
               $ref: '#/definitions/User'
         401:
           description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}} or {{RESPONSES['token']['expired']}}
+        422:
+          description: {{RESPONSES['token']['access']['required']}}
       security:
         - Bearer: []
   /user/create:
@@ -37,12 +39,16 @@ paths:
           schema:
             $ref: '#/definitions/CreateUserController'
       responses:
-        '201':
-          description: Successfully created.
-        '409':
-          description: Duplication error.
-        '500':
-          $ref: '#/responses/InternalError'
+        201:
+          description: {{RESPONSES['user']['create']['success']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}} {{RESPONSES['token']['missing_auth_header']}} or {{RESPONSES['token']['expired']}} or {{RESPONSES['token']['revoked']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+        409:
+          description: {{RESPONSES['user']['create']['failure']['duplicate']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
   /user/delete/{id}:
@@ -58,16 +64,18 @@ paths:
           required: true
           type: integer
       responses:
-        '204':
-          description: Successfully deleted.
-        '403':
-          description: Admin cannot be deleted.
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalError'
-        '501':
-          $ref: '#/responses/InternalError'
+        200:
+          description: {{RESPONSES['user']['delete']['success']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}} {{RESPONSES['token']['missing_auth_header']}} or {{RESPONSES['token']['expired']}} or {{RESPONSES['token']['revoked']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+        404:
+          description: {{RESPONSES['user']['not_found']}}
+        422:
+          description: {{RESPONSES['token']['access']['required']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
   /user/logout:

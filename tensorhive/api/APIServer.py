@@ -12,9 +12,9 @@ class APIServer():
         app = connexion.FlaskApp(__name__)
         init_jwt(app.app)
 
-        @app.app.teardown_appcontext
-        def shutdown_session(exception=None):
-            db.session.remove()
+        # @app.app.teardown_appcontext
+        # def shutdown_session(exception=None):
+        #     db.session.remove()
 
         app.add_api(API.SPEC_FILE,
                     arguments={

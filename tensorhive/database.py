@@ -25,10 +25,18 @@ def init_migrations(app, db):
     flask_migrate.Migrate(app, db)
 
 
+db = flask_sqlalchemy.SQLAlchemy()
+flask_app = create_boilerplate_app(db)
+migrate = init_migrations(flask_app, db)
+
+
 def init_db() -> None:
     '''Creates the database, tables (if they does not exist)'''
     from tensorhive.cli import prompt_to_create_first_account
     from tensorhive.models.User import User
+    from tensorhive.models.Reservation import Reservation
+    from tensorhive.models.Role import Role
+    from tensorhive.models.RevokedToken import RevokedToken
 
     with flask_app.app_context():
         if sqlalchemy_utils.database_exists(DB.SQLALCHEMY_DATABASE_URI):
@@ -40,7 +48,3 @@ def init_db() -> None:
             log.info('[✔] Database created ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
             prompt_to_create_first_account()
 
-
-db = flask_sqlalchemy.SQLAlchemy()
-flask_app = create_boilerplate_app(db)
-migrate = init_migrations(flask_app, db)

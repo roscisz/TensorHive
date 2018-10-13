@@ -37,16 +37,17 @@ class CRUDModel:
                 return self
 
     def destroy(self):
-        try:
-            db.session.delete(self)
-            db.session.commit()
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            log.error('{} with {}'.format(cause=e.__cause__, data=self))
-            raise e
-        else:
-            log.debug('Deleted {}'.format(self))
-            return self
+        with flask_app.app_context():
+            try:
+                db.session.delete(self)
+                db.session.commit()
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                log.error('{} with {}'.format(cause=e.__cause__, data=self))
+                raise e
+            else:
+                log.debug('Deleted {}'.format(self))
+                return self
 
     @classmethod
     def get(cls, id):
@@ -55,11 +56,11 @@ class CRUDModel:
                 result = db.session.query(cls).filter_by(id=id).one()
             except MultipleResultsFound as e:
                 msg = 'There are multiple {} records with the same id={}!'.format(cls.__name__, id)
-                log.error(msg)
+                log.critical(msg)
                 raise MultipleResultsFound(msg)
             except NoResultFound as e:
                 msg = 'There is no record {} with id={}!'.format(cls.__name__, id)
-                log.error(msg)
+                log.warning(msg)
                 raise NoResultFound(msg)
             else:
                 return result
