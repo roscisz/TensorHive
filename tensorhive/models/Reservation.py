@@ -21,8 +21,6 @@ class Reservation(CRUDModel, db.Model):
     _ends_at = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
-    __display_datetime_format = '%Y-%m-%dT%H:%M:%S'
-    __server_timezone = '+00:00'
     __min_reservation_time = datetime.timedelta(minutes=30)
     __max_reservation_time = datetime.timedelta(days=2)
 
