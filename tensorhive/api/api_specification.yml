@@ -57,7 +57,7 @@ paths:
       tags:
         - users
       summary: Delete user
-      operationId: 'tensorhive.api.controllers.user.delete_user'
+      operationId: tensorhive.controllers.user.delete_user_controller.delete
       parameters:
         - description: Delete user by id
           in: path

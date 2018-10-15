@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, jwt_refresh_token_required
 #from tensorhive.controllers.user.UserLogoutController import LogoutUserController
 # from tensorhive.controllers.user.CreateUserController import CreateUserController
 from tensorhive.controllers.user.CreateRefreshedUserTokenController import CreateRefreshedUserTokenController
-from tensorhive.controllers.user.DeleteUserController import DeleteUserController
+#from tensorhive.controllers.user.DeleteUserController import DeleteUserController
 from tensorhive.authorization import admin_required
 
 
@@ -36,7 +36,7 @@ def get_refreshed_access_token():
 #     return CreateUserController.create(user)
 
 
-@admin_required
-def delete_user(id):
-    '''Delete user'''
-    return DeleteUserController.delete(id)
+# @admin_required
+# def delete_user(id):
+#     '''Delete user'''
+#     return DeleteUserController.delete(id)
