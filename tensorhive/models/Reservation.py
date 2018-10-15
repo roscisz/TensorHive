@@ -138,7 +138,7 @@ class Reservation(CRUDModel, db.Model):
 
     def __repr__(self):
         return '''
-<ReservationEvent id={0}, user={1}
+<ReservationEvent id={0}, user_id={1}
     title={2}
     description={3}
     protected_resource_id={4}
@@ -146,7 +146,7 @@ class Reservation(CRUDModel, db.Model):
     starts_at={5}
     ends_at={6}
     created_at={7}'''.format(
-            self.id, self.user,
+            self.id, self.user_id,
             self.title, self.description,
             self.protected_resource_id,
             self.starts_at, self.ends_at,

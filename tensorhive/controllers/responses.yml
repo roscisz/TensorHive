@@ -22,8 +22,11 @@ user:
     failure:
       duplicate: Such user exists
 reservation:
+  not_found: Reservation has not been found
   create:
     success: Reservation has been successfully made
+  delete:
+    success: Reservation has been successfully deleted
 users:
   get:
     success: Fetched successfully

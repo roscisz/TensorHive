@@ -219,24 +219,27 @@ paths:
     delete:
       tags: 
           - reservations
-      summary: Delete reservation event by id
+      summary: Delete reservation
       operationId: tensorhive.controllers.reservation.delete_reservation_controller.delete
       parameters:
-        - description: Id of reservation event
+        - description: Reservation ID
           in: path
           name: id
           required: true
           type: integer
       responses:
-        '204':
-          description: Successfully deleted.
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalError'
+        200:
+          description: {{RESPONSES['reservation']['delete']['success']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}}
+        404:
+          description: {{RESPONSES['reservation']['not_found']}}
+        422:
+          description: {{RESPONSES['token']['access']['required']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
-  # TODO Nodes: Add more specific schemas, response codes + descriptions
   /nodes/hostnames:
     get:
       tags: 
