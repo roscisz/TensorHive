@@ -116,7 +116,7 @@ paths:
       tags:
         - users
       summary: Generate new access token using refresh token
-      operationId: 'tensorhive.api.controllers.user.get_refreshed_access_token'
+      operationId: tensorhive.controllers.user.refresh_access_token_controller.generate
       responses:
         200:
           description: {{RESPONSES['token']['refresh']['success']}}
