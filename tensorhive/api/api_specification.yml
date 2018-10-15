@@ -12,6 +12,7 @@ paths:
       tags: 
         - users
       summary: Get all users
+      operationId: tensorhive.controllers.user.get_users_controller.all
       responses:
         200:
           description: {{RESPONSES['users']['get']['success']}}
@@ -30,7 +31,7 @@ paths:
       tags: 
         - users
       summary: Create new user
-      operationId: 'tensorhive.api.controllers.user.post_create'
+      operationId: tensorhive.controllers.user.create_user_controller.create
       parameters:
         - description: User object
           in: body
@@ -56,7 +57,7 @@ paths:
       tags:
         - users
       summary: Delete user
-      operationId: 'tensorhive.api.controllers.user.delete_user'
+      operationId: tensorhive.controllers.user.delete_user_controller.delete
       parameters:
         - description: Delete user by id
           in: path
@@ -83,7 +84,7 @@ paths:
       tags:
         - users
       summary: Logout user using access token
-      operationId: 'tensorhive.api.controllers.user.post_logout_access_token'
+      operationId: tensorhive.controllers.user.logout_user_controller.logout_with_access_token
       responses:
         201:
           description: {{RESPONSES['user']['logout']['success']}}
@@ -98,7 +99,7 @@ paths:
       tags:
         - users
       summary: Logout user using refresh token
-      operationId: 'tensorhive.api.controllers.user.post_logout_refresh_token'
+      operationId: tensorhive.controllers.user.logout_user_controller.logout_with_refresh_token
       responses:
         201:
           description: {{RESPONSES['user']['logout']['success']}}
@@ -115,7 +116,7 @@ paths:
       tags:
         - users
       summary: Generate new access token using refresh token
-      operationId: 'tensorhive.api.controllers.user.get_refreshed_access_token'
+      operationId: tensorhive.controllers.user.refresh_access_token_controller.generate
       responses:
         200:
           description: {{RESPONSES['token']['refresh']['success']}}
@@ -132,7 +133,7 @@ paths:
       tags:
         - users
       summary: Login user
-      operationId: 'tensorhive.api.controllers.user.post_login'
+      operationId: 'tensorhive.controllers.user.login_user_controller.login'
       parameters:
         - description: User object
           in: body
@@ -156,6 +157,7 @@ paths:
       tags: 
         - reservations
       summary: Get all reservation events
+      operationId: tensorhive.controllers.reservation.get_reservation_controller.get
       parameters:
         - description: Array of uuids
           in: query
@@ -192,10 +194,11 @@ paths:
       tags: 
         - reservations
       summary: Create new reservation event
+      operationId: tensorhive.controllers.reservation.create_reservation_controller.create
       parameters:
         - description: Reservation event object
           in: body
-          name: reservation_event
+          name: reservation
           required: true
           schema:
             $ref: '#/definitions/CreateReservationEventController'
@@ -213,6 +216,7 @@ paths:
       tags: 
           - reservations
       summary: Delete reservation event by id
+      operationId: tensorhive.controllers.reservation.delete_reservation_controller.delete
       parameters:
         - description: Id of reservation event
           in: path
@@ -234,7 +238,7 @@ paths:
       tags: 
         - nodes
       summary: Get all hostnames
-      operationId: 'tensorhive.api.controllers.nodes.get_hostnames'
+      operationId: tensorhive.controllers.nodes.infrastructure_controller.get_hostnames
       responses:
         '200':
           description: List of hostnames fetched with success
@@ -249,7 +253,7 @@ paths:
       tags: 
         - nodes
       summary: Get each node's all metric data
-      operationId: 'tensorhive.api.controllers.nodes.get_all_metrics'
+      operationId: tensorhive.controllers.nodes.infrastructure_controller.get_all_data
       responses:
         '200':
           description: 'Success'
@@ -262,7 +266,7 @@ paths:
       tags: 
         - nodes
       summary: Get node's basic GPU information
-      operationId: 'tensorhive.api.controllers.nodes.get_gpu_info'
+      operationId: tensorhive.controllers.nodes.gpu_controller.get_info
       parameters:
         - $ref: '#/parameters/hostnameParam'
       responses:
@@ -281,7 +285,7 @@ paths:
       tags: 
         - nodes
       summary: Get node's GPU metric data
-      operationId: 'tensorhive.api.controllers.nodes.get_gpu_metrics'
+      operationId: tensorhive.controllers.nodes.gpu_controller.get_metrics
       parameters:
         - $ref: '#/parameters/hostnameParam'
         - $ref: '#/parameters/gpuMetricTypeQuery'
@@ -301,7 +305,7 @@ paths:
       tags: 
         - nodes
       summary: Get node's GPU processes data
-      operationId: 'tensorhive.api.controllers.nodes.get_gpu_processes'
+      operationId: tensorhive.controllers.nodes.gpu_controller.get_processes
       parameters:
         - $ref: '#/parameters/hostnameParam'
       responses:
