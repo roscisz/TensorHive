@@ -10,6 +10,6 @@ def get_all_data():
 
 @jwt_required
 def get_hostnames():
-        infrastructure = TensorHiveManager().infrastructure_manager.infrastructure
-        hostnames = infrastructure.keys()
-        return list(hostnames), 200
+    infrastructure = TensorHiveManager().infrastructure_manager.infrastructure
+    hostnames = infrastructure.keys()
+    return list(hostnames), 200
