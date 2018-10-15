@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class Reservation(CRUDModel, db.Model):
-    __tablename__ = 'reservation_events'
+    __tablename__ = 'reservations'
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     title = Column(String(60), unique=False, nullable=False)
@@ -113,20 +113,20 @@ class Reservation(CRUDModel, db.Model):
     # #     # Check if any row were affected by deletion (otherwise -> not found)
     # #     return True if num_rows_deleted > 0 else False
 
-    # @property
-    # def as_dict(self):
-    #     '''Serializes model instance into dict (which is interpreted as json automatically)'''
-    #     return dict(id=self.id,
-    #                 title=self.title,
-    #                 description=self.description,
-    #                 resourceId=self.protected_resource_id,
-    #                 userId=self.user_id,
-    #                 start=self.start.strftime(
-    #                     self.__display_datetime_format)
-    #                 + self.__server_timezone,
-    #                 end=self.end.strftime(
-    #                     self.__display_datetime_format)
-    #                 + self.__server_timezone,
-    #                 createdAt=self.created_at.strftime(
-    #                     self.__display_datetime_format)
-    #                 )
+    @property
+    def as_dict(self):
+        '''Serializes model instance into dict (which is interpreted as json automatically)'''
+        return dict(id=self.id,
+                    title=self.title,
+                    description=self.description,
+                    resourceId=self.protected_resource_id,
+                    userId=self.user_id,
+                    start=self.starts_at.strftime(
+                        self.__display_datetime_format)
+                    + self.__server_timezone,
+                    end=self.ends_at.strftime(
+                        self.__display_datetime_format)
+                    + self.__server_timezone,
+                    createdAt=self.created_at.strftime(
+                        self.__display_datetime_format)
+                    )

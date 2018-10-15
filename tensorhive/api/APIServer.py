@@ -12,15 +12,16 @@ class APIServer():
         app = connexion.FlaskApp(__name__)
         init_jwt(app.app)
 
-        @app.app.teardown_appcontext
-        def shutdown_session(exception=None):
-            db.session.remove()
+        # @app.app.teardown_appcontext
+        # def shutdown_session(exception=None):
+        #     db.session.remove()
 
         app.add_api(API.SPEC_FILE,
                     arguments={
                         'title': API.TITLE, 
                         'version': API.VERSION,
-                        'url_prefix': API.URL_PREFIX
+                        'url_prefix': API.URL_PREFIX,
+                        'RESPONSES': API.RESPONSES
                     },
                     resolver=connexion.RestyResolver(API.IMPL_LOCATION),
                     strict_validation=True)

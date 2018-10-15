@@ -1,12 +1,10 @@
 import pytest
-from tensorhive.database import db, create_app
-from tensorhive.models.Reservation import Reservation
-from tensorhive.models.User import User
-from tensorhive.models.Role import Role
+from tensorhive.database import db, create_boilerplate_app
+
 
 @pytest.fixture(scope='module')
 def test_client():
-    flask_app = create_app()
+    flask_app = create_boilerplate_app(db)
 
     # Flask provides a way to test your application by exposing the Werkzeug test Client
     # and handling the context locals for you.

@@ -12,21 +12,26 @@ paths:
       tags: 
         - users
       summary: Get all users
+      operationId: tensorhive.controllers.user.get_users_controller.all
       responses:
-        '200':
-          description: All fetched with success.
+        200:
+          description: {{RESPONSES['users']['get']['success']}}
           schema:
             type: array
             items:
               $ref: '#/definitions/User'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}} or {{RESPONSES['token']['expired']}}
+        422:
+          description: {{RESPONSES['token']['access']['required']}}
       security:
-          - Bearer: []
+        - Bearer: []
   /user/create:
     post:
       tags: 
         - users
       summary: Create new user
-      operationId: 'tensorhive.api.controllers.user.post_create'
+      operationId: tensorhive.controllers.user.create_user_controller.create
       parameters:
         - description: User object
           in: body
@@ -35,20 +40,24 @@ paths:
           schema:
             $ref: '#/definitions/CreateUserController'
       responses:
-        '201':
-          description: Successfully created.
-        '409':
-          description: Duplication error.
-        '500':
-          $ref: '#/responses/InternalError'
+        201:
+          description: {{RESPONSES['user']['create']['success']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}} {{RESPONSES['token']['missing_auth_header']}} or {{RESPONSES['token']['expired']}} or {{RESPONSES['token']['revoked']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+        409:
+          description: {{RESPONSES['user']['create']['failure']['duplicate']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
-          - Bearer: []
+        - Bearer: []
   /user/delete/{id}:
     delete:
       tags:
         - users
       summary: Delete user
-      operationId: 'tensorhive.api.controllers.user.delete_user'
+      operationId: tensorhive.controllers.user.delete_user_controller.delete
       parameters:
         - description: Delete user by id
           in: path
@@ -56,69 +65,75 @@ paths:
           required: true
           type: integer
       responses:
-        '204':
-          description: Successfully deleted.
-        '403':
-          description: Admin cannot be deleted.
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalError'
-        '501':
-          $ref: '#/responses/InternalError'
+        200:
+          description: {{RESPONSES['user']['delete']['success']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}} {{RESPONSES['token']['missing_auth_header']}} or {{RESPONSES['token']['expired']}} or {{RESPONSES['token']['revoked']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+        404:
+          description: {{RESPONSES['user']['not_found']}}
+        422:
+          description: {{RESPONSES['token']['access']['required']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
-          - Bearer: []
+        - Bearer: []
   /user/logout:
     delete:
       tags:
         - users
-      summary: Logout user with access token
-      operationId: 'tensorhive.api.controllers.user.post_logout_access_token'
+      summary: Logout user using access token
+      operationId: tensorhive.controllers.user.logout_user_controller.logout_with_access_token
       responses:
-        '201':
-          description: Successfully deleted.
-        '500':
-          $ref: '#/responses/InternalError'
-        '501':
-          $ref: '#/responses/InternalError'
+        201:
+          description: {{RESPONSES['user']['logout']['success']}}
+        401:
+          description: {{RESPONSES['token']['missing_auth_header']}} or {{RESPONSES['token']['expired']}} or {{RESPONSES['token']['revoked']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}      
       security:
-          - Bearer: []
+        - Bearer: []
   /user/logout/refresh_token:
     delete:
       tags:
         - users
-      summary: Logout user with refresh token
-      operationId: 'tensorhive.api.controllers.user.post_logout_refresh_token'
+      summary: Logout user using refresh token
+      operationId: tensorhive.controllers.user.logout_user_controller.logout_with_refresh_token
       responses:
-        '201':
-          description: Successfully deleted.
-        '500':
-          $ref: '#/responses/InternalError'
-        '501':
-          $ref: '#/responses/InternalError'
+        201:
+          description: {{RESPONSES['user']['logout']['success']}}
+        401:
+          description: {{RESPONSES['token']['missing_auth_header']}}
+        422:
+          description: {{RESPONSES['token']['refresh']['required']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
-          - Bearer: []
+        - Bearer: []
   /user/refresh:
     get:
       tags:
         - users
-      summary: Refresh users token
-      operationId: 'tensorhive.api.controllers.user.get_refreshed_access_token'
+      summary: Generate new access token using refresh token
+      operationId: tensorhive.controllers.user.refresh_access_token_controller.generate
       responses:
-        '201':
-          description: Successfully refreshed.
-        403:
-          $ref: '#/responses/Forbidden'
-        '500':
-          $ref: '#/responses/InternalError'
+        200:
+          description: {{RESPONSES['token']['refresh']['success']}}
+        401:
+          description: {{RESPONSES['token']['refresh']['failure']}} or {{RESPONSES['token']['missing_auth_header']}}
+        422:
+          description: {{RESPONSES['token']['refresh']['required']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
-          - Bearer: []
+        - Bearer: []
   /user/login:
     post:
       tags:
         - users
       summary: Login user
-      operationId: 'tensorhive.api.controllers.user.post_login'
+      operationId: 'tensorhive.controllers.user.login_user_controller.login'
       parameters:
         - description: User object
           in: body
@@ -127,19 +142,22 @@ paths:
           schema:
             $ref: '#/definitions/UserLoginController'
       responses:
-        '200':
-          description: Successfully loged in.
-        '401':
-          description: User does not exist.
-        '405':
-          description: Duplicate username error.
-        '500':
-          $ref: '#/responses/InternalError'
+        200:
+          description: {{RESPONSES['user']['login']['success']}}
+        400:
+          description: {{RESPONSES['general']['bad_request']}}
+        401:
+          description: {{RESPONSES['user']['login']['failure']['credentials']}}
+        404:
+          description: {{RESPONSES['user']['not_found']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
   /reservations:
     get:
       tags: 
         - reservations
       summary: Get all reservation events
+      operationId: tensorhive.controllers.reservation.get_reservation_controller.get
       parameters:
         - description: Array of uuids
           in: query
@@ -171,15 +189,16 @@ paths:
         '400':
           description: Bad request. You have to specifiy either all parameters or none
       security:
-          - Bearer: []
+        - Bearer: []
     post:
       tags: 
         - reservations
       summary: Create new reservation event
+      operationId: tensorhive.controllers.reservation.create_reservation_controller.create
       parameters:
         - description: Reservation event object
           in: body
-          name: reservation_event
+          name: reservation
           required: true
           schema:
             $ref: '#/definitions/CreateReservationEventController'
@@ -191,12 +210,13 @@ paths:
         '500':
           $ref: '#/responses/InternalError'
       security:
-          - Bearer: []
+        - Bearer: []
   /reservations/{id}:
     delete:
       tags: 
           - reservations
       summary: Delete reservation event by id
+      operationId: tensorhive.controllers.reservation.delete_reservation_controller.delete
       parameters:
         - description: Id of reservation event
           in: path
@@ -211,14 +231,14 @@ paths:
         '500':
           $ref: '#/responses/InternalError'
       security:
-          - Bearer: []
+        - Bearer: []
   # TODO Nodes: Add more specific schemas, response codes + descriptions
   /nodes/hostnames:
     get:
       tags: 
         - nodes
       summary: Get all hostnames
-      operationId: 'tensorhive.api.controllers.nodes.get_hostnames'
+      operationId: tensorhive.controllers.nodes.infrastructure_controller.get_hostnames
       responses:
         '200':
           description: List of hostnames fetched with success
@@ -227,26 +247,26 @@ paths:
             items: 
               type: string
       security:
-          - Bearer: []
+        - Bearer: []
   /nodes/metrics:
     get:
       tags: 
         - nodes
       summary: Get each node's all metric data
-      operationId: 'tensorhive.api.controllers.nodes.get_all_metrics'
+      operationId: tensorhive.controllers.nodes.infrastructure_controller.get_all_data
       responses:
         '200':
           description: 'Success'
           schema:
             type: object
       security:
-          - Bearer: []
+        - Bearer: []
   /nodes/{hostname}/gpu/info:
     get:
       tags: 
         - nodes
       summary: Get node's basic GPU information
-      operationId: 'tensorhive.api.controllers.nodes.get_gpu_info'
+      operationId: tensorhive.controllers.nodes.gpu_controller.get_info
       parameters:
         - $ref: '#/parameters/hostnameParam'
       responses:
@@ -259,13 +279,13 @@ paths:
         '404':
           $ref: '#/responses/NotFound'
       security:
-          - Bearer: []
+        - Bearer: []
   /nodes/{hostname}/gpu/metrics:
     get:
       tags: 
         - nodes
       summary: Get node's GPU metric data
-      operationId: 'tensorhive.api.controllers.nodes.get_gpu_metrics'
+      operationId: tensorhive.controllers.nodes.gpu_controller.get_metrics
       parameters:
         - $ref: '#/parameters/hostnameParam'
         - $ref: '#/parameters/gpuMetricTypeQuery'
@@ -279,13 +299,13 @@ paths:
         '404':
           $ref: '#/responses/NotFound'
       security:
-          - Bearer: []
+        - Bearer: []
   /nodes/{hostname}/gpu/processes:
     get:
       tags: 
         - nodes
       summary: Get node's GPU processes data
-      operationId: 'tensorhive.api.controllers.nodes.get_gpu_processes'
+      operationId: tensorhive.controllers.nodes.gpu_controller.get_processes
       parameters:
         - $ref: '#/parameters/hostnameParam'
       responses:
@@ -298,7 +318,7 @@ paths:
         '404':
           $ref: '#/responses/NotFound'
       security:
-          - Bearer: []
+        - Bearer: []
 definitions:
   CreateUserController:
     type: object

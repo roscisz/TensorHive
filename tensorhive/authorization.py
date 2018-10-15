@@ -2,7 +2,10 @@ from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_claims
 from tensorhive.models.RevokedToken import RevokedToken
 from tensorhive.config import AUTH
 from functools import wraps
-from tensorhive.models.Role import Role
+from tensorhive.models.User import User
+from tensorhive.database import flask_app, db
+from tensorhive.config import API
+G = API.RESPONSES['general']
 
 
 def init_jwt(app):
@@ -18,31 +21,25 @@ def init_jwt(app):
 
     @jwt.user_claims_loader
     def add_claims_to_access_token(current_user_id):
-        # new
         try:
-            roles = User.get(current_user_id).role_names
-        except:
+            current_user = User.get(current_user_id)
+
+            # ORM objects cannot be detached from session
+            with flask_app.app_context():
+                db.session.add(current_user)
+                roles = current_user.role_names
+        except Exception as e:
             roles = []
         finally:
             return {'roles':  roles}
-        
-        # # old
-        # roles = []
-        # if current_user_id is not None:
-        #     found_users_roles = Role.find_by_user_id(current_user_id)
-        #     if found_users_roles is not None:
-        #         for role in found_users_roles:
-        #             roles.append(role.name)
-        # return {'roles': roles}
 
-# Decorator admin role jwt access only
+
 def admin_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
         claims = get_jwt_claims()
-        for role in claims['roles']:
-            if role == 'admin':
-                return fn(*args, **kwargs)
-        return {'message': 'Admin required!'}, 401
+        if 'admin' in claims['roles']:
+            return fn(*args, **kwargs)
+        return {'msg': G['unpriviliged']}, 401
     return wrapper
