@@ -121,7 +121,7 @@ paths:
         200:
           description: {{RESPONSES['token']['refresh']['success']}}
         401:
-          description: {{RESPONSES['token']['refresh']['failure']}} or {{RESPONSES['token']['missing_auth_header']}}
+          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}}
         422:
           description: {{RESPONSES['token']['refresh']['required']}}
         500:
