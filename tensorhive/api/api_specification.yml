@@ -157,6 +157,7 @@ paths:
       tags: 
         - reservations
       summary: Get all reservation events
+      operationId: tensorhive.controllers.reservation.get_reservation_controller.get
       parameters:
         - description: Array of uuids
           in: query
@@ -215,6 +216,7 @@ paths:
       tags: 
           - reservations
       summary: Delete reservation event by id
+      operationId: tensorhive.controllers.reservation.delete_reservation_controller.delete
       parameters:
         - description: Id of reservation event
           in: path
