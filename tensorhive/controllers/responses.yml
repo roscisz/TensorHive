@@ -5,6 +5,7 @@ general:
   bad_request: Bad Request
   unpriviliged: Unpriviliged
   no_identity: Could not resolve identity
+  ok: OK
 user:
   not_found: User has not been found
   login:

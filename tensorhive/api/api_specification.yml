@@ -167,27 +167,27 @@ paths:
           items: {
               type: string
             }
-        - description: UTC ISO (e.g. 2019-10-22T19:23:45Z)
+        - description: UTC ISO (e.g. 2018-10-22T10:00:00.0Z)
           in: query
           name: start
           required: false
           type: string
           format: date-time
-        - description: UTC ISO
+        - description: UTC ISO (e.g. 2018-10-22T19:00:00.0Z)
           in: query
           name: end
           required: false
           type: string
           format: date-time
       responses:
-        '200':
-          description: All fetched with success.
+        200:
+          description: {{RESPONSES['general']['ok']}}
           schema:
             type: array
             items:
               $ref: '#/definitions/ReservationEvent'
-        '400':
-          description: Bad request. You have to specifiy either all parameters or none
+        400:
+          description: {{RESPONSES['general']['bad_request']}}. Specify all parameters or none.
       security:
         - Bearer: []
     post:

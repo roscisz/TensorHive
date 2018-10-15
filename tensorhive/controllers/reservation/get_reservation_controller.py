@@ -1,5 +1,8 @@
 from flask_jwt_extended import jwt_required
 from tensorhive.models.Reservation import Reservation
+from typing import List
+from tensorhive.config import API
+G = API.RESPONSES['general']
 
 
 @jwt_required
@@ -10,16 +13,27 @@ def get_all():
 
 
 @jwt_required
-def get_selected(resources_ids, start, end):
+def get_selected(resources_ids: List, start: str, end: str):
     # All args are required at once, otherwise return 400
     all_not_none = resources_ids and start and end
     if all_not_none:
-        reservations = list(Reservation.filter_by_uuids_and_time_range(
-            resources_ids, start, end))
-        content = [reservation.as_dict for reservation in reservations]
-        return content, 200
+
+        try:
+            start_as_datetime = Reservation.parsed_input_datetime(start)
+            ends_as_datetime = Reservation.parsed_input_datetime(end)
+
+            matches = list(Reservation.filter_by_uuids_and_time_range(
+                            resources_ids, start_as_datetime, ends_as_datetime))
+        except (ValueError, AssertionError) as reason:
+            content = {'msg': '{}. {}'.format(G['bad_request'], reason)}
+            status = 400
+        else:
+            content = [match.as_dict for match in matches]
+            status = 200
     else:
-        return 'Bad request', 400
+        content = {'msg': G['bad_request']}
+        status = 400
+    return content, status
 
 
 @jwt_required

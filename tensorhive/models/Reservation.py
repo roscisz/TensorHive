@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, and_, not_
 from tensorhive.database import db, flask_app
 from tensorhive.models.CRUDModel import CRUDModel
 from sqlalchemy.ext.hybrid import hybrid_property
-from typing import Optional
+from typing import Optional, List
 import datetime
 import logging
 log = logging.getLogger(__name__)
@@ -48,10 +48,10 @@ class Reservation(CRUDModel, db.Model):
         client_datetime_format = '%Y-%m-%dT%H:%M:%S.%fZ'
         try:
             result = datetime.datetime.strptime(value, client_datetime_format)
-        except ValueError:
-            log.error('Could not parse datetime (value={})'.format(value))
-            result = None
-        finally:
+        except ValueError as e:
+            log.error(e)
+            raise
+        else:
             return result
 
     @classmethod
@@ -81,7 +81,12 @@ class Reservation(CRUDModel, db.Model):
     @ends_at.setter
     def ends_at(self, value):
         if isinstance(value, str):
-            self._ends_at = Reservation.parsed_input_datetime(value)
+            try:
+                self._ends_at = Reservation.parsed_input_datetime(value)
+            except ValueError:
+                # Catch, but don't propagate at this moment,
+                # let the dev to change it to correct value later
+                self._ends_at = None
         elif isinstance(value, datetime.datetime):
             self._ends_at = value
         else:
@@ -112,30 +117,25 @@ class Reservation(CRUDModel, db.Model):
                 Reservation.protected_resource_id == self.protected_resource_id
             ).first()
 
+    @classmethod
+    def filter_by_uuids_and_time_range(cls, uuids: List[str], start: datetime.datetime, end: datetime.datetime):
+        '''
+        Returns all reservations that overlap with <start, end> in any way:
+        X|   X|, |X   X|, |X   |X or |X   X|
 
+        and have UUID matching any of those from specified in uuids
+        '''
+        assertion_failed_msg = 'Argument must be of type datetime.datetime!'
+        assert isinstance(start, datetime.datetime), assertion_failed_msg
+        assert isinstance(end, datetime.datetime), assertion_failed_msg
 
-    # @classmethod
-    # def find_by_id(cls, id):
-    #     return cls.query.get(id)
+        with flask_app.app_context():
+            uuid_filter = cls.protected_resource_id.in_(uuids)
+            after_start_filter = cls.starts_at <= end
+            before_end_filter = start <= cls.ends_at
+            matching_conditions = and_(uuid_filter, after_start_filter, before_end_filter)
+            return cls.query.filter(matching_conditions).all()
 
-    # @classmethod
-    # def filter_by_uuids_and_time_range(cls, uuids, start, end):
-    #     uuid_filter = cls.protected_resource_id.in_(uuids)
-    #     after_start_filter = cls.start <= end
-    #     before_end_filter = start <= cls.end
-    #     matching_conditions = and_(uuid_filter, after_start_filter, before_end_filter)
-    #     return cls.query.filter(matching_conditions).all()
-
-    # # @classmethod
-    # # def delete_by_id(cls, id):
-    # #     try:
-    # #         num_rows_deleted = cls.query.filter_by(id=id).delete()
-    # #         db_session.commit()
-    # #     except:
-    # #         db_session.rollback()
-    # #         return False
-    # #     # Check if any row were affected by deletion (otherwise -> not found)
-    # #     return True if num_rows_deleted > 0 else False
     def __repr__(self):
         return '''
 <ReservationEvent id={0}, user={1}
