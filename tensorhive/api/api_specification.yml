@@ -12,6 +12,7 @@ paths:
       tags: 
         - users
       summary: Get all users
+      operationId: 'tensorhive.controllers.user.get_users_controller.all'
       responses:
         200:
           description: {{RESPONSES['users']['get']['success']}}
