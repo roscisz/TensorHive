@@ -24,6 +24,7 @@ class Reservation(CRUDModel, db.Model):
     __display_datetime_format = '%Y-%m-%dT%H:%M:%S'
     __server_timezone = '+00:00'
     __min_reservation_time = datetime.timedelta(minutes=30)
+    __max_reservation_time = datetime.timedelta(days=2)
 
     def check_assertions(self):
         assert self.user_id, 'Reservation owner must be given!'
@@ -31,6 +32,7 @@ class Reservation(CRUDModel, db.Model):
         assert self.starts_at, 'Reservation start time is invalid!'
         assert self.ends_at, 'Reservation end time is invalid!'
         assert self.duration >= self.__min_reservation_time, 'Reservation duration is too short!'
+        assert self.duration <= self.__max_reservation_time, 'Reservation duration is too long!'
 
         assert 8 < len(self.title) < 60, 'Reservation title length has incorrect length!'
         assert 8 < len(self.description) < 200, 'Reservation description has incorrect length!'
