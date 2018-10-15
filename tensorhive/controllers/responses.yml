@@ -20,6 +20,9 @@ user:
     success: User created successfully
     failure:
       duplicate: Such user exists
+reservation:
+  create:
+    success: Reservation has been successfully made
 users:
   get:
     success: Fetched successfully
