@@ -121,7 +121,7 @@ paths:
         200:
           description: {{RESPONSES['token']['refresh']['success']}}
         401:
-          description: {{RESPONSES['token']['refresh']['failure']}} or {{RESPONSES['token']['missing_auth_header']}}
+          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}}
         422:
           description: {{RESPONSES['token']['refresh']['required']}}
         500:
@@ -203,12 +203,16 @@ paths:
           schema:
             $ref: '#/definitions/CreateReservationEventController'
       responses:
-        '201':
-          description: Successfully created.
-        '400':
-          $ref: '#/responses/BadRequest'
-        '500':
-          $ref: '#/responses/InternalError'
+        201:
+          description: {{RESPONSES['reservation']['create']['success']}}
+        400:
+          description: {{RESPONSES['general']['bad_request']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}}
+        422:
+          description: {{RESPONSES['token']['access']['required']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
   /reservations/{id}:
