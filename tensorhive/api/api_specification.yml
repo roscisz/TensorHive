@@ -236,7 +236,7 @@ paths:
       tags: 
         - nodes
       summary: Get all hostnames
-      operationId: 'tensorhive.api.controllers.nodes.get_hostnames'
+      operationId: tensorhive.controllers.nodes.infrastructure_controller.get_hostnames
       responses:
         '200':
           description: List of hostnames fetched with success
@@ -251,7 +251,7 @@ paths:
       tags: 
         - nodes
       summary: Get each node's all metric data
-      operationId: 'tensorhive.api.controllers.nodes.get_all_metrics'
+      operationId: tensorhive.controllers.nodes.infrastructure_controller.get_all_data
       responses:
         '200':
           description: 'Success'
@@ -264,7 +264,7 @@ paths:
       tags: 
         - nodes
       summary: Get node's basic GPU information
-      operationId: 'tensorhive.api.controllers.nodes.get_gpu_info'
+      operationId: tensorhive.controllers.nodes.gpu_controller.get_info
       parameters:
         - $ref: '#/parameters/hostnameParam'
       responses:
@@ -283,7 +283,7 @@ paths:
       tags: 
         - nodes
       summary: Get node's GPU metric data
-      operationId: 'tensorhive.api.controllers.nodes.get_gpu_metrics'
+      operationId: tensorhive.controllers.nodes.gpu_controller.get_metrics
       parameters:
         - $ref: '#/parameters/hostnameParam'
         - $ref: '#/parameters/gpuMetricTypeQuery'
@@ -303,7 +303,7 @@ paths:
       tags: 
         - nodes
       summary: Get node's GPU processes data
-      operationId: 'tensorhive.api.controllers.nodes.get_gpu_processes'
+      operationId: tensorhive.controllers.nodes.gpu_controller.get_processes
       parameters:
         - $ref: '#/parameters/hostnameParam'
       responses:
