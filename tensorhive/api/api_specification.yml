@@ -84,7 +84,7 @@ paths:
       tags:
         - users
       summary: Logout user using access token
-      operationId: 'tensorhive.api.controllers.user.post_logout_access_token'
+      operationId: tensorhive.controllers.user.logout_user_controller.logout_with_access_token
       responses:
         201:
           description: {{RESPONSES['user']['logout']['success']}}
@@ -99,7 +99,7 @@ paths:
       tags:
         - users
       summary: Logout user using refresh token
-      operationId: 'tensorhive.api.controllers.user.post_logout_refresh_token'
+      operationId: tensorhive.controllers.user.logout_user_controller.logout_with_refresh_token
       responses:
         201:
           description: {{RESPONSES['user']['logout']['success']}}

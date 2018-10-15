@@ -1,6 +1,6 @@
 from flask_jwt_extended import jwt_required, jwt_refresh_token_required
 # from tensorhive.controllers.user.UserLoginController import LoginUserController
-from tensorhive.controllers.user.UserLogoutController import LogoutUserController
+#from tensorhive.controllers.user.UserLogoutController import LogoutUserController
 # from tensorhive.controllers.user.CreateUserController import CreateUserController
 from tensorhive.controllers.user.CreateRefreshedUserTokenController import CreateRefreshedUserTokenController
 from tensorhive.controllers.user.DeleteUserController import DeleteUserController
@@ -18,16 +18,16 @@ def get_refreshed_access_token():
     return CreateRefreshedUserTokenController.create()
 
 
-@jwt_required
-def post_logout_access_token():
-    '''Revoking the current users access token'''
-    return LogoutUserController.delete_logout('Access')
+# @jwt_required
+# def post_logout_access_token():
+#     '''Revoking the current users access token'''
+#     return LogoutUserController.delete_logout('Access')
 
 
-@jwt_refresh_token_required
-def post_logout_refresh_token():
-    '''Revoking the refresh users access token'''
-    return LogoutUserController.delete_logout('Refresh')
+# @jwt_refresh_token_required
+# def post_logout_refresh_token():
+#     '''Revoking the refresh users access token'''
+#     return LogoutUserController.delete_logout('Refresh')
 
 
 # @admin_required
