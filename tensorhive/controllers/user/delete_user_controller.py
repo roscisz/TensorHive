@@ -30,7 +30,7 @@ def delete(id):
 
             # Try to destroy
             user_to_destroy = User.get(id)
-            db.session.add(current_user)
+            db.session.add(user_to_destroy)
             user_to_destroy.destroy()
     except AssertionError as error_message:
         content, status = {'msg': str(error_message)}, 403
