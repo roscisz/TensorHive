@@ -3,14 +3,14 @@ from tensorhive.models.Reservation import Reservation
 
 
 @jwt_required
-def all():
+def get_all():
     return [
         reservation.as_dict for reservation in Reservation.all()
     ], 200
 
 
 @jwt_required
-def selected(resources_ids, start, end):
+def get_selected(resources_ids, start, end):
     # All args are required at once, otherwise return 400
     all_not_none = resources_ids and start and end
     if all_not_none:
@@ -28,7 +28,7 @@ def get(resources_ids=None, start=None, end=None):
     all_args_none = all(a is None for a in args)
 
     if all_args_none:
-        return all()
+        return get_all()
     else:
         # Filter reservations
-        return selected(resources_ids, start, end)
+        return get_selected(resources_ids, start, end)
