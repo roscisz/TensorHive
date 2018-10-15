@@ -59,7 +59,7 @@ paths:
       summary: Delete user
       operationId: tensorhive.controllers.user.delete_user_controller.delete
       parameters:
-        - description: Delete user by id
+        - description: User ID
           in: path
           name: id
           required: true
@@ -193,10 +193,10 @@ paths:
     post:
       tags: 
         - reservations
-      summary: Create new reservation event
+      summary: Make new reservation
       operationId: tensorhive.controllers.reservation.create_reservation_controller.create
       parameters:
-        - description: Reservation event object
+        - description: Reservation object
           in: body
           name: reservation
           required: true
