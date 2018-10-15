@@ -193,10 +193,11 @@ paths:
       tags: 
         - reservations
       summary: Create new reservation event
+      operationId: tensorhive.controllers.reservation.create_reservation_controller.create
       parameters:
         - description: Reservation event object
           in: body
-          name: reservation_event
+          name: reservation
           required: true
           schema:
             $ref: '#/definitions/CreateReservationEventController'
