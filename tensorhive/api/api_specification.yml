@@ -12,7 +12,7 @@ paths:
       tags: 
         - users
       summary: Get all users
-      operationId: 'tensorhive.controllers.user.get_users_controller.all'
+      operationId: tensorhive.controllers.user.get_users_controller.all
       responses:
         200:
           description: {{RESPONSES['users']['get']['success']}}
@@ -31,7 +31,7 @@ paths:
       tags: 
         - users
       summary: Create new user
-      operationId: 'tensorhive.api.controllers.user.post_create'
+      operationId: tensorhive.controllers.user.create_user_controller.create
       parameters:
         - description: User object
           in: body
