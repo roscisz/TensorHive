@@ -133,7 +133,7 @@ paths:
       tags:
         - users
       summary: Login user
-      operationId: 'tensorhive.api.controllers.user.post_login'
+      operationId: 'tensorhive.controllers.user.login_user_controller.login'
       parameters:
         - description: User object
           in: body
