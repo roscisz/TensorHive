@@ -8,7 +8,6 @@ G = API.RESPONSES['general']
 
 def login(user):
     try:
-        # Try to find the user
         current_user = User.find_by_username(user['username'])
     except NoResultFound as e:
         content = {'msg': R['not_found']}
@@ -18,7 +17,6 @@ def login(user):
         status = 500
     else:
         if not User.verify_hash(user['password'], current_user.password):
-            # Incorrect password
             content = {'msg': R['login']['failure']['credentials']}
             status = 401
         else:

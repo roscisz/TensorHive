@@ -21,9 +21,11 @@ paths:
             items:
               $ref: '#/definitions/User'
         401:
-          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}} or {{RESPONSES['token']['expired']}}
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
         422:
-          description: {{RESPONSES['token']['access']['required']}}
+          description: {{RESPONSES['general']['auth_error']}}
       security:
         - Bearer: []
   /user/create:
@@ -43,7 +45,7 @@ paths:
         201:
           description: {{RESPONSES['user']['create']['success']}}
         401:
-          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}} {{RESPONSES['token']['missing_auth_header']}} or {{RESPONSES['token']['expired']}} or {{RESPONSES['token']['revoked']}}
+          description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
         409:
@@ -74,7 +76,7 @@ paths:
         404:
           description: {{RESPONSES['user']['not_found']}}
         422:
-          description: {{RESPONSES['token']['access']['required']}}
+          description: {{RESPONSES['general']['auth_error']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:
@@ -89,7 +91,9 @@ paths:
         201:
           description: {{RESPONSES['user']['logout']['success']}}
         401:
-          description: {{RESPONSES['token']['missing_auth_header']}} or {{RESPONSES['token']['expired']}} or {{RESPONSES['token']['revoked']}}
+          description: {{RESPONSES['general']['unauthorized']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}      
       security:
@@ -104,9 +108,9 @@ paths:
         201:
           description: {{RESPONSES['user']['logout']['success']}}
         401:
-          description: {{RESPONSES['token']['missing_auth_header']}}
+          description: {{RESPONSES['general']['unauthorized']}}
         422:
-          description: {{RESPONSES['token']['refresh']['required']}}
+          description: {{RESPONSES['general']['auth_error']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:
@@ -121,11 +125,9 @@ paths:
         200:
           description: {{RESPONSES['token']['refresh']['success']}}
         401:
-          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}}
+          description: {{RESPONSES['general']['unauthorized']}}
         422:
-          description: {{RESPONSES['token']['refresh']['required']}}
-        500:
-          description: {{RESPONSES['general']['internal_error']}}
+          description: {{RESPONSES['general']['auth_error']}}
       security:
         - Bearer: []
   /user/login:
@@ -208,9 +210,9 @@ paths:
         400:
           description: {{RESPONSES['general']['bad_request']}}
         401:
-          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}}
+          description: {{RESPONSES['general']['unauthorized']}}
         422:
-          description: {{RESPONSES['token']['access']['required']}}
+          description: {{RESPONSES['general']['auth_error']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:
@@ -231,11 +233,11 @@ paths:
         200:
           description: {{RESPONSES['reservation']['delete']['success']}}
         401:
-          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}}
+          description: {{RESPONSES['general']['unauthorized']}}
         404:
           description: {{RESPONSES['reservation']['not_found']}}
         422:
-          description: {{RESPONSES['token']['access']['required']}}
+          description: {{RESPONSES['general']['auth_error']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:

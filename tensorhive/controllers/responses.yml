@@ -5,6 +5,7 @@ general:
   bad_request: Bad Request
   unpriviliged: Unpriviliged
   no_identity: Could not resolve identity
+  auth_error: Authorization error
   ok: OK
 user:
   not_found: User has not been found
@@ -42,6 +43,3 @@ token:
   revoked: Token has been revoked
   expired: Token has expired
   missing_auth_header: Missing Authorization Header
-
-
-

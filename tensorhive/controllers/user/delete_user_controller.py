@@ -13,22 +13,13 @@ G = API.RESPONSES['general']
 @admin_required
 def delete(id):
     try:
-        # Check identity
         current_user_id = get_jwt_identity()
-        assert current_user_id, G['no_identity']
+
+        # User is not allowed to delete his own account
+        assert id != current_user_id, R['delete']['self']
 
         with flask_app.app_context():
-            # User is not allowed to delete his own account
-            assert id != current_user_id, R['delete']['self']
-
-            # Check if the identity exists
-            current_user = User.get(current_user_id)
-            db.session.add(current_user)
-
-            # Check permissions
-            assert current_user.has_role('admin'), G['unpriviliged']
-
-            # Try to destroy
+            # Fetch the user and destroy
             user_to_destroy = User.get(id)
             db.session.add(user_to_destroy)
             user_to_destroy.destroy()
