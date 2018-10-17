@@ -66,6 +66,12 @@ class User(CRUDModel, db.Model):
         assert result, 'Incorrect password, reason: {}'.format(result.message)
         self._hashed_password = sha256.hash(raw)
 
+    @validates('username')
+    def validate_username(self, key, username):
+        assert is_safe_username(username), 'Invalid username'
+        assert 4 < len(username) < 30, 'Username must be between 4 and 30 characters long!'
+        return username
+
     @classmethod
     def find_by_username(cls, username):
         with flask_app.app_context():
@@ -82,16 +88,6 @@ class User(CRUDModel, db.Model):
                 raise NoResultFound(msg)
             else:
                 return result
-
-    # @classmethod
-    # def find_by_id(cls, id):
-    #     return cls.query.filter_by(id=id).first()
-
-    @validates('username')
-    def validate_username(self, key, username):
-        assert is_safe_username(username), 'Invalid username'
-        assert 4 < len(username) < 30, 'Username must be between 4 and 30 characters long!'
-        return username
 
     @property
     def as_dict(self):
