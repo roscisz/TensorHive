@@ -25,7 +25,7 @@ paths:
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
         422:
-          description: {{RESPONSES['token']['access']['required']}}
+          description: {{RESPONSES['general']['auth_error']}}
       security:
         - Bearer: []
   /user/create:
@@ -76,7 +76,7 @@ paths:
         404:
           description: {{RESPONSES['user']['not_found']}}
         422:
-          description: {{RESPONSES['token']['access']['required']}}
+          description: {{RESPONSES['general']['auth_error']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:
@@ -92,6 +92,8 @@ paths:
           description: {{RESPONSES['user']['logout']['success']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}      
       security:
@@ -108,7 +110,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         422:
-          description: {{RESPONSES['token']['refresh']['required']}}
+          description: {{RESPONSES['general']['auth_error']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:
@@ -125,7 +127,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         422:
-          description: {{RESPONSES['token']['refresh']['required']}}
+          description: {{RESPONSES['general']['auth_error']}}
       security:
         - Bearer: []
   /user/login:
@@ -210,7 +212,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         422:
-          description: {{RESPONSES['token']['access']['required']}}
+          description: {{RESPONSES['general']['auth_error']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:
@@ -235,7 +237,7 @@ paths:
         404:
           description: {{RESPONSES['reservation']['not_found']}}
         422:
-          description: {{RESPONSES['token']['access']['required']}}
+          description: {{RESPONSES['general']['auth_error']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:
