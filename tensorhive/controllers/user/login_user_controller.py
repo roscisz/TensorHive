@@ -9,23 +9,23 @@ G = API.RESPONSES['general']
 def login(user):
     try:
         current_user = User.find_by_username(user['username'])
+        assert User.verify_hash(user['password'], current_user.password), \
+            R['login']['failure']['credentials']
     except NoResultFound as e:
         content = {'msg': R['not_found']}
         status = 404
+    except AssertionError as error_message:
+        content = {'msg': str(error_message)}
+        status = 401
     except Exception as e:
         content = {'msg': G['internal_error']}
         status = 500
     else:
-        if not User.verify_hash(user['password'], current_user.password):
-            content = {'msg': R['login']['failure']['credentials']}
-            status = 401
-        else:
-            # User is authorized now
-            content = {
-                'msg': R['login']['success'].format(username=current_user.username),
-                'access_token': create_access_token(identity=current_user.id, fresh=True),
-                'refresh_token': create_refresh_token(identity=current_user.id)
-            }
-            status = 200
+        content = {
+            'msg': R['login']['success'].format(username=current_user.username),
+            'access_token': create_access_token(identity=current_user.id, fresh=True),
+            'refresh_token': create_refresh_token(identity=current_user.id)
+        }
+        status = 200
     finally:
         return content, status

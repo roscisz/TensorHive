@@ -20,8 +20,8 @@ def create(user):
             )
             new_user.save()
     except AssertionError as e:
-        content = {'msg': str(e)}
-        status = 403
+        content = {'msg': R['create']['failure']['invalid'].format(reason=e)}
+        status = 422
     except IntegrityError:
         content = {'msg': R['create']['failure']['duplicate']}
         status = 409

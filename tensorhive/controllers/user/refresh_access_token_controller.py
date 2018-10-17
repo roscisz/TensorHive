@@ -4,7 +4,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.config import API
 import logging
 log = logging.getLogger(__name__)
-R = API.RESPONSES
+R = API.RESPONSES['token']
 G = API.RESPONSES['general']
 
 
@@ -12,7 +12,7 @@ G = API.RESPONSES['general']
 def generate():
     new_access_token = create_access_token(identity=get_jwt_identity(), fresh=False)
     content = {
-        'msg': R['token']['refresh']['success'],
+        'msg': R['refresh']['success'],
         'access_token': new_access_token
     }
     return content, 200

@@ -50,6 +50,8 @@ paths:
           description: {{RESPONSES['general']['unpriviliged']}}
         409:
           description: {{RESPONSES['user']['create']['failure']['duplicate']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['user']['create']['failure']['invalid']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:
@@ -70,7 +72,7 @@ paths:
         200:
           description: {{RESPONSES['user']['delete']['success']}}
         401:
-          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}} {{RESPONSES['token']['missing_auth_header']}} or {{RESPONSES['token']['expired']}} or {{RESPONSES['token']['revoked']}}
+          description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
         404:
@@ -88,7 +90,7 @@ paths:
       summary: Logout user using access token
       operationId: tensorhive.controllers.user.logout_user_controller.logout_with_access_token
       responses:
-        201:
+        200:
           description: {{RESPONSES['user']['logout']['success']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
@@ -105,7 +107,7 @@ paths:
       summary: Logout user using refresh token
       operationId: tensorhive.controllers.user.logout_user_controller.logout_with_refresh_token
       responses:
-        201:
+        200:
           description: {{RESPONSES['user']['logout']['success']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
@@ -152,6 +154,8 @@ paths:
           description: {{RESPONSES['user']['login']['failure']['credentials']}}
         404:
           description: {{RESPONSES['user']['not_found']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
   /reservations:
@@ -190,6 +194,10 @@ paths:
               $ref: '#/definitions/ReservationEvent'
         400:
           description: {{RESPONSES['general']['bad_request']}}. Specify all parameters or none.
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
     post:
@@ -207,12 +215,12 @@ paths:
       responses:
         201:
           description: {{RESPONSES['reservation']['create']['success']}}
-        400:
-          description: {{RESPONSES['general']['bad_request']}}
+        422:
+          description: {{RESPONSES['reservation']['create']['failure']['invalid']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         422:
-          description: {{RESPONSES['general']['auth_error']}}
+          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['reservation']['create']['failure']['invalid']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:

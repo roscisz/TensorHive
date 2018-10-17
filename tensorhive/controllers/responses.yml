@@ -1,5 +1,5 @@
 general:
-  internal_error: Internal server error
+  internal_error: Internal server error 
   success: Fetched successfully
   unauthorized: Unauthorized
   bad_request: Bad Request
@@ -22,10 +22,13 @@ user:
     success: User created successfully
     failure:
       duplicate: Such user exists
+      invalid: Requirements not met - {reason}
 reservation:
   not_found: Reservation has not been found
   create:
     success: Reservation has been successfully made
+    failure:
+      invalid: Requirements not met - {reason}
   delete:
     success: Reservation has been successfully deleted
 users:
@@ -34,6 +37,7 @@ users:
 token:
   revoke:
     success: '{token_type} has been revoked'
+    failure: '{token_type} has not been revoked'
   refresh:
     failure: Unable to refresh - unauthorized user
     success: Token has been refreshed successfully

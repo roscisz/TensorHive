@@ -19,9 +19,9 @@ def create(reservation):
                 ends_at=reservation['end']
             )
             new_reservation.save()
-    except AssertionError as reason:
-        content = {'msg': '{}. {}'.format(G['bad_request'], str(reason))}
-        status = 400
+    except AssertionError as e:
+        content = {'msg': R['create']['failure']['invalid'].format(reason=e)}
+        status = 422
     except Exception as e:
         content = {'msg': G['internal_error']}
         status = 500

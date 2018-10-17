@@ -2,8 +2,11 @@ from flask_jwt_extended import get_raw_jwt
 from tensorhive.models.RevokedToken import RevokedToken
 from flask_jwt_extended import jwt_required, jwt_refresh_token_required
 from tensorhive.config import API
-R = API.RESPONSES['token']
+import logging
+log = logging.getLogger(__name__)
+R = API.RESPONSES['user']
 G = API.RESPONSES['general']
+T = API.RESPONSES['token']['revoke']
 
 
 def logout(token_type):
@@ -11,11 +14,13 @@ def logout(token_type):
     try:
         RevokedToken(jti=jti).save()
     except Exception as e:
+        log.critical(G['internal_error'])
+        log.critical(T['failure'].format(token_type=token_type))
         content = {'msg': G['internal_error']}
         status = 500
     else:
-        content = {'msg': R['revoke']['success'].format(token_type=token_type)}
-        status = 201
+        content = {'msg': R['logout']['success']}
+        status = 200
     finally:
         return content, status
 
