@@ -49,7 +49,8 @@ setup(
         'flask_migrate',
         'gunicorn',
         'coloredlogs',
-        'Safe'
+        'Safe',
+        'python-usernames'
     ],
     zip_safe=False
 )
