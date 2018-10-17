@@ -16,16 +16,6 @@ paths:
       responses:
         200:
           description: {{RESPONSES['users']['get']['success']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: Example message
-              user:
-                type: array
-                items:
-                  $ref: '#/definitions/User'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
@@ -50,6 +40,18 @@ paths:
       responses:
         201:
           description: {{RESPONSES['user']['create']['success']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['user']['create']['success']}}
+              user:
+                type: array
+                items:
+                  $ref: '#/definitions/User'
+        400:
+          description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
@@ -221,8 +223,18 @@ paths:
       responses:
         201:
           description: {{RESPONSES['reservation']['create']['success']}}
-        422:
-          description: {{RESPONSES['reservation']['create']['failure']['invalid']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['reservation']['create']['success']}}
+              reservation:
+                type: array
+                items:
+                  $ref: '#/definitions/Reservation'
+        400:
+          description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         422:

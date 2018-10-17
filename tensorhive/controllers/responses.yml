@@ -26,7 +26,7 @@ user:
 reservation:
   not_found: Reservation has not been found
   create:
-    success: Reservation has been successfully made
+    success: Reservation has been successfully created
     failure:
       invalid: Requirements not met - {reason}
   delete:
