@@ -19,11 +19,19 @@ def delete(id):
 
         with flask_app.app_context():
             # Check if the identity exists
-            User.get(current_user_id)
+            current_user = User.get(current_user_id)
+            db.session.add(current_user)
 
-            # Try to destroy
+            # Fetch the reservation
             reservation_to_destroy = Reservation.get(id)
             db.session.add(reservation_to_destroy)
+
+            # Must be priviliged
+            is_admin = current_user.has_role('admin')
+            is_owner = reservation_to_destroy.user_id == current_user_id
+            assert is_owner or is_admin, G['unpriviliged']
+
+            # Try to destroy
             reservation_to_destroy.destroy()
     except AssertionError as error_message:
         content, status = {'msg': str(error_message)}, 403
