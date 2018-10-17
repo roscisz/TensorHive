@@ -14,6 +14,7 @@ G = API.RESPONSES['general']
 def delete(id):
     try:
         current_user_id = get_jwt_identity()
+        claims = get_jwt_claims()
 
         with flask_app.app_context():
             # Fetch the reservation
@@ -21,7 +22,7 @@ def delete(id):
             db.session.add(reservation_to_destroy)
 
             # Must be priviliged
-            is_admin = 'admin' in get_jwt_claims()['roles']
+            is_admin = 'admin' in claims['roles']
             is_owner = reservation_to_destroy.user_id == current_user_id
             assert is_owner or is_admin, G['unpriviliged']
 
