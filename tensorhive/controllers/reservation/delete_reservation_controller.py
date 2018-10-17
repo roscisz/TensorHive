@@ -1,5 +1,5 @@
 from sqlalchemy.orm.exc import NoResultFound
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt_claims
 from tensorhive.models.Reservation import Reservation
 from tensorhive.models.User import User
 from tensorhive.config import API
@@ -13,25 +13,19 @@ G = API.RESPONSES['general']
 @jwt_required
 def delete(id):
     try:
-        # Check identity
         current_user_id = get_jwt_identity()
-        assert current_user_id, G['no_identity']
 
         with flask_app.app_context():
-            # Check if the identity exists
-            current_user = User.get(current_user_id)
-            db.session.add(current_user)
-
             # Fetch the reservation
             reservation_to_destroy = Reservation.get(id)
             db.session.add(reservation_to_destroy)
 
             # Must be priviliged
-            is_admin = current_user.has_role('admin')
+            is_admin = 'admin' in get_jwt_claims()['roles']
             is_owner = reservation_to_destroy.user_id == current_user_id
             assert is_owner or is_admin, G['unpriviliged']
 
-            # Try to destroy
+            # Destroy
             reservation_to_destroy.destroy()
     except AssertionError as error_message:
         content, status = {'msg': str(error_message)}, 403

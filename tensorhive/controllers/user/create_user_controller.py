@@ -12,22 +12,12 @@ G = API.RESPONSES['general']
 @admin_required
 def create(user):
     try:
-        # Check identity
-        current_user_id = get_jwt_identity()
-        assert current_user_id, G['no_identity']
-
         with flask_app.app_context():
-            # Check if the identity exists
-            current_user = User.get(current_user_id)
-            db.session.add(current_user)
-
-            # Check permissions
-            assert current_user.has_role('admin'), G['unpriviliged']                           
-
-            # Try to create with default role
-            new_user = User(username=user['username'],
-                            password=user['password'],
-                            roles=[Role(name='user')])
+            new_user = User(
+                username=user['username'],
+                password=user['password'],
+                roles=[Role(name='user')]
+            )
             new_user.save()
     except AssertionError as e:
         content = {'msg': str(e)}

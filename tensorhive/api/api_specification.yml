@@ -106,7 +106,7 @@ paths:
         201:
           description: {{RESPONSES['user']['logout']['success']}}
         401:
-          description: {{RESPONSES['token']['unauthorized']}}
+          description: {{RESPONSES['general']['unauthorized']}}
         422:
           description: {{RESPONSES['token']['refresh']['required']}}
         500:
@@ -126,8 +126,6 @@ paths:
           description: {{RESPONSES['general']['unauthorized']}}
         422:
           description: {{RESPONSES['token']['refresh']['required']}}
-        500:
-          description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
   /user/login:

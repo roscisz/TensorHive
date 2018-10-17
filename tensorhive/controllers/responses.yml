@@ -42,6 +42,3 @@ token:
   revoked: Token has been revoked
   expired: Token has expired
   missing_auth_header: Missing Authorization Header
-
-
-
