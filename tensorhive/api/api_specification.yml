@@ -21,7 +21,9 @@ paths:
             items:
               $ref: '#/definitions/User'
         401:
-          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}} or {{RESPONSES['token']['expired']}}
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
         422:
           description: {{RESPONSES['token']['access']['required']}}
       security:
@@ -43,7 +45,7 @@ paths:
         201:
           description: {{RESPONSES['user']['create']['success']}}
         401:
-          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}} {{RESPONSES['token']['missing_auth_header']}} or {{RESPONSES['token']['expired']}} or {{RESPONSES['token']['revoked']}}
+          description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
         409:
@@ -89,7 +91,7 @@ paths:
         201:
           description: {{RESPONSES['user']['logout']['success']}}
         401:
-          description: {{RESPONSES['token']['missing_auth_header']}} or {{RESPONSES['token']['expired']}} or {{RESPONSES['token']['revoked']}}
+          description: {{RESPONSES['general']['unauthorized']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}      
       security:
@@ -104,7 +106,7 @@ paths:
         201:
           description: {{RESPONSES['user']['logout']['success']}}
         401:
-          description: {{RESPONSES['token']['missing_auth_header']}}
+          description: {{RESPONSES['token']['unauthorized']}}
         422:
           description: {{RESPONSES['token']['refresh']['required']}}
         500:
@@ -121,7 +123,7 @@ paths:
         200:
           description: {{RESPONSES['token']['refresh']['success']}}
         401:
-          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}}
+          description: {{RESPONSES['general']['unauthorized']}}
         422:
           description: {{RESPONSES['token']['refresh']['required']}}
         500:
@@ -208,7 +210,7 @@ paths:
         400:
           description: {{RESPONSES['general']['bad_request']}}
         401:
-          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}}
+          description: {{RESPONSES['general']['unauthorized']}}
         422:
           description: {{RESPONSES['token']['access']['required']}}
         500:
@@ -231,7 +233,7 @@ paths:
         200:
           description: {{RESPONSES['reservation']['delete']['success']}}
         401:
-          description: {{RESPONSES['general']['unauthorized']}} or {{RESPONSES['token']['missing_auth_header']}}
+          description: {{RESPONSES['general']['unauthorized']}}
         404:
           description: {{RESPONSES['reservation']['not_found']}}
         422:
