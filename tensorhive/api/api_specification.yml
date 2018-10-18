@@ -277,12 +277,13 @@ paths:
       summary: Get all hostnames
       operationId: tensorhive.controllers.nodes.infrastructure_controller.get_hostnames
       responses:
-        '200':
-          description: List of hostnames fetched with success
+        200:
+          description: {{RESPONSES['general']['ok']}}
           schema:
             type: array
             items: 
               type: string
+              example: <SOME_HOSTNAME>
       security:
         - Bearer: []
   /nodes/metrics:
