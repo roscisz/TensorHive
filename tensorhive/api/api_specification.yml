@@ -178,7 +178,7 @@ paths:
     get:
       tags: 
         - reservations
-      summary: Get all reservation events
+      summary: Get all or specific reservation events
       operationId: tensorhive.controllers.reservation.get_reservation_controller.get
       parameters:
         - description: Array of uuids
