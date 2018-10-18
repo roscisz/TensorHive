@@ -83,6 +83,9 @@ paths:
       responses:
         200:
           description: {{RESPONSES['user']['delete']['success']}}
+          schema:
+            example:
+              msg: {{RESPONSES['user']['delete']['success']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
@@ -104,6 +107,9 @@ paths:
       responses:
         200:
           description: {{RESPONSES['user']['logout']['success']}}
+          schema:
+            example:
+              msg: {{RESPONSES['user']['logout']['success']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         422:
@@ -121,6 +127,9 @@ paths:
       responses:
         200:
           description: {{RESPONSES['user']['logout']['success']}}
+          schema:
+            example:
+              msg: {{RESPONSES['user']['logout']['success']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         422:
@@ -271,6 +280,9 @@ paths:
       responses:
         200:
           description: {{RESPONSES['reservation']['delete']['success']}}
+          schema:
+            example:
+              msg: {{RESPONSES['reservation']['delete']['success']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         404:
