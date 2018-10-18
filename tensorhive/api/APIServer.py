@@ -1,5 +1,5 @@
-from tensorhive.config import API, API_SERVER
-from tensorhive.database import db
+from tensorhive.config import API, API_SERVER, DB
+from tensorhive.database import db, init_migrations, connexion_app_instance
 from flask_cors import CORS
 from tensorhive.authorization import init_jwt
 import connexion
@@ -7,14 +7,22 @@ import logging
 log = logging.getLogger(__name__)
 
 
+# def connexion_app_instance():
+#     app = connexion.FlaskApp(__name__)
+#     app.app.config['SQLALCHEMY_DATABASE_URI'] = DB.SQLALCHEMY_DATABASE_URI
+#     app.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+#     return app
+
+
 class APIServer():
     def run_forever(self):
-        app = connexion.FlaskApp(__name__)
+        app = connexion_app_instance()
+        print(__name__)
         init_jwt(app.app)
 
-        # @app.app.teardown_appcontext
-        # def shutdown_session(exception=None):
-        #     db.session.remove()
+        @app.app.teardown_appcontext
+        def shutdown_session(exception=None):
+            db.session.remove()
 
         app.add_api(API.SPEC_FILE,
                     arguments={

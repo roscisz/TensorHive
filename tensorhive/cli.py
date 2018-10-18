@@ -82,17 +82,17 @@ def main(log_level):
 
     try:
         init_db()
-        manager = TensorHiveManager()
+        # manager = TensorHiveManager()
         api_server = APIServer()
         webapp_server = Process(target=start_server)
 
-        manager.configure_services_from_config()
-        manager.init()
+        # manager.configure_services_from_config()
+        # manager.init()
         webapp_server.start()       # Separate process
         api_server.run_forever()    # Will block (runs on main thread)
     except KeyboardInterrupt:
         click.echo('[⚙] Shutting down TensorHive...')
-        manager.shutdown()
+        # manager.shutdown()
         webapp_server.join()
         sys.exit()
 

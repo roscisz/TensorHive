@@ -4,14 +4,15 @@ import flask_sqlalchemy
 import flask_migrate
 import sqlalchemy_utils
 import logging
+import connexion
 log = logging.getLogger(__name__)
 
 
-def create_boilerplate_app(db):
-    app = flask.Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = DB.SQLALCHEMY_DATABASE_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-    db.init_app(app)
+def connexion_app_instance():
+    app = connexion.FlaskApp('tensorhive.api.APIServer')
+    app.app.config['SQLALCHEMY_DATABASE_URI'] = DB.SQLALCHEMY_DATABASE_URI
+    app.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+    db.init_app(app.app)
     return app
 
 
@@ -26,8 +27,10 @@ def init_migrations(app, db):
 
 
 db = flask_sqlalchemy.SQLAlchemy()
-flask_app = create_boilerplate_app(db)
+connexion_app = connexion_app_instance()
+flask_app = connexion_app.app
 migrate = init_migrations(flask_app, db)
+#flask_app = create_boilerplate_app(db, 'sqlite:///test_database.sqlite')
 
 
 def init_db() -> None:

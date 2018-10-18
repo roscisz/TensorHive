@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-from tensorhive.database import db, flask_app
+from tensorhive.database import db
 from tensorhive.models.CRUDModel import CRUDModel
 import logging
 log = logging.getLogger(__name__)

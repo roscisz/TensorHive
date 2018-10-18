@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, and_, not_, or_
-from tensorhive.database import db, flask_app
+from tensorhive.database import db
 from tensorhive.models.CRUDModel import CRUDModel
 from sqlalchemy.ext.hybrid import hybrid_property
 from typing import Optional, List
@@ -97,14 +97,14 @@ class Reservation(CRUDModel, db.Model):
     def current_events(cls):
         '''Returns only those events that should be currently respected by users'''
         current_time = datetime.datetime.utcnow()
-        with flask_app.app_context():
-            return cls.query.filter(
-                and_(
-                    # Events that has already started
-                    cls.starts_at <= current_time,
-                    # Events before their end
-                    current_time <= cls.ends_at)
-                ).all()
+        # with flask_app.app_context():
+        return cls.query.filter(
+            and_(
+                # Events that has already started
+                cls.starts_at <= current_time,
+                # Events before their end
+                current_time <= cls.ends_at)
+            ).all()
 
     def would_interfere(self):
         return Reservation.query.filter(

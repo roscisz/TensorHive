@@ -3,7 +3,7 @@ from tensorhive.models.RevokedToken import RevokedToken
 from tensorhive.config import AUTH
 from functools import wraps
 from tensorhive.models.User import User
-from tensorhive.database import flask_app, db
+from tensorhive.database import db
 from tensorhive.config import API
 G = API.RESPONSES['general']
 

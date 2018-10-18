@@ -25,6 +25,7 @@ class User(CRUDModel, db.Model):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
+    #siema = Column(String(40))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     reservations = relationship('Reservation', cascade='all,delete', backref=backref('user'))
 
