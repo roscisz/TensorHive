@@ -282,10 +282,9 @@ paths:
         200:
           description: {{RESPONSES['general']['ok']}}
           schema:
-            type: array
-            items: 
-              type: string
-              example: <SOME_HOSTNAME>
+            example:
+              - hostname1
+              - hostname2
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         422:
