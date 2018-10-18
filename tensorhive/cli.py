@@ -24,8 +24,7 @@ def print_version(ctx, param, value):
     ctx.exit()
 
 
-def setup_logging(log_level):
-    DEFAULT_LEVEL = logging.INFO
+def setup_logging(log_level=logging.INFO):
     FORMAT = '%(levelname)-8s | %(asctime)s | %(threadName)-30s | MSG: %(message)-79s | FROM: %(name)s'
 
     # Remove existing configuration first (otherwise basicConfig won't be applied for the second time)
@@ -52,6 +51,7 @@ def setup_logging(log_level):
     # Colored logs can be easily disabled by commenting this single line
     import coloredlogs
     coloredlogs.install(level=log_level, fmt=FORMAT)
+
 
 def log_level_mapping(ctx, param, value: str) -> int:
     '''
