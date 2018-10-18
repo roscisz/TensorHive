@@ -291,12 +291,13 @@ paths:
       tags: 
         - nodes
       summary: Get each node's all metric data
+      description: Puts null if some data is unavailable
       operationId: tensorhive.controllers.nodes.infrastructure_controller.get_all_data
       responses:
-        '200':
-          description: 'Success'
+        200:
+          description: {{RESPONSES['general']['ok']}} 
           schema:
-            type: object
+            $ref: '#/definitions/GPUAllData'
       security:
         - Bearer: []
   /nodes/{hostname}/gpu/info:
@@ -454,6 +455,22 @@ definitions:
       end:
         type: string
         format: date-time
+  GPUAllData:
+    type: object
+    example:
+      <HOSTNAME>:
+        GPU:
+          <GPU_UUID>:
+            index: 0
+            name: GeForce GTX 1060
+            metrics: 
+              fan_speed:
+                unit: '%'
+                value: 30
+              power:
+                unit: W
+                value: 90
+            processes: 'null'
   GPUInfo:
     type: object
     properties:
@@ -465,7 +482,7 @@ definitions:
             example: 0
           name:
             type: string
-            example: "GeForce GTX 1060"
+            example: GeForce GTX 1060
 responses:
   # TODO Remove and adjust /nodes/* endpoints
   NotFound:
