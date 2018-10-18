@@ -502,21 +502,6 @@ definitions:
         - command: java
           owner: bar
           pid: 2222
-responses:
-  # TODO Remove and adjust /nodes/* endpoints
-  NotFound:
-    description: Resource was not found
-  Unauthorized:
-    description: Unauthorized
-  InternalError:
-    description: Internal Server Error
-  BadRequest:
-    description: Bad Request
-  NoPermission:
-    description: User can not do that.
-  Forbidden:
-    description: Forbidden
-
 parameters:
   hostnameParam:
     description: Node's hostname in the network
@@ -539,7 +524,6 @@ parameters:
       - mem_util
       - temp
       - power
-
 securityDefinitions:
   Bearer:
     type: apiKey
