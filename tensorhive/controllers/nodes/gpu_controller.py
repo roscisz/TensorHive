@@ -1,6 +1,8 @@
 from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
 from connexion import NoContent
 from flask_jwt_extended import jwt_required
+from tensorhive.config import API
+R = API.RESPONSES['nodes']
 
 
 @jwt_required
@@ -68,10 +70,12 @@ def get_info(hostname: str):
                 'name': full_dict['name'],
                 'index': full_dict['index']
             }
-
-        result = {uuid: basic_info(gpu_data) for uuid, gpu_data in resource_data.items()}
-        response = result, 200
+        # TODO Should be wrapped into dict: {'msg': 'OK', 'info': content}
+        content = {uuid: basic_info(gpu_data) for uuid, gpu_data in resource_data.items()}
+        status = 200
     except KeyError:
-        response = NoContent, 404
+        # TODO Theoretically possible that ['GPU'] can trigger this exception
+        content = {'msg': R['hostname']['not_found']}
+        status = 404
     finally:
-        return response
+        return content, status

@@ -47,3 +47,6 @@ token:
   revoked: Token has been revoked
   expired: Token has expired
   missing_auth_header: Missing Authorization Header
+nodes:
+  hostname:
+    not_found: Hostname has not been found

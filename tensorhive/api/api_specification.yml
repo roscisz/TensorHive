@@ -311,10 +311,10 @@ paths:
           description: {{RESPONSES['general']['ok']}}
           schema:
             $ref: '#/definitions/GPUInfo'
-        '404':
-          $ref: '#/responses/NotFound'
-      # security:
-      #   - Bearer: []
+        404:
+          description: {{RESPONSES['nodes']['hostname']['not_found']}}
+      security:
+        - Bearer: []
   /nodes/{hostname}/gpu/metrics:
     get:
       tags: 
