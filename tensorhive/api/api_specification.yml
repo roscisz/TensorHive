@@ -471,16 +471,14 @@ definitions:
             processes: 'null'
   GPUInfo:
     type: object
-    properties:
+    example:
       <GPU_UUID>:
-        type: object
-        properties:
-          index:
-            type: integer
-            example: 0
-          name:
-            type: string
-            example: GeForce GTX 1060
+        index:
+          type: integer
+          example: 0
+        name:
+          type: string
+          example: GeForce GTX 1060
   GPUMetricsInTwoCases:
     type: object
     example:
