@@ -138,6 +138,10 @@ paths:
       responses:
         200:
           description: {{RESPONSES['token']['refresh']['success']}}
+          schema:
+            example:
+              msg: {{RESPONSES['token']['refresh']['success']}}
+              access_token: <ACCESS_TOKEN>
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         422:
@@ -160,6 +164,11 @@ paths:
       responses:
         200:
           description: {{RESPONSES['user']['login']['success']}}
+          schema:
+            example:
+              msg: {{RESPONSES['user']['login']['success']}}
+              access_token: <ACCESS_TOKEN>
+              refresh_token: <REFRESH_TOKEN>
         400:
           description: {{RESPONSES['general']['bad_request']}}
         401:
