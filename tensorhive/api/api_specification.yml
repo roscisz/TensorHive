@@ -94,7 +94,7 @@ paths:
   /user/logout:
     delete:
       tags:
-        - users
+        - authentication
       summary: Logout user using access token
       operationId: tensorhive.controllers.user.logout_user_controller.logout_with_access_token
       responses:
@@ -111,7 +111,7 @@ paths:
   /user/logout/refresh_token:
     delete:
       tags:
-        - users
+        - authentication
       summary: Logout user using refresh token
       operationId: tensorhive.controllers.user.logout_user_controller.logout_with_refresh_token
       responses:
@@ -128,7 +128,7 @@ paths:
   /user/refresh:
     get:
       tags:
-        - users
+        - authentication
       summary: Generate new access token using refresh token
       operationId: tensorhive.controllers.user.refresh_access_token_controller.generate
       responses:
@@ -143,7 +143,7 @@ paths:
   /user/login:
     post:
       tags:
-        - users
+        - authentication
       summary: Login user
       operationId: 'tensorhive.controllers.user.login_user_controller.login'
       parameters:
