@@ -69,20 +69,14 @@ def log_level_mapping(ctx, param, value: str) -> int:
     return AVAILABLE_LOG_LEVELS[value]
 
 
-@click.group()
+@click.command()
 @click.option('-v', '--version', is_flag=True, callback=print_version, expose_value=False, is_eager=True,
               help='Print the current version number and exit.')
-def main():
-    pass
-
-
-@main.command()
 @click.option('--log-level', '-l',
               type=click.Choice(AVAILABLE_LOG_LEVELS.keys()),
               callback=log_level_mapping,
               help='Log level to apply.')
-@click.pass_context
-def run(ctx, log_level):
+def main(log_level):
     click.echo('TensorHive {}'.format(tensorhive.__version__))
     setup_logging(log_level)
 
