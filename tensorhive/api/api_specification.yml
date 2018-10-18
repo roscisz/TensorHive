@@ -342,18 +342,17 @@ paths:
       tags: 
         - nodes
       summary: Get node's GPU processes data
+      description: Puts null if some data is unavailable
       operationId: tensorhive.controllers.nodes.gpu_controller.get_processes
       parameters:
         - $ref: '#/parameters/hostnameParam'
       responses:
-        '200':
-          description: 'Success'
+        200:
+          description: {{RESPONSES['general']['ok']}}
           schema:
-            type: array
-            items: 
-              type: object
-        '404':
-          $ref: '#/responses/NotFound'
+            $ref: '#/definitions/GPUProcesses'
+        404:
+          description: {{RESPONSES['nodes']['hostname']['not_found']}}
       security:
         - Bearer: []
 definitions:
@@ -483,6 +482,16 @@ definitions:
           name:
             type: string
             example: GeForce GTX 1060
+  GPUProcesses:
+    type: object
+    example:
+      <GPU_UUID>:
+        - command: python
+          owner: foo
+          pid: 1111
+        - command: java
+          owner: bar
+          pid: 2222
 responses:
   # TODO Remove and adjust /nodes/* endpoints
   NotFound:
