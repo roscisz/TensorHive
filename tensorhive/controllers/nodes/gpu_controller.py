@@ -27,26 +27,24 @@ def get_metrics(hostname: str, metric_type: str = None):
             '<GPU1_UUID>': {'value': 32, 'unit': '%'},
         }
         '''
-        if resource_data is None:
-            # No data about GPU
-            response = NoContent, 404
+        # No data about GPU
+        assert resource_data
+
+        if metric_type is None:
+            # Put all gathered metric data for each GPU
+            result = {uuid: gpu_data['metrics'] for uuid, gpu_data in resource_data.items()}
         else:
-            if metric_type is None:
-                # Put all gathered metric data for each GPU
-                result = {uuid: gpu_data['metrics'] for uuid, gpu_data in resource_data.items()}
-            else:
-                # Put only requested metric data for each GPU
-                result = {uuid: gpu_data['metrics'][metric_type] for uuid, gpu_data in resource_data.items()}
-            response = result, 200
-
-        # TODO Put exception and error messages within infrastructure dict, so it can be passed to the API consumer
-    except KeyError:
-        response = NoContent, 404
+            # Put only requested metric data for each GPU
+            result = {uuid: gpu_data['metrics'][metric_type] for uuid, gpu_data in resource_data.items()}
+    except (KeyError, AssertionError):
+        content, status = NoContent, 404
+    else:
+        content, status = result, 200
     finally:
-        return response
+        return content, status
 
 
-@jwt_required
+# @jwt_required
 def get_processes(hostname: str):
     try:
         infrastructure = TensorHiveManager().infrastructure_manager.infrastructure
