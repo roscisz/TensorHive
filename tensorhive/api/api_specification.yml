@@ -284,6 +284,10 @@ paths:
             items: 
               type: string
               example: <SOME_HOSTNAME>
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
       security:
         - Bearer: []
   /nodes/metrics:
@@ -298,6 +302,10 @@ paths:
           description: {{RESPONSES['general']['ok']}} 
           schema:
             $ref: '#/definitions/GPUAllData'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
       security:
         - Bearer: []
   /nodes/{hostname}/gpu/info:
@@ -313,8 +321,13 @@ paths:
           description: {{RESPONSES['general']['ok']}}
           schema:
             $ref: '#/definitions/GPUInfo'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
         404:
           description: {{RESPONSES['nodes']['hostname']['not_found']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
+        
       security:
         - Bearer: []
   /nodes/{hostname}/gpu/metrics:
@@ -332,8 +345,12 @@ paths:
           description: {{RESPONSES['general']['ok']}}
           schema:
             $ref: '#/definitions/GPUMetricsInTwoCases'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
         404:
           description: {{RESPONSES['nodes']['hostname']['not_found']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
       security:
         - Bearer: []
   /nodes/{hostname}/gpu/processes:
@@ -350,8 +367,12 @@ paths:
           description: {{RESPONSES['general']['ok']}}
           schema:
             $ref: '#/definitions/GPUProcesses'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
         404:
           description: {{RESPONSES['nodes']['hostname']['not_found']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
       security:
         - Bearer: []
 definitions:
