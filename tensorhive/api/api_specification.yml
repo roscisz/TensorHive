@@ -17,13 +17,7 @@ paths:
         200:
           description: {{RESPONSES['users']['get']['success']}}
           schema:
-            type: array
-            items:
-              type: object
-              example:
-                id: 1
-                username: foobar
-                createdAt: 2019-10-18T10:00:00.00Z
+            $ref: '#/definitions/UserToDisplay'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
