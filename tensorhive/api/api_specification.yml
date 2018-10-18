@@ -307,16 +307,14 @@ paths:
       parameters:
         - $ref: '#/parameters/hostnameParam'
       responses:
-        '200':
-          description: 'Success'
+        200:
+          description: {{RESPONSES['general']['ok']}}
           schema:
-            type: array
-            items: 
-              type: object
+            $ref: '#/definitions/GPUInfo'
         '404':
           $ref: '#/responses/NotFound'
-      security:
-        - Bearer: []
+      # security:
+      #   - Bearer: []
   /nodes/{hostname}/gpu/metrics:
     get:
       tags: 
@@ -455,6 +453,18 @@ definitions:
       end:
         type: string
         format: date-time
+  GPUInfo:
+    type: object
+    properties:
+      <GPU_UUID>:
+        type: object
+        properties:
+          index:
+            type: integer
+            example: 0
+          name:
+            type: string
+            example: "GeForce GTX 1060"
 responses:
   # TODO Remove and adjust /nodes/* endpoints
   NotFound:
