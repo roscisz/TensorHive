@@ -17,7 +17,9 @@ paths:
         200:
           description: {{RESPONSES['users']['get']['success']}}
           schema:
-            $ref: '#/definitions/UserToDisplay'
+            type: array
+            items:
+              $ref: '#/definitions/UserToDisplay'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
