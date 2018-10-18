@@ -1,18 +1,12 @@
 import click
 import tensorhive
 import logging
-import signal
 import sys
 '''
 Current CLI Structure: (update regularly)
-tensorhive 
+tensorhive
 ├── -v/--version
-├── --help
-├── run
-|   ├── --help
-|   └── --log-level <level> (e.g. debug, info, warning, error, critical)
-└── db
-    └── init
+└── --log-level <level> (e.g. debug, info, warning, error, critical)
 '''
 AVAILABLE_LOG_LEVELS = {
     'debug': logging.DEBUG,
