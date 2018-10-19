@@ -1,5 +1,5 @@
-from tensorhive.config import API, API_SERVER
-from tensorhive.database import db
+from tensorhive.config import API, API_SERVER, DB
+from tensorhive.database import db_session
 from flask_cors import CORS
 from tensorhive.authorization import init_jwt
 import connexion
@@ -12,9 +12,9 @@ class APIServer():
         app = connexion.FlaskApp(__name__)
         init_jwt(app.app)
 
-        # @app.app.teardown_appcontext
-        # def shutdown_session(exception=None):
-        #     db.session.remove()
+        @app.app.teardown_appcontext
+        def shutdown_session(exception=None):
+            db_session.remove()
 
         app.add_api(API.SPEC_FILE,
                     arguments={
@@ -27,10 +27,11 @@ class APIServer():
                     strict_validation=True)
         CORS(app.app)
         log.info('[⚙] Starting API server with {} backend'.format(API_SERVER.BACKEND))
-        log.info('[✔] API documentation (Swagger UI) available at: http://{host}:{port}/{url_prefix}/ui/'.format(
-            host=API_SERVER.HOST, 
+        URL = 'http://{host}:{port}/{url_prefix}/ui/'.format(
+            host=API_SERVER.HOST,
             port=API_SERVER.PORT,
-            url_prefix=API.URL_PREFIX))
+            url_prefix=API.URL_PREFIX)
+        log.info('[✔] API documentation (Swagger UI) available at: {}'.format(URL))
         app.run(server=API_SERVER.BACKEND,
                 host=API_SERVER.HOST,
                 port=API_SERVER.PORT,

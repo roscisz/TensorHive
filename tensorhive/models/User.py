@@ -3,7 +3,7 @@ import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship, backref
-from tensorhive.database import db, flask_app
+from tensorhive.database import db_session, Base
 from tensorhive.models.CRUDModel import CRUDModel
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm import validates
@@ -21,10 +21,11 @@ class PASS_COMPLEXITY:
         STRONG = 3
 
 
-class User(CRUDModel, db.Model):
+class User(CRUDModel, Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
+    #siema = Column(String(40))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     reservations = relationship('Reservation', cascade='all,delete', backref=backref('user'))
 
@@ -74,20 +75,19 @@ class User(CRUDModel, db.Model):
 
     @classmethod
     def find_by_username(cls, username):
-        with flask_app.app_context():
-            try:
-                result = db.session.query(cls).filter_by(username=username).one()
-            except MultipleResultsFound as e:
-                # Theoretically cannot happen because of model built-in constraints
-                msg = 'Multiple users with identical usernames has been found!'
-                log.critical(msg)
-                raise MultipleResultsFound(msg)
-            except NoResultFound as e:
-                msg = 'There is no user with username={}!'.format(username)
-                log.warning(msg)
-                raise NoResultFound(msg)
-            else:
-                return result
+        try:
+            result = db_session.query(cls).filter_by(username=username).one()
+        except MultipleResultsFound as e:
+            # Theoretically cannot happen because of model built-in constraints
+            msg = 'Multiple users with identical usernames has been found!'
+            log.critical(msg)
+            raise MultipleResultsFound(msg)
+        except NoResultFound as e:
+            msg = 'There is no user with username={}!'.format(username)
+            log.warning(msg)
+            raise NoResultFound(msg)
+        else:
+            return result
 
     @property
     def as_dict(self):
@@ -101,3 +101,4 @@ class User(CRUDModel, db.Model):
     @staticmethod
     def verify_hash(password, hash):
         return sha256.verify(password, hash)
+

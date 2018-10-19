@@ -85,7 +85,7 @@ def main(log_level):
         manager = TensorHiveManager()
         api_server = APIServer()
         webapp_server = Process(target=start_server)
-
+        
         manager.configure_services_from_config()
         manager.init()
         webapp_server.start()       # Separate process
@@ -95,6 +95,12 @@ def main(log_level):
         manager.shutdown()
         webapp_server.join()
         sys.exit()
+
+
+def ask_to_open_browser(url):
+    if click.confirm('Would you like to open the app in browser?'):
+        import webbrowser
+        webbrowser.open_new_tab(url)
 
 
 def prompt_to_create_first_account():

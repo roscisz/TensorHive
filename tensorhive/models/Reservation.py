@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, and_, not_, or_
-from tensorhive.database import db, flask_app
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, and_, not_, or_, event
+from tensorhive.database import db_session, Base
 from tensorhive.models.CRUDModel import CRUDModel
 from sqlalchemy.ext.hybrid import hybrid_property
 from typing import Optional, List
@@ -8,7 +8,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class Reservation(CRUDModel, db.Model):
+class Reservation(CRUDModel, Base):
     __tablename__ = 'reservations'
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
@@ -97,14 +97,13 @@ class Reservation(CRUDModel, db.Model):
     def current_events(cls):
         '''Returns only those events that should be currently respected by users'''
         current_time = datetime.datetime.utcnow()
-        with flask_app.app_context():
-            return cls.query.filter(
-                and_(
-                    # Events that has already started
-                    cls.starts_at <= current_time,
-                    # Events before their end
-                    current_time <= cls.ends_at)
-                ).all()
+        return cls.query.filter(
+            and_(
+                # Events that has already started
+                cls.starts_at <= current_time,
+                # Events before their end
+                current_time <= cls.ends_at)
+            ).all()
 
     def would_interfere(self):
         return Reservation.query.filter(
@@ -129,12 +128,11 @@ class Reservation(CRUDModel, db.Model):
         assert isinstance(start, datetime.datetime), assertion_failed_msg
         assert isinstance(end, datetime.datetime), assertion_failed_msg
 
-        with flask_app.app_context():
-            uuid_filter = cls.protected_resource_id.in_(uuids)
-            after_start_filter = cls.starts_at <= end
-            before_end_filter = start <= cls.ends_at
-            matching_conditions = and_(uuid_filter, after_start_filter, before_end_filter)
-            return cls.query.filter(matching_conditions).all()
+        uuid_filter = cls.protected_resource_id.in_(uuids)
+        after_start_filter = cls.starts_at <= end
+        before_end_filter = start <= cls.ends_at
+        matching_conditions = and_(uuid_filter, after_start_filter, before_end_filter)
+        return cls.query.filter(matching_conditions).all()
 
     def __repr__(self):
         return '''
@@ -165,3 +163,27 @@ class Reservation(CRUDModel, db.Model):
             'end': self.parsed_output_datetime(self.ends_at),
             'createdAt': self.parsed_output_datetime(self.created_at)
         }
+
+
+# def validate(mapper, connection, target):
+#     assert target.user_id, 'Reservation owner must be given!'
+#     assert target.protected_resource_id, 'Reservation must be related with a resource!'
+#     assert target.starts_at, 'Reservation start time is invalid!'
+#     assert target.ends_at, 'Reservation end time is invalid!'
+
+#     __min_reservation_time = datetime.timedelta(minutes=30)
+#     __max_reservation_time = datetime.timedelta(days=2)
+#     assert target.duration >= __min_reservation_time, 'Reservation duration is too short!'
+#     assert target.duration <= __max_reservation_time, 'Reservation duration is too long!'
+
+#     assert 8 < len(target.title) < 60, 'Reservation title length has incorrect length!'
+#     assert 8 < len(target.description) < 200, 'Reservation description has incorrect length!'
+#     assert len(target.protected_resource_id) == 40, 'Protected resource UUID has incorrect length!'
+
+#     print('>>>>>>>>>>>>>>>>>>>>>>>', target.duration)
+#     collision = target.would_interfere()
+#     assert not collision, 'Reservation would interfere with some other reservation!'
+
+
+# event.listen(Reservation, 'before_insert', validate)
+# event.listen(Reservation, 'before_update', validate)
