@@ -18,7 +18,6 @@ def delete(id):
 
         # Fetch the reservation
         reservation_to_destroy = Reservation.get(id)
-        db_session.add(reservation_to_destroy)
 
         # Must be priviliged
         is_admin = 'admin' in claims['roles']
