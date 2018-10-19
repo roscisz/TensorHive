@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt_claims
 from tensorhive.models.Reservation import Reservation
 from tensorhive.models.User import User
 from tensorhive.config import API
-from tensorhive.database import db
+from tensorhive.database import db_session
 import logging
 log = logging.getLogger(__name__)
 R = API.RESPONSES['reservation']
@@ -16,10 +16,9 @@ def delete(id):
         current_user_id = get_jwt_identity()
         claims = get_jwt_claims()
 
-        # with flask_app.app_context():
         # Fetch the reservation
         reservation_to_destroy = Reservation.get(id)
-        db.session.add(reservation_to_destroy)
+        db_session.add(reservation_to_destroy)
 
         # Must be priviliged
         is_admin = 'admin' in claims['roles']

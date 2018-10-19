@@ -1,53 +1,42 @@
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy_utils import database_exists
 from tensorhive.config import DB
-import flask
-import flask_sqlalchemy
-import flask_migrate
-import sqlalchemy_utils
 import logging
-import connexion
+import os
 log = logging.getLogger(__name__)
 
+if bool(os.environ.get('PYTEST')):
+    db_uri = 'sqlite:///test_database.sqlite'
+else:
+    db_uri = DB.SQLALCHEMY_DATABASE_URI
 
-def connexion_app_instance():
-    app = connexion.FlaskApp('tensorhive.api.APIServer')
-    app.app.config['SQLALCHEMY_DATABASE_URI'] = DB.SQLALCHEMY_DATABASE_URI
-    app.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-    db.init_app(app.app)
-    return app
+engine = create_engine(db_uri, convert_unicode=True, echo=False)
+db_session = scoped_session(sessionmaker(autocommit=False,
+                                         autoflush=False,
+                                         bind=engine))
 
-
-def init_migrations(app, db):
-    # Import all modules that define models so that
-    # they could be registered properly on the metadata.
-    from tensorhive.models.User import User
-    from tensorhive.models.Reservation import Reservation
-    from tensorhive.models.Role import Role
-    from tensorhive.models.RevokedToken import RevokedToken
-    flask_migrate.Migrate(app, db)
-
-
-db = flask_sqlalchemy.SQLAlchemy()
-connexion_app = connexion_app_instance()
-flask_app = connexion_app.app
-migrate = init_migrations(flask_app, db)
-#flask_app = create_boilerplate_app(db, 'sqlite:///test_database.sqlite')
+Base = declarative_base()
+Base.query = db_session.query_property()
 
 
 def init_db() -> None:
     '''Creates the database, tables (if they does not exist)'''
-    from tensorhive.cli import prompt_to_create_first_account
+    # Import all modules that define models so that
+    # they could be registered properly on the metadata.
     from tensorhive.models.User import User
     from tensorhive.models.Reservation import Reservation
-    from tensorhive.models.Role import Role
     from tensorhive.models.RevokedToken import RevokedToken
-
-    with flask_app.app_context():
-        if sqlalchemy_utils.database_exists(DB.SQLALCHEMY_DATABASE_URI):
-            log.info('[•] Database found ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
-            if db.session.query(User).count() == 0:
-                prompt_to_create_first_account()
-        else:
-            db.create_all()
-            log.info('[✔] Database created ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
+    from tensorhive.models.Role import Role
+    from tensorhive.cli import prompt_to_create_first_account
+    
+    if database_exists(DB.SQLALCHEMY_DATABASE_URI):
+        if User.query.count() == 0:
             prompt_to_create_first_account()
-
+        log.info('[•] Database found ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
+    else:
+        # Double check via checkfirst=True (does not execute CREATE query on tables which already exist)
+        Base.metadata.create_all(bind=engine, checkfirst=True)
+        log.info('[✔] Database created ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
+        prompt_to_create_first_account()

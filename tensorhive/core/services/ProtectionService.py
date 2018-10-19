@@ -1,6 +1,7 @@
 from tensorhive.core.services.Service import Service
 from tensorhive.models.Reservation import Reservation
 from tensorhive.models.User import User
+from tensorhive.database import db_session
 from tensorhive.core.utils.decorators.override import override
 from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.managers.SSHConnectionManager import SSHConnectionManager
@@ -9,6 +10,7 @@ from typing import Generator, Dict, List, Optional
 import datetime
 import time
 import gevent
+import json
 import logging
 log = logging.getLogger(__name__)
 
@@ -141,10 +143,8 @@ class ProtectionService(Service):
         # 1. Get list of current reservations
         current_reservations = Reservation.current_events()
 
-        # DEBUG ONLY
-        __reservations_as_dict = [r.as_dict for r in current_reservations]
-        import json
-        log.debug(json.dumps(__reservations_as_dict, indent=4))
+        # FIXME DEBUG ONLY
+        log.debug(json.dumps([r.as_dict for r in current_reservations], indent=4))
 
         for reservation in current_reservations:
             # 1. Extract reservation info

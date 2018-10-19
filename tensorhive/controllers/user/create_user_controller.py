@@ -1,7 +1,7 @@
 from sqlalchemy.exc import IntegrityError
 from tensorhive.models.User import User
 from tensorhive.models.Role import Role
-from tensorhive.database import db
+from tensorhive.database import db_session
 from flask_jwt_extended import get_jwt_identity
 from tensorhive.config import API
 from tensorhive.authorization import admin_required
@@ -12,7 +12,6 @@ G = API.RESPONSES['general']
 @admin_required
 def create(user):
     try:
-        # with flask_app.app_context():
         new_user = User(
             username=user['username'],
             password=user['password'],
