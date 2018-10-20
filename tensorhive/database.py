@@ -7,8 +7,9 @@ import logging
 import os
 log = logging.getLogger(__name__)
 
+
 if bool(os.environ.get('PYTEST')):
-    db_uri = 'sqlite:///test_database.sqlite'
+    db_uri = DB.TEST_DATABASE_URI
 else:
     db_uri = DB.SQLALCHEMY_DATABASE_URI
 
@@ -36,7 +37,6 @@ def init_db() -> None:
             prompt_to_create_first_account()
         log.info('[•] Database found ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
     else:
-        # Double check via checkfirst=True (does not execute CREATE query on tables which already exist)
         Base.metadata.create_all(bind=engine, checkfirst=True)
         log.info('[✔] Database created ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
         prompt_to_create_first_account()
