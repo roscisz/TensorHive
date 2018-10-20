@@ -2,6 +2,7 @@ from gunicorn.app.base import BaseApplication
 from flask import Flask, render_template
 from flask_cors import CORS
 from tensorhive.config import APP_SERVER
+import webbrowser
 import logging
 log = logging.getLogger(__name__)
 
@@ -47,7 +48,9 @@ def start_server():
             'workers': APP_SERVER.WORKERS,
             'loglevel': APP_SERVER.LOG_LEVEL
         }
-        log.info('[✔] Web App avaliable at: http://{} '.format(options['bind']))
+        URL = 'http://' + options['bind']
+        log.info('[✔] Web App avaliable at: ' + URL)
+        webbrowser.open_new_tab(URL)
         GunicornStandaloneApplication(app, options).run()
     else:
         raise NotImplementedError('Selected backend is not supported yet.')
