@@ -14,7 +14,10 @@ export default {
   SET_ID (state, id) {
     state.id = id
   },
-  SET_TOKEN (state, token) {
-    state.token = token
+  SET_ACCESS_TOKEN (state, token) {
+    state.accessToken = token
+  },
+  SET_REFRESH_TOKEN (state, token) {
+    state.refreshToken = token
   }
 }

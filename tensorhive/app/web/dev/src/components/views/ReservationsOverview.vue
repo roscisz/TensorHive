@@ -113,7 +113,7 @@ export default {
   mounted () {
     if (JSON.parse(window.localStorage.getItem('visibleResources')) === null) {
       api
-        .request('get', '/nodes/metrics', this.$store.state.token)
+        .request('get', '/nodes/metrics', this.$store.state.accessToken)
         .then(response => {
           this.nodes = response.data
           this.parseData()

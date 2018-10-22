@@ -118,7 +118,7 @@ export default {
 
     loadData: function () {
       api
-        .request('get', '/nodes/metrics', this.$store.state.token)
+        .request('get', '/nodes/metrics', this.$store.state.accessToken)
         .then(response => {
           if (JSON.parse(window.localStorage.getItem('watches')) === null) {
             this.watches = [
@@ -344,7 +344,7 @@ export default {
       var metric, resourceType, value
       var data = []
       api
-        .request('get', '/nodes/' + nodeName + '/gpu/metrics', this.$store.state.token)
+        .request('get', '/nodes/' + nodeName + '/gpu/metrics', this.$store.state.accessToken)
         .then(response => {
           data = response.data
           for (var resourceTypeName in node) {

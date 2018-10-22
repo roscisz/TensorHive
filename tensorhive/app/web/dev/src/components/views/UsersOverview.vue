@@ -76,7 +76,7 @@ export default {
     },
     checkUsers: function () {
       api
-        .request('get', '/users', this.$store.state.token)
+        .request('get', '/users', this.$store.state.accessToken)
         .then(response => {
           this.users = response.data
           this.pagination['totalItems'] = this.users.length
@@ -89,7 +89,7 @@ export default {
     },
     deleteUser: function (userId) {
       api
-        .request('delete', '/user/delete/' + userId, this.$store.state.token)
+        .request('delete', '/user/delete/' + userId, this.$store.state.accessToken)
         .then(response => {
           this.checkUsers()
         })

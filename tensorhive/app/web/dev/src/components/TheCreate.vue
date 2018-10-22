@@ -36,14 +36,10 @@
         <v-btn
           color="success"
           type="submit"
-          :class="'btn btn-primary btn-lg ' + loading"
         >
           Create
         </v-btn>
       </form>
-
-      <!-- errors -->
-      <div v-if=response class="text-red"><p class="vertical-5p lead">{{response}}</p></div>
     </div>
   </div>
 </template>
@@ -57,10 +53,8 @@ export default {
   data (router) {
     return {
       section: 'Create',
-      loading: '',
       username: '',
-      password: '',
-      response: ''
+      password: ''
     }
   },
 
@@ -71,38 +65,12 @@ export default {
 
     createUser () {
       const { username, password } = this
-
-      this.toggleLoading()
-      this.resetResponse()
-      this.$store.commit('TOGGLE_LOADING')
-
       api
-        .request('post', '/user/create', this.$store.state.token, { 'username': username, 'password': password })
+        .request('post', '/user/create', this.$store.state.accessToken, { 'username': username, 'password': password })
         .then(response => {
           this.toggleLoading()
           this.$router.push('/users_overview')
         })
-        .catch(error => {
-          this.$store.commit('TOGGLE_LOADING')
-          console.log(error)
-          var status = error.response.status
-          if (status === 401) {
-            this.response = 'Your access token expired. Login again'
-          } else if (status === 409) {
-            this.response = 'This username is used by other user'
-          } else {
-            this.response = 'Server appears to be offline'
-          }
-          this.toggleLoading()
-        })
-    },
-
-    toggleLoading () {
-      this.loading = this.loading === '' ? 'loading' : ''
-    },
-
-    resetResponse () {
-      this.response = ''
     }
   }
 }

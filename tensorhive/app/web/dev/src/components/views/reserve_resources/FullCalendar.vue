@@ -52,7 +52,7 @@ export default {
       this.calendar.fullCalendar('removeEventSources')
       this.calendar.fullCalendar('addEventSource', {
         url: config.serverURI + '/reservations?resources_ids=' + resourcesString,
-        headers: { Authorization: this.$store.state.token },
+        headers: { Authorization: this.$store.state.accessToken },
         cache: true
       })
       var obj
@@ -124,7 +124,7 @@ export default {
 
     cancelReservation: function (reservation) {
       api
-        .request('delete', '/reservations/' + reservation.id.toString(), this.$store.state.token)
+        .request('delete', '/reservations/' + reservation.id.toString(), this.$store.state.accessToken)
         .then(response => {
           this.calendar.fullCalendar('removeEvents', reservation._id)
         })
@@ -135,7 +135,7 @@ export default {
 
     addReservation: function (reservation) {
       api
-        .request('post', '/reservations', this.$store.state.token, reservation)
+        .request('post', '/reservations', this.$store.state.accessToken, reservation)
         .then(response => {
           this.calendar.fullCalendar('refetchEvents')
         })

@@ -5,7 +5,8 @@ export default {
   user: null,
   role: null,
   id: null,
-  token: null,
+  accessToken: null,
+  refreshToken: null,
   userInfo: {
     messages: [{1: 'test', 2: 'test'}],
     notifications: [],
