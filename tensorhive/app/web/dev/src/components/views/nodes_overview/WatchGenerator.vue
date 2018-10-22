@@ -1,5 +1,12 @@
 <template>
   <div>
+    <v-alert
+      v-model="alert"
+      dismissible
+      type="error"
+    >
+      {{ errorMessage }}
+    </v-alert>
     <v-btn
       color="info"
       small
@@ -47,7 +54,8 @@ export default {
       chartLength: 25,
       space: 2,
       interval: null,
-      errors: [],
+      alert: false,
+      errorMessage: '',
       updateChart: false,
       resourcesIndexes: {},
       watchIds: 3
@@ -147,8 +155,9 @@ export default {
           }
           this.parseData(response.data)
         })
-        .catch(e => {
-          this.errors.push(e)
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
         })
     },
 
@@ -364,8 +373,9 @@ export default {
             this.updateChart = !this.updateChart
           }
         })
-        .catch(e => {
-          this.errors.push(e)
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
         })
     },
 

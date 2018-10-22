@@ -1,5 +1,20 @@
 <template>
   <section class="content">
+    <v-snackbar
+      color="error"
+      v-model="snackbar"
+      bottom
+      multi-line
+    >
+      {{ errorMessage}}
+      <v-btn
+        color="white"
+        flat
+        @click="snackbar = false"
+      >
+        Close
+      </v-btn>
+    </v-snackbar>
     <section id="calendar_section">
       <v-btn
         color= "info"
@@ -10,7 +25,7 @@
       >
         Adjust filters
       </v-btn>
-      <FullCalendar :update-calendar="updateCalendar" :selected-resources="selectedResources"/>
+      <FullCalendar @showSnackbar="showSnackbar(...arguments)" :update-calendar="updateCalendar" :selected-resources="selectedResources"/>
     </section>
     <section id="filter_section">
       <v-btn
@@ -101,7 +116,9 @@ export default {
     return {
       nodes: [],
       parsedNodes: [],
-      errors: [],
+      alert: false,
+      snackbar: false,
+      errorMessage: '',
       updateCalendar: false,
       selectedResources: [],
       nodeCheckbox: false,
@@ -118,8 +135,8 @@ export default {
           this.nodes = response.data
           this.parseData()
         })
-        .catch(e => {
-          this.errors.push(e)
+        .catch(error => {
+          this.showSnackbar(error.response.data.msg)
         })
     } else {
       this.parsedNodes = JSON.parse(window.localStorage.getItem('visibleResources'))
@@ -243,6 +260,11 @@ export default {
       }
       this.updateCalendar = !this.updateCalendar
       window.localStorage.setItem('visibleResources', JSON.stringify(this.parsedNodes))
+    },
+
+    showSnackbar (message) {
+      this.errorMessage = message
+      this.snackbar = true
     }
   }
 }

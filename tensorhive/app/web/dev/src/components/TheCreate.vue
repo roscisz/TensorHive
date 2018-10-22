@@ -24,6 +24,13 @@
             v-model="password"
           >
         </div>
+        <v-alert
+          v-model="alert"
+          dismissible
+          type="error"
+        >
+          {{ errorMessage }}
+        </v-alert>
         <v-btn
           color="info"
           small
@@ -54,7 +61,9 @@ export default {
     return {
       section: 'Create',
       username: '',
-      password: ''
+      password: '',
+      alert: false,
+      errorMessage: ''
     }
   },
 
@@ -70,6 +79,10 @@ export default {
         .then(response => {
           this.toggleLoading()
           this.$router.push('/users_overview')
+        })
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
         })
     }
   }

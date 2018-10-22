@@ -35,6 +35,16 @@
               :time-picker-options="timePickerOptions"
             ></date-picker>
           </label>
+          <v-textarea
+            outline
+            label="Title"
+            v-model="reservationTitle"
+          ></v-textarea>
+          <v-textarea
+            outline
+            label="Description"
+            v-model="reservationDescription"
+          ></v-textarea>
           <div v-show="showInfo===true" class="text-red"><p class="vertical-5p lead">You need to choose at least one resource to reserve</p></div>
           <div class="modal-footer text-right">
             <v-btn
@@ -101,7 +111,9 @@ export default {
         step: '00:30',
         end: '23:30'
       },
-      showInfo: false
+      showInfo: false,
+      reservationTitle: '',
+      reservationDescription: ''
     }
   },
 
@@ -128,12 +140,12 @@ export default {
         for (var i = 0; i < this.numberOfResources; i++) {
           if (this.resourcesCheckboxes[i].checked) {
             tempReservation = {
-              title: 'Reserved',
-              description: 'Resource ' + (i + 1).toString(),
+              title: this.reservationTitle,
+              description: this.reservationDescription,
               start: this.reservationTime[0].toISOString(),
               end: this.reservationTime[1].toISOString(),
               resourceId: this.resourcesCheckboxes[i].uuid,
-              userId: this.$store.state.id
+              userId: parseInt(this.$store.state.id)
             }
             this.addReservation(tempReservation)
           }

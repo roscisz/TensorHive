@@ -82,8 +82,7 @@ export default {
       endDate: null,
       minReservationTime: '',
       maxReservationTime: '',
-      resourcesCheckboxes: [],
-      errors: []
+      resourcesCheckboxes: []
     }
   },
 
@@ -128,8 +127,9 @@ export default {
         .then(response => {
           this.calendar.fullCalendar('removeEvents', reservation._id)
         })
-        .catch(e => {
-          this.errors.push(e)
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
         })
     },
 
@@ -139,8 +139,8 @@ export default {
         .then(response => {
           this.calendar.fullCalendar('refetchEvents')
         })
-        .catch(e => {
-          this.errors.push(e)
+        .catch(error => {
+          this.$emit('showSnackbar', error.response.data.msg)
         })
     }
   },

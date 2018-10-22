@@ -1,5 +1,12 @@
 <template>
   <div :class="['wrapper', classes]">
+    <v-alert
+      v-model="alert"
+      dismissible
+      type="error"
+    >
+      {{ errorMessage }}
+    </v-alert>
     <header class="main-header">
       <span class="logo-mini">
       </span>
@@ -80,7 +87,9 @@ export default {
         fixed_layout: config.fixedLayout,
         hide_logo: config.hideLogoOnMobile
       },
-      loggedIn: true
+      loggedIn: true,
+      alert: false,
+      errorMessage: ''
     }
   },
 
@@ -106,8 +115,16 @@ export default {
     logout: function () {
       api
         .request('delete', '/user/logout', this.$store.state.accessToken)
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
+        })
       api
         .request('delete', '/user/logout/refresh_token', this.$store.state.accessToken)
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
+        })
       this.$store.commit('SET_USER', null)
       this.$store.commit('SET_ACCESS_TOKEN', null)
       this.$store.commit('SET_REFRESH_TOKEN', null)

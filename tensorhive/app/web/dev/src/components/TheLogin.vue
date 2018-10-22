@@ -25,6 +25,13 @@
             v-model="password"
           >
         </div>
+        <v-alert
+          v-model="alert"
+          dismissible
+          type="error"
+        >
+          {{ errorMessage }}
+        </v-alert>
         <v-btn
           color="success"
           type="submit"
@@ -46,7 +53,9 @@ export default {
     return {
       section: 'Login',
       username: '',
-      password: ''
+      password: '',
+      alert: false,
+      errorMessage: ''
     }
   },
 
@@ -109,6 +118,10 @@ export default {
             this.$router.push('/')
           }
         })
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
+        })
     },
 
     refreshToken () {
@@ -123,6 +136,10 @@ export default {
           window.setTimeout(function () {
             self.refreshToken()
           }, 55000)
+        })
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
         })
     },
 

@@ -29,6 +29,13 @@
         <v-icon dark>delete</v-icon>
       </v-btn>
     </div>
+    <v-alert
+      v-model="alert"
+      dismissible
+      type="error"
+    >
+      {{ errorMessage }}
+    </v-alert>
     <div v-if="showProcesses === true" class="table_box">
       <v-data-table
         :headers="headers"
@@ -100,7 +107,9 @@ export default {
         { text: 'pid', value: 'pid' },
         { text: 'command', value: 'command' }
       ],
-      processes: []
+      processes: [],
+      alert: false,
+      errorMessage: ''
     }
   },
 
@@ -172,7 +181,7 @@ export default {
       var data, processes, tempProcess
       processes = []
       api
-        .request('get', '/nodes/' + this.selectedNode + '/gpu/processes', this.$store.state.token)
+        .request('get', '/nodes/' + this.selectedNode + '/gpu/processes', this.$store.state.accessToken)
         .then(response => {
           data = response.data
           for (var resourceUUID in data) {
@@ -185,8 +194,9 @@ export default {
           }
           this.processes = processes
         })
-        .catch(e => {
-          this.errors.push(e)
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
         })
     }
   },
