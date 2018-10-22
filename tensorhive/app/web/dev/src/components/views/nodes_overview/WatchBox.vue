@@ -216,6 +216,9 @@ export default {
         this.checkProcesses()
         let self = this
         this.interval = setInterval(function () {
+          if (self.$route.fullPath !== '/nodes_overview') {
+            clearInterval(self.interval)
+          }
           self.checkProcesses()
         }, this.time)
         this.showProcesses = true

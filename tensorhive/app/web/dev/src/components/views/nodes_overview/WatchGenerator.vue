@@ -66,6 +66,9 @@ export default {
     this.loadData()
     let self = this
     this.interval = setInterval(function () {
+      if (self.$route.fullPath !== '/nodes_overview') {
+        clearInterval(self.interval)
+      }
       self.changeData()
     }, this.time)
   },

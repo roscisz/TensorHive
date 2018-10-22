@@ -120,7 +120,7 @@ export default {
           this.alert = true
         })
       api
-        .request('delete', '/user/logout/refresh_token', this.$store.state.accessToken)
+        .request('delete', '/user/logout/refresh_token', this.$store.state.refreshToken)
         .catch(error => {
           this.errorMessage = error.response.data.msg
           this.alert = true
