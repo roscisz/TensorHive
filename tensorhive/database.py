@@ -30,13 +30,9 @@ def init_db() -> None:
     from tensorhive.models.Reservation import Reservation
     from tensorhive.models.RevokedToken import RevokedToken
     from tensorhive.models.Role import Role
-    from tensorhive.cli import prompt_to_create_first_account
     
-    if database_exists(DB.SQLALCHEMY_DATABASE_URI):
-        if User.query.count() == 0:
-            prompt_to_create_first_account()
-        log.info('[•] Database found ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
-    else:
+    if not database_exists(DB.SQLALCHEMY_DATABASE_URI):
         Base.metadata.create_all(bind=engine, checkfirst=True)
         log.info('[✔] Database created ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
-        prompt_to_create_first_account()
+    else:
+        log.info('[•] Database found ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))

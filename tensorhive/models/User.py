@@ -32,6 +32,8 @@ class User(CRUDModel, Base):
     _hashed_password = Column(String(120), nullable=False)
     _roles = relationship('Role', cascade='all,delete', backref=backref('user'))
 
+    min_password_length = 8
+
     def check_assertions(self):
         # TODO Check if user has roles assigned
         pass
@@ -62,14 +64,14 @@ class User(CRUDModel, Base):
 
     @password.setter
     def password(self, raw: str):
-        result = safe.check(raw, length=8, freq=0, min_types=1, level=PASS_COMPLEXITY.TERRIBLE)
+        result = safe.check(raw, length=self.min_password_length, freq=0, min_types=1, level=PASS_COMPLEXITY.TERRIBLE)
         assert result, 'Incorrect password, reason: {}'.format(result.message)
         self._hashed_password = sha256.hash(raw)
 
     @validates('username')
     def validate_username(self, key, username):
-        assert is_safe_username(username), 'Invalid username'
-        assert 4 < len(username) < 30, 'Username must be between 4 and 30 characters long!'
+        assert is_safe_username(username), 'Username unsafe'
+        assert 2 < len(username) < 16, 'Username must be between 3 and 15 characters long'
         return username
 
     @classmethod
