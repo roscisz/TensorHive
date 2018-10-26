@@ -1,4 +1,5 @@
 import click
+from tensorhive.core.utils.colors import orange, green
 import tensorhive
 import logging
 import signal
@@ -81,9 +82,8 @@ def main():
               type=click.Choice(AVAILABLE_LOG_LEVELS.keys()),
               callback=log_level_mapping,
               help='Log level to apply.')
-@click.pass_context
-def run(ctx, log_level):
-    click.echo('TensorHive {}'.format(tensorhive.__version__))
+def run(log_level):
+    click.echo(green('TensorHive {}'.format(tensorhive.__version__)))
     setup_logging(log_level)
 
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
@@ -103,7 +103,7 @@ def run(ctx, log_level):
         webapp_server.start()       # Separate process
         api_server.run_forever()    # Will block (runs on main thread)
     except KeyboardInterrupt:
-        click.echo('[⚙] Shutting down TensorHive...')
+        click.echo(orange('[⚙] Shutting down TensorHive...'))
         manager.shutdown()
         webapp_server.join()
         sys.exit()
