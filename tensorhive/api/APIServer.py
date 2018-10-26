@@ -8,6 +8,10 @@ from tensorhive.authorization import init_jwt
 log = logging.getLogger(__name__)
 
 
+class APILogger:
+    write = lambda message: log.debug(message)
+
+
 class APIServer():
     def run_forever(self):
         app = connexion.FlaskApp(__name__)
@@ -34,7 +38,8 @@ class APIServer():
         app.run(server=API_SERVER.BACKEND,
                 host=API_SERVER.HOST,
                 port=API_SERVER.PORT,
-                debug=API_SERVER.DEBUG)
+                debug=API_SERVER.DEBUG,
+                log=APILogger)
 
 
 def start_api_server():
