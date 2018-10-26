@@ -1,4 +1,5 @@
 import click
+from tensorhive.core.utils.colors import orange, green
 import tensorhive
 import logging
 import sys
@@ -147,7 +148,7 @@ def prompt_to_create_first_account():
               callback=log_level_mapping,
               help='Log level to apply.')
 def main(log_level):
-    click.echo('TensorHive {}'.format(tensorhive.__version__))
+    click.echo(green('TensorHive {}'.format(tensorhive.__version__)))
     setup_logging(log_level)
 
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
@@ -171,7 +172,7 @@ def main(log_level):
         webapp_server.start()       # Separate process
         api_server.run_forever()    # Will block (runs on main thread)
     except KeyboardInterrupt:
-        click.echo('[⚙] Shutting down TensorHive...')
+        click.echo(orange('[⚙] Shutting down TensorHive...'))
         manager.shutdown()
         webapp_server.join()
         sys.exit()

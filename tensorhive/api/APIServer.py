@@ -4,7 +4,13 @@ from flask_cors import CORS
 from tensorhive.authorization import init_jwt
 import connexion
 import logging
+from tensorhive.core.utils.colors import green
+
 log = logging.getLogger(__name__)
+
+
+class APILogger:
+    write = lambda message: log.debug(message)
 
 
 class APIServer():
@@ -31,11 +37,12 @@ class APIServer():
             host=API_SERVER.HOST,
             port=API_SERVER.PORT,
             url_prefix=API.URL_PREFIX)
-        log.info('[✔] API documentation (Swagger UI) available at: {}'.format(URL))
+        log.info(green('[✔] API documentation (Swagger UI) available at: {}'.format(URL)))
         app.run(server=API_SERVER.BACKEND,
                 host=API_SERVER.HOST,
                 port=API_SERVER.PORT,
-                debug=API_SERVER.DEBUG)
+                debug=API_SERVER.DEBUG,
+                log=APILogger)
 
 
 def start_api_server():
