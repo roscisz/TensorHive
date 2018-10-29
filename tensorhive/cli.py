@@ -111,12 +111,6 @@ def main(ctx, log_level):
         sys.exit()
 
 
-def ask_to_open_browser(url):
-    if click.confirm('Would you like to open the app in browser?'):
-        import webbrowser
-        webbrowser.open_new_tab(url)
-
-
 @main.group()
 def create():
     pass
