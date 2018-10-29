@@ -8,8 +8,10 @@ Current CLI Structure: (update regularly)
 tensorhive
 ├── -v/--version
 ├── -u/--add-user
-└── --log-level <level> (e.g. debug, info, warning, error, critical)
-
+├── --log-level <level> (e.g. debug, info, warning, error, critical)
+└── create
+    └── user
+        └── --multiple
 '''
 AVAILABLE_LOG_LEVELS = {
     'debug': logging.DEBUG,
@@ -66,89 +68,20 @@ def log_level_mapping(ctx, param, value: str) -> int:
     return AVAILABLE_LOG_LEVELS[value]
 
 
-def add_user(ctx, param, do_add):
-    '''
-    Asks for username, password and admin role,
-    validates and creates an account.
-    '''
-    if not do_add:
-        return
-
-    if ctx is not None:
-        from tensorhive.database import init_db
-        init_db()
-
-    from tensorhive.models.User import User
-    from tensorhive.models.Role import Role
-
-    while True:
-        username = click.prompt('[1/3] username', type=str)
-        try:
-            new_user = User(username=username)
-            break
-        except Exception as e:
-            click.echo('Invalid username: {}.'.format(e))
-
-    while True:
-        password1 = click.prompt('[2/3] password (at least {} characters)'.format(new_user.min_password_length),
-                                 type=str, hide_input=True)
-        password2 = click.prompt('[2/3] password (repeated)', type=str, hide_input=True)
-        if password1 != password2:
-            click.echo('Passwords don\'t match, please try again.')
-            continue
-        try:
-            new_user.password = password1
-            break
-        except Exception as e:
-            click.echo('{}'.format(e))
-
-    make_admin = click.confirm('[3/3] admin account?', default=False)
-
-    try:
-        # TODO Refactor roles: admin or not instead of two mutually exclusive 'admin' and 'user
-        new_user.roles.append(Role(name='user'))
-
-        if make_admin:
-            new_user.roles.append(Role(name='admin'))
-        new_user.save()
-    except Exception as e:
-        click.echo('Account creation failed due to an error: {}.'.format(e))
-    else:
-        click.echo('Account created successfully.')
-
-    if ctx is not None:
-        ctx.exit()
-
-
-def prompt_to_create_first_account():
-    '''
-    Asks whether a user wants to create an account
-    (called when the database has no users)
-    '''
-    import click
-
-    click.echo('Database has no users.')
-
-    default = True
-    while True:
-        if click.confirm('Would you like to create a user account?', default=default):
-            add_user(None, None, True)
-            default = False
-        else:
-            break
-
-
-@click.command()
+@click.group(invoke_without_command=True)
 @click.option('-v', '--version', is_flag=True, callback=print_version, expose_value=False, is_eager=True,
               help='Print the current version number and exit.')
-@click.option('-u', '--add-user', is_flag=True, callback=add_user, expose_value=False,
-              help='Add a user account to database and exit.')
 @click.option('--log-level', '-l',
               type=click.Choice(AVAILABLE_LOG_LEVELS.keys()),
               callback=log_level_mapping,
               help='Log level to apply.')
-def main(log_level):
-    click.echo(green('TensorHive {}'.format(tensorhive.__version__)))
+@click.pass_context
+def main(ctx, log_level):
+    if ctx.invoked_subcommand is not None:
+        # Invoke subcommand only
+        return
+
+    click.echo('TensorHive {}'.format(tensorhive.__version__))
     setup_logging(log_level)
 
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
@@ -166,7 +99,7 @@ def main(log_level):
         manager = TensorHiveManager()
         api_server = APIServer()
         webapp_server = Process(target=start_server)
-        
+
         manager.configure_services_from_config()
         manager.init()
         webapp_server.start()       # Separate process
@@ -182,3 +115,32 @@ def ask_to_open_browser(url):
     if click.confirm('Would you like to open the app in browser?'):
         import webbrowser
         webbrowser.open_new_tab(url)
+
+
+@main.group()
+def create():
+    pass
+
+
+@create.command()
+@click.option('-m', '--multiple', is_flag=True, help='Create more users in one go.')
+def user(multiple):
+    from tensorhive.core.utils.AccountCreator import AccountCreator
+    creator = AccountCreator()
+    # Create one user
+    creator.run_prompt()
+
+    # Create more users
+    while multiple:
+        creator.run_prompt()
+
+
+def prompt_to_create_first_account():
+    '''
+    Asks whether a user wants to create an account
+    (called when the database has no users)
+    '''
+    from tensorhive.core.utils.AccountCreator import AccountCreator
+    click.echo('Database has no users.')
+    if click.confirm('Would you like to create a user account?', default=True):
+        AccountCreator().run_prompt()
