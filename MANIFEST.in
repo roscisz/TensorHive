@@ -3,6 +3,7 @@ include LICENSE
 
 include setup.py
 include tensorhive/api/*.yml
+include tensorhive/controllers/responses.yml
 include tensorhive/*.ini
 graft tensorhive/app/web/dist
 

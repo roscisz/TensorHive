@@ -86,6 +86,7 @@ class DB:
         return 'sqlite:///{}'.format(PosixPath(path).expanduser())
 
     SQLALCHEMY_DATABASE_URI = uri_for_path(config.get(section, 'path', fallback=default_path))
+    TEST_DATABASE_URI = 'sqlite:///test_database.sqlite'  # or 'sqlite://' for in-memory, faster database
 
 
 class API:
@@ -95,6 +96,11 @@ class API:
     URL_PREFIX = config.get(section, 'url_prefix', fallback='api/{}'.format(VERSION))
     SPEC_FILE = config.get(section, 'spec_file', fallback='api_specification.yml')
     IMPL_LOCATION = config.get(section, 'impl_location', fallback='tensorhive.api.controllers')
+
+    import yaml
+    respones_file_path = str(PosixPath(__file__).parent / 'controllers/responses.yml')
+    with open(respones_file_path, 'r') as file:
+        RESPONSES = yaml.safe_load(file)
 
 
 class APP_SERVER:
@@ -159,7 +165,7 @@ class AUTH:
         'JWT_BLACKLIST_ENABLED': config.getboolean(section, 'jwt_blacklist_enabled', fallback=True),
         'JWT_BLACKLIST_TOKEN_CHECKS': config_get_parsed('jwt_blacklist_token_checks', fallback=['access', 'refresh']),
         'BUNDLE_ERRORS': config.getboolean(section, 'bundle_errors', fallback=True),
-        'JWT_ACCESS_TOKEN_EXPIRES': timedelta(minutes=config.getint(section, 'jwt_access_token_expires', fallback=15)),
-        'JWT_REFRESH_TOKEN_EXPIRES': timedelta(days=config.getint(section, 'jwt_refresh_token_expires', fallback=30)),
+        'JWT_ACCESS_TOKEN_EXPIRES': timedelta(minutes=config.getint(section, 'jwt_access_token_expires_minutes', fallback=1)),
+        'JWT_REFRESH_TOKEN_EXPIRES': timedelta(days=config.getint(section, 'jwt_refresh_token_expires_days', fallback=1)),
         'JWT_TOKEN_LOCATION': config_get_parsed('jwt_token_location', fallback=['headers'])
     }

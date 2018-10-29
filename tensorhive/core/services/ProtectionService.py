@@ -1,6 +1,7 @@
 from tensorhive.core.services.Service import Service
-from tensorhive.models.reservation_event.ReservationEventModel import ReservationEventModel
-from tensorhive.models.user.UserModel import UserModel
+from tensorhive.models.Reservation import Reservation
+from tensorhive.models.User import User
+from tensorhive.database import db_session
 from tensorhive.core.utils.decorators.override import override
 from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.managers.SSHConnectionManager import SSHConnectionManager
@@ -9,6 +10,7 @@ from typing import Generator, Dict, List, Optional
 import datetime
 import time
 import gevent
+import json
 import logging
 log = logging.getLogger(__name__)
 
@@ -139,18 +141,16 @@ class ProtectionService(Service):
         start_time = time_func()
 
         # 1. Get list of current reservations
-        current_reservations = ReservationEventModel.current_events()
+        current_reservations = Reservation.current_events()
 
-        # DEBUG ONLY
-        __reservations_as_dict = [r.as_dict for r in current_reservations]
-        import json
-        log.debug(json.dumps(__reservations_as_dict, indent=4))
+        # FIXME DEBUG ONLY
+        log.debug(json.dumps([r.as_dict for r in current_reservations], indent=4))
 
         for reservation in current_reservations:
             # 1. Extract reservation info
-            uuid = reservation.resource_id
+            uuid = reservation.protected_resource_id
             hostname = self.find_hostname(uuid)
-            username = UserModel.find_by_id(reservation.user_id).username
+            username = User.get(reservation.user_id).username
             if hostname is None or username is None:
                 log.warning('Unable to process the reservation ({}@{}), skipping...'.format(username, hostname))
                 continue

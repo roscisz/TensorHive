@@ -1,12 +1,15 @@
-from flask_jwt_extended import JWTManager,verify_jwt_in_request,get_jwt_claims
-from tensorhive.models.auth.RevokedTokenModel import RevokedTokenModel
+from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_claims
+from tensorhive.models.RevokedToken import RevokedToken
 from tensorhive.config import AUTH
 from functools import wraps
-from tensorhive.models.role.RoleModel import RoleModel
+from tensorhive.models.User import User
+from tensorhive.database import db_session
+from tensorhive.config import API
+G = API.RESPONSES['general']
 
 
 def init_jwt(app):
-    for key,value in AUTH.FLASK_JWT.items():
+    for key, value in AUTH.FLASK_JWT.items():
         app.config[key] = value
     global jwt
     jwt = JWTManager(app)
@@ -14,27 +17,25 @@ def init_jwt(app):
     @jwt.token_in_blacklist_loader
     def is_token_on_blacklist(decrypted_token):
         jti = decrypted_token['jti']
-        return RevokedTokenModel.is_jti_blacklisted(jti)
+        return RevokedToken.is_jti_blacklisted(jti)
 
     @jwt.user_claims_loader
     def add_claims_to_access_token(current_user_id):
-        #current_user = UserModel.find_by_username(current_user_name)
-        roles = []
-        if current_user_id is not None:
-            found_users_roles = RoleModel.find_by_user_id(current_user_id)
-            if found_users_roles is not None:
-                for role in found_users_roles:
-                    roles.append(role.name)
-        return {'roles': roles}
+        try:
+            current_user = User.get(current_user_id)
+            roles = current_user.role_names
+        except Exception as e:
+            roles = []
+        finally:
+            return {'roles':  roles}
 
-# Decorator admin role jwt access only
+
 def admin_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
         claims = get_jwt_claims()
-        for role in claims['roles']:
-            if role == 'admin':
-                return fn(*args, **kwargs)
-        return {'message': 'Admin required!'}, 401
+        if 'admin' in claims['roles']:
+            return fn(*args, **kwargs)
+        return {'msg': G['unpriviliged']}, 401
     return wrapper

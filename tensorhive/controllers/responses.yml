@@ -1,0 +1,52 @@
+general:
+  internal_error: Internal server error 
+  success: Fetched successfully
+  unauthorized: Unauthorized
+  bad_request: Bad Request
+  unpriviliged: Unpriviliged
+  no_identity: Could not resolve identity
+  auth_error: Authorization error
+  ok: OK
+user:
+  not_found: User has not been found
+  login:
+    success: Logged in as {username}
+    failure:
+      credentials: Incorrect credentials
+  logout:
+    success: Logged out successfully
+  delete:
+    self: Cannot delete own account
+    success: User deleted successfully
+  create:
+    success: User created successfully
+    failure:
+      duplicate: Such user exists
+      invalid: Requirements not met - {reason}
+reservation:
+  not_found: Reservation has not been found
+  create:
+    success: Reservation has been successfully created
+    failure:
+      invalid: Requirements not met - {reason}
+  delete:
+    success: Reservation has been successfully deleted
+users:
+  get:
+    success: Fetched successfully
+token:
+  revoke:
+    success: '{token_type} has been revoked'
+    failure: '{token_type} has not been revoked'
+  refresh:
+    failure: Unable to refresh - unauthorized user
+    success: Token has been refreshed successfully
+    required: Only refresh tokens are allowed
+  access:
+    required: Only access tokens are allowed
+  revoked: Token has been revoked
+  expired: Token has expired
+  missing_auth_header: Missing Authorization Header
+nodes:
+  hostname:
+    not_found: Hostname has not been found

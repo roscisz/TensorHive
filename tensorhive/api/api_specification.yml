@@ -12,132 +12,188 @@ paths:
       tags: 
         - users
       summary: Get all users
+      operationId: tensorhive.controllers.user.get_users_controller.all
       responses:
-        '200':
-          description: All fetched with success.
+        200:
+          description: {{RESPONSES['users']['get']['success']}}
           schema:
             type: array
             items:
-              $ref: '#/definitions/User'
+              $ref: '#/definitions/UserToDisplay'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
       security:
-          - Bearer: []
+        - Bearer: []
   /user/create:
     post:
       tags: 
         - users
       summary: Create new user
-      operationId: 'tensorhive.api.controllers.user.post_create'
+      operationId: tensorhive.controllers.user.create_user_controller.create
       parameters:
         - description: User object
           in: body
           name: user
           required: true
           schema:
-            $ref: '#/definitions/CreateUserController'
+            $ref: '#/definitions/UserForm'
       responses:
-        '201':
-          description: Successfully created.
-        '409':
-          description: Duplication error.
-        '500':
-          $ref: '#/responses/InternalError'
+        201:
+          description: {{RESPONSES['user']['create']['success']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['user']['create']['success']}}
+              user:
+                type: array
+                items:
+                  $ref: '#/definitions/UserToDisplay'
+        400:
+          description: {{RESPONSES['general']['bad_request']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+        409:
+          description: {{RESPONSES['user']['create']['failure']['duplicate']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['user']['create']['failure']['invalid']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
-          - Bearer: []
+        - Bearer: []
   /user/delete/{id}:
     delete:
       tags:
         - users
       summary: Delete user
-      operationId: 'tensorhive.api.controllers.user.delete_user'
+      operationId: tensorhive.controllers.user.delete_user_controller.delete
       parameters:
-        - description: Delete user by id
+        - description: User ID
           in: path
           name: id
           required: true
           type: integer
       responses:
-        '204':
-          description: Successfully deleted.
-        '403':
-          description: Admin cannot be deleted.
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalError'
-        '501':
-          $ref: '#/responses/InternalError'
+        200:
+          description: {{RESPONSES['user']['delete']['success']}}
+          schema:
+            example:
+              msg: {{RESPONSES['user']['delete']['success']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+        404:
+          description: {{RESPONSES['user']['not_found']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
-          - Bearer: []
+        - Bearer: []
   /user/logout:
     delete:
       tags:
-        - users
-      summary: Logout user with access token
-      operationId: 'tensorhive.api.controllers.user.post_logout_access_token'
+        - authentication
+      summary: Logout user using access token
+      operationId: tensorhive.controllers.user.logout_user_controller.logout_with_access_token
       responses:
-        '201':
-          description: Successfully deleted.
-        '500':
-          $ref: '#/responses/InternalError'
-        '501':
-          $ref: '#/responses/InternalError'
+        200:
+          description: {{RESPONSES['user']['logout']['success']}}
+          schema:
+            example:
+              msg: {{RESPONSES['user']['logout']['success']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}      
       security:
-          - Bearer: []
+        - Bearer: []
   /user/logout/refresh_token:
     delete:
       tags:
-        - users
-      summary: Logout user with refresh token
-      operationId: 'tensorhive.api.controllers.user.post_logout_refresh_token'
+        - authentication
+      summary: Logout user using refresh token
+      operationId: tensorhive.controllers.user.logout_user_controller.logout_with_refresh_token
       responses:
-        '201':
-          description: Successfully deleted.
-        '500':
-          $ref: '#/responses/InternalError'
-        '501':
-          $ref: '#/responses/InternalError'
+        200:
+          description: {{RESPONSES['user']['logout']['success']}}
+          schema:
+            example:
+              msg: {{RESPONSES['user']['logout']['success']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
-          - Bearer: []
+        - Bearer: []
   /user/refresh:
     get:
       tags:
-        - users
-      summary: Refresh users token
-      operationId: 'tensorhive.api.controllers.user.get_refreshed_access_token'
+        - authentication
+      summary: Generate new access token using refresh token
+      operationId: tensorhive.controllers.user.refresh_access_token_controller.generate
       responses:
-        '201':
-          description: Successfully refreshed.
-        '500':
-          $ref: '#/responses/InternalError'
+        200:
+          description: {{RESPONSES['token']['refresh']['success']}}
+          schema:
+            example:
+              msg: {{RESPONSES['token']['refresh']['success']}}
+              access_token: <ACCESS_TOKEN>
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
       security:
-          - Bearer: []
+        - Bearer: []
   /user/login:
     post:
       tags:
-        - users
+        - authentication
       summary: Login user
-      operationId: 'tensorhive.api.controllers.user.post_login'
+      operationId: 'tensorhive.controllers.user.login_user_controller.login'
       parameters:
         - description: User object
           in: body
           name: user
           required: true
           schema:
-            $ref: '#/definitions/UserLoginController'
+            $ref: '#/definitions/UserForm'
       responses:
-        '200':
-          description: Successfully loged in.
-        '401':
-          description: User does not exist.
-        '405':
-          description: Duplicate username error.
-        '500':
-          $ref: '#/responses/InternalError'
+        200:
+          description: {{RESPONSES['user']['login']['success']}}
+          schema:
+            example:
+              msg: {{RESPONSES['user']['login']['success']}}
+              access_token: <ACCESS_TOKEN>
+              refresh_token: <REFRESH_TOKEN>
+        400:
+          description: {{RESPONSES['general']['bad_request']}}
+        401:
+          description: {{RESPONSES['user']['login']['failure']['credentials']}}
+        404:
+          description: {{RESPONSES['user']['not_found']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
   /reservations:
     get:
       tags: 
         - reservations
-      summary: Get all reservation events
+      summary: Get all or specific reservation events
+      operationId: tensorhive.controllers.reservation.get_reservation_controller.get
       parameters:
         - description: Array of uuids
           in: query
@@ -147,224 +203,348 @@ paths:
           items: {
               type: string
             }
-        - description: UTC ISO (e.g. 2019-10-22T19:23:45Z)
+        - description: UTC ISO (e.g. 2018-10-22T10:00:00.0Z)
           in: query
           name: start
           required: false
           type: string
           format: date-time
-        - description: UTC ISO
+        - description: UTC ISO (e.g. 2018-10-22T19:00:00.0Z)
           in: query
           name: end
           required: false
           type: string
           format: date-time
       responses:
-        '200':
-          description: All fetched with success.
+        200:
+          description: {{RESPONSES['general']['ok']}}
           schema:
             type: array
             items:
-              $ref: '#/definitions/ReservationEvent'
-        '400':
-          description: Bad request. You have to specifiy either all parameters or none
+              $ref: '#/definitions/Reservation'
+        400:
+          description: {{RESPONSES['general']['bad_request']}}. Specify all parameters or none.
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
-          - Bearer: []
+        - Bearer: []
     post:
       tags: 
         - reservations
-      summary: Create new reservation event
+      summary: Make new reservation
+      operationId: tensorhive.controllers.reservation.create_reservation_controller.create
       parameters:
-        - description: Reservation event object
+        - description: Reservation object
           in: body
-          name: reservation_event
+          name: reservation
           required: true
           schema:
-            $ref: '#/definitions/CreateReservationEventController'
+            $ref: '#/definitions/ReservationForm'
       responses:
-        '201':
-          description: Successfully created.
-        '400':
-          $ref: '#/responses/BadRequest'
-        '500':
-          $ref: '#/responses/InternalError'
+        201:
+          description: {{RESPONSES['reservation']['create']['success']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['reservation']['create']['success']}}
+              reservation:
+                type: array
+                items:
+                  $ref: '#/definitions/Reservation'
+        400:
+          description: {{RESPONSES['general']['bad_request']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['reservation']['create']['failure']['invalid']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
-          - Bearer: []
+        - Bearer: []
   /reservations/{id}:
     delete:
       tags: 
           - reservations
-      summary: Delete reservation event by id
+      summary: Delete reservation
+      operationId: tensorhive.controllers.reservation.delete_reservation_controller.delete
       parameters:
-        - description: Id of reservation event
+        - description: Reservation ID
           in: path
           name: id
           required: true
           type: integer
       responses:
-        '204':
-          description: Successfully deleted.
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalError'
+        200:
+          description: {{RESPONSES['reservation']['delete']['success']}}
+          schema:
+            example:
+              msg: {{RESPONSES['reservation']['delete']['success']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        404:
+          description: {{RESPONSES['reservation']['not_found']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
-          - Bearer: []
-  # TODO Nodes: Add more specific schemas, response codes + descriptions
+        - Bearer: []
   /nodes/hostnames:
     get:
       tags: 
         - nodes
       summary: Get all hostnames
-      operationId: 'tensorhive.api.controllers.nodes.get_hostnames'
+      operationId: tensorhive.controllers.nodes.infrastructure_controller.get_hostnames
       responses:
-        '200':
-          description: List of hostnames fetched with success
+        200:
+          description: {{RESPONSES['general']['ok']}}
           schema:
-            type: array
-            items: 
-              type: string
+            example:
+              - hostname1
+              - hostname2
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
       security:
-          - Bearer: []
+        - Bearer: []
   /nodes/metrics:
     get:
       tags: 
         - nodes
       summary: Get each node's all metric data
-      operationId: 'tensorhive.api.controllers.nodes.get_all_metrics'
+      description: Puts null if some data is unavailable
+      operationId: tensorhive.controllers.nodes.infrastructure_controller.get_all_data
       responses:
-        '200':
-          description: 'Success'
+        200:
+          description: {{RESPONSES['general']['ok']}} 
           schema:
-            type: object
+            $ref: '#/definitions/GPUAllData'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
       security:
-          - Bearer: []
+        - Bearer: []
   /nodes/{hostname}/gpu/info:
     get:
       tags: 
         - nodes
       summary: Get node's basic GPU information
-      operationId: 'tensorhive.api.controllers.nodes.get_gpu_info'
+      operationId: tensorhive.controllers.nodes.gpu_controller.get_info
       parameters:
         - $ref: '#/parameters/hostnameParam'
       responses:
-        '200':
-          description: 'Success'
+        200:
+          description: {{RESPONSES['general']['ok']}}
           schema:
-            type: array
-            items: 
-              type: object
-        '404':
-          $ref: '#/responses/NotFound'
+            $ref: '#/definitions/GPUInfo'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        404:
+          description: {{RESPONSES['nodes']['hostname']['not_found']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
+        
       security:
-          - Bearer: []
+        - Bearer: []
   /nodes/{hostname}/gpu/metrics:
     get:
       tags: 
         - nodes
       summary: Get node's GPU metric data
-      operationId: 'tensorhive.api.controllers.nodes.get_gpu_metrics'
+      description: Puts null if some data is unavailable
+      operationId: tensorhive.controllers.nodes.gpu_controller.get_metrics
       parameters:
         - $ref: '#/parameters/hostnameParam'
         - $ref: '#/parameters/gpuMetricTypeQuery'
       responses:
-        '200':
-          description: 'Success'
+        200:
+          description: {{RESPONSES['general']['ok']}}
           schema:
-            type: array
-            items: 
-              type: object
-        '404':
-          $ref: '#/responses/NotFound'
+            $ref: '#/definitions/GPUMetricsInTwoCases'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        404:
+          description: {{RESPONSES['nodes']['hostname']['not_found']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
       security:
-          - Bearer: []
+        - Bearer: []
   /nodes/{hostname}/gpu/processes:
     get:
       tags: 
         - nodes
       summary: Get node's GPU processes data
-      operationId: 'tensorhive.api.controllers.nodes.get_gpu_processes'
+      description: Puts null if some data is unavailable
+      operationId: tensorhive.controllers.nodes.gpu_controller.get_processes
       parameters:
         - $ref: '#/parameters/hostnameParam'
       responses:
-        '200':
-          description: 'Success'
+        200:
+          description: {{RESPONSES['general']['ok']}}
           schema:
-            type: array
-            items: 
-              type: object
-        '404':
-          $ref: '#/responses/NotFound'
+            $ref: '#/definitions/GPUProcesses'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        404:
+          description: {{RESPONSES['nodes']['hostname']['not_found']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
       security:
-          - Bearer: []
+        - Bearer: []
 definitions:
-  CreateUserController:
-    type: object
-    properties:
-      username: { type: string }
-      password: { type: string }
-  UserLoginController:
-    type: object
-    properties:
-      username: { type: string }
-      password: { type: string }
-  User:
+  UserToDisplay:
     type: object
     properties:
       id:
         type: integer
         format: int64
-      username: { type: string }
+        example: 1
+      username:
+        type: string
+        example: foobar
       createdAt:
         type: string
         format: date-time
-  CreateReservationEventController:
+  UserForm:
     type: object
+    required:
+      - username
+      - password
     properties:
-      title: { type: string }
-      description: { type: string }
-      resourceId: { type: string }
-      userId: { type: integer }
+      username:
+        type: string
+        example: foobar
+      password:
+        type: string
+        example: difficult_password
+  Reservation:
+    type: object
+    required:
+      - title
+      - description
+      - resourceId
+      - userId
+      - start
+      - end
+    properties:
+      id:
+        type: integer
+        format: int64
+        example: 1
+        readOnly: true
+      createdAt:
+        type: string
+        format: date-time
+        readOnly: true
+      title:
+        type: string
+        example: Example title
+        minLength: 8
+        maxLength: 60
+      description:
+        type: string
+        example: Example description
+        minLength: 8
+        maxLength: 200
+      resourceId:
+        type: string
+        example: GPU-d38d4de3-85ee-e837-3d87-e8e2faeb6a63
+      userId:
+        type: integer
+        example: 1
       start:
         type: string
         format: date-time
       end:
         type: string
         format: date-time
-  ReservationEvent:
+  ReservationForm:
     type: object
+    required:
+      - title
+      - description
+      - resourceId
+      - userId
+      - start
+      - end
     properties:
-      id:
+      title:
+        type: string
+        example: Example title
+        minLength: 8
+        maxLength: 60
+      description:
+        type: string
+        example: Example description
+        minLength: 8
+        maxLength: 200
+      resourceId:
+        type: string
+        example: GPU-d38d4de3-85ee-e837-3d87-e8e2faeb6a63
+      userId:
         type: integer
-        format: int64
-      title: { type: string }
-      description: { type: string }
-      resourceId: { type: string }
-      userId: { type: integer}
+        example: 1
       start:
         type: string
         format: date-time
       end:
         type: string
         format: date-time
-      createdAt:
-        type: string
-        format: date-time
-
-responses:
-  # Example responses
-  # TODO Define more complex behaviour and use these reusable responses where possible (when API begins to stabilize)
-  NotFound:
-    description: Resource was not found
-  Unauthorized:
-    description: Unauthorized
-  InternalError:
-    description: Internal Server Error
-  BadRequest:
-    description: Bad Request
-  NoPermission:
-    description: User can not do that.
-
+  GPUAllData:
+    type: object
+    example:
+      <HOSTNAME>:
+        GPU:
+          <GPU_UUID>:
+            index: 0
+            name: GeForce GTX 1060
+            metrics: 
+              fan_speed:
+                unit: '%'
+                value: 30
+              power:
+                unit: W
+                value: 90
+            processes: 'null'
+  GPUInfo:
+    type: object
+    example:
+      <GPU_UUID>:
+        index:
+          type: integer
+          example: 0
+        name:
+          type: string
+          example: GeForce GTX 1060
+  GPUMetricsInTwoCases:
+    type: object
+    example:
+      <GPU_UUID (All metrics case)>:
+        gpu_util:
+          unit: '%'
+          value: 95
+        power:
+          unit: W
+          value: 90
+      <GPU_UUID (Specific metric case)>:
+        unit: '%'
+        value: 95
+  GPUProcesses:
+    type: object
+    example:
+      <GPU_UUID>:
+        - command: python
+          owner: foo
+          pid: 1111
+        - command: java
+          owner: bar
+          pid: 2222
 parameters:
   hostnameParam:
     description: Node's hostname in the network
@@ -387,7 +567,6 @@ parameters:
       - mem_util
       - temp
       - power
-
 securityDefinitions:
   Bearer:
     type: apiKey

@@ -3,16 +3,21 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_utils import database_exists
 from tensorhive.config import DB
-
 import logging
+import os
 log = logging.getLogger(__name__)
 
-engine = create_engine(DB.SQLALCHEMY_DATABASE_URI,
-                       convert_unicode=True,
-                       echo=False)
+
+if bool(os.environ.get('PYTEST')):
+    db_uri = DB.TEST_DATABASE_URI
+else:
+    db_uri = DB.SQLALCHEMY_DATABASE_URI
+
+engine = create_engine(db_uri, convert_unicode=True, echo=False)
 db_session = scoped_session(sessionmaker(autocommit=False,
                                          autoflush=False,
                                          bind=engine))
+
 Base = declarative_base()
 Base.query = db_session.query_property()
 
@@ -21,42 +26,13 @@ def init_db() -> None:
     '''Creates the database, tables (if they does not exist)'''
     # Import all modules that define models so that
     # they could be registered properly on the metadata.
-    from tensorhive.models.user import UserModel
-    from tensorhive.models.reservation_event import ReservationEventModel
-    from tensorhive.models.auth import RevokedTokenModel
-    from tensorhive.models.role import RoleModel
-    from tensorhive.models.user.UserModel import UserModel
-
-    if database_exists(DB.SQLALCHEMY_DATABASE_URI):
-        if not UserModel.find_by_username('admin'):
-            log.info('[•] Admin has not been found.')
-            create_admin()
-        log.info('[•] Database found ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
-
-    else:
-        # Double check via checkfirst=True (does not execute CREATE query on tables which already exist)
+    from tensorhive.models.User import User
+    from tensorhive.models.Reservation import Reservation
+    from tensorhive.models.RevokedToken import RevokedToken
+    from tensorhive.models.Role import Role
+    
+    if not database_exists(DB.SQLALCHEMY_DATABASE_URI):
         Base.metadata.create_all(bind=engine, checkfirst=True)
         log.info('[✔] Database created ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
-        create_admin()
-
-def create_admin():
-    from tensorhive.models.user.UserModel import UserModel
-    from tensorhive.models.role.RoleModel import RoleModel
-    admin_default_password  = 'tensorhive_admin'
-    new_user = UserModel(
-        username='admin',
-        password=UserModel.generate_hash(admin_default_password)
-    )
-
-    if new_user.save_to_db():
-        for role_name in ['user', 'admin']:
-            new_role = RoleModel(
-                name=role_name,
-                user_id=new_user.id
-            )
-            if not new_role.save_to_db():
-                log.warning('[•] Admin is not created due to role exception.')
     else:
-        log.warning('[•] Admin is not created.')
-
-    log.info('[•] Admin created. Login: {name} . Password : {password} .'.format(name=new_user.username, password=admin_default_password))
+        log.info('[•] Database found ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))

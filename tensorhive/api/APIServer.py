@@ -1,9 +1,9 @@
-import logging
-import connexion
-from tensorhive.config import API, API_SERVER
+from tensorhive.config import API, API_SERVER, DB
 from tensorhive.database import db_session
 from flask_cors import CORS
 from tensorhive.authorization import init_jwt
+import connexion
+import logging
 from tensorhive.core.utils.colors import green
 
 log = logging.getLogger(__name__)
@@ -26,16 +26,18 @@ class APIServer():
                     arguments={
                         'title': API.TITLE, 
                         'version': API.VERSION,
-                        'url_prefix': API.URL_PREFIX
+                        'url_prefix': API.URL_PREFIX,
+                        'RESPONSES': API.RESPONSES
                     },
                     resolver=connexion.RestyResolver(API.IMPL_LOCATION),
                     strict_validation=True)
         CORS(app.app)
         log.info('[⚙] Starting API server with {} backend'.format(API_SERVER.BACKEND))
-        log.info(green('[✔] API documentation (Swagger UI) available at: http://{host}:{port}/{url_prefix}/ui/'.format(
-            host=API_SERVER.HOST, 
+        URL = 'http://{host}:{port}/{url_prefix}/ui/'.format(
+            host=API_SERVER.HOST,
             port=API_SERVER.PORT,
-            url_prefix=API.URL_PREFIX)))
+            url_prefix=API.URL_PREFIX)
+        log.info(green('[✔] API documentation (Swagger UI) available at: {}'.format(URL)))
         app.run(server=API_SERVER.BACKEND,
                 host=API_SERVER.HOST,
                 port=API_SERVER.PORT,
@@ -45,6 +47,7 @@ class APIServer():
 
 def start_api_server():
     APIServer().run_forever()
+
 
 if __name__ == '__main__':
     start_api_server()
