@@ -1,5 +1,5 @@
 import pytest
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 
 def test_reservation_creation(tables, new_reservation):
@@ -40,168 +40,48 @@ def test_interference_detection(tables, new_reservation):
         new_reservation.save()
 
 
+@pytest.mark.usefixtures('faker')
+def test_string_time_format_conversion(tables, new_reservation, faker):
+    # Prepare test data
+    starts_at_datetime = faker.future_datetime(end_date='+1d')
+    ends_at_datetime = starts_at_datetime + timedelta(minutes=400)
+
+    def cast_dt_to_str(format):
+        return starts_at_datetime.strftime(format), ends_at_datetime.strftime(format)
+
+    # Test invalid format
+    invalid_format = '%Y_%m_%dT%H:%M:%S.%fZ'
+    starts_at, ends_at = cast_dt_to_str(invalid_format)
+    with pytest.raises(ValueError):
+        new_reservation.starts_at = starts_at
+        new_reservation.ends_at = ends_at
+        new_reservation.save()
+
+    # Test valid format
+    valid_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+    starts_at, ends_at = cast_dt_to_str(valid_format)
+    new_reservation.starts_at = starts_at
+    new_reservation.ends_at = ends_at
+    new_reservation.save()
 
 
+@pytest.mark.usefixtures('faker')
+def test_invalid_reservation_time_range(tables, new_reservation, faker):
+    with pytest.raises(AssertionError):
+        # End before start
+        new_reservation.starts_at = faker.future_datetime(end_date='+1d')
+        new_reservation.ends_at = faker.past_datetime(start_date='-1d')
+        new_reservation.save()
 
+    with pytest.raises(AssertionError):
+        # Duration too short (30 min at least required)
+        new_reservation.starts_at = faker.future_datetime()
+        new_reservation.ends_at = new_reservation.starts_at + timedelta(minutes=29, seconds=59)
+        new_reservation.save()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# def test_exception_on_reservation_collision(db_session, valid_user):
-#     now = datetime.datetime.utcnow()
-#     duration = datetime.timedelta(minutes=30)
-
-#     existing_reservation = Reservation.create(
-#         start=now,
-#         end=now + duration,
-#         title='asd',
-#         description='',
-#         protected_resource_id='THE SAME UUID',
-#         user_id=valid_user.id
-#     ).save(session=db_session)
-
-#     with pytest.raises(AssertionError):
-#         # TODO Refactor, use fixtures
-#         # Between time
-#         colliding_reservation = Reservation.create(
-#             start=now + datetime.timedelta(minutes=5),
-#             end=now + duration - datetime.timedelta(minutes=5),
-#             title='asd',
-#             description='',
-#             protected_resource_id='THE SAME UUID',
-#             user_id=valid_user.id
-#         ).save(session=db_session)
-
-#     # IT DOES NOT RAISE ANY ERRORS!
-#     # with pytest.raises(AssertionError):
-#     #     # Exact time
-#     #     colliding_reservation = Reservation.create(
-#     #         start=now,
-#     #         end=now + duration,
-#     #         title='asd',
-#     #         description='',
-#     #         protected_resource_id='THE SAME UUID',
-#     #         user_id=valid_user.id
-#     #     ).save(session=db_session)
-
-
-# @pytest.mark.usefixtures('faker')
-# def test_invalid_reservation_time_range(db_session, faker):
-#     with pytest.raises(AssertionError):
-#         # End is before start
-#         Reservation(
-#             start=faker.future_datetime(end_date='+1d'),
-#             end=faker.past_datetime(start_date='-1d'),
-#             title='asd',
-#             description='',
-#             protected_resource_id='UUID',
-#         )
-#     with pytest.raises(AssertionError):
-#         # Duration is too short
-#         test_future_datetime = faker.future_datetime()
-#         test_duration = datetime.timedelta(minutes=10)
-#         Reservation(
-#             start=test_future_datetime,
-#             end=test_future_datetime + test_duration,
-#             title='asd',
-#             description='',
-#             protected_resource_id='UUID'
-#         )
-
-
-# @pytest.mark.usefixtures('faker')
-# def test_valid_string_time_format(db_session, faker, valid_user):
-#     starts_at = faker.future_datetime(end_date='+1d')
-#     ends_at = starts_at + datetime.timedelta(minutes=400)
-
-#     # Convert datetime to string
-#     valid_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-#     starts_at = starts_at.strftime(valid_format)  # type: str
-#     ends_at = ends_at.strftime(valid_format)  # type: str
-
-#     Reservation.create(
-#         start=starts_at,
-#         end=ends_at,
-#         title='asd',
-#         description='',
-#         protected_resource_id='UUID',
-#         user_id=valid_user.id
-#     ).save(session=db_session)
-
-
-# @pytest.mark.usefixtures('faker')
-# def test_invalid_start_time_format(db_session, faker, valid_user):
-#     starts_at = faker.future_datetime()
-#     ends_at = starts_at + datetime.timedelta(minutes=400)
-
-#     # Convert datetime to string
-#     invalid_format = '%Y_%m_%dT%H:%M:%S.%fZ'
-#     starts_at = starts_at.strftime(invalid_format)  # type: str
-#     ends_at = ends_at.strftime(invalid_format)  # type: str
-
-#     with pytest.raises(ValueError):
-#         Reservation(
-#             start=starts_at,
-#             end=ends_at,
-#             title='asd',
-#             description='',
-#             protected_resource_id='UUID',
-#             #user_id=valid_user.id
-#         )
-
-
-# @pytest.mark.parametrize('duration_in_minutes', [
-#     30, 31, 40, 120, 9999
-# ], scope='function')
-# @pytest.mark.usefixtures('faker')
-# def test_valid_reservation_creation(db_session, faker, duration_in_minutes, valid_user):
-#     starts_at = faker.future_datetime()
-#     duration = datetime.timedelta(minutes=duration_in_minutes)
-#     reservation = Reservation.create(
-#         start=starts_at,
-#         end=starts_at + duration,
-#         title='asd',
-#         description='',
-#         protected_resource_id='UUID',
-#         user_id=valid_user.id
-#     ).save(session=db_session)
-#     assert reservation.duration == duration
+    with pytest.raises(AssertionError):
+        # Duration too long (2 days at last)
+        new_reservation.starts_at = faker.future_datetime()
+        new_reservation.ends_at = new_reservation.starts_at + timedelta(days=2, seconds=1)
+        print(new_reservation)
+        new_reservation.save()
