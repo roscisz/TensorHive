@@ -204,25 +204,27 @@ export default {
       tempMetrics = {}
       uniqueMetrics = {}
       for (var resourceUUID in resourceType) {
-        this.resourcesIndexes[resourceUUID] = resourceType[resourceUUID].index
-        resource = resourceType[resourceUUID]
-        for (var metricName in resource.metrics) {
-          if (isNaN(resource.metrics[metricName])) {
-            metric = resource.metrics[metricName]
-            metric['visible'] = this.isVisible(resource.metrics[metricName], metricName)
-          } else {
-            metric = {
-              value: resource.metrics[metricName],
-              unit: '',
-              visible: this.isVisible(resource.metrics[metricName], metricName)
+        if (resourceType[resourceUUID] !== null) {
+          this.resourcesIndexes[resourceUUID] = resourceType[resourceUUID].index
+          resource = resourceType[resourceUUID]
+          for (var metricName in resource.metrics) {
+            if (isNaN(resource.metrics[metricName])) {
+              metric = resource.metrics[metricName]
+              metric['visible'] = this.isVisible(resource.metrics[metricName], metricName)
+            } else {
+              metric = {
+                value: resource.metrics[metricName],
+                unit: '',
+                visible: this.isVisible(resource.metrics[metricName], metricName)
+              }
             }
-          }
-          if (uniqueMetrics.hasOwnProperty(metricName)) {
-            if (uniqueMetrics[metricName].visible === false) {
+            if (uniqueMetrics.hasOwnProperty(metricName)) {
+              if (uniqueMetrics[metricName].visible === false) {
+                uniqueMetrics[metricName] = metric
+              }
+            } else {
               uniqueMetrics[metricName] = metric
             }
-          } else {
-            uniqueMetrics[metricName] = metric
           }
         }
       }

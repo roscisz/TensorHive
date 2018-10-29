@@ -164,13 +164,13 @@ export default {
               resourceIndex: resourceType[resourceUUID].index,
               metrics: resourceType[resourceUUID].metrics
             }
-            tempResource.metrics['checked'] = false
+            tempResource.metrics['checked'] = true
             resources.push(tempResource)
           }
           orderedResources = _.orderBy(resources, 'resourceIndex')
           tempResourceType = {
             name: resourceTypeName,
-            checked: false,
+            checked: true,
             open: false,
             resources: orderedResources
           }
@@ -178,12 +178,13 @@ export default {
         }
         tempNode = {
           nodeName: nodeName,
-          checked: false,
+          checked: true,
           open: false,
           resourceTypes: resourceTypes
         }
         this.parsedNodes.push(tempNode)
       }
+      this.loadCalendar()
     },
 
     changeNode (node) {

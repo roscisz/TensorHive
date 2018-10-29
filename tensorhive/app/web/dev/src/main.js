@@ -20,94 +20,124 @@ import Vuetify from 'vuetify'
 import 'vuetify/dist/vuetify.min.css'
 import 'material-design-icons-iconfont/dist/material-design-icons.css'
 
-import staticConfig from '../static/config'
+import axios from 'axios'
 import config from './config'
+axios.get('static/config.json').then(response => {
+  config.serverURI = response.data.apiPath
 
-config.serverURI = staticConfig.apiPath
+  Vue.use(Vuetify)
 
-Vue.use(Vuetify)
+  // Import Install and register helper items
+  Vue.filter('count', count)
+  Vue.filter('domain', domain)
+  Vue.filter('prettyDate', prettyDate)
+  Vue.filter('pluralize', pluralize)
 
-// Import Install and register helper items
-Vue.filter('count', count)
-Vue.filter('domain', domain)
-Vue.filter('prettyDate', prettyDate)
-Vue.filter('pluralize', pluralize)
+  Vue.use(VueRouter)
 
-Vue.use(VueRouter)
+  // Routing logic
+  var router = new VueRouter({
+    routes: routes,
+    mode: 'history',
+    linkExactActiveClass: 'active',
+    scrollBehavior: function (to, from, savedPosition) {
+      return savedPosition || { x: 0, y: 0 }
+    }
+  })
 
-// Routing logic
-var router = new VueRouter({
-  routes: routes,
-  mode: 'history',
-  linkExactActiveClass: 'active',
-  scrollBehavior: function (to, from, savedPosition) {
-    return savedPosition || { x: 0, y: 0 }
-  }
-})
-
-// Some middleware to help us ensure the user is authenticated.
-router.beforeEach((to, from, next) => {
-  if (
-    to.matched.some(record => record.meta.requiresAuth) &&
-    (!router.app.$store.state.accessToken || router.app.$store.state.accessToken === 'null')
-  ) {
-    // this route requires auth, check if logged in
-    // if not, redirect to login page.
-    window.console.log('Not authenticated')
-    next({
-      path: '/login',
-      query: { redirect: to.fullPath }
-    })
-  } else if (to.meta.role === 'admin') {
-    if (router.app.$store.state.role === 'admin') {
-      next()
-    } else {
+  // Some middleware to help us ensure the user is authenticated.
+  router.beforeEach((to, from, next) => {
+    if (
+      to.matched.some(record => record.meta.requiresAuth) &&
+      (!router.app.$store.state.accessToken || router.app.$store.state.accessToken === 'null')
+    ) {
+      // this route requires auth, check if logged in
+      // if not, redirect to login page.
+      window.console.log('Not authenticated')
       next({
-        path: '/',
+        path: '/login',
         query: { redirect: to.fullPath }
       })
-    }
-  } else {
-    next()
-  }
-})
-
-sync(store, router)
-
-// Check local storage to handle refreshes
-if (window.localStorage) {
-  var localUserString = window.localStorage.getItem('user') || 'null'
-  var localUser = JSON.parse(localUserString)
-
-  if (localUser && store.state.user !== localUser) {
-    store.commit('SET_USER', localUser)
-    store.commit('SET_ACCESS_TOKEN', window.localStorage.getItem('accessToken'))
-    store.commit('SET_REFRESH_TOKEN', window.localStorage.getItem('refreshToken'))
-    store.commit('SET_ROLE', window.localStorage.getItem('role'))
-    store.commit('SET_ID', window.localStorage.getItem('userId'))
-  }
-  refreshToken()
-}
-
-function refreshToken () {
-  api
-    .request('get', '/user/refresh', store.state.refreshToken)
-    .then(response => {
-      store.commit('SET_ACCESS_TOKEN', 'Bearer ' + response.data.access_token)
-      if (window.localStorage) {
-        window.localStorage.setItem('accessToken', 'Bearer ' + response.data.access_token)
+    } else if (to.meta.role === 'admin') {
+      if (router.app.$store.state.role === 'admin') {
+        next()
+      } else {
+        next({
+          path: '/',
+          query: { redirect: to.fullPath }
+        })
       }
-      window.setTimeout(function () {
-        refreshToken()
-      }, 55000)
-    })
-}
+    } else {
+      next()
+    }
+  })
 
-// Start out app!
-// eslint-disable-next-line no-new
-new Vue({
-  el: '#root',
-  router: router,
-  store: store,
-  render: h => h(AppView)
+  sync(store, router)
+
+  // Check local storage to handle refreshes
+  if (window.localStorage) {
+    var localUserString = window.localStorage.getItem('user') || 'null'
+    var localUser = JSON.parse(localUserString)
+
+    if (localUser && store.state.user !== localUser) {
+      store.commit('SET_USER', localUser)
+      store.commit('SET_ACCESS_TOKEN', window.localStorage.getItem('accessToken'))
+      store.commit('SET_REFRESH_TOKEN', window.localStorage.getItem('refreshToken'))
+      store.commit('SET_ROLE', window.localStorage.getItem('role'))
+      store.commit('SET_ID', window.localStorage.getItem('userId'))
+    }
+    window.setTimeout(function () {
+      refreshToken()
+    }, 1000)
+  }
+
+  function refreshToken () {
+    if (store.state.refreshToken !== null) {
+      api
+        .request('get', '/user/refresh', store.state.refreshToken)
+        .then(response => {
+          store.commit('SET_ACCESS_TOKEN', 'Bearer ' + response.data.access_token)
+          if (window.localStorage) {
+            window.localStorage.setItem('accessToken', 'Bearer ' + response.data.access_token)
+          }
+          window.setTimeout(function () {
+            refreshToken()
+          }, 55000)
+        })
+        .catch(error => {
+          console.log(error)
+          logout()
+        })
+    }
+  }
+
+  function logout () {
+    api
+      .request('delete', '/user/logout', store.state.accessToken)
+    api
+      .request('delete', '/user/logout/refresh_token', store.state.refreshToken)
+    store.commit('SET_USER', null)
+    store.commit('SET_ACCESS_TOKEN', null)
+    store.commit('SET_REFRESH_TOKEN', null)
+    store.commit('SET_ROLE', null)
+
+    if (window.localStorage) {
+      window.localStorage.setItem('user', null)
+      window.localStorage.setItem('accessToken', null)
+      window.localStorage.setItem('refreshToken', null)
+      window.localStorage.setItem('role', null)
+      window.localStorage.setItem('visibleResources', null)
+      window.localStorage.setItem('watches', null)
+      window.localStorage.setItem('watchIds', null)
+    }
+    router.push('/login')
+  }
+  // Start out app!
+  // eslint-disable-next-line no-new
+  new Vue({
+    el: '#root',
+    router: router,
+    store: store,
+    render: h => h(AppView)
+  })
 })

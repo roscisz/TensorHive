@@ -185,11 +185,13 @@ export default {
         .then(response => {
           data = response.data
           for (var resourceUUID in data) {
-            for (var i = 0; i < data[resourceUUID].length; i++) {
-              tempProcess = data[resourceUUID][i]
-              tempProcess['index'] = this.resourcesIndexes[resourceUUID]
-              tempProcess['uuid'] = resourceUUID
-              processes.push(tempProcess)
+            if (data[resourceUUID] !== null) {
+              for (var i = 0; i < data[resourceUUID].length; i++) {
+                tempProcess = data[resourceUUID][i]
+                tempProcess['index'] = this.resourcesIndexes[resourceUUID]
+                tempProcess['uuid'] = resourceUUID
+                processes.push(tempProcess)
+              }
             }
           }
           this.processes = processes

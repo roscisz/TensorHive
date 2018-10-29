@@ -138,6 +138,7 @@ export default {
         .request('post', '/reservations', this.$store.state.accessToken, reservation)
         .then(response => {
           this.calendar.fullCalendar('refetchEvents')
+          this.addResourcesHeader()
         })
         .catch(error => {
           this.$emit('showSnackbar', error.response.data.msg)
@@ -166,12 +167,22 @@ export default {
       header: {
         left: 'prev,next today',
         center: 'title',
-        right: ''
+        right: 'agendaWeek, week2'
       },
       views: {
         week: {
           columnHeaderFormat: 'ddd D/M'
+        },
+        week2: {
+          type: 'agendaWeek',
+          duration: { days: 7 },
+          buttonText: '+-1 day',
+          dateIncrement: { days: 1 },
+          columnHeaderFormat: 'ddd D/M'
         }
+      },
+      eventRender: function (event, element) {
+        element.find('.fc-title').append('<br/>' + event.description)
       },
       eventAfterRender: function (event, element, view) {
         var resourceIndex
@@ -237,6 +248,7 @@ export default {
         }
       },
       viewRender: function (view, element) {
+        self.calendar.fullCalendar('refetchEvents')
         self.addResourcesHeader()
       }
     })
