@@ -163,27 +163,3 @@ class Reservation(CRUDModel, Base):
             'end': self.parsed_output_datetime(self.ends_at),
             'createdAt': self.parsed_output_datetime(self.created_at)
         }
-
-
-# def validate(mapper, connection, target):
-#     assert target.user_id, 'Reservation owner must be given!'
-#     assert target.protected_resource_id, 'Reservation must be related with a resource!'
-#     assert target.starts_at, 'Reservation start time is invalid!'
-#     assert target.ends_at, 'Reservation end time is invalid!'
-
-#     __min_reservation_time = datetime.timedelta(minutes=30)
-#     __max_reservation_time = datetime.timedelta(days=2)
-#     assert target.duration >= __min_reservation_time, 'Reservation duration is too short!'
-#     assert target.duration <= __max_reservation_time, 'Reservation duration is too long!'
-
-#     assert 8 < len(target.title) < 60, 'Reservation title length has incorrect length!'
-#     assert 8 < len(target.description) < 200, 'Reservation description has incorrect length!'
-#     assert len(target.protected_resource_id) == 40, 'Protected resource UUID has incorrect length!'
-
-#     print('>>>>>>>>>>>>>>>>>>>>>>>', target.duration)
-#     collision = target.would_interfere()
-#     assert not collision, 'Reservation would interfere with some other reservation!'
-
-
-# event.listen(Reservation, 'before_insert', validate)
-# event.listen(Reservation, 'before_update', validate)
