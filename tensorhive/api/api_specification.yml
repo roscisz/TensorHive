@@ -445,13 +445,9 @@ definitions:
       title:
         type: string
         example: Example title
-        minLength: 8
-        maxLength: 60
       description:
         type: string
         example: Example description
-        minLength: 8
-        maxLength: 200
       resourceId:
         type: string
         example: GPU-d38d4de3-85ee-e837-3d87-e8e2faeb6a63
@@ -477,13 +473,9 @@ definitions:
       title:
         type: string
         example: Example title
-        minLength: 8
-        maxLength: 60
       description:
         type: string
         example: Example description
-        minLength: 8
-        maxLength: 200
       resourceId:
         type: string
         example: GPU-d38d4de3-85ee-e837-3d87-e8e2faeb6a63
