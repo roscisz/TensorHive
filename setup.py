@@ -33,7 +33,7 @@ setup(
         ],
     },
     description='Lightweight computing resource management tool for executing distributed TensorFlow programs',
-    author='Pawel Rosciszewski, Michał Martyniak, Filip Schodowski, Tomasz Menet',
+    author='Pawel Rosciszewski, Michal Martyniak, Filip Schodowski, Tomasz Menet',
     author_email='pawel.rosciszewski@pg.edu.pl',
     url='https://github.com/roscisz/TensorHive',
     download_url='https://github.com/roscisz/TensorHive/archive/0.1.1.tar.gz',
