@@ -29,6 +29,13 @@
         <v-icon dark>delete</v-icon>
       </v-btn>
     </div>
+    <v-alert
+      v-model="alert"
+      dismissible
+      type="error"
+    >
+      {{ errorMessage }}
+    </v-alert>
     <div v-if="showProcesses === true" class="table_box">
       <v-data-table
         :headers="headers"
@@ -100,7 +107,9 @@ export default {
         { text: 'pid', value: 'pid' },
         { text: 'command', value: 'command' }
       ],
-      processes: []
+      processes: [],
+      alert: false,
+      errorMessage: ''
     }
   },
 
@@ -172,21 +181,24 @@ export default {
       var data, processes, tempProcess
       processes = []
       api
-        .request('get', '/nodes/' + this.selectedNode + '/gpu/processes', this.$store.state.token)
+        .request('get', '/nodes/' + this.selectedNode + '/gpu/processes', this.$store.state.accessToken)
         .then(response => {
           data = response.data
           for (var resourceUUID in data) {
-            for (var i = 0; i < data[resourceUUID].length; i++) {
-              tempProcess = data[resourceUUID][i]
-              tempProcess['index'] = this.resourcesIndexes[resourceUUID]
-              tempProcess['uuid'] = resourceUUID
-              processes.push(tempProcess)
+            if (data[resourceUUID] !== null) {
+              for (var i = 0; i < data[resourceUUID].length; i++) {
+                tempProcess = data[resourceUUID][i]
+                tempProcess['index'] = this.resourcesIndexes[resourceUUID]
+                tempProcess['uuid'] = resourceUUID
+                processes.push(tempProcess)
+              }
             }
           }
           this.processes = processes
         })
-        .catch(e => {
-          this.errors.push(e)
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
         })
     }
   },
@@ -206,6 +218,9 @@ export default {
         this.checkProcesses()
         let self = this
         this.interval = setInterval(function () {
+          if (self.$route.fullPath !== '/nodes_overview') {
+            clearInterval(self.interval)
+          }
           self.checkProcesses()
         }, this.time)
         this.showProcesses = true

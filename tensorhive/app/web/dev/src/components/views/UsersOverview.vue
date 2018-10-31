@@ -1,5 +1,12 @@
 <template>
   <section class="content">
+    <v-alert
+      v-model="alert"
+      dismissible
+      type="error"
+    >
+      {{ errorMessage }}
+    </v-alert>
     <div>
       <div class="text-xs-center pt-2">
         <v-btn color="primary" @click="createUser()">Create user</v-btn>
@@ -52,7 +59,8 @@ export default {
       ],
       users: [],
       time: 1000,
-      errors: []
+      alert: false,
+      errorMessage: ''
     }
   },
 
@@ -76,25 +84,27 @@ export default {
     },
     checkUsers: function () {
       api
-        .request('get', '/users', this.$store.state.token)
+        .request('get', '/users', this.$store.state.accessToken)
         .then(response => {
           this.users = response.data
           this.pagination['totalItems'] = this.users.length
           this.pagination['rowsPerPage'] = 30
         })
-        .catch(e => {
+        .catch(error => {
           this.pagination = {}
-          this.errors.push(e)
+          this.errorMessage = error.response.data.msg
+          this.alert = true
         })
     },
     deleteUser: function (userId) {
       api
-        .request('delete', '/user/delete/' + userId, this.$store.state.token)
+        .request('delete', '/user/delete/' + userId, this.$store.state.accessToken)
         .then(response => {
           this.checkUsers()
         })
-        .catch(e => {
-          this.errors.push(e)
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
         })
     }
   }

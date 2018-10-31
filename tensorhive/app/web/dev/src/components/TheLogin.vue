@@ -25,17 +25,20 @@
             v-model="password"
           >
         </div>
+        <v-alert
+          v-model="alert"
+          dismissible
+          type="error"
+        >
+          {{ errorMessage }}
+        </v-alert>
         <v-btn
           color="success"
           type="submit"
-          :class="'btn btn-primary btn-lg ' + loading"
         >
           Login
         </v-btn>
       </form>
-
-      <!-- errors -->
-      <div v-if=response class="text-red"><p class="vertical-5p lead">{{response}}</p></div>
     </div>
   </div>
 </template>
@@ -49,10 +52,10 @@ export default {
   data (router) {
     return {
       section: 'Login',
-      loading: '',
       username: '',
       password: '',
-      response: ''
+      alert: false,
+      errorMessage: ''
     }
   },
 
@@ -69,7 +72,7 @@ export default {
       this.$store.commit('TOGGLE_LOADING')
       /* Making API call to authenticate a user */
       api
-        .request('post', '/user/login', this.$store.state.token, { 'username': username, 'password': password })
+        .request('post', '/user/login', this.$store.state.accessToken, { 'username': username, 'password': password })
         .then(response => {
           this.toggleLoading()
 
@@ -90,30 +93,85 @@ export default {
           }
           /* Setting user in the state and caching record to the localStorage */
           if (username) {
-            var token = 'Bearer ' + data.access_token
+            var accessToken = 'Bearer ' + data.access_token
+            var refreshToken = 'Bearer ' + data.refresh_token
             var object = JSON.parse(atob(data.access_token.split('.')[1]))
             var id = object.identity
             var role = object.user_claims.roles.length === 2 ? 'admin' : 'user'
             this.$store.commit('SET_USER', username)
             this.$store.commit('SET_ROLE', role)
             this.$store.commit('SET_ID', id)
-            this.$store.commit('SET_TOKEN', token)
+            this.$store.commit('SET_ACCESS_TOKEN', accessToken)
+            this.$store.commit('SET_REFRESH_TOKEN', refreshToken)
 
             if (window.localStorage) {
               window.localStorage.setItem('user', JSON.stringify(username))
-              window.localStorage.setItem('token', token)
+              window.localStorage.setItem('accessToken', accessToken)
+              window.localStorage.setItem('refreshToken', refreshToken)
               window.localStorage.setItem('role', role)
+              window.localStorage.setItem('userId', id)
             }
+            let self = this
+            window.setTimeout(function () {
+              self.refreshToken()
+            }, 55000)
             this.$router.push('/')
           }
         })
         .catch(error => {
-          this.$store.commit('TOGGLE_LOADING')
-          console.log(error)
-
-          this.response = 'Server appears to be offline'
-          this.toggleLoading()
+          this.errorMessage = error.response.data.msg
+          this.alert = true
         })
+    },
+
+    refreshToken () {
+      api
+        .request('get', '/user/refresh', this.$store.state.refreshToken)
+        .then(response => {
+          this.$store.commit('SET_ACCESS_TOKEN', 'Bearer ' + response.data.access_token)
+          if (window.localStorage) {
+            window.localStorage.setItem('accessToken', 'Bearer ' + response.data.access_token)
+          }
+          let self = this
+          window.setTimeout(function () {
+            self.refreshToken()
+          }, 55000)
+        })
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
+          this.logout()
+        })
+    },
+
+    logout: function () {
+      api
+        .request('delete', '/user/logout', this.$store.state.accessToken)
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
+        })
+      api
+        .request('delete', '/user/logout/refresh_token', this.$store.state.refreshToken)
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
+        })
+      this.$store.commit('SET_USER', null)
+      this.$store.commit('SET_ACCESS_TOKEN', null)
+      this.$store.commit('SET_REFRESH_TOKEN', null)
+      this.$store.commit('SET_ROLE', null)
+
+      if (window.localStorage) {
+        window.localStorage.setItem('user', null)
+        window.localStorage.setItem('accessToken', null)
+        window.localStorage.setItem('refreshToken', null)
+        window.localStorage.setItem('role', null)
+        window.localStorage.setItem('visibleResources', null)
+        window.localStorage.setItem('watches', null)
+        window.localStorage.setItem('watchIds', null)
+      }
+      this.$router.push('/login')
     },
 
     toggleLoading () {

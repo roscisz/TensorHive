@@ -1,5 +1,12 @@
 <template>
   <div>
+    <v-alert
+      v-model="alert"
+      dismissible
+      type="error"
+    >
+      {{ errorMessage }}
+    </v-alert>
     <v-btn
       color="info"
       small
@@ -47,7 +54,8 @@ export default {
       chartLength: 25,
       space: 2,
       interval: null,
-      errors: [],
+      alert: false,
+      errorMessage: '',
       updateChart: false,
       resourcesIndexes: {},
       watchIds: 3
@@ -58,6 +66,9 @@ export default {
     this.loadData()
     let self = this
     this.interval = setInterval(function () {
+      if (self.$route.fullPath !== '/nodes_overview') {
+        clearInterval(self.interval)
+      }
       self.changeData()
     }, this.time)
   },
@@ -118,7 +129,7 @@ export default {
 
     loadData: function () {
       api
-        .request('get', '/nodes/metrics', this.$store.state.token)
+        .request('get', '/nodes/metrics', this.$store.state.accessToken)
         .then(response => {
           if (JSON.parse(window.localStorage.getItem('watches')) === null) {
             this.watches = [
@@ -147,8 +158,9 @@ export default {
           }
           this.parseData(response.data)
         })
-        .catch(e => {
-          this.errors.push(e)
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
         })
     },
 
@@ -192,25 +204,27 @@ export default {
       tempMetrics = {}
       uniqueMetrics = {}
       for (var resourceUUID in resourceType) {
-        this.resourcesIndexes[resourceUUID] = resourceType[resourceUUID].index
-        resource = resourceType[resourceUUID]
-        for (var metricName in resource.metrics) {
-          if (isNaN(resource.metrics[metricName])) {
-            metric = resource.metrics[metricName]
-            metric['visible'] = this.isVisible(resource.metrics[metricName], metricName)
-          } else {
-            metric = {
-              value: resource.metrics[metricName],
-              unit: '',
-              visible: this.isVisible(resource.metrics[metricName], metricName)
+        if (resourceType[resourceUUID] !== null) {
+          this.resourcesIndexes[resourceUUID] = resourceType[resourceUUID].index
+          resource = resourceType[resourceUUID]
+          for (var metricName in resource.metrics) {
+            if (isNaN(resource.metrics[metricName])) {
+              metric = resource.metrics[metricName]
+              metric['visible'] = this.isVisible(resource.metrics[metricName], metricName)
+            } else {
+              metric = {
+                value: resource.metrics[metricName],
+                unit: '',
+                visible: this.isVisible(resource.metrics[metricName], metricName)
+              }
             }
-          }
-          if (uniqueMetrics.hasOwnProperty(metricName)) {
-            if (uniqueMetrics[metricName].visible === false) {
+            if (uniqueMetrics.hasOwnProperty(metricName)) {
+              if (uniqueMetrics[metricName].visible === false) {
+                uniqueMetrics[metricName] = metric
+              }
+            } else {
               uniqueMetrics[metricName] = metric
             }
-          } else {
-            uniqueMetrics[metricName] = metric
           }
         }
       }
@@ -344,7 +358,7 @@ export default {
       var metric, resourceType, value
       var data = []
       api
-        .request('get', '/nodes/' + nodeName + '/gpu/metrics', this.$store.state.token)
+        .request('get', '/nodes/' + nodeName + '/gpu/metrics', this.$store.state.accessToken)
         .then(response => {
           data = response.data
           for (var resourceTypeName in node) {
@@ -364,8 +378,9 @@ export default {
             this.updateChart = !this.updateChart
           }
         })
-        .catch(e => {
-          this.errors.push(e)
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
         })
     },
 

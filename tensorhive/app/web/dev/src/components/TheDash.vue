@@ -1,5 +1,12 @@
 <template>
   <div :class="['wrapper', classes]">
+    <v-alert
+      v-model="alert"
+      dismissible
+      type="error"
+    >
+      {{ errorMessage }}
+    </v-alert>
     <header class="main-header">
       <span class="logo-mini">
       </span>
@@ -17,18 +24,33 @@
         >
           <span class="sr-only">Toggle navigation</span>
         </a>
-        <v-chip
+        <v-menu
           class="user_chip"
-          close
-          v-model="loggedIn"
-          color="green"
-          text-color="white"
+          :close-on-content-click="false"
+          offset-y
         >
-          <v-avatar>
-            <v-icon>check_circle</v-icon>
-          </v-avatar>
-          {{displayName}}
-        </v-chip>
+          <v-chip
+            slot="activator"
+            color="green"
+            text-color="white"
+          >
+            <v-avatar>
+              <v-icon>account_circle</v-icon>
+            </v-avatar>
+            {{displayName}}
+          </v-chip>
+
+          <v-card>
+            <v-avatar>
+              <v-icon>account_circle</v-icon>
+            </v-avatar>
+            {{displayName}}
+            <v-divider></v-divider>
+            <v-card-actions>
+              <v-btn flat @click="logout()">Logout</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-menu>
       </nav>
     </header>
     <!-- Left side column. contains the logo and sidebar -->
@@ -41,13 +63,6 @@
           {{$route.name }}
           <small>{{ $route.meta.description }}</small>
         </h1>
-        <ol class="breadcrumb">
-          <li>
-            <a href="javascript:;">
-              <i class="fa fa-home"></i>Home</a>
-          </li>
-          <li class="active">{{$route.name}}</li>
-        </ol>
       </section>
       <router-view></router-view>
     </div>
@@ -80,22 +95,14 @@ export default {
         fixed_layout: config.fixedLayout,
         hide_logo: config.hideLogoOnMobile
       },
-      error: '',
-      loggedIn: true
+      alert: false,
+      errorMessage: ''
     }
   },
 
   computed: {
     displayName () {
       return this.$store.state.user
-    }
-  },
-
-  watch: {
-    loggedIn () {
-      if (this.loggedIn === false) {
-        this.logout()
-      }
     }
   },
 
@@ -106,15 +113,26 @@ export default {
 
     logout: function () {
       api
-        .request('delete', '/user/logout', this.$store.state.token)
-
+        .request('delete', '/user/logout', this.$store.state.accessToken)
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
+        })
+      api
+        .request('delete', '/user/logout/refresh_token', this.$store.state.refreshToken)
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.alert = true
+        })
       this.$store.commit('SET_USER', null)
-      this.$store.commit('SET_TOKEN', null)
+      this.$store.commit('SET_ACCESS_TOKEN', null)
+      this.$store.commit('SET_REFRESH_TOKEN', null)
       this.$store.commit('SET_ROLE', null)
 
       if (window.localStorage) {
         window.localStorage.setItem('user', null)
-        window.localStorage.setItem('token', null)
+        window.localStorage.setItem('accessToken', null)
+        window.localStorage.setItem('refreshToken', null)
         window.localStorage.setItem('role', null)
         window.localStorage.setItem('visibleResources', null)
         window.localStorage.setItem('watches', null)
@@ -128,12 +146,15 @@ export default {
 
 <style lang="scss">
 .user_chip {
-  margin-top: 8px;
+  position: absolute;
+  right: 0;
+  margin-top: 50px;
 }
 .wrapper.fixed_layout {
   .main-header {
     position: fixed;
     width: 100%;
+    z-index: -1;
   }
 
   .content-wrapper {
