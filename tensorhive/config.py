@@ -2,6 +2,7 @@ from pathlib import PosixPath
 import configparser
 from typing import Dict, Optional, Any, List
 import logging
+import tensorhive
 
 log = logging.getLogger(__name__)
 MAIN_CONFIG_PATH = '~/.config/TensorHive/main_config.ini'
@@ -92,7 +93,7 @@ class DB:
 class API:
     section = 'api'
     TITLE = config.get(section, 'title', fallback='TensorHive API')
-    VERSION = config.getfloat(section, 'version', fallback=0.2)
+    VERSION = config.get(section, 'version', fallback='{}'.format(tensorhive.__version__))
     URL_PREFIX = config.get(section, 'url_prefix', fallback='api/{}'.format(VERSION))
     SPEC_FILE = config.get(section, 'spec_file', fallback='api_specification.yml')
     IMPL_LOCATION = config.get(section, 'impl_location', fallback='tensorhive.api.controllers')
