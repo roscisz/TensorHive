@@ -183,6 +183,16 @@ export default {
       },
       eventRender: function (event, element) {
         element.find('.fc-title').append('<br/>' + event.description)
+        if (!event.allDay) {
+          api
+            .request('get', '/users/' + event.userId, self.$store.state.accessToken)
+            .then(response => {
+              element.find('.fc-title').prepend((response.data.username).bold().big().italics() + '<br/>')
+            })
+            .catch(error => {
+              this.$emit('showSnackbar', error.response.data.msg)
+            })
+        }
       },
       eventAfterRender: function (event, element, view) {
         var resourceIndex
@@ -196,10 +206,12 @@ export default {
         var width = view.el[0].clientWidth
         var dayWidth = (width - scrollWidth - hoursWidth) / 7
         var eventSlotWidth = dayWidth / self.selectedResources.length - 1
-        var margin = (Math.floor((resourceIndex - 1) * eventSlotWidth)).toString() + 'px'
-        var eventWidth = (Math.floor(eventSlotWidth)).toString() + 'px'
+        var eventWidth = (Math.floor(eventSlotWidth - 1)).toString() + 'px'
         $(element).css('width', eventWidth)
-        $(element).css('margin-left', margin)
+        if (resourceIndex !== 1) {
+          var margin = (Math.floor((resourceIndex - 1) * eventSlotWidth) + 1).toString() + 'px'
+          $(element).css('margin-left', margin)
+        }
         if (event.allDay) {
           if (resourceIndex - 1) {
             $(element).css('margin-top', '-36px')

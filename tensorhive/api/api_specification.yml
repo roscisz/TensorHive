@@ -12,7 +12,34 @@ paths:
       tags: 
         - users
       summary: Get all users
-      operationId: tensorhive.controllers.user.get_users_controller.all
+      operationId: tensorhive.controllers.user.get_users_controller.get
+      responses:
+        200:
+          description: {{RESPONSES['users']['get']['success']}}
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/UserToDisplay'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
+      security:
+        - Bearer: []
+  /users/{id}:
+    get:
+      tags:
+        - users
+      summary: Get users with given ID
+      operationId: tensorhive.controllers.user.get_users_controller.get_by_id
+      parameters:
+        - description: User ID
+          in: path
+          name: id
+          required: true
+          type: integer
       responses:
         200:
           description: {{RESPONSES['users']['get']['success']}}
