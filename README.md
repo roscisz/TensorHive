@@ -1,14 +1,11 @@
-<p float="left">
-  <img src="https://i.imgur.com/wPmx9yq.png" height="200">
-  <img src="https://i.imgur.com/7GtwA5G.png" height="200">
-</p>
+<img src="https://github.com/roscisz/TensorHive/raw/master/images/logo_small.png" height="200">
 
 TensorHive
 ===
 
 
-![](https://img.shields.io/badge/release-v0.2-brightgreen.svg?style=popout-square)
-![](https://img.shields.io/badge/pypi-v0.2-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/release-v0.2.2-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/pypi-v0.1.1-brightgreen.svg?style=popout-square)
 ![](https://img.shields.io/badge/platform-Linux-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=popout-square)
@@ -18,20 +15,6 @@ It solves the most common problems and nightmares about accessing and sharing yo
 
 It's designed with __flexibility, lightness and configuration-friendliness__ in mind. 
 
-Test bed and benchmarks
---------
-[**NVIDIA DGX STATION (4x NVIDIA Tesla® V100 32GB)**](https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/dgx-station/dgx-station-print-dgx-station-32GB-infographic-final-LR.pdf) and a bunch of nodes with GTX 1060 on board.
-
-You can check out our **unique** benchamark results with a full set instructions to reproduce (both in Distributed TensorFlow):
-- [**DeepSpeech README**](https://github.com/roscisz/TensorHive/tree/develop/examples/deepspeech#deepspeech-benchmarks)
-- [**T2T Transformer README**](https://github.com/roscisz/TensorHive/tree/develop/examples/t2t_transformer#t2t-transformer-benchmarks)
-<hr/>
-
-TODO
-- Maybe expand description
-- Put GIF here
-- (See full gallery)[TODO link to screenshots of API docs and web app]
-
 Getting started
 ---------------
 ### Prerequisites
@@ -39,44 +22,61 @@ Getting started
 * Only NVIDIA GPUs are supported (```nvidia-smi``` is required)
 
 ### Installation
-(we recommend using `miniconda`/`conda`/`virtualenv`)
+
 #### Via pip
 ```shell
-pip install tensorhive
+pip3 install tensorhive
 ```
-#### Via conda
-```shell
-conda install TODO
-```
+
 #### From source
 ```
 git clone https://github.com/roscisz/TensorHive.git
 cd TensorHive
 pip install .
 ```
+
 If you want to also build the web app manually:
 ```shell
 (cd tensorhive/app/web/dev && npm install && npm run build)
 ```
+
 Usage
 -----
 #### Required configuration
 At first, you must tell TensorHive how it can establish SSH connections to hosts you want to work with.
 
-You can do this by editing `~/.config/TensorHive/hosts_config.ini` [(see example)](https://github.com/roscisz/TensorHive/blob/feature/fixes_and_cleanups_before_release/tensorhive/hosts_config.ini)
+You can do this by editing `~/.config/TensorHive/hosts_config.ini` [(see example)](https://github.com/roscisz/TensorHive/blob/master/hosts_config.ini)
 
 #### Run TensorHive
 ```shell
-tensorhive run
+tensorhive
 ```
-Open **Dashboard** http://0.0.0.0:5000
+Sample output:
+<img src="https://raw.githubusercontent.com/roscisz/TensorHive/master/images/console_screenshot.png">
 
-Open **API docs** http://0.0.0.0:1111/api/0.2/ui
+The Web application and API Documentation can be accessed through te given URLs.
+
+#### Monitor infrastructure
+
+The available infrastructure can be monitored in the Nodes overview tab. Sample screenshot:
+
+<img src="https://raw.githubusercontent.com/roscisz/TensorHive/master/images/nodes_overview_screenshot.png" height="600">
+
+The "Add watch" button allows to add a new chart which can be configured to show chosen metrics of the selected devices. Currently, the metrics include GPU metrics from nvidia-smi and a process overview with corresponding usernames.
+
+#### Reserve resources
+
+The computing resource reservations can be viewed and managed in the Reservations overview tab. Sample screenshot:
+
+<img src="https://raw.githubusercontent.com/roscisz/TensorHive/master/images/reservations_overview_screenshot.png" height="600">
+
+The select boxes at the bottom of the page (easily accessible by the Adjust Filters button) allow to specify which nodes or devices should be visible in the view. Adding reservations is possible through selecting a time interval and filling the reservation details in a form. Cancelling reservations is possible for the reservation owner and admin user by clicking on a given reservation and confirming the cancellation.
 
 #### Optional configuration
-You can fully customize TensorHive behaviour from `~/.config/TensorHive/config.ini`
-[(see example)](https://github.com/roscisz/TensorHive/blob/feature/fixes_and_cleanups_before_release/tensorhive/default_config.ini)
-  
+You can fully customize TensorHive behaviour from `~/.config/TensorHive/main_config.ini`
+[(see example)](https://github.com/roscisz/TensorHive/blob/master/main_config.ini)
+
+
 Features
 --------
 #### Core
@@ -95,6 +95,7 @@ Features
     - [ ] CPU, RAM, HDD metrics
 - [x] :calendar: Calendar view
     - [x] Allow making reservations for selected GPUs
+    - [ ] Edit reservations
     - [x] Cancel reservations
 - [ ] :scroll: Detailed hardware specification view
 - [ ] :penguin: Admin panel
@@ -103,8 +104,14 @@ Features
 
 #### API
 - [x] OpenAPI 2.0 specification with Swagger UI
-- [ ] User authentication via JWT
+- [x] User authentication via JWT
 
+
+Application examples and benchmarks
+--------
+Along with TensorHive, we are developing a set of [**sample deep neural network training applications**](https://github.com/roscisz/TensorHive/tree/master/examples) in Distributed TensorFlow which will be used as test applications for the system. They can also serve as benchmarks for various GPU, distributed multiGPU and distributed multinode architectures. For each example, a full set of instructions to reproduce is given.
+
+<hr/>
 
 Contibution and feedback
 ------------------------
