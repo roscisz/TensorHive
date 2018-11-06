@@ -18,7 +18,7 @@ It's designed with __flexibility, lightness and configuration-friendliness__ in 
 Getting started
 ---------------
 ### Prerequisites
-* Nodes should be accessible via SSH without password (how to)[TODO tutorial link, generating keys]
+* Nodes should be accessible via SSH without password ([HOWTO set up SSH keys](https://www.ssh.com/ssh/keygen/))
 * Only NVIDIA GPUs are supported (```nvidia-smi``` is required)
 
 ### Installation
