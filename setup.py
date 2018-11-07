@@ -9,11 +9,19 @@ def copy_configuration_files():
     # destination is given explicitely, just in case we'd want to rename file during the installation process
     hosts_config_path = {'src': 'hosts_config.ini', 'dst': str(target_dir / 'hosts_config.ini')}
     config_path = {'src': 'main_config.ini', 'dst': str(target_dir / 'main_config.ini')}
-    
+
+    def safe_copy(src: str, dst: str):
+        '''It won't override existing configuration'''
+        if PosixPath(dst).exists():
+            print('Skipping, file already exists: {}'.format(dst))
+        else:
+            shutil.copy(src, dst)
+            print('Creating file {}'.format(dst))
+
     try:
         target_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copy(hosts_config_path['src'], hosts_config_path['dst'])
-        shutil.copy(config_path['src'], config_path['dst'])
+        safe_copy(hosts_config_path['src'], hosts_config_path['dst'])
+        safe_copy(config_path['src'], config_path['dst'])
         # FIXME Prints are only visible with `pip install foobar --verbose`
         print('Configuration .ini files copied to {}'.format(target_dir))
     except Exception:
