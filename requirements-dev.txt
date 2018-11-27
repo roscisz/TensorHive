@@ -1,3 +1,4 @@
-pytest
-pytest-faker
-alembic
+pytest==4.0.1
+pytest-faker==2.0.0
+alembic==1.0.3
+
