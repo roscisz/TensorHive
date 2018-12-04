@@ -37,15 +37,10 @@ nvidia-docker pull nvidia/cuda:9.0-cudnn7-devel
 nvidia-docker run -it nvidia/cuda:9.0-cudnn7-devel
 apt-get update
 apt-get install -y python3 python3-pip git wget
-pip3 install 'tensorflow-gpu==1.6.0' pandas python_speech_features pyxdg progressbar2
+pip3 install 'tensorflow-gpu==1.6.0' pandas python_speech_features pyxdg progressbar2 scipy
 ```
 
 ### Installing DeepSpeech
-
-**Install python bindings**
-```bash
-pip3 install deepspeech
-```
 
 **Clone the proper version of DeepSpeech**
 ```bash
@@ -57,7 +52,7 @@ Note: if you have git-lfs installed, you can disable it for the benchmarks using
 
 **Download native libraries**
 ```bash
-python3 util/taskcluster.py --arch gpu --target native_client/
+python3 util/taskcluster.py --arch gpu --target native_client/ --branch=v0.2.0
 ```
 
 **Download small dataset**
@@ -68,7 +63,7 @@ python3 bin/import_ldc93s1.py ldc93s1
 ### Applying the benchmarking patch
 
 ```bash
-wget https://raw.githubusercontent.com/roscisz/TensorHive/feature/deepspeech_example/examples/deepspeech/deepspeech_benchmarking.patch
+wget https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/deepspeech/deepspeech_benchmarking.patch
 git apply deepspeech_benchmarking.patch
 ```
 
