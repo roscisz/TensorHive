@@ -5,8 +5,18 @@ import logging
 import tensorhive
 
 log = logging.getLogger(__name__)
-MAIN_CONFIG_PATH = '~/.config/TensorHive/main_config.ini'
 
+
+class CONFIG_FILES:
+    # TensorHive tries to load these by default
+    config_dir = PosixPath.home() / '.config/TensorHive'
+    MAIN_CONFIG_PATH = str(config_dir / 'main_config.ini')
+    HOSTS_CONFIG_PATH = str(config_dir / 'hosts_config.ini')
+
+    # Clone these files when default files are not found (and user does not)
+    tensorhive_package_dir = PosixPath(__file__).parent.parent
+    MAIN_CONFIG_TEMPLATE_PATH = str(tensorhive_package_dir / 'main_config.ini')
+    HOSTS_CONFIG_TEMPLATE_PATH = str(tensorhive_package_dir / 'hosts_config.ini')
 
 class ConfigLoader:
     @staticmethod
