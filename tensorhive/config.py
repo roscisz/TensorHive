@@ -59,10 +59,10 @@ class ConfigLoader:
         config = configparser.ConfigParser(strict=False)
         full_path = PosixPath(path).expanduser()
         if config.read(str(full_path)):
-            log.info('[•] Reading {} config from {}'.format(displayed_title, path))
+            log.info('[•] Reading {} config from {}'.format(displayed_title, full_path))
         else:
-            log.warning('[✘] Missing configuration file ({})'.format(path))
-            log.warning('Using default settings from config.py')
+            log.warning('[✘] Configuration file not found ({})'.format(full_path))
+            log.info('Using default {} settings from config.py'.format(displayed_title))
         return config
 
 
