@@ -66,7 +66,8 @@ class ConfigLoader:
         return config
 
 
-config = ConfigLoader.load(MAIN_CONFIG_PATH, displayed_title='main')
+ConfigInitilizer()
+config = ConfigLoader.load(CONFIG_FILES.MAIN_CONFIG_PATH, displayed_title='main')
 
 
 def display_config(cls):
@@ -82,7 +83,7 @@ def display_config(cls):
 
 class SSH:
     section = 'ssh'
-    HOSTS_CONFIG_FILE = config.get(section, 'hosts_config_file', fallback='~/.config/TensorHive/hosts_config.ini')
+    HOSTS_CONFIG_FILE = config.get(section, 'hosts_config_file', fallback=CONFIG_FILES.HOSTS_CONFIG_PATH)
     TEST_ON_STARTUP = config.getboolean(section, 'test_on_startup', fallback=True)
     TIMEOUT = config.getfloat(section, 'timeout', fallback=10.0)
     NUM_RETRIES = config.getint(section, 'number_of_retries', fallback=1)
