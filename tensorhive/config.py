@@ -15,7 +15,7 @@ class CONFIG_FILES:
     HOSTS_CONFIG_PATH = str(config_dir / 'hosts_config.ini')
 
     # Clone these files when default files are not found (and user does not)
-    tensorhive_package_dir = PosixPath(__file__).parent.parent
+    tensorhive_package_dir = PosixPath(__file__).parent
     MAIN_CONFIG_TEMPLATE_PATH = str(tensorhive_package_dir / 'main_config.ini')
     HOSTS_CONFIG_TEMPLATE_PATH = str(tensorhive_package_dir / 'hosts_config.ini')
 
