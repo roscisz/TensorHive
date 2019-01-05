@@ -135,6 +135,12 @@ class PROTECTION_SERVICE:
     NOTIFY_ON_PTY = config.getboolean(section, 'notify_on_pty', fallback=True)
 
 
+class FOOBAR_SERVICE:
+    section = 'foobar_service'
+    ENABLED = config.getboolean(section, 'enabled', fallback=True)
+    UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=2.0)
+
+
 class AUTH:
     from datetime import timedelta
     section = 'auth'

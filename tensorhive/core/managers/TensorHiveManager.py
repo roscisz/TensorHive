@@ -6,13 +6,14 @@ from tensorhive.core.managers.ServiceManager import ServiceManager
 from tensorhive.core.services.Service import Service
 from typing import List, Dict
 from tensorhive.core.utils.decorators.override import override
-from tensorhive.config import SSH, MONITORING_SERVICE, PROTECTION_SERVICE
+from tensorhive.config import SSH, MONITORING_SERVICE, PROTECTION_SERVICE, FOOBAR_SERVICE
 from tensorhive.api.APIServer import APIServer
 from tensorhive.core.utils.StoppableThread import StoppableThread
 from tensorhive.core.monitors.Monitor import Monitor
 from tensorhive.core.monitors.GPUMonitoringBehaviour import GPUMonitoringBehaviour
 from tensorhive.core.services.MonitoringService import MonitoringService
 from tensorhive.core.services.ProtectionService import ProtectionService
+from tensorhive.core.services.FoobarService import FoobarService
 from tensorhive.core.violation_handlers.ProtectionHandler import ProtectionHandler
 from tensorhive.core.violation_handlers.MessageSendingBehaviour import MessageSendingBehaviour
 import logging
@@ -56,6 +57,9 @@ class TensorHiveManager(metaclass=Singleton):
                 interval=PROTECTION_SERVICE.UPDATE_INTERVAL
             )
             services.append(protection_service)
+        if FOOBAR_SERVICE.ENABLED:
+            foobar_service = FoobarService(interval=FOOBAR_SERVICE.UPDATE_INTERVAL)
+            services.append(foobar_service)
         return services
 
 
