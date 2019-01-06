@@ -90,7 +90,7 @@ class FoobarService(Service):
         if not log_file_path.exists():
             with log_file_path.open(mode='w') as file:
                 json.dump(self.empty_log_file_format, file)
-
+    
         # 2. Read log file contents and append new data to it
         with log_file_path.open(mode='r') as file:
             log_contents = json.load(file)
