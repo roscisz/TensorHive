@@ -2,14 +2,16 @@ from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.utils.decorators.override import override
 from tensorhive.core.services.Service import Service
 from tensorhive.models.Reservation import Reservation
-from typing import Dict, List
+from typing import Dict, List, Optional
 from pathlib import PosixPath
+from datetime import datetime
 import time
 import gevent
 import json
+import logging
+log = logging.getLogger(__name__)
 
 class FoobarService(Service):
-    main_log_dir = '~/.config/logs/{reservation_id}/'
 
     '''
     Responsible for:
@@ -19,6 +21,20 @@ class FoobarService(Service):
     3. Deleting data when they become useless
     '''
     infrastructure_manager = None
+    empty_log_file_format = {
+        # 'uuid': 'GPU-83012632-91d5-80cd-8b08-78e96c31195b'
+        'samples_datetime': [],
+        'metrics_samples': {
+            'gpu_util': {
+                'values': [],
+                'unit': '%'
+            },
+            'mem_util': {
+                'values': [],
+                'unit': '%'
+            },
+        }
+    }
 
     def __init__(self, interval=0.0):
         super().__init__()
@@ -29,6 +45,12 @@ class FoobarService(Service):
         if isinstance(injected_object, InfrastructureManager):
             self.infrastructure_manager = injected_object
 
+    def target_log_dir(self, reservation) -> str:
+        '''Fills in prototype path, creates dir if it does not exist'''
+        formatted_dir = '~/.config/TensorHive/logs/{}'.format(reservation.id)
+        PosixPath(formatted_dir).expanduser().mkdir(parents=True, exist_ok=True)
+        return formatted_dir
+
     @override
     def do_run(self):
         start_time = time.perf_counter()
@@ -36,17 +58,14 @@ class FoobarService(Service):
         current_reservations = Reservation.current_events()
         infrastructure = self.infrastructure_manager.infrastructure
 
+        # TODO Add high-level logic here
         for reservation in current_reservations:
-            # TODO Add high-level logic
-
-            # Initialize directory for storing logs
-            final_log_dir = PosixPath.expanduser(self.main_log_dir) / str(reservation.protected_resource_id)
-            final_log_dir.mkdir(parents=True, exist_ok=True)
-
-            log_file_path = '{dir}/data.json'.format(dir=final_log_dir)
-            with open(log_file_path, 'a') as file:
-                json.dump(infrastructure, file)
-
+            try:
+                gpu_data = self.extract_specific_gpu_data(uuid=reservation.protected_resource_id, infrastructure=infrastructure)
+                self.dump_to_file(data=gpu_data, dst_dir=self.target_log_dir(reservation))
+            except Exception as e:
+                log.error(e)
+                
         end_time = time.perf_counter()
         execution_time = end_time - start_time
 
@@ -54,8 +73,52 @@ class FoobarService(Service):
         if execution_time < self.interval:
             gevent.sleep(self.interval - execution_time)
 
-    def dump_to_file(self, data: Dict):
-        raise NotImplementedError
+    def extract_specific_gpu_data(self, uuid: str, infrastructure: Dict) -> Dict:
+        assert isinstance(infrastructure, dict)
+        assert isinstance(uuid, str) and len(uuid) == 40
+
+        for hostname in infrastructure.keys():
+            gpu_metrics = infrastructure[hostname].get('GPU').get(uuid).get('metrics')
+            if gpu_metrics:
+                return gpu_metrics
+        raise KeyError(uuid + ' has not been found!')
+
+    def dump_to_file(self, data: Dict, dst_dir: str, filename: str = 'data.json'):
+        log_file_path = PosixPath(dst_dir).expanduser() / filename
+        # TODO remove indent arg
+
+        # 1. Create and fill in empty log file if necessary
+        if not log_file_path.exists():
+            with log_file_path.open(mode='w') as file:
+                json.dump(self.empty_log_file_format, file, indent=2)
+    
+        # 2. Read log file contents and append new data to it
+        with log_file_path.open(mode='r') as file:
+            log_contents = json.load(file)
+
+            # TODO Add more metrics if necessary
+            log_contents['metrics_samples']['mem_util']['values'].append(data['mem_util']['value'])
+            log_contents['metrics_samples']['gpu_util']['values'].append(data['gpu_util']['value'])
+            log_contents['samples_datetime'].append(datetime.utcnow())
+
+        # 3. Overwrite old file
+        with log_file_path.open(mode='w') as file:
+            # TODO Non-standard classes must be serialized manually here
+            def _serialize_datetime(obj):
+                if isinstance(obj, datetime):
+                    return obj.__str__()
+            json.dump(log_contents, file, default=_serialize_datetime, indent=2)
+
+
+        # except FileNotFoundError:
+#             # Create empty file
+#             log_file_path.open(mode='w')
+#         except PermissionError:
+#             log.error('You don\'t have the permission to open {}'.format(log_file_path))
+#         except json.JSONDecodeError as e:
+#             log.warning(e)
+#         except Exception as e:
+#             log.error('Unexpected error occured: ' + e)
 
     def save_summary(self, ):
         raise NotImplementedError
