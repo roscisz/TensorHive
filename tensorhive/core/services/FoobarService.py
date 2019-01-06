@@ -73,6 +73,44 @@ class FoobarService(Service):
         if execution_time < self.interval:
             gevent.sleep(self.interval - execution_time)
 
+    def save_summary(self, path: PosixPath) -> bool:
+        '''
+        Makes a simple log digest by calculating average usage values.
+        Returns wheter summary was successfully persisted or not.
+        '''
+        # 1. Prepare summary
+        with path.open(mode='r') as file:
+            try:
+                log_contents = json.load(file)
+                # Mock
+                log_contents['metrics']['gpu_util']['values'] = [10, 20, 30]
+                log_contents['metrics']['mem_util']['values'] = []
+
+                def avg(data: List[Union[int, float]]) -> float:
+                    try:
+                        return sum(data) // len(data)
+                    except ZeroDivisionError:
+                        return float(-1)
+
+                summary = {
+                    'gpu_util_avg': avg(log_contents['metrics']['gpu_util']['values']),
+                    'mem_util_avg': avg(log_contents['metrics']['mem_util']['values'])
+                }
+            except FileNotFoundError:
+                raise
+
+        print(summary)
+
+
+        # with path.open(mode='w') as file:
+        #     # TODO Non-standard classes must be serialized manually here
+        #     def _serialize_objects(obj):
+        #         if isinstance(obj, datetime.datetime):
+        #             return obj.__str__()
+        #         elif isinstance(obj, set):
+        #             return list(obj)
+        #     json.dump(log_contents, file, default=_serialize_objects)
+        #     log.debug('Log file has been updated {}'.format(log_file_path))
     def extract_specific_gpu_data(self, uuid: str, infrastructure: Dict) -> Dict:
         assert isinstance(infrastructure, dict)
         assert isinstance(uuid, str) and len(uuid) == 40
@@ -132,8 +170,8 @@ class FoobarService(Service):
 #         except Exception as e:
 #             log.error('Unexpected error occured: ' + e)
 
-    def save_summary(self, ):
-        raise NotImplementedError
+    # def save_summary(self, ):
+    #     raise NotImplementedError
 
     def remove_expired_logs(self):
         raise NotImplementedError
