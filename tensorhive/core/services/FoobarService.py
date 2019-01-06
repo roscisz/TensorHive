@@ -78,9 +78,9 @@ class FoobarService(Service):
         assert isinstance(uuid, str) and len(uuid) == 40
 
         for hostname in infrastructure.keys():
-            gpu_metrics = infrastructure[hostname].get('GPU').get(uuid).get('metrics')
-            if gpu_metrics:
-                return gpu_metrics
+            gpu_data = infrastructure[hostname].get('GPU').get(uuid)
+            if gpu_data:
+                return gpu_data
         raise KeyError(uuid + ' has not been found!')
 
     def dump_to_file(self, data: Dict, dst_dir: str, filename: str = 'data.json'):
