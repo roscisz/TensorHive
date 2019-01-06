@@ -3,6 +3,7 @@ from tensorhive.core.utils.decorators.override import override
 from tensorhive.core.services.Service import Service
 from tensorhive.models.Reservation import Reservation
 from typing import Dict, List, Optional
+from tensorhive.config import FOOBAR_SERVICE
 from pathlib import PosixPath
 from datetime import datetime
 import time
@@ -12,7 +13,6 @@ import logging
 log = logging.getLogger(__name__)
 
 class FoobarService(Service):
-
     '''
     Responsible for:
     1. Gathering infrastracture data within active reservation time
@@ -22,7 +22,6 @@ class FoobarService(Service):
     '''
     infrastructure_manager = None
     empty_log_file_format = {
-        # 'uuid': 'GPU-83012632-91d5-80cd-8b08-78e96c31195b'
         'samples_datetime': [],
         'metrics_samples': {
             'gpu_util': {
@@ -40,16 +39,13 @@ class FoobarService(Service):
         super().__init__()
         self.interval = interval
 
+        # Initialize dir for storing log files
+        PosixPath(FOOBAR_SERVICE.LOG_DIR).mkdir(parents=True, exist_ok=True)
+
     @override
     def inject(self, injected_object):
         if isinstance(injected_object, InfrastructureManager):
             self.infrastructure_manager = injected_object
-
-    def target_log_dir(self, reservation) -> str:
-        '''Fills in prototype path, creates dir if it does not exist'''
-        formatted_dir = '~/.config/TensorHive/logs/{}'.format(reservation.id)
-        PosixPath(formatted_dir).expanduser().mkdir(parents=True, exist_ok=True)
-        return formatted_dir
 
     @override
     def do_run(self):
@@ -62,7 +58,8 @@ class FoobarService(Service):
         for reservation in current_reservations:
             try:
                 gpu_data = self.extract_specific_gpu_data(uuid=reservation.protected_resource_id, infrastructure=infrastructure)
-                self.dump_to_file(data=gpu_data, dst_dir=self.target_log_dir(reservation))
+                self.dump_to_file(data=gpu_data, dst_dir=FOOBAR_SERVICE.LOG_DIR, filename='{}.json'.format(reservation.id))
+
             except Exception as e:
                 log.error(e)
                 
@@ -85,7 +82,7 @@ class FoobarService(Service):
 
     def dump_to_file(self, data: Dict, dst_dir: str, filename: str = 'data.json'):
         log_file_path = PosixPath(dst_dir).expanduser() / filename
-        # TODO remove indent arg
+        # TODO Remove indent arg
 
         # 1. Create and fill in empty log file if necessary
         if not log_file_path.exists():

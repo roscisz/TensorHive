@@ -137,8 +137,14 @@ class PROTECTION_SERVICE:
 
 class FOOBAR_SERVICE:
     section = 'foobar_service'
+    default_path = '~/.config/TensorHive/logs/'
+
+    def full_path(path: str) -> str:
+        return str(PosixPath(path).expanduser())
+
     ENABLED = config.getboolean(section, 'enabled', fallback=True)
     UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=2.0)
+    LOG_DIR = full_path(config.get(section, 'log_dir', fallback=default_path))
 
 
 class AUTH:
