@@ -2,10 +2,10 @@ from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.utils.decorators.override import override
 from tensorhive.core.services.Service import Service
 from tensorhive.models.Reservation import Reservation
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from tensorhive.config import FOOBAR_SERVICE
 from pathlib import PosixPath
-from datetime import datetime
+import datetime
 import time
 import gevent
 import json
@@ -62,8 +62,7 @@ class FoobarService(Service):
         for reservation in current_reservations:
             try:
                 gpu_data = self.extract_specific_gpu_data(uuid=reservation.protected_resource_id, infrastructure=infrastructure)
-                self.dump_to_file(data=gpu_data, dst_dir=FOOBAR_SERVICE.LOG_DIR, filename='{}.json'.format(reservation.id))
-
+                self.dump_to_file(data=gpu_data, filename='{}.json'.format(reservation.id))
             except Exception as e:
                 log.error(e)
 
@@ -154,7 +153,7 @@ class FoobarService(Service):
                 return gpu_data
         raise KeyError(uuid + ' has not been found!')
 
-    def dump_to_file(self, data: Dict, dst_dir: str, filename: str = 'data.json'):
+    def dump_to_file(self, data: Dict, dst_dir: str = FOOBAR_SERVICE.LOG_DIR, filename: str = 'data.json'):
         log_file_path = PosixPath(dst_dir).expanduser() / filename
 
         # 1. Create and fill in empty log file if necessary
@@ -174,7 +173,7 @@ class FoobarService(Service):
             gpu_util = data['metrics']['mem_util']['value']
 
             if gpu_util is not None and mem_util is not None:
-                log_contents['timestamps'].append(datetime.utcnow())
+                log_contents['timestamps'].append(datetime.datetime.utcnow())
                 log_contents['metrics']['gpu_util']['values'].append(gpu_util)
                 log_contents['metrics']['mem_util']['values'].append(mem_util)
             else:
@@ -186,11 +185,12 @@ class FoobarService(Service):
         with log_file_path.open(mode='w') as file:
             # TODO Non-standard classes must be serialized manually here
             def _serialize_objects(obj):
-                if isinstance(obj, datetime):
+                if isinstance(obj, datetime.datetime):
                     return obj.__str__()
                 elif isinstance(obj, set):
                     return list(obj)
             json.dump(log_contents, file, default=_serialize_objects)
+            log.debug('Log file has been updated {}'.format(log_file_path))
 
 
         # except FileNotFoundError:
