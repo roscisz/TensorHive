@@ -22,8 +22,11 @@ class FoobarService(Service):
     '''
     infrastructure_manager = None
     empty_log_file_format = {
-        'samples_datetime': [],
-        'metrics_samples': {
+        'name': None,
+        'index': None,
+        'messages': [],
+        'timestamps': [],
+        'metrics': {
             'gpu_util': {
                 'values': [],
                 'unit': '%'
@@ -93,10 +96,21 @@ class FoobarService(Service):
         with log_file_path.open(mode='r') as file:
             log_contents = json.load(file)
 
-            # TODO Add more metrics if necessary
-            log_contents['metrics_samples']['mem_util']['values'].append(data['mem_util']['value'])
-            log_contents['metrics_samples']['gpu_util']['values'].append(data['gpu_util']['value'])
-            log_contents['samples_datetime'].append(datetime.utcnow())
+            # TODO Add more if necessary
+            log_contents['name'] = data['name']
+            log_contents['index'] = data['index']
+
+            mem_util = data['metrics']['mem_util']['value']
+            gpu_util = data['metrics']['mem_util']['value']
+
+            if gpu_util is not None and mem_util is not None:
+                log_contents['timestamps'].append(datetime.utcnow())
+                log_contents['metrics']['gpu_util']['values'].append(gpu_util)
+                log_contents['metrics']['mem_util']['values'].append(mem_util)
+            else:
+                err_msg = '`mem_util` or `gpu_util` is not supported on this GPU'
+                if err_msg not in log_contents['messages']:
+                    log_contents['messages'].append(err_msg)
 
         # 3. Overwrite old file
         with log_file_path.open(mode='w') as file:
