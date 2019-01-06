@@ -115,10 +115,12 @@ class FoobarService(Service):
         # 3. Overwrite old file
         with log_file_path.open(mode='w') as file:
             # TODO Non-standard classes must be serialized manually here
-            def _serialize_datetime(obj):
+            def _serialize_objects(obj):
                 if isinstance(obj, datetime):
                     return obj.__str__()
-            json.dump(log_contents, file, default=_serialize_datetime, indent=2)
+                elif isinstance(obj, set):
+                    return list(obj)
+            json.dump(log_contents, file, default=_serialize_objects)
 
 
         # except FileNotFoundError:
