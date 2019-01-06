@@ -21,6 +21,7 @@ class FoobarService(Service):
     3. Deleting data when they become useless
     '''
     infrastructure_manager = None
+    log_expiration_time = datetime.timedelta(minutes=1)
     empty_log_file_format = {
         'name': None,
         'index': None,
@@ -65,7 +66,9 @@ class FoobarService(Service):
 
             except Exception as e:
                 log.error(e)
-                
+
+        self.handle_expired_logs()
+
         end_time = time.perf_counter()
         execution_time = end_time - start_time
 
@@ -111,6 +114,36 @@ class FoobarService(Service):
         #             return list(obj)
         #     json.dump(log_contents, file, default=_serialize_objects)
         #     log.debug('Log file has been updated {}'.format(log_file_path))
+
+    def handle_expired_logs(self, dir: str = FOOBAR_SERVICE.LOG_DIR):
+        time_now = datetime.datetime.utcnow()
+
+        # Get all files within given directory
+        for item in PosixPath(dir).glob('*'):
+            if item.is_file():
+                # Get filename without extension for files like: 10.json
+                try:
+                    id_from_filename = int(item.stem)
+                except ValueError:
+                    # Ignore invalid file names
+                    log.warning('Invalid log file names found in: {}'.format(dir))
+                    break
+                else:
+                    reservation = Reservation.get(id=id_from_filename)
+
+                # Check if file and its corresponding reservation record are both expired
+                modification_time = datetime.datetime.utcfromtimestamp(item.stat().st_mtime)
+                log_expired = modification_time + self.log_expiration_time < time_now
+                reservation_expired = reservation.ends_at < time_now
+                self.save_summary(path=item)
+                if log_expired and reservation_expired:
+                    if self.save_summary(path=item):
+                        # Delete expired log file
+                        item.unlink()
+                        log.info('Expired log has been found and removed (modification time: {mtime} (UTC), after {time}): {path}'.format(mtime=modification_time, time=self.log_expiration_time, path=item))
+
+                    
+
     def extract_specific_gpu_data(self, uuid: str, infrastructure: Dict) -> Dict:
         assert isinstance(infrastructure, dict)
         assert isinstance(uuid, str) and len(uuid) == 40
@@ -172,6 +205,3 @@ class FoobarService(Service):
 
     # def save_summary(self, ):
     #     raise NotImplementedError
-
-    def remove_expired_logs(self):
-        raise NotImplementedError
