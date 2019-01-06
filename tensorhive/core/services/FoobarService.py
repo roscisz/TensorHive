@@ -12,6 +12,12 @@ import json
 import logging
 log = logging.getLogger(__name__)
 
+def avg(data: List[Union[int, float]]) -> float:
+    try:
+        return sum(data) // len(data)
+    except ZeroDivisionError:
+        return float(-1)
+
 class FoobarService(Service):
     '''
     Responsible for:
@@ -77,44 +83,32 @@ class FoobarService(Service):
 
     def save_summary(self, path: PosixPath) -> bool:
         '''
-        Makes a simple log digest by calculating average usage values.
+        TODO
+        digest avg
         Returns wheter summary was successfully persisted or not.
         '''
-        # 1. Prepare summary
-        with path.open(mode='r') as file:
-            try:
+        try:
+            # 1. Prepare summary
+            with path.open(mode='r') as file:
                 log_contents = json.load(file)
-                # Mock
-                log_contents['metrics']['gpu_util']['values'] = [10, 20, 30]
-                log_contents['metrics']['mem_util']['values'] = []
-
-                def avg(data: List[Union[int, float]]) -> float:
-                    try:
-                        return sum(data) // len(data)
-                    except ZeroDivisionError:
-                        return float(-1)
-
                 summary = {
                     'gpu_util_avg': avg(log_contents['metrics']['gpu_util']['values']),
                     'mem_util_avg': avg(log_contents['metrics']['mem_util']['values'])
                 }
-            except FileNotFoundError:
-                raise
 
-        print(summary)
-
-
-        # with path.open(mode='w') as file:
-        #     # TODO Non-standard classes must be serialized manually here
-        #     def _serialize_objects(obj):
-        #         if isinstance(obj, datetime.datetime):
-        #             return obj.__str__()
-        #         elif isinstance(obj, set):
-        #             return list(obj)
-        #     json.dump(log_contents, file, default=_serialize_objects)
-        #     log.debug('Log file has been updated {}'.format(log_file_path))
-
+            # 2. Persist summary
+            summary_file_path = path.rename('summary_{old_name}'.format(old_name=path.name))
+            with summary_file_path.open(mode='w') as file:
+                json.dump(summary, file)
+        except Exception as e:
+            log.error(e)
+            return False
+        else:
+            log.info('Summary has been successfully generated from {}: {}'.format(path, summary))
+            return True
+        
     def handle_expired_logs(self, dir: str = FOOBAR_SERVICE.LOG_DIR):
+        '''TODO'''
         time_now = datetime.datetime.utcnow()
 
         # Get all files within given directory
@@ -140,8 +134,6 @@ class FoobarService(Service):
                         # Delete expired log file
                         item.unlink()
                         log.info('Expired log has been found and removed (modification time: {mtime} (UTC), after {time}): {path}'.format(mtime=modification_time, time=self.log_expiration_time, path=item))
-
-                    
 
     def extract_specific_gpu_data(self, uuid: str, infrastructure: Dict) -> Dict:
         assert isinstance(infrastructure, dict)
