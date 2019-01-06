@@ -12,11 +12,19 @@ import json
 import logging
 log = logging.getLogger(__name__)
 
+# TODO Move both to utils
 def avg(data: List[Union[int, float]]) -> float:
     try:
         return sum(data) // len(data)
     except ZeroDivisionError:
         return float(-1)
+
+def object_serializer(obj):
+    '''All non-JSON-serializable classes must be handled explicitly'''
+    if isinstance(obj, datetime.datetime):
+        return obj.__str__()
+    elif isinstance(obj, set):
+        return list(obj)
 
 class FoobarService(Service):
     '''
@@ -24,13 +32,15 @@ class FoobarService(Service):
     1. Gathering infrastracture data within active reservation time
     2. Storing data as files in suitable format and location
     3. Preparing short summary when reservation time ends
-    3. Deleting data when they become useless
+    3. Deleting log files when they become useless
     '''
-    infrastructure_manager = None
+    # After that time, log file will be digested into summary file and then removed
     log_expiration_time = datetime.timedelta(minutes=1)
+
+    # Template structure for .json log files
     empty_log_file_format = {
-        'name': None,
-        'index': None,
+        'name': str(),
+        'index': int(),
         'messages': [],
         'timestamps': [],
         'metrics': {
@@ -48,8 +58,7 @@ class FoobarService(Service):
     def __init__(self, interval=0.0):
         super().__init__()
         self.interval = interval
-
-        # Initialize dir for storing log files
+        # Create logging directory
         PosixPath(FOOBAR_SERVICE.LOG_DIR).mkdir(parents=True, exist_ok=True)
 
     @override
@@ -64,13 +73,12 @@ class FoobarService(Service):
         current_reservations = Reservation.current_events()
         infrastructure = self.infrastructure_manager.infrastructure
 
-        # TODO Add high-level logic here
         for reservation in current_reservations:
             try:
                 gpu_data = self.extract_specific_gpu_data(uuid=reservation.protected_resource_id, infrastructure=infrastructure)
                 self.dump_to_file(data=gpu_data, filename='{}.json'.format(reservation.id))
             except Exception as e:
-                log.error(e)
+                log.debug(e)
 
         self.handle_expired_logs()
 
@@ -83,8 +91,7 @@ class FoobarService(Service):
 
     def save_summary(self, path: PosixPath) -> bool:
         '''
-        TODO
-        digest avg
+        Makes a simple digest of given log file by calculating average resource usage.
         Returns wheter summary was successfully persisted or not.
         '''
         try:
@@ -92,21 +99,23 @@ class FoobarService(Service):
             with path.open(mode='r') as file:
                 log_contents = json.load(file)
                 summary = {
+                    # TODO May want to rewrite name, index, uuid, etc.
                     'gpu_util_avg': avg(log_contents['metrics']['gpu_util']['values']),
                     'mem_util_avg': avg(log_contents['metrics']['mem_util']['values'])
                 }
 
             # 2. Persist summary
-            summary_file_path = path.rename('summary_{old_name}'.format(old_name=path.name))
+            summary_file_path = path.parent / 'summary_{old_name}'.format(old_name=path.name)
             with summary_file_path.open(mode='w') as file:
                 json.dump(summary, file)
         except Exception as e:
             log.error(e)
             return False
         else:
-            log.info('Summary has been successfully generated from {}: {}'.format(path, summary))
+            log.info('Summary has been successfully generated from {}'.format(path))
+            log.debug(summary)
             return True
-        
+
     def handle_expired_logs(self, dir: str = FOOBAR_SERVICE.LOG_DIR):
         '''TODO'''
         time_now = datetime.datetime.utcnow()
@@ -118,8 +127,9 @@ class FoobarService(Service):
                 try:
                     id_from_filename = int(item.stem)
                 except ValueError:
-                    # Ignore invalid file names
-                    log.warning('Invalid log file names found in: {}'.format(dir))
+                    # Ignore other file names
+                    # FIXME It warns about summary files, e.g. summary_10.json
+                    # log.warning('Invalid log file names found in: {}'.format(dir))
                     break
                 else:
                     reservation = Reservation.get(id=id_from_filename)
@@ -128,12 +138,14 @@ class FoobarService(Service):
                 modification_time = datetime.datetime.utcfromtimestamp(item.stat().st_mtime)
                 log_expired = modification_time + self.log_expiration_time < time_now
                 reservation_expired = reservation.ends_at < time_now
-                self.save_summary(path=item)
+
+                # reservation_expired = True
+                # log_expired = True
                 if log_expired and reservation_expired:
                     if self.save_summary(path=item):
-                        # Delete expired log file
+                        # Expired log file can be safely deleted
                         item.unlink()
-                        log.info('Expired log has been found and removed (modification time: {mtime} (UTC), after {time}): {path}'.format(mtime=modification_time, time=self.log_expiration_time, path=item))
+                        log.info('Expired log has been removed (mod_time: {mtime} (UTC), after {time}): {path}'.format(mtime=modification_time, time=self.log_expiration_time, path=item))
 
     def extract_specific_gpu_data(self, uuid: str, infrastructure: Dict) -> Dict:
         assert isinstance(infrastructure, dict)
@@ -175,13 +187,7 @@ class FoobarService(Service):
 
         # 3. Overwrite old file
         with log_file_path.open(mode='w') as file:
-            # TODO Non-standard classes must be serialized manually here
-            def _serialize_objects(obj):
-                if isinstance(obj, datetime.datetime):
-                    return obj.__str__()
-                elif isinstance(obj, set):
-                    return list(obj)
-            json.dump(log_contents, file, default=_serialize_objects)
+            json.dump(log_contents, file, default=object_serializer)
             log.debug('Log file has been updated {}'.format(log_file_path))
 
 
