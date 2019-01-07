@@ -14,23 +14,31 @@ log = logging.getLogger(__name__)
 
 # TODO Move both to utils
 def avg(data: List[Union[int, float]]) -> float:
+    '''Calculates average from a list of values'''
     try:
         return sum(data) // len(data)
     except ZeroDivisionError:
         return float(-1)
 
 def object_serializer(obj):
-    '''All non-JSON-serializable classes must be handled explicitly'''
+    '''
+    All non-JSON-serializable classes must be handled explicitly
+    Usage example: json.dump(..., default=object_serializer)
+    '''
     if isinstance(obj, datetime.datetime):
         return obj.__str__()
     elif isinstance(obj, set):
         return list(obj)
 
-# class LogFileBrowser:
-    # raise NotImplementedError
+class LogFileBrowser:
+    pass
 
-class JsonLogFile:
-    def __init__(self, path: PosixPath):
+class JSONLogFile:
+    '''
+    Encapsulates JSON file operations
+    TODO Handle exceptions
+    '''
+    def __init__(self, path: PosixPath) -> None:
         self.path = path
 
     def read(self) -> Dict:
@@ -42,6 +50,7 @@ class JsonLogFile:
             json.dump(data, file, **kwargs)
 
 class Log:
+    '''Represents ordinary JSON log file, altering original input data before persisting'''
     # Template structure for .json log files
     empty_log_file_format = {
         'name': str(),
@@ -63,7 +72,8 @@ class Log:
     def __init__(self, data: Dict) -> None:
         self.data = data
 
-    def updated_log(self, log_file: PosixPath) -> Dict:
+    def updated_log(self, log_file: JSONLogFile) -> Dict:
+        '''Reads a log file, returns its content plus new data'''
         log = log_file.read()
 
         log['name'] = self.data['name']
@@ -76,19 +86,22 @@ class Log:
             log['timestamps'].append(datetime.datetime.utcnow())
             log['metrics']['gpu_util']['values'].append(gpu_util)
             log['metrics']['mem_util']['values'].append(mem_util)
+            # TODO Add more metrics
         else:
-            err_msg = '`mem_util` or `gpu_util` is not supported on this GPU'
+            err_msg = '`mem_util` or `gpu_util` is not supported by this GPU'
+            # Append message only once
             if err_msg not in log['messages']:
                 log['messages'].append(err_msg)
         return log
 
     def save(self, out_path: PosixPath) -> None:
-        log_file = JsonLogFile(out_path)
+        log_file = JSONLogFile(out_path)
 
-        # 1. If file is empty, initialize it with template
+        # If file is empty, initialize it with template
         if not log_file.path.exists():
             log_file.write(self.empty_log_file_format)
-        # 2. Overwrite log file with updated content
+
+        # Overwrite log file with updated content
         updated_log_content = self.updated_log(log_file)
         log_file.write(updated_log_content, default=object_serializer)
 
@@ -96,9 +109,10 @@ class Log:
 
 
 class Summary:
+    '''Represents small JSON log file created when standard log file expires'''
     def __init__(self, in_path: PosixPath) -> None:
         self.in_path = in_path
-        log_contents = JsonLogFile(self.in_path).read()
+        log_contents = JSONLogFile(self.in_path).read()
         self.summary = {
             # TODO May want to rewrite name, index, uuid, etc.
             'gpu_util_avg': avg(log_contents['metrics']['gpu_util']['values']),
@@ -106,7 +120,7 @@ class Summary:
         }
 
     def save(self, out_path: PosixPath) -> None:
-        JsonLogFile(out_path).write(self.summary)
+        JSONLogFile(out_path).write(self.summary)
 
         log.info('Summary generated from {}'.format(self.in_path))
         log.debug(self.summary)
@@ -121,12 +135,13 @@ class FoobarService(Service):
     '''
     # After that time, log file will be digested into summary file and then removed
     log_expiration_time = datetime.timedelta(minutes=1)
+
+    # Default location for all log files
     log_dir = PosixPath(FOOBAR_SERVICE.LOG_DIR).expanduser()
 
     def __init__(self, interval=0.0):
         super().__init__()
         self.interval = interval
-        # Create logging directory
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
     @override
@@ -142,13 +157,13 @@ class FoobarService(Service):
         infrastructure = self.infrastructure_manager.infrastructure
 
         for reservation in current_reservations:
-            filename = '{}.json'.format(reservation.id)
+            filename = '{id}.json'.format(id=reservation.id)
             log_file_path = self.log_dir / filename
             try:
                 gpu_data = self.extract_specific_gpu_data(uuid=reservation.protected_resource_id, infrastructure=infrastructure)
                 Log(data=gpu_data).save(out_path=log_file_path)
             except Exception as e:
-                log.debug(e)
+                log.error(e)
 
         self.handle_expired_logs()
 
@@ -159,98 +174,27 @@ class FoobarService(Service):
         if execution_time < self.interval:
             gevent.sleep(self.interval - execution_time)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # def save_summary(self, path: PosixPath) -> bool:
-    #     '''
-    #     Makes a simple digest of given log file by calculating average resource usage.
-    #     Returns wheter summary was successfully persisted or not.
-    #     '''
-    #     try:
-    #         # 1. Prepare summary
-    #         with path.open(mode='r') as file:
-    #             log_contents = json.load(file)
-    #             summary = {
-    #                 # TODO May want to rewrite name, index, uuid, etc.
-    #                 'gpu_util_avg': avg(log_contents['metrics']['gpu_util']['values']),
-    #                 'mem_util_avg': avg(log_contents['metrics']['mem_util']['values'])
-    #             }
-
-    #         # 2. Persist summary
-    #         summary_file_path = path.parent / 'summary_{old_name}'.format(old_name=path.name)
-    #         with summary_file_path.open(mode='w') as file:
-    #             json.dump(summary, file)
-    #     except Exception as e:
-    #         log.error(e)
-    #         return False
-    #     else:
-            
-    #         return True
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     # TODO Refactor
     def handle_expired_logs(self):
-        '''TODO'''
+        '''
+        Seeks for expired, ordinary JSON log files.
+        Log file expires after given amount of time (self.log_expiration_time) 
+        since its last modification and when corresponding reservation record 
+        is also expired.
+
+        If such file is found it generates summary file and removes the original log.
+        Summary filenames are like: summary_10.json
+        '''
         time_now = datetime.datetime.utcnow()
 
         # Get all files within given directory
         for item in self.log_dir.glob('*.json'):
-            print(item)
             if item.is_file():
                 # Get filename without extension for files like: 10.json
+                # Ignore all non-matching file names
                 try:
                     id_from_filename = int(item.stem)
                 except ValueError:
-                    # Ignore other file names
-                    # FIXME It warns about summary files, e.g. summary_10.json
-                    # log.warning('Invalid log file names found in: {}'.format(dir))
                     break
                 else:
                     reservation = Reservation.get(id=id_from_filename)
@@ -260,18 +204,16 @@ class FoobarService(Service):
                 log_expired = modification_time + self.log_expiration_time < time_now
                 reservation_expired = reservation.ends_at < time_now
 
-                # reservation_expired = True
-                # log_expired = True
                 if log_expired and reservation_expired:
                     summary_file_path = item.parent / 'summary_{old_name}'.format(old_name=item.name)
-                    print(item, summary_file_path)
                     Summary(in_path=item).save(out_path=summary_file_path)
 
-                    # Expired log file can be safely deleted
+                    # Expired log file can be removed
                     item.unlink()
                     log.info('Expired log has been removed (mod_time: {mtime} (UTC), after {time}): {path}'.format(mtime=modification_time, time=self.log_expiration_time, path=item))
 
     def extract_specific_gpu_data(self, uuid: str, infrastructure: Dict) -> Dict:
+        '''Returns whole right-hand side value (dictionary) for given key (uuid)'''
         assert isinstance(infrastructure, dict)
         assert isinstance(uuid, str) and len(uuid) == 40
 
@@ -280,50 +222,3 @@ class FoobarService(Service):
             if gpu_data:
                 return gpu_data
         raise KeyError(uuid + ' has not been found!')
-
-    # def dump_to_file(self, data: Dict, dst_dir: str = FOOBAR_SERVICE.LOG_DIR, filename: str = 'data.json'):
-    #     log_file_path = PosixPath(dst_dir).expanduser() / filename
-
-    #     # 1. Create and fill in empty log file if necessary
-    #     if not log_file_path.exists():
-    #         with log_file_path.open(mode='w') as file:
-    #             json.dump(self.empty_log_file_format, file)
-    
-    #     # 2. Read log file contents and append new data to it
-    #     with log_file_path.open(mode='r') as file:
-    #         log_contents = json.load(file)
-
-    #         # TODO Add more if necessary
-    #         log_contents['name'] = data['name']
-    #         log_contents['index'] = data['index']
-
-    #         mem_util = data['metrics']['mem_util']['value']
-    #         gpu_util = data['metrics']['mem_util']['value']
-
-    #         if gpu_util is not None and mem_util is not None:
-    #             log_contents['timestamps'].append(datetime.datetime.utcnow())
-    #             log_contents['metrics']['gpu_util']['values'].append(gpu_util)
-    #             log_contents['metrics']['mem_util']['values'].append(mem_util)
-    #         else:
-    #             err_msg = '`mem_util` or `gpu_util` is not supported on this GPU'
-    #             if err_msg not in log_contents['messages']:
-    #                 log_contents['messages'].append(err_msg)
-
-    #     # 3. Overwrite old file
-    #     with log_file_path.open(mode='w') as file:
-    #         json.dump(log_contents, file, default=object_serializer)
-    #         log.debug('Log file has been updated {}'.format(log_file_path))
-
-
-        # except FileNotFoundError:
-#             # Create empty file
-#             log_file_path.open(mode='w')
-#         except PermissionError:
-#             log.error('You don\'t have the permission to open {}'.format(log_file_path))
-#         except json.JSONDecodeError as e:
-#             log.warning(e)
-#         except Exception as e:
-#             log.error('Unexpected error occured: ' + e)
-
-    # def save_summary(self, ):
-    #     raise NotImplementedError
