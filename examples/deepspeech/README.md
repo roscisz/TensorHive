@@ -10,6 +10,7 @@ implementation in TensorFlow that supports distributed training using Distribute
 - [x] [Installation instructions](#installation)
 - [ ] [Instructions for running the benchmarks](#running-the-benchmarks)
   - [x] [Manually](#running-manually)
+  - [x] [Using run_cluster.sh](#using-runcluster.sh-to-run-distributed-benchmarks)
   - [ ] [Using TensorHive](#running-using-tensorhive)
 - [ ] [Experimental results](#experimental-results):
   - [x] [Batch size influence on training performance on various GPUs](#batch-size)
@@ -96,27 +97,55 @@ For example, to use GPUs 1 and 2, set CUDA_VISIBLE_DEVICES=1,2 and to use all GP
 CUDA_VISIBLE_DEVICES=0,1,2,3. The in-graph replication method for data-parallel, synchronized training implemented in
 Mozilla DeepSpeech will be used.
 
+## Using run-cluster.sh to run distributed benchmarks
+
+The Mozilla DeepSpeech implementation supports distributed training using Distributed TensorFlow with a
+parameter server and worker processes. The 'bin/run-cluster.sh' script is helpful for configuring and running
+these processes on a single machine. The script accepts an argument in a p:w:g format, where p denotes the 
+number of used parameter servers, w denotes the number of worker processes and g denotes the number of
+GPUs used by individual worker processes.
+
+For example, running our benchmark on the distributed training
+application using 1 parameter server and 4 workers using 1 GPU each would require executing the following command:
+
+```bash
+LD_LIBRARY_PATH=native_client/ bin/run-cluster.sh 1:4:1 --script="python3 DeepSpeech.py" --train_files=ldc93s1/ldc93s1.csv --dev_files=ldc93s1/ldc93s1.csv --test_files=ldc93s1/ldc93s1.csv --train_batch_size=64 --epoch=1000 --benchmark_warmup_steps=10 --benchmark_steps=10 --log_level=3
+```
+
+It should be noted that the distributed training introduces a startup overhead, so increasing the number of
+warmup steps can be necessary to collect reliable results.
+
 ### Running using TensorHive
 
 ## Experimental results
 
 ### Batch size
 
-![batch_size_v100](https://raw.githubusercontent.com/roscisz/TensorHive/develop/examples/deepspeech/img/batch_size_v100.png)
-![batch_size_gtx1060](https://raw.githubusercontent.com/roscisz/TensorHive/develop/examples/deepspeech/img/batch_size_gtx1060.png)
+As expected, performance increases proportionally to batch size, up to a limit depending on GPU memory capacity:  
+
+![batch_size_v100](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/deepspeech/img/batch_size_v100.png)
+![batch_size_gtx1060](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/deepspeech/img/batch_size_gtx1060.png)
+
+Although using Distributed TensorFlow with Parameter Servers allows distributed training on multiple nodes, it
+should be noted that communication with the Parameter Server introduces significant overhead comparing to the
+in-graph replication method:  
+
+![batch_size_v100_distributed](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/deepspeech/img/batch_size_v100_distributed.png)
 
 ### MultiGPU scalability
 
 The following results show performance results on NVIDIA® DGX Station™, depending on the choice utilized GPUs. The
 results are marked with ID's of the used GPUs, for example '013' means that CUDA_VISIBLE_DEVICES was set to 0,1,3.
 
-![multigpu_128](https://raw.githubusercontent.com/roscisz/TensorHive/develop/examples/deepspeech/img/multigpu_128.png)
-![multigpu_64](https://raw.githubusercontent.com/roscisz/TensorHive/develop/examples/deepspeech/img/multigpu_64.png)
+![multigpu_128](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/deepspeech/img/multigpu_128.png)
 
-Two interesting facts can be seen in the charts. First, in the cases of utilizing two GPUs, it is significant which
-GPUs are used exactly. For example, combining GPUs 0 and 1 or 2 and 3 results in worse performance. This is probably
-connected with interconnects between the GPUs. The differences are more visible in the case of higher batch size per
-GPU, which results in more intensive communication during synchronization. Secondly, scalability beyond two GPUs is
-poor for high batch size (128), while for lower batch_size (64) scalability is better, giving the best performance on
-4 GPUs. 
+Interestingly, in the cases of utilizing two GPUs, it is significant which exactly GPUs are used exactly. For example,
+combining GPUs 0 and 1 or 2 and 3 results in worse performance. This is probably connected with interconnects between
+the GPUs.
 
+Overhead of the Distributed TensorFlow implementation is also visible in the multi-GPU setup:
+
+![multigpu_128_distributed](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/deepspeech/img/multigpu_128_distributed.png)
+
+The results show that in the investigated setup it is better to run many processes utilizing single GPUs than 
+to run one process utilizing multiple GPUs. 
