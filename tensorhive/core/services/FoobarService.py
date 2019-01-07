@@ -26,17 +26,22 @@ def object_serializer(obj):
     elif isinstance(obj, set):
         return list(obj)
 
-class FoobarService(Service):
-    '''
-    Responsible for:
-    1. Gathering infrastracture data within active reservation time
-    2. Storing data as files in suitable format and location
-    3. Preparing short summary when reservation time ends
-    3. Deleting log files when they become useless
-    '''
-    # After that time, log file will be digested into summary file and then removed
-    log_expiration_time = datetime.timedelta(minutes=1)
+# class LogFileBrowser:
+    # raise NotImplementedError
 
+class JsonLogFile:
+    def __init__(self, path: PosixPath):
+        self.path = path
+
+    def read(self) -> Dict:
+        with self.path.open(mode='r') as file:
+            return json.load(file)
+
+    def write(self, data: Dict, **kwargs) -> None:
+        with self.path.open(mode='w') as file:
+            json.dump(data, file, **kwargs)
+
+class Log:
     # Template structure for .json log files
     empty_log_file_format = {
         'name': str(),
@@ -55,11 +60,74 @@ class FoobarService(Service):
         }
     }
 
+    def __init__(self, data: Dict) -> None:
+        self.data = data
+
+    def updated_log(self, log_file: PosixPath) -> Dict:
+        log = log_file.read()
+
+        log['name'] = self.data['name']
+        log['index'] = self.data['index']
+
+        mem_util = self.data['metrics']['mem_util']['value']
+        gpu_util = self.data['metrics']['mem_util']['value']
+
+        if gpu_util is not None and mem_util is not None:
+            log['timestamps'].append(datetime.datetime.utcnow())
+            log['metrics']['gpu_util']['values'].append(gpu_util)
+            log['metrics']['mem_util']['values'].append(mem_util)
+        else:
+            err_msg = '`mem_util` or `gpu_util` is not supported on this GPU'
+            if err_msg not in log['messages']:
+                log['messages'].append(err_msg)
+        return log
+
+    def save(self, out_path: PosixPath) -> None:
+        log_file = JsonLogFile(out_path)
+
+        # 1. If file is empty, initialize it with template
+        if not log_file.path.exists():
+            log_file.write(self.empty_log_file_format)
+        # 2. Overwrite log file with updated content
+        updated_log_content = self.updated_log(log_file)
+        log_file.write(updated_log_content, default=object_serializer)
+
+        log.debug('Log file has been updated {}'.format(out_path))
+
+
+class Summary:
+    def __init__(self, in_path: PosixPath) -> None:
+        self.in_path = in_path
+        log_contents = JsonLogFile(self.in_path).read()
+        self.summary = {
+            # TODO May want to rewrite name, index, uuid, etc.
+            'gpu_util_avg': avg(log_contents['metrics']['gpu_util']['values']),
+            'mem_util_avg': avg(log_contents['metrics']['mem_util']['values'])
+        }
+
+    def save(self, out_path: PosixPath) -> None:
+        JsonLogFile(out_path).write(self.summary)
+
+        log.info('Summary generated from {}'.format(self.in_path))
+        log.debug(self.summary)
+
+class FoobarService(Service):
+    '''
+    Responsible for:
+    1. Gathering infrastracture data within active reservation time
+    2. Storing data as files in suitable format and location
+    3. Preparing short summary when reservation time ends
+    3. Deleting log files when they become useless
+    '''
+    # After that time, log file will be digested into summary file and then removed
+    log_expiration_time = datetime.timedelta(minutes=1)
+    log_dir = PosixPath(FOOBAR_SERVICE.LOG_DIR).expanduser()
+
     def __init__(self, interval=0.0):
         super().__init__()
         self.interval = interval
         # Create logging directory
-        PosixPath(FOOBAR_SERVICE.LOG_DIR).mkdir(parents=True, exist_ok=True)
+        self.log_dir.mkdir(parents=True, exist_ok=True)
 
     @override
     def inject(self, injected_object):
@@ -74,9 +142,11 @@ class FoobarService(Service):
         infrastructure = self.infrastructure_manager.infrastructure
 
         for reservation in current_reservations:
+            filename = '{}.json'.format(reservation.id)
+            log_file_path = self.log_dir / filename
             try:
                 gpu_data = self.extract_specific_gpu_data(uuid=reservation.protected_resource_id, infrastructure=infrastructure)
-                self.dump_to_file(data=gpu_data, filename='{}.json'.format(reservation.id))
+                Log(data=gpu_data).save(out_path=log_file_path)
             except Exception as e:
                 log.debug(e)
 
@@ -89,39 +159,90 @@ class FoobarService(Service):
         if execution_time < self.interval:
             gevent.sleep(self.interval - execution_time)
 
-    def save_summary(self, path: PosixPath) -> bool:
-        '''
-        Makes a simple digest of given log file by calculating average resource usage.
-        Returns wheter summary was successfully persisted or not.
-        '''
-        try:
-            # 1. Prepare summary
-            with path.open(mode='r') as file:
-                log_contents = json.load(file)
-                summary = {
-                    # TODO May want to rewrite name, index, uuid, etc.
-                    'gpu_util_avg': avg(log_contents['metrics']['gpu_util']['values']),
-                    'mem_util_avg': avg(log_contents['metrics']['mem_util']['values'])
-                }
 
-            # 2. Persist summary
-            summary_file_path = path.parent / 'summary_{old_name}'.format(old_name=path.name)
-            with summary_file_path.open(mode='w') as file:
-                json.dump(summary, file)
-        except Exception as e:
-            log.error(e)
-            return False
-        else:
-            log.info('Summary has been successfully generated from {}'.format(path))
-            log.debug(summary)
-            return True
 
-    def handle_expired_logs(self, dir: str = FOOBAR_SERVICE.LOG_DIR):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # def save_summary(self, path: PosixPath) -> bool:
+    #     '''
+    #     Makes a simple digest of given log file by calculating average resource usage.
+    #     Returns wheter summary was successfully persisted or not.
+    #     '''
+    #     try:
+    #         # 1. Prepare summary
+    #         with path.open(mode='r') as file:
+    #             log_contents = json.load(file)
+    #             summary = {
+    #                 # TODO May want to rewrite name, index, uuid, etc.
+    #                 'gpu_util_avg': avg(log_contents['metrics']['gpu_util']['values']),
+    #                 'mem_util_avg': avg(log_contents['metrics']['mem_util']['values'])
+    #             }
+
+    #         # 2. Persist summary
+    #         summary_file_path = path.parent / 'summary_{old_name}'.format(old_name=path.name)
+    #         with summary_file_path.open(mode='w') as file:
+    #             json.dump(summary, file)
+    #     except Exception as e:
+    #         log.error(e)
+    #         return False
+    #     else:
+            
+    #         return True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # TODO Refactor
+    def handle_expired_logs(self):
         '''TODO'''
         time_now = datetime.datetime.utcnow()
 
         # Get all files within given directory
-        for item in PosixPath(dir).glob('*'):
+        for item in self.log_dir.glob('*.json'):
+            print(item)
             if item.is_file():
                 # Get filename without extension for files like: 10.json
                 try:
@@ -142,10 +263,13 @@ class FoobarService(Service):
                 # reservation_expired = True
                 # log_expired = True
                 if log_expired and reservation_expired:
-                    if self.save_summary(path=item):
-                        # Expired log file can be safely deleted
-                        item.unlink()
-                        log.info('Expired log has been removed (mod_time: {mtime} (UTC), after {time}): {path}'.format(mtime=modification_time, time=self.log_expiration_time, path=item))
+                    summary_file_path = item.parent / 'summary_{old_name}'.format(old_name=item.name)
+                    print(item, summary_file_path)
+                    Summary(in_path=item).save(out_path=summary_file_path)
+
+                    # Expired log file can be safely deleted
+                    item.unlink()
+                    log.info('Expired log has been removed (mod_time: {mtime} (UTC), after {time}): {path}'.format(mtime=modification_time, time=self.log_expiration_time, path=item))
 
     def extract_specific_gpu_data(self, uuid: str, infrastructure: Dict) -> Dict:
         assert isinstance(infrastructure, dict)
@@ -157,38 +281,38 @@ class FoobarService(Service):
                 return gpu_data
         raise KeyError(uuid + ' has not been found!')
 
-    def dump_to_file(self, data: Dict, dst_dir: str = FOOBAR_SERVICE.LOG_DIR, filename: str = 'data.json'):
-        log_file_path = PosixPath(dst_dir).expanduser() / filename
+    # def dump_to_file(self, data: Dict, dst_dir: str = FOOBAR_SERVICE.LOG_DIR, filename: str = 'data.json'):
+    #     log_file_path = PosixPath(dst_dir).expanduser() / filename
 
-        # 1. Create and fill in empty log file if necessary
-        if not log_file_path.exists():
-            with log_file_path.open(mode='w') as file:
-                json.dump(self.empty_log_file_format, file)
+    #     # 1. Create and fill in empty log file if necessary
+    #     if not log_file_path.exists():
+    #         with log_file_path.open(mode='w') as file:
+    #             json.dump(self.empty_log_file_format, file)
     
-        # 2. Read log file contents and append new data to it
-        with log_file_path.open(mode='r') as file:
-            log_contents = json.load(file)
+    #     # 2. Read log file contents and append new data to it
+    #     with log_file_path.open(mode='r') as file:
+    #         log_contents = json.load(file)
 
-            # TODO Add more if necessary
-            log_contents['name'] = data['name']
-            log_contents['index'] = data['index']
+    #         # TODO Add more if necessary
+    #         log_contents['name'] = data['name']
+    #         log_contents['index'] = data['index']
 
-            mem_util = data['metrics']['mem_util']['value']
-            gpu_util = data['metrics']['mem_util']['value']
+    #         mem_util = data['metrics']['mem_util']['value']
+    #         gpu_util = data['metrics']['mem_util']['value']
 
-            if gpu_util is not None and mem_util is not None:
-                log_contents['timestamps'].append(datetime.datetime.utcnow())
-                log_contents['metrics']['gpu_util']['values'].append(gpu_util)
-                log_contents['metrics']['mem_util']['values'].append(mem_util)
-            else:
-                err_msg = '`mem_util` or `gpu_util` is not supported on this GPU'
-                if err_msg not in log_contents['messages']:
-                    log_contents['messages'].append(err_msg)
+    #         if gpu_util is not None and mem_util is not None:
+    #             log_contents['timestamps'].append(datetime.datetime.utcnow())
+    #             log_contents['metrics']['gpu_util']['values'].append(gpu_util)
+    #             log_contents['metrics']['mem_util']['values'].append(mem_util)
+    #         else:
+    #             err_msg = '`mem_util` or `gpu_util` is not supported on this GPU'
+    #             if err_msg not in log_contents['messages']:
+    #                 log_contents['messages'].append(err_msg)
 
-        # 3. Overwrite old file
-        with log_file_path.open(mode='w') as file:
-            json.dump(log_contents, file, default=object_serializer)
-            log.debug('Log file has been updated {}'.format(log_file_path))
+    #     # 3. Overwrite old file
+    #     with log_file_path.open(mode='w') as file:
+    #         json.dump(log_contents, file, default=object_serializer)
+    #         log.debug('Log file has been updated {}'.format(log_file_path))
 
 
         # except FileNotFoundError:
