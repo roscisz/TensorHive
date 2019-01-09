@@ -109,7 +109,7 @@ For example, running our benchmark on the distributed training
 application using 1 parameter server and 4 workers using 1 GPU each would require executing the following command:
 
 ```bash
-LD_LIBRARY_PATH=native_client/ bin/run-cluster.sh 1:4:1 --script="python3 DeepSpeech.py" --train_files=ldc93s1/ldc93s1.csv --dev_files=ldc93s1/ldc93s1.csv --test_files=ldc93s1/ldc93s1.csv --train_batch_size=64 --epoch=1000 --benchmark_warmup_steps=10 --benchmark_steps=10 --log_level=3
+LD_LIBRARY_PATH=native_client/ bin/run-cluster.sh 1:4:1 --script="python3 DeepSpeech.py" --train_files=ldc93s1/ldc93s1.csv --dev_files=ldc93s1/ldc93s1.csv --test_files=ldc93s1/ldc93s1.csv --train_batch_size=64 --epoch=1000 --benchmark_warmup_steps=10 --benchmark_steps=10 --log_level=3 --noshow_progressbar
 ```
 
 It should be noted that the distributed training introduces a startup overhead, so increasing the number of
@@ -139,7 +139,7 @@ results are marked with ID's of the used GPUs, for example '013' means that CUDA
 
 ![multigpu_128](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/deepspeech/img/multigpu_128.png)
 
-Interestingly, in the cases of utilizing two GPUs, it is significant which exactly GPUs are used exactly. For example,
+Interestingly, in the cases of utilizing two GPUs, it is significant which GPUs are used exactly. For example,
 combining GPUs 0 and 1 or 2 and 3 results in worse performance. This is probably connected with interconnects between
 the GPUs.
 
