@@ -6,15 +6,15 @@ G = API.RESPONSES['general']
 
 @jwt_required
 def update(reservation):
-    if reservation['id'] is not None:
+    if reservation.get('id') is not None:
         try:
             found_reservation = Reservation.get(reservation['id'])
-            found_reservation.title = reservation['title'] if reservation['title'] is not None else found_reservation.title
-            found_reservation.description = reservation['description'] if reservation['description'] is not None else found_reservation.description
-            found_reservation.protected_resource_id = reservation['resourceId'] if  reservation['resourceId'] is not None else found_reservation.protected_resource_id
-            found_reservation.user_id = reservation['userId'] if reservation['userId'] is not None else found_reservation.user_id
-            found_reservation.starts_at = reservation['start'] if reservation['start'] is not None else found_reservation.starts_at
-            found_reservation.ends_at = reservation['end'] if reservation['end'] is not None else found_reservation.ends_at
+            found_reservation.title = reservation['title'] if reservation.get('title') is not None else found_reservation.title
+            found_reservation.description = reservation['description'] if reservation.get('description') is not None else found_reservation.description
+            found_reservation.protected_resource_id = reservation['resourceId'] if  reservation.get('resourceId') is not None else found_reservation.protected_resource_id
+            found_reservation.user_id = reservation['userId'] if reservation.get('userId') is not None else found_reservation.user_id
+            found_reservation.starts_at = reservation['start'] if reservation.get('start') is not None else found_reservation.starts_at
+            found_reservation.ends_at = reservation['end'] if reservation.get('end') is not None else found_reservation.ends_at
 
             found_reservation.save()
 
