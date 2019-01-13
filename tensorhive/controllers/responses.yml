@@ -23,6 +23,10 @@ user:
     failure:
       duplicate: Such user exists
       invalid: Requirements not met - {reason}
+  update:
+    success: User has been successfully updated
+    failure:
+      invalid: Requirements not met - {reason}
 reservation:
   not_found: Reservation has not been found
   create:
