@@ -29,6 +29,10 @@ reservation:
     success: Reservation has been successfully created
     failure:
       invalid: Requirements not met - {reason}
+  update:
+    success: Reservation has been successfully updated
+    failure:
+      invalid: Requirements not met - {reason}
   delete:
     success: Reservation has been successfully deleted
 users:

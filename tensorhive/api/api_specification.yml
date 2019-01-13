@@ -292,6 +292,41 @@ paths:
           description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
+    put:
+      tags:
+      - reservations
+      summary: Update existed reservation
+      operationId: tensorhive.controllers.reservation.update_reservation_controller.update
+      parameters:
+      - description: Reservation object
+        in: body
+        name: reservation
+        required: true
+        schema:
+          $ref: '#/definitions/ReservationUpdateForm'
+      responses:
+        201:
+          description: {{RESPONSES['reservation']['create']['success']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['reservation']['create']['success']}}
+              reservation:
+                type: array
+                items:
+                  $ref: '#/definitions/Reservation'
+        400:
+          description: {{RESPONSES['general']['bad_request']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['reservation']['create']['failure']['invalid']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
+      security:
+        - Bearer: []
   /reservations/{id}:
     delete:
       tags: 
@@ -497,6 +532,38 @@ definitions:
       - start
       - end
     properties:
+      title:
+        type: string
+        example: Example title
+      description:
+        type: string
+        example: Example description
+      resourceId:
+        type: string
+        example: GPU-d38d4de3-85ee-e837-3d87-e8e2faeb6a63
+      userId:
+        type: integer
+        example: 1
+      start:
+        type: string
+        format: date-time
+      end:
+        type: string
+        format: date-time
+  ReservationUpdateForm:
+    type: object
+    required:
+      - id
+      - title
+      - description
+      - resourceId
+      - userId
+      - start
+      - end
+    properties:
+      id:
+        type: integer
+        example: 1
       title:
         type: string
         example: Example title

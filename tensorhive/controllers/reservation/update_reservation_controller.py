@@ -5,16 +5,16 @@ R = API.RESPONSES['reservation']
 G = API.RESPONSES['general']
 
 @jwt_required
-def update(reservation_id,reservation):
-    if reservation_id is not None:
+def update(reservation):
+    if reservation['id'] is not None:
         try:
-			found_reservation = get(reservation_id)
-            found_reservation.title = reservation['title']
-            found_reservation.description = reservation['description']
-            found_reservation.protected_resource_id = reservation['resourceId']
-            found_reservation.user_id = reservation['userId']
-            found_reservation.starts_at = reservation['start']
-            found_reservation.ends_at = reservation['end']
+            found_reservation = Reservation.get(reservation['id'])
+            found_reservation.title = reservation['title'] if reservation['title'] is not None else found_reservation.title
+            found_reservation.description = reservation['description'] if reservation['description'] is not None else found_reservation.description
+            found_reservation.protected_resource_id = reservation['resourceId'] if  reservation['resourceId'] is not None else found_reservation.protected_resource_id
+            found_reservation.user_id = reservation['userId'] if reservation['userId'] is not None else found_reservation.user_id
+            found_reservation.starts_at = reservation['start'] if reservation['start'] is not None else found_reservation.starts_at
+            found_reservation.ends_at = reservation['end'] if reservation['end'] is not None else found_reservation.ends_at
 
             found_reservation.save()
 
@@ -27,7 +27,7 @@ def update(reservation_id,reservation):
         else:
             content = {
                 'msg': R['update']['success'],
-                'reservation': new_reservation.as_dict
+                'reservation': found_reservation.as_dict
             }
             status = 201
     else:
@@ -35,3 +35,4 @@ def update(reservation_id,reservation):
             status = 400
 
     return content, status
+
