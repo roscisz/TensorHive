@@ -517,7 +517,6 @@ definitions:
     type: object
     required:
       - id
-      - username
     properties:
       roles:
         type: array
@@ -616,12 +615,6 @@ definitions:
     type: object
     required:
       - id
-      - title
-      - description
-      - resourceId
-      - userId
-      - start
-      - end
     properties:
       id:
         type: integer
