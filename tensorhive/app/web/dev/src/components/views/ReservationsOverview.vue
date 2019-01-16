@@ -136,7 +136,11 @@ export default {
           this.parseData()
         })
         .catch(error => {
-          this.showSnackbar(error.response.data.msg)
+          if (!error.hasOwnProperty('response')) {
+            this.showSnackbar(error.message)
+          } else {
+            this.showSnackbar(error.response.data.msg)
+          }
         })
     } else {
       this.parsedNodes = JSON.parse(window.localStorage.getItem('visibleResources'))
@@ -234,6 +238,7 @@ export default {
         }
         resourceType.checked = checked
         this.changeResourceType(resourceType, node)
+        this.loadCalendar()
       }
       this.resourceCheckbox = false
     },
