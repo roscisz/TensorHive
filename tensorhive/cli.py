@@ -75,6 +75,7 @@ def log_level_mapping(ctx, param, value: str) -> int:
               type=click.Choice(AVAILABLE_LOG_LEVELS.keys()),
               callback=log_level_mapping,
               help='Log level to apply.')
+# TODO Allow using custom configuration from file: --config
 @click.pass_context
 def main(ctx, log_level):
     if ctx.invoked_subcommand is not None:
