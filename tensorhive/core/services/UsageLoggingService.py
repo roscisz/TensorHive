@@ -125,6 +125,7 @@ class Summary:
         log.info('Summary generated from {}'.format(self.in_path))
         log.debug(self.summary)
 
+
 class UsageLoggingService(Service):
     '''
     Responsible for:
@@ -133,8 +134,11 @@ class UsageLoggingService(Service):
     3. Preparing short summary when reservation time ends
     3. Deleting log files when they become useless
     '''
-    # After that time, log file will be digested into summary file and then removed
-    log_expiration_time = datetime.timedelta(minutes=1)
+    # After that time, log file will be digested into summary file and then cleaned up in some way
+    log_expiration_time = datetime.timedelta(minutes=USAGE_LOGGING_SERVICE.GENERATE_SUMMARY_AFTER)
+
+    # What to do when log file is expired and summary was generated
+    log_cleanup_action = USAGE_LOGGING_SERVICE.ACTION_TRIGGERED_AFTER_SUMMARY
 
     # Default location for all log files
     log_dir = PosixPath(USAGE_LOGGING_SERVICE.LOG_DIR).expanduser()
