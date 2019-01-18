@@ -194,18 +194,19 @@ class UsageLoggingService(Service):
 
         if action == LogFileCleanupAction.REMOVE:
             file.unlink()
-            msg = 'Log file has been cleaned up.'
+            msg = 'Log file has been removed'
         elif action == LogFileCleanupAction.HIDE:
             new_name = file.parent / ('.' + file.name)
             file.rename(new_name)
-            msg = 'Log file is now hidden.'
+            msg = 'Log file is now hidden'
         elif action == LogFileCleanupAction.RENAME:
-            new_name = file.parent / ('old_' + file.name)
-            file.rename(new_name)
-            msg = 'Log file has been renamed to {}.'.format(new_name.name)
+            new_file = file.parent / ('old_' + file.name)
+            file.rename(new_file)
+            file = new_file
+            msg = 'Log file has been renamed'
 
         modification_time = datetime.datetime.fromtimestamp(file.lstat().st_mtime)
-        log.info('{} (mtime: {}, after: {})'.format(msg, modification_time, self.log_expiration_time))
+        log.info('{}. (path: {}, mtime: {})'.format(msg, file, modification_time))
 
     def handle_expired_logs(self):
         '''
