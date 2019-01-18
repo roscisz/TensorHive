@@ -84,7 +84,7 @@ class Log:
         log['index'] = self.data['index']
 
         mem_util = self.data['metrics']['mem_util']['value']
-        gpu_util = self.data['metrics']['mem_util']['value']
+        gpu_util = self.data['metrics']['gpu_util']['value']
 
         if gpu_util is not None and mem_util is not None:
             log['timestamps'].append(datetime.datetime.utcnow())
