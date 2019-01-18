@@ -190,8 +190,8 @@ class USAGE_LOGGING_SERVICE:
     ENABLED = config.getboolean(section, 'enabled', fallback=True)
     UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=2.0)
     LOG_DIR = full_path(config.get(section, 'log_dir', fallback=default_path))
-    GENERATE_SUMMARY_AFTER = config.getfloat(section, 'generate_summary_after', fallback=30.0)
-    ACTION_TRIGGERED_AFTER_SUMMARY = config.getint(section, 'after_summary_trigger_action', fallback=3)
+    LOG_CLEANUP_AFTER = config.getfloat(section, 'log_cleanup_after', fallback=30.0)
+    LOG_CLEANUP_ACTION = config.getint(section, 'log_cleanup_action', fallback=2)
 
 class AUTH:
     from datetime import timedelta

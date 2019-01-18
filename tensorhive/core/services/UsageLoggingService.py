@@ -135,11 +135,11 @@ class UsageLoggingService(Service):
     3. Preparing short summary when reservation time ends
     3. Deleting log files when they become useless
     '''
-    # After that time, log file will be digested into summary file and then cleaned up in some way
-    log_expiration_time = datetime.timedelta(minutes=USAGE_LOGGING_SERVICE.GENERATE_SUMMARY_AFTER)
+    # After that time, log file will be cleaned up in some way
+    log_expiration_time = datetime.timedelta(minutes=USAGE_LOGGING_SERVICE.LOG_CLEANUP_AFTER)
 
-    # What to do when log file is expired and summary was generated
-    log_cleanup_action = USAGE_LOGGING_SERVICE.ACTION_TRIGGERED_AFTER_SUMMARY
+    # What to do when log file is expired
+    log_cleanup_action = USAGE_LOGGING_SERVICE.LOG_CLEANUP_ACTION
 
     # Default location for all log files
     log_dir = PosixPath(USAGE_LOGGING_SERVICE.LOG_DIR).expanduser()
@@ -200,8 +200,6 @@ class UsageLoggingService(Service):
             new_name = file.parent / ('old_' + file.name)
             file.rename(new_name)
             msg = 'Log file has been renamed to {}.'.format(new_name.name)
-        elif action == LogFileCleanupAction.LEAVE:
-            msg = 'Log file cleanup has been skipped.'
 
         modification_time = datetime.datetime.fromtimestamp(file.lstat().st_mtime)
         log.info('{} (mtime: {}, after: {})'.format(msg, modification_time, self.log_expiration_time))
