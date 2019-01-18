@@ -141,9 +141,6 @@ class UsageLoggingService(Service):
     3. Preparing short summary when reservation time ends
     3. Deleting log files when they become useless
     '''
-    # After that time, log file will be cleaned up in some way
-    log_expiration_time = datetime.timedelta(minutes=USAGE_LOGGING_SERVICE.LOG_CLEANUP_AFTER)
-
     # What to do when log file is expired
     log_cleanup_action = USAGE_LOGGING_SERVICE.LOG_CLEANUP_ACTION
 

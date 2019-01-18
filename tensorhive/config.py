@@ -190,7 +190,6 @@ class USAGE_LOGGING_SERVICE:
     ENABLED = config.getboolean(section, 'enabled', fallback=True)
     UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=2.0)
     LOG_DIR = full_path(config.get(section, 'log_dir', fallback=default_path))
-    LOG_CLEANUP_AFTER = config.getfloat(section, 'log_cleanup_after', fallback=30.0)
     LOG_CLEANUP_ACTION = config.getint(section, 'log_cleanup_action', fallback=2)
 
 class AUTH:
