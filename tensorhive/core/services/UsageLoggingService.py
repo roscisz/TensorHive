@@ -217,10 +217,9 @@ class UsageLoggingService(Service):
         time_now = datetime.datetime.utcnow()
 
         # Get all files within given directory
-        for item in self.log_dir.glob('*.json'):
+        # Accept only files like: 10.json
+        for item in self.log_dir.glob('[0-9]*.json'):
             if item.is_file():
-                # Get filename without extension for files like: 10.json
-                # Ignore all non-matching file names
                 try:
                     id_from_filename = int(item.stem)
                 except ValueError:
