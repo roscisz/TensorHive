@@ -153,18 +153,7 @@ class UsageLoggingService(Service):
     def do_run(self):
         start_time = time.perf_counter()
 
-        current_reservations = Reservation.current_events()
-        infrastructure = self.infrastructure_manager.infrastructure
-
-        for reservation in current_reservations:
-            filename = '{id}.json'.format(id=reservation.id)
-            log_file_path = self.log_dir / filename
-            try:
-                gpu_data = self.extract_specific_gpu_data(uuid=reservation.protected_resource_id, infrastructure=infrastructure)
-                Log(data=gpu_data).save(out_path=log_file_path)
-            except Exception as e:
-                log.error(e)
-
+        self.log_current_usage()
         self.handle_expired_logs()
 
         end_time = time.perf_counter()
@@ -173,6 +162,19 @@ class UsageLoggingService(Service):
         # Hold on until next interval
         if execution_time < self.interval:
             gevent.sleep(self.interval - execution_time)
+
+    def log_current_usage(self):
+        '''Updates all log files related to current reservations'''
+        current_reservations = Reservation.current_events()
+        infrastructure = self.infrastructure_manager.infrastructure
+        for reservation in current_reservations:
+            filename = '{id}.json'.format(id=reservation.id)
+            log_file_path = self.log_dir / filename
+            try:
+                gpu_data = self.extract_specific_gpu_data(uuid=reservation.protected_resource_id, infrastructure=infrastructure)
+                Log(data=gpu_data).save(out_path=log_file_path)
+            except Exception as e:
+                log.error(e)
 
     # TODO Refactor
     def handle_expired_logs(self):
