@@ -223,7 +223,7 @@ class UsageLoggingService(Service):
                 try:
                     id_from_filename = int(item.stem)
                     reservation = Reservation.get(id=id_from_filename)
-                except ValueError:
+                except:
                     break
 
                 # Check if file and its corresponding reservation record are both expired
