@@ -3,7 +3,7 @@ from tensorhive.core.utils.decorators.override import override
 from tensorhive.core.services.Service import Service
 from tensorhive.models.Reservation import Reservation
 from typing import Dict, List, Optional, Union
-from tensorhive.config import FOOBAR_SERVICE
+from tensorhive.config import USAGE_LOGGING_SERVICE
 from pathlib import PosixPath
 import datetime
 import time
@@ -50,7 +50,7 @@ class JSONLogFile:
             json.dump(data, file, **kwargs)
 
 class Log:
-    '''Represents ordinary JSON log file, altering original input data before persisting'''
+    '''Represents ordinary JSON log file, alters original input data before persisting'''
     # Template structure for .json log files
     empty_log_file_format = {
         'name': str(),
@@ -109,7 +109,7 @@ class Log:
 
 
 class Summary:
-    '''Represents small JSON log file created when standard log file expires'''
+    '''Represents small JSON log file, created when standard log file expires'''
     def __init__(self, in_path: PosixPath) -> None:
         self.in_path = in_path
         log_contents = JSONLogFile(self.in_path).read()
@@ -125,7 +125,7 @@ class Summary:
         log.info('Summary generated from {}'.format(self.in_path))
         log.debug(self.summary)
 
-class FoobarService(Service):
+class UsageLoggingService(Service):
     '''
     Responsible for:
     1. Gathering infrastracture data within active reservation time
@@ -137,7 +137,7 @@ class FoobarService(Service):
     log_expiration_time = datetime.timedelta(minutes=1)
 
     # Default location for all log files
-    log_dir = PosixPath(FOOBAR_SERVICE.LOG_DIR).expanduser()
+    log_dir = PosixPath(USAGE_LOGGING_SERVICE.LOG_DIR).expanduser()
 
     def __init__(self, interval=0.0):
         super().__init__()

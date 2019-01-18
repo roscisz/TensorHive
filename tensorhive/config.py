@@ -135,8 +135,8 @@ class PROTECTION_SERVICE:
     NOTIFY_ON_PTY = config.getboolean(section, 'notify_on_pty', fallback=True)
 
 
-class FOOBAR_SERVICE:
-    section = 'foobar_service'
+class USAGE_LOGGING_SERVICE:
+    section = 'usage_logging_service'
     default_path = '~/.config/TensorHive/logs/'
 
     def full_path(path: str) -> str:
