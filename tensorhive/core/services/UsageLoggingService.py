@@ -222,19 +222,20 @@ class UsageLoggingService(Service):
             if item.is_file():
                 try:
                     id_from_filename = int(item.stem)
+                    reservation = Reservation.get(id=id_from_filename)
                 except ValueError:
                     break
-                else:
-                    reservation = Reservation.get(id=id_from_filename)
 
                 # Check if file and its corresponding reservation record are both expired
                 modification_time = datetime.datetime.utcfromtimestamp(item.stat().st_mtime)
                 log_expired = modification_time + self.log_expiration_time < time_now
                 reservation_expired = reservation.ends_at < time_now
 
-                if log_expired and reservation_expired:
+                if reservation_expired:
+                    # Generate immidiately
                     summary_file_path = item.parent / 'summary_{old_name}'.format(old_name=item.name)
                     Summary(in_path=item).save(out_path=summary_file_path)
+                if log_expired:
                     self._clean_up_old_log_file(file=item)
 
     def extract_specific_gpu_data(self, uuid: str, infrastructure: Dict) -> Dict:
