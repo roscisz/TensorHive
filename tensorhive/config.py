@@ -2,10 +2,54 @@ from pathlib import PosixPath
 import configparser
 from typing import Dict, Optional, Any, List
 import logging
+import shutil
 import tensorhive
 
 log = logging.getLogger(__name__)
-MAIN_CONFIG_PATH = '~/.config/TensorHive/main_config.ini'
+
+
+class CONFIG_FILES:
+    # TensorHive tries to load these by default
+    config_dir = PosixPath.home() / '.config/TensorHive'
+    MAIN_CONFIG_PATH = str(config_dir / 'main_config.ini')
+    HOSTS_CONFIG_PATH = str(config_dir / 'hosts_config.ini')
+
+    # Clone these files when default files are not found (and user does not)
+    tensorhive_package_dir = PosixPath(__file__).parent
+    MAIN_CONFIG_TEMPLATE_PATH = str(tensorhive_package_dir / 'main_config.ini')
+    HOSTS_CONFIG_TEMPLATE_PATH = str(tensorhive_package_dir / 'hosts_config.ini')
+
+
+class ConfigInitilizer:
+    '''Makes sure that all default config files exist'''
+
+    def __init__(self):
+        # 1. Check if all config files exist
+        both_exist = PosixPath(CONFIG_FILES.MAIN_CONFIG_PATH).exists() and \
+            PosixPath(CONFIG_FILES.HOSTS_CONFIG_PATH).exists()
+
+        if not both_exist:
+            log.warning('[•] Detected missing default config file(s), recreating...')
+            self.recreate_default_configuration_files()
+
+    def recreate_default_configuration_files(self) -> None:
+        try:
+            # 1. Create directory for stroing config files
+            CONFIG_FILES.config_dir.mkdir(parents=True, exist_ok=True)
+
+            # 2. Clone templates safely from `tensorhive` package
+            self.safe_copy(src=CONFIG_FILES.MAIN_CONFIG_TEMPLATE_PATH, dst=CONFIG_FILES.MAIN_CONFIG_PATH)
+            self.safe_copy(src=CONFIG_FILES.HOSTS_CONFIG_TEMPLATE_PATH, dst=CONFIG_FILES.HOSTS_CONFIG_PATH)
+        except Exception:
+            log.error('[✘] Unable to recreate configuration files.')
+
+    def safe_copy(self, src: str, dst: str) -> None:
+        '''Safe means that it won't override existing configuration'''
+        if PosixPath(dst).exists():
+            log.info('Skipping, file already exists: {}'.format(dst))
+        else:
+            shutil.copy(src, dst)
+            log.info('Copied {} to {}'.format(src, dst))
 
 
 class ConfigLoader:
@@ -15,14 +59,15 @@ class ConfigLoader:
         config = configparser.ConfigParser(strict=False)
         full_path = PosixPath(path).expanduser()
         if config.read(str(full_path)):
-            log.info('[•] Reading {} config from {}'.format(displayed_title, path))
+            log.info('[•] Reading {} config from {}'.format(displayed_title, full_path))
         else:
-            log.warning('[✘] Missing configuration file ({})'.format(path))
-            log.warning('Using default settings from config.py')
+            log.warning('[✘] Configuration file not found ({})'.format(full_path))
+            log.info('Using default {} settings from config.py'.format(displayed_title))
         return config
 
 
-config = ConfigLoader.load(MAIN_CONFIG_PATH, displayed_title='main')
+ConfigInitilizer()
+config = ConfigLoader.load(CONFIG_FILES.MAIN_CONFIG_PATH, displayed_title='main')
 
 
 def display_config(cls):
@@ -38,7 +83,7 @@ def display_config(cls):
 
 class SSH:
     section = 'ssh'
-    HOSTS_CONFIG_FILE = config.get(section, 'hosts_config_file', fallback='~/.config/TensorHive/hosts_config.ini')
+    HOSTS_CONFIG_FILE = config.get(section, 'hosts_config_file', fallback=CONFIG_FILES.HOSTS_CONFIG_PATH)
     TEST_ON_STARTUP = config.getboolean(section, 'test_on_startup', fallback=True)
     TIMEOUT = config.getfloat(section, 'timeout', fallback=10.0)
     NUM_RETRIES = config.getint(section, 'number_of_retries', fallback=1)
@@ -87,7 +132,7 @@ class DB:
         return 'sqlite:///{}'.format(PosixPath(path).expanduser())
 
     SQLALCHEMY_DATABASE_URI = uri_for_path(config.get(section, 'path', fallback=default_path))
-    TEST_DATABASE_URI = 'sqlite:///test_database.sqlite'  # or 'sqlite://' for in-memory, faster database
+    TEST_DATABASE_URI = 'sqlite://'  # Use in-memory (before: sqlite:///test_database.sqlite)
 
 
 class API:
