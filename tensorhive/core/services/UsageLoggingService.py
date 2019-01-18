@@ -48,7 +48,10 @@ class JSONLogFile:
 
     def write(self, data: Dict, **kwargs) -> None:
         with self.path.open(mode='w') as file:
-            json.dump(data, file, **kwargs)
+            try:
+                json.dump(data, file, **kwargs)
+            except:
+                raise
 
 class Log:
     '''Represents ordinary JSON log file, alters original input data before persisting'''
@@ -121,10 +124,13 @@ class Summary:
         }
 
     def save(self, out_path: PosixPath) -> None:
-        JSONLogFile(out_path).write(self.summary)
-
-        log.info('Summary generated from {}'.format(self.in_path))
-        log.debug(self.summary)
+        try:
+            JSONLogFile(out_path).write(self.summary)
+        except:
+            raise
+        else:
+            log.info('Summary generated from {}'.format(self.in_path))
+            log.debug(self.summary)
 
 
 class UsageLoggingService(Service):
@@ -223,20 +229,19 @@ class UsageLoggingService(Service):
                 try:
                     id_from_filename = int(item.stem)
                     reservation = Reservation.get(id=id_from_filename)
+
+                    # Check if file and its corresponding reservation record are both expired
+                    reservation_expired = reservation.ends_at < time_now
+
+                    if reservation_expired:
+                        # Generate summary immidiately
+                        summary_file_path = item.parent / 'summary_{old_name}'.format(old_name=item.name)
+                        Summary(in_path=item).save(out_path=summary_file_path)
+
+                        # Clean up log immidiately
+                        self._clean_up_old_log_file(file=item)
                 except:
                     break
-
-                # Check if file and its corresponding reservation record are both expired
-                modification_time = datetime.datetime.utcfromtimestamp(item.stat().st_mtime)
-                log_expired = modification_time + self.log_expiration_time < time_now
-                reservation_expired = reservation.ends_at < time_now
-
-                if reservation_expired:
-                    # Generate immidiately
-                    summary_file_path = item.parent / 'summary_{old_name}'.format(old_name=item.name)
-                    Summary(in_path=item).save(out_path=summary_file_path)
-                if log_expired:
-                    self._clean_up_old_log_file(file=item)
 
     def extract_specific_gpu_data(self, uuid: str, infrastructure: Dict) -> Dict:
         '''Returns whole right-hand side value (dictionary) for given key (uuid)'''
