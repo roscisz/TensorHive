@@ -1,5 +1,6 @@
 from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.utils.decorators.override import override
+from tensorhive.core.utils.enums import LogFileCleanupAction
 from tensorhive.core.services.Service import Service
 from tensorhive.models.Reservation import Reservation
 from typing import Dict, List, Optional, Union
@@ -180,7 +181,31 @@ class UsageLoggingService(Service):
             except Exception as e:
                 log.error(e)
 
-    # TODO Refactor
+    def _clean_up_old_log_file(self, file: PosixPath):
+        '''
+        Triggers an action on expired/summarized log file
+        depending on the value specified by self.log_cleanup_action
+        '''
+        action = self.log_cleanup_action
+        assert LogFileCleanupAction(action)
+
+        if action == LogFileCleanupAction.REMOVE:
+            file.unlink()
+            msg = 'Log file has been cleaned up.'
+        elif action == LogFileCleanupAction.HIDE:
+            new_name = file.parent / ('.' + file.name)
+            file.rename(new_name)
+            msg = 'Log file is now hidden.'
+        elif action == LogFileCleanupAction.RENAME:
+            new_name = file.parent / ('old_' + file.name)
+            file.rename(new_name)
+            msg = 'Log file has been renamed to {}.'.format(new_name.name)
+        elif action == LogFileCleanupAction.LEAVE:
+            msg = 'Log file cleanup has been skipped.'
+
+        modification_time = datetime.datetime.fromtimestamp(file.lstat().st_mtime)
+        log.info('{} (mtime: {}, after: {})'.format(msg, modification_time, self.log_expiration_time))
+
     def handle_expired_logs(self):
         '''
         Seeks for expired, ordinary JSON log files.
@@ -188,7 +213,7 @@ class UsageLoggingService(Service):
         since its last modification and when corresponding reservation record 
         is also expired.
 
-        If such file is found it generates summary file and removes the original log.
+        If such file is found it generates summary file and cleans up the original log file.
         Summary filenames are like: summary_10.json
         '''
         time_now = datetime.datetime.utcnow()
@@ -213,10 +238,7 @@ class UsageLoggingService(Service):
                 if log_expired and reservation_expired:
                     summary_file_path = item.parent / 'summary_{old_name}'.format(old_name=item.name)
                     Summary(in_path=item).save(out_path=summary_file_path)
-
-                    # Expired log file can be removed
-                    item.unlink()
-                    log.info('Expired log has been removed (mod_time: {mtime} (UTC), after {time}): {path}'.format(mtime=modification_time, time=self.log_expiration_time, path=item))
+                    self._clean_up_old_log_file(file=item)
 
     def extract_specific_gpu_data(self, uuid: str, infrastructure: Dict) -> Dict:
         '''Returns whole right-hand side value (dictionary) for given key (uuid)'''
