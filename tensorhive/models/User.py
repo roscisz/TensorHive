@@ -25,6 +25,7 @@ class User(CRUDModel, Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
+    email = Column(String(40), unique=True, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     reservations = relationship('Reservation', cascade='all,delete', backref=backref('user'))
 
@@ -73,6 +74,11 @@ class User(CRUDModel, Base):
         assert is_safe_username(username), 'Username unsafe'
         assert 2 < len(username) < 16, 'Username must be between 3 and 15 characters long'
         return username
+
+    @validates('email')
+    def validate_username(self, key, email):
+        log.warning('TODO Validate email correctness!')
+        return email
 
     @classmethod
     def find_by_username(cls, username):
