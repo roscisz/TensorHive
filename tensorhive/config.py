@@ -178,7 +178,20 @@ class PROTECTION_SERVICE:
     ENABLED = config.getboolean(section, 'enabled', fallback=True)
     UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=2.0)
     NOTIFY_ON_PTY = config.getboolean(section, 'notify_on_pty', fallback=True)
+    NOTIFY_VIA_EMAIL = config.getboolean(section, 'notify_on_pty', fallback=True)
 
+class EMAIL_BOT:
+    section = 'email_bot'
+    NOTIFY_INTRUDER = config.getboolean(section, 'notify_intruder', fallback=True)
+    NOTIFY_ADMIN = config.getboolean(section, 'notify_admin', fallback=True)
+    ADMIN_EMAIL = config.get(section, 'admin_email', fallback=None)
+
+    BOT_EMAIL = config.get(section, 'bot_email', fallback=None)
+    PASSWORD_ENV_VAR = config.get(section, 'password_env_var', fallback='TH_EMAIL_PASS')
+    SUBJECT = config.get(section, 'subject')
+
+    SMTP_SERVER = config.get(section, 'smtp_server', fallback=None)
+    SMTP_PORT = config.getint(section, 'smtp_port', fallback=587)
 
 class AUTH:
     from datetime import timedelta
