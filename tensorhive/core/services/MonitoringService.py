@@ -30,7 +30,6 @@ class MonitoringService(Service):
         elif isinstance(injected_object, SSHConnectionManager):
             self.connection_manager = injected_object
 
-
     @override
     def do_run(self):
         # FIXME Time measurements can be abandoned in the future
