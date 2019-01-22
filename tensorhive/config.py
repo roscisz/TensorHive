@@ -132,7 +132,7 @@ class DB:
         return 'sqlite:///{}'.format(PosixPath(path).expanduser())
 
     SQLALCHEMY_DATABASE_URI = uri_for_path(config.get(section, 'path', fallback=default_path))
-    TEST_DATABASE_URI = 'sqlite://'  # Use in-memory (before: sqlite:///test_database.sqlite)
+    TEST_DATABASE_URI = 'sqlite:///test_database.sqlite'  # or 'sqlite://' for in-memory, faster database
 
 
 class API:
