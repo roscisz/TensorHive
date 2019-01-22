@@ -2,7 +2,6 @@ from pathlib import PosixPath
 import configparser
 from typing import Dict, Optional, Any, List
 import logging
-import shutil
 import tensorhive
 
 log = logging.getLogger(__name__)
@@ -18,39 +17,6 @@ class CONFIG_FILES:
     tensorhive_package_dir = PosixPath(__file__).parent.parent
     MAIN_CONFIG_TEMPLATE_PATH = str(tensorhive_package_dir / 'main_config.ini')
     HOSTS_CONFIG_TEMPLATE_PATH = str(tensorhive_package_dir / 'hosts_config.ini')
-
-
-class ConfigInitilizer:
-    '''Makes sure that all default config files exist'''
-
-    def __init__(self):
-        # 1. Check if all config files exist
-        both_exist = PosixPath(CONFIG_FILES.MAIN_CONFIG_PATH).exists() and \
-            PosixPath(CONFIG_FILES.HOSTS_CONFIG_PATH).exists()
-
-        if not both_exist:
-            log.warning('[•] One or more default config files not found, recreating...')
-            self.recreate_default_configuration_files()
-
-    def recreate_default_configuration_files(self) -> None:
-        try:
-            # 1. Create directory for stroing config files
-            CONFIG_FILES.config_dir.mkdir(parents=True, exist_ok=True)
-
-            # 2. Clone templates safely from `tensorhive` package
-            self.safe_copy(src=CONFIG_FILES.MAIN_CONFIG_TEMPLATE_PATH, dst=CONFIG_FILES.MAIN_CONFIG_PATH)
-            self.safe_copy(src=CONFIG_FILES.HOSTS_CONFIG_TEMPLATE_PATH, dst=CONFIG_FILES.HOSTS_CONFIG_PATH)
-        except Exception:
-            log.error('[✘] Unable to recreate configuration files.')
-
-    def safe_copy(self, src: str, dst: str) -> None:
-        '''Safe means that it won't override existing configuration'''
-        if PosixPath(dst).exists():
-            log.info('Skipping, file already exists: {}'.format(dst))
-        else:
-            shutil.copy(src, dst)
-            log.info('Copied {} to {}'.format(src, dst))
-
 
 class ConfigLoader:
     @staticmethod
