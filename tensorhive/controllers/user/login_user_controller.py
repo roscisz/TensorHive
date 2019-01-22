@@ -11,13 +11,13 @@ def login(user):
         current_user = User.find_by_username(user['username'])
         assert User.verify_hash(user['password'], current_user.password), \
             R['login']['failure']['credentials']
-    except NoResultFound as e:
+    except NoResultFound as e:  # NOQA: F841
         content = {'msg': R['not_found']}
         status = 404
     except AssertionError as error_message:
         content = {'msg': str(error_message)}
         status = 401
-    except Exception as e:
+    except Exception as e:  # NOQA: F841
         content = {'msg': G['internal_error']}
         status = 500
     else:

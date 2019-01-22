@@ -22,7 +22,7 @@ def create(reservation):
     except AssertionError as e:
         content = {'msg': R['create']['failure']['invalid'].format(reason=e)}
         status = 422
-    except Exception as e:
+    except Exception as e:  # NOQA: F841
         content = {'msg': G['internal_error']}
         status = 500
     else:

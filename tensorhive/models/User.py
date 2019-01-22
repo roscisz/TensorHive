@@ -78,12 +78,12 @@ class User(CRUDModel, Base):
     def find_by_username(cls, username):
         try:
             result = db_session.query(cls).filter_by(username=username).one()
-        except MultipleResultsFound as e:
+        except MultipleResultsFound as e:  # NOQA: F841
             # Theoretically cannot happen because of model built-in constraints
             msg = 'Multiple users with identical usernames has been found!'
             log.critical(msg)
             raise MultipleResultsFound(msg)
-        except NoResultFound as e:
+        except NoResultFound as e:  # NOQA: F841
             msg = 'There is no user with username={}!'.format(username)
             log.warning(msg)
             raise NoResultFound(msg)

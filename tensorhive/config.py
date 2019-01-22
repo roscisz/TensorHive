@@ -201,7 +201,7 @@ class AUTH:
             raw_arguments = config.get('auth', option)
             parsed_arguments = ast.literal_eval(raw_arguments)
             return parsed_arguments
-        except (configparser.Error, ValueError) as e:
+        except (configparser.Error, ValueError) as e:  # NOQA: F841
             log.warning('Parsing [auth] config section failed for option "{}", using fallback value: {}'.format(
                 option, fallback))
             return fallback

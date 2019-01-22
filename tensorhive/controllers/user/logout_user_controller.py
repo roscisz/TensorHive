@@ -13,7 +13,7 @@ def logout(token_type):
     jti = get_raw_jwt()['jti']
     try:
         RevokedToken(jti=jti).save()
-    except Exception as e:
+    except Exception as e:  # NOQA: F841
         log.critical(G['internal_error'])
         log.critical(T['failure'].format(token_type=token_type))
         content = {'msg': G['internal_error']}
