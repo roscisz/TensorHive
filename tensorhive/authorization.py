@@ -27,7 +27,7 @@ def init_jwt(app):
         except Exception as _:  # NOQA: F841
             roles = []
         finally:
-            return {'roles':  roles}
+            return {'roles': roles}
 
 
 def admin_required(fn):

@@ -29,7 +29,7 @@ class Role(CRUDModel, Base):
             num_rows_deleted = cls.query(cls).delete()
             cls.commit()
             return {'message': '{} role(s) deleted'.format(num_rows_deleted)}
-        except:
+        except Exception as e:  # NOQA: F841
             return {'message': 'Deleting all roles operation failed'}
 
     @property

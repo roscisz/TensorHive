@@ -103,7 +103,7 @@ class Reservation(CRUDModel, Base):
                 cls.starts_at <= current_time,
                 # Events before their end
                 current_time <= cls.ends_at)
-            ).all()
+        ).all()
 
     def would_interfere(self):
         return Reservation.query.filter(

@@ -25,7 +25,7 @@ class SSHConnectionManager():
                 proxy_user=SSH.PROXY['proxy_user'],
                 proxy_port=SSH.PROXY['proxy_port']
                 # Ignore timeout and num_retires for proxy
-                )
+            )
 
         return ParallelSSHClient(
             hosts=hostnames,

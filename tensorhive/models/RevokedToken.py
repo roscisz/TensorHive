@@ -22,5 +22,5 @@ class RevokedToken(CRUDModel, Base):
 
     @classmethod
     def is_jti_blacklisted(cls, jti):
-        #with flask_app.app_context():
+        # with flask_app.app_context():
         return bool(cls.query.filter_by(jti=jti).first())

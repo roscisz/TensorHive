@@ -5,4 +5,5 @@ make inheritance mechanism more visible.
 '''
 
 
-def override(func): return func
+def override(func):
+    return func

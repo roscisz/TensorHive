@@ -9,7 +9,7 @@ G = API.RESPONSES['general']
 @jwt_required
 def create(reservation):
     try:
-        #with flask_app.app_context():
+        # with flask_app.app_context():
         new_reservation = Reservation(
             title=reservation['title'],
             description=reservation['description'],

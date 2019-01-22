@@ -54,7 +54,7 @@ class NvidiaSmiParser():
         values = cls._format_values(values)
 
         # Regex that matches: [W], [%], [MiB], etc. at the end of string
-        unit_regex = re.compile('\[(.*)\]$')
+        unit_regex = re.compile(r'\[(.*)\]$')
         result = {}
 
         for (long_key_name, value) in zip(keys, values):
