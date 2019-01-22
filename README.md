@@ -56,6 +56,10 @@ Sample output:
 
 The Web application and API Documentation can be accessed through te given URLs.
 
+If you need the Web application to be accessible from remote machines, set the host and port fields in the 
+[web_app.server] section in ~/.config/TensorHive/main_config.ini. The host field should be set to a hostname
+or IP that resolves to an external network interface.
+
 #### Monitor infrastructure
 
 The available infrastructure can be monitored in the Nodes overview tab. Sample screenshot:
