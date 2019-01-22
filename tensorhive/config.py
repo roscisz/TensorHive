@@ -29,7 +29,7 @@ class ConfigInitilizer:
             PosixPath(CONFIG_FILES.HOSTS_CONFIG_PATH).exists()
 
         if not both_exist:
-            log.warning('[•] Detected missing default config file(s), recreating...')
+            log.warning('[•] One or more default config files not found, recreating...')
             self.recreate_default_configuration_files()
 
     def recreate_default_configuration_files(self) -> None:
