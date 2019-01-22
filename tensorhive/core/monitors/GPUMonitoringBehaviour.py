@@ -57,7 +57,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         {
             'example_host_0': {
                 'GPU': {
-                    '<GPU0 UUID>': { 
+                    '<GPU0 UUID>': {
                         'name': 'GeForce GTX 660',
                         'index': 0,
                         'metrics': { "fan_speed": 10, ... }
@@ -152,7 +152,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
                     else
                         echo "[PMON NOT SUPPORTED]"
                     fi
-                done 
+                done
             else
                 # nvidia-smi failed
                 exit $?

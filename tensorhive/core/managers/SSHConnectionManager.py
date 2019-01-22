@@ -26,7 +26,7 @@ class SSHConnectionManager():
                         proxy_port=SSH.PROXY['proxy_port']
                         # Ignore timeout and num_retires for proxy
                         )
-        
+
         return ParallelSSHClient(
                     hosts=hostnames,
                     host_config=config,
@@ -37,7 +37,7 @@ class SSHConnectionManager():
         '''
         Appends a host (as hostname + config) directly into parallel ssh client instance.
 
-        Expected dict structure: 
+        Expected dict structure:
         host_config = {'<some_hostname>': {'user': '<some_username>'}}
         '''
         hostname = [*host_config][0]
@@ -65,7 +65,7 @@ class SSHConnectionManager():
         '''
         It checks if all of the defined hosts are accessible via SSH.
         Typically runs on each TensorHive startup.
-        You can turn it off (INI config -> [ssh] -> test_on_startup = off 
+        You can turn it off (INI config -> [ssh] -> test_on_startup = off
         '''
         log.info('[⚙] Testing SSH configuration...')
         if not config:
@@ -97,9 +97,9 @@ class SSHConnectionManager():
                     icon='✘',
                     host=host,
                     msg=error_message))
-                    
+
         # 4. Show simple summary of failed connections
         if num_failed > 0:
             log.critical('Summary: {failed}/{all} failed to connect.'.format(
-                failed=num_failed, 
+                failed=num_failed,
                 all=len(output)))

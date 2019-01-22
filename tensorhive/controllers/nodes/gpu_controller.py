@@ -16,13 +16,13 @@ def get_metrics(hostname: str, metric_type: str = None):
         and the corresponding value is the actual metric data
 
         Example (metric_type is None + disabled units):
-        { 
+        {
             '<GPU0_UUID>': {'fan_speed': 31, 'util': 20, ...},
             '<GPU1_UUID>': {'fan_speed': 32, 'util': 25, ...},
         }
 
         Example (metric_type == 'fan_speed' with enabled units):
-        { 
+        {
             '<GPU0_UUID>': {'value': 31, 'unit': '%'},
             '<GPU1_UUID>': {'value': 32, 'unit': '%'},
         }

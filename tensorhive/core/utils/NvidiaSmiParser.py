@@ -38,7 +38,7 @@ class NvidiaSmiParser():
             "fan_speed": {'value': 32, 'unit': '%'},
             "gpu_util": {'value': null, 'unit': '%'},
             "power": {'value': 80, 'unit': 'W'},
-            ...            
+            ...
         }
 
         Example result with disabled units:
@@ -47,7 +47,7 @@ class NvidiaSmiParser():
             "fan_speed": 32,
             "gpu_util": null,
             "power": 80,
-            ...            
+            ...
         }
         '''
         assert len(keys) == len(values), 'List sizes does not match.'
@@ -101,7 +101,7 @@ class NvidiaSmiParser():
     def parse_query_gpu_stdout(cls, stdout: Generator) -> Dict[str, Dict]:
         '''
         Example stdout:
-        $ nvidia-smi --query-gpu=name,fan.speed,utilization.gpu --format=csv,nounits   
+        $ nvidia-smi --query-gpu=name,fan.speed,utilization.gpu --format=csv,nounits
         name, fan.speed [%], utilization.gpu [%]
         GeForce GTX 660, 35, [Not Supported]
 
@@ -111,7 +111,7 @@ class NvidiaSmiParser():
                 "name": "GeForce GTX 660",
                 "fan_speed": 32,
                 "gpu_util": null,
-                ...            
+                ...
             }
         }
         '''
@@ -150,7 +150,7 @@ class NvidiaSmiParser():
     @classmethod
     def parse_pmon_stdout(cls, stdout: Generator) -> Dict[str, Dict]:
         '''
-        Example of expected stdout: 
+        Example of expected stdout:
             UUID=GPU-c6d01ed6-8240-2e11-efe9-1111111111111
             # gpu        pid  type    sm   mem   enc   dec   command
             # Idx          #   C/G     %     %     %     %   name
@@ -169,7 +169,7 @@ class NvidiaSmiParser():
         [
             {
                 'uuid': '<UUID>',
-                'pid': 4810, 
+                'pid': 4810,
                 'command': 'Xorg',
                 ...
             },
@@ -223,7 +223,7 @@ class NvidiaSmiParser():
 
             keys:
             ['gpu', 'pid', 'type', 'sm', 'mem', 'enc', 'dec', 'command']
-            
+
             processes_lines:
             ['0    4810     G     0     0     0     0   Xorg',
             '0    7187     G     0     0     0     0   compiz']

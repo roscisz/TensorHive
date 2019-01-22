@@ -41,7 +41,7 @@ class TensorHiveManager(metaclass=Singleton):
                 monitors.append(gpu_monitor)
             # TODO Add more monitors here
             monitoring_service = MonitoringService(
-                monitors=monitors, 
+                monitors=monitors,
                 interval=MONITORING_SERVICE.UPDATE_INTERVAL
             )
             services.append(monitoring_service)
@@ -51,7 +51,7 @@ class TensorHiveManager(metaclass=Singleton):
                 message_sending_handler = ProtectionHandler(behaviour=MessageSendingBehaviour())
                 violation_handlers.append(message_sending_handler)
             protection_service = ProtectionService(
-                handlers=violation_handlers, 
+                handlers=violation_handlers,
                 interval=PROTECTION_SERVICE.UPDATE_INTERVAL
             )
             services.append(protection_service)

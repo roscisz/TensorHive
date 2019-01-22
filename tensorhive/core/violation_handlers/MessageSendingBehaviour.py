@@ -15,7 +15,7 @@ class MessageSendingBehaviour():
 
     def _merged_command(self, sessions: List):
         '''
-        Concatenates multiple commands into one, 
+        Concatenates multiple commands into one,
         It allows using ssh connection only once instead of multiple times (for each tty separately)
 
         Example: 'echo ... | write A pty/1; echo ... | write A pty/2; echo ... | write A pty/3'

@@ -37,10 +37,10 @@ class User(CRUDModel, Base):
     def check_assertions(self):
         # TODO Check if user has roles assigned
         pass
-     
+
     def __repr__(self):
         return '<User id={id}, username={username}>'.format(
-            id=self.id, 
+            id=self.id,
             username=self.username)
 
     @hybrid_property
