@@ -22,7 +22,7 @@ def get_selected(resources_ids: List, start: str, end: str):
             start_as_datetime = Reservation.parsed_input_datetime(start)
             ends_as_datetime = Reservation.parsed_input_datetime(end)
             matches = list(Reservation.filter_by_uuids_and_time_range(
-                            resources_ids, start_as_datetime, ends_as_datetime))
+                resources_ids, start_as_datetime, ends_as_datetime))
             matches = [match.as_dict for match in matches]
         except (ValueError, AssertionError) as reason:
             content = {'msg': '{}. {}'.format(G['bad_request'], reason)}

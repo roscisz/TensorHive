@@ -19,19 +19,19 @@ class SSHConnectionManager():
         hostnames = config.keys()
         if SSH.PROXY:
             return ParallelSSHClient(
-                        hosts=hostnames,
-                        host_config=config,
-                        proxy_host=SSH.PROXY['proxy_host'],
-                        proxy_user=SSH.PROXY['proxy_user'],
-                        proxy_port=SSH.PROXY['proxy_port']
-                        # Ignore timeout and num_retires for proxy
-                        )
+                hosts=hostnames,
+                host_config=config,
+                proxy_host=SSH.PROXY['proxy_host'],
+                proxy_user=SSH.PROXY['proxy_user'],
+                proxy_port=SSH.PROXY['proxy_port']
+                # Ignore timeout and num_retires for proxy
+                )
 
         return ParallelSSHClient(
-                    hosts=hostnames,
-                    host_config=config,
-                    timeout=SSH.TIMEOUT,
-                    num_retries=SSH.NUM_RETRIES)
+            hosts=hostnames,
+            host_config=config,
+            timeout=SSH.TIMEOUT,
+            num_retries=SSH.NUM_RETRIES)
 
     def add_host(self, host_config: Dict):
         '''
