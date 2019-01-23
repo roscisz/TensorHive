@@ -14,38 +14,61 @@
       <v-dialog v-model="dialog" max-width="500px">
         <v-card>
           <v-card-text>
-            Edit user
-          </v-card-text>
-          <v-card-text>
             <v-card-text>
-              New username:
+              Edit user
             </v-card-text>
-            <v-textarea
-              outline
-              label="Username"
-              v-model="user.username"
-            ></v-textarea>
             <v-card-text>
-              New password:
+              Current username: {{currentUser.username}}
             </v-card-text>
-            <v-textarea
-              outline
-              label="Password"
-              v-model="user.password"
-            ></v-textarea>
             <v-card-text>
-              Select roles:
+              New username
             </v-card-text>
-            <v-checkbox
-              label="admin"
-              v-model="adminCheckbox"
-            >
-            </v-checkbox>
-            <v-checkbox
-              label="user"
-              v-model="userCheckbox"
-            >
-            </v-checkbox>
+            <div class="input-group">
+              <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+              <input
+                class="form-control"
+                name="modalUsername"
+                placeholder="Username"
+                type="text"
+                v-model="user.username"
+              >
+            </div>
+            <v-card-text>
+              New password
+            </v-card-text>
+            <div class="input-group">
+              <span class="input-group-addon"><i class="fa fa-lock"></i></span>
+              <input
+                class="form-control"
+                name="modalPassword"
+                placeholder="Password"
+                type="password"
+                v-model="user.password"
+              >
+            </div>
+            <v-card-text>
+              Repeat password
+            </v-card-text>
+            <div class="input-group">
+              <span class="input-group-addon"><i class="fa fa-lock"></i></span>
+              <input
+                class="form-control"
+                name="modalPassword2"
+                placeholder="Password2"
+                type="password"
+                v-model="user.password2"
+              >
+            </div>
+            <v-card-text>
+              Account roles:
+            </v-card-text>
+            <v-card-text>
+              <v-checkbox
+                label="admin"
+                v-model="adminCheckbox"
+              >
+              </v-checkbox>
+            </v-card-text>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -68,10 +91,11 @@
             <td>{{ props.item.id }}</td>
             <td>{{ props.item.username }}</td>
             <td>{{ props.item.createdAt }}</td>
+            <td>{{ props.item.role }}</td>
             <td>
               <v-icon
                 small
-                @click="editUser(props.item.id)"
+                @click="editUser(props.item)"
               >
                 edit
               </v-icon>
@@ -105,6 +129,7 @@ export default {
         { text: 'User id', value: 'id' },
         { text: 'Username', value: 'username' },
         { text: 'Created at', value: 'createdAt' },
+        { text: 'Role', value: 'role' },
         { text: 'Actions', value: 'id' }
       ],
       users: [],
@@ -112,8 +137,10 @@ export default {
         id: -1,
         username: '',
         password: '',
+        password2: '',
         roles: []
       },
+      currentUser: {},
       time: 1000,
       alert: false,
       errorMessage: '',
@@ -142,60 +169,84 @@ export default {
       this.checkUsers()
     },
 
-    editUser: function (id) {
+    editUser: function (currentUser) {
       this.dialog = true
-      this.user.id = id
+      this.user.id = currentUser.id
+      var admin = false
+      for (var role in currentUser.roles) {
+        if (currentUser.roles[role] === 'admin') {
+          admin = true
+        }
+      }
+      this.adminCheckbox = admin
+      this.currentUser = currentUser
     },
 
     updateUser: function () {
-      if (this.adminCheckbox) {
-        this.user.roles.push('admin')
-      }
-      if (this.userCheckbox) {
+      if (this.user.password === this.user.password2) {
+        if (this.adminCheckbox) {
+          this.user.roles.push('admin')
+        }
         this.user.roles.push('user')
+        var updatedUser = {
+          id: this.user.id
+        }
+        if (this.user.username !== '') {
+          updatedUser['username'] = this.user.username
+        }
+        if (this.user.password !== '') {
+          updatedUser['password'] = this.user.password
+        }
+        if (this.user.roles.length > 0) {
+          updatedUser['roles'] = this.user.roles
+        }
+        api
+          .request('put', '/user', this.$store.state.accessToken, updatedUser)
+          .then(response => {
+            this.user = {
+              id: -1,
+              username: '',
+              password: '',
+              password2: '',
+              roles: []
+            }
+            this.adminCheckbox = false
+            this.userCheckbox = false
+            this.dialog = false
+            this.checkUsers()
+          })
+          .catch(error => {
+            this.pagination = {}
+            if (!error.hasOwnProperty('response')) {
+              this.errorMessage = error.message
+            } else {
+              this.errorMessage = error.response.data.msg
+            }
+            this.alert = true
+          })
+      } else {
+        this.errorMessage = 'Passwords do not match'
+        this.alert = true
       }
-      var updatedUser = {
-        id: this.user.id
-      }
-      if (this.user.username !== '') {
-        updatedUser['username'] = this.user.username
-      }
-      if (this.user.password !== '') {
-        updatedUser['password'] = this.user.password
-      }
-      if (this.user.roles.length > 0) {
-        updatedUser['roles'] = this.user.roles
-      }
-      api
-        .request('put', '/user', this.$store.state.accessToken, updatedUser)
-        .then(response => {
-          this.user = {
-            id: -1,
-            username: '',
-            password: '',
-            roles: []
-          }
-          this.adminCheckbox = false
-          this.userCheckbox = false
-          this.dialog = false
-          this.checkUsers()
-        })
-        .catch(error => {
-          this.pagination = {}
-          if (!error.hasOwnProperty('response')) {
-            this.errorMessage = error.message
-          } else {
-            this.errorMessage = error.response.data.msg
-          }
-          this.alert = true
-        })
     },
-
     checkUsers: function () {
       api
         .request('get', '/users', this.$store.state.accessToken)
         .then(response => {
           this.users = response.data
+          for (var user in this.users) {
+            var admin = false
+            for (var role in this.users[user].roles) {
+              if (this.users[user].roles[role] === 'admin') {
+                admin = true
+              }
+            }
+            if (admin) {
+              this.users[user]['role'] = 'admin'
+            } else {
+              this.users[user]['role'] = 'user'
+            }
+          }
           this.pagination['totalItems'] = this.users.length
           this.pagination['rowsPerPage'] = 30
         })
