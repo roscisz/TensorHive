@@ -12,23 +12,6 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class Email:
-    def __init__(self, server, recipients: List[str], body: str):
-        self.server = server
-        self.recipients = recipients
-
-        msg = MIMEMultipart()
-        msg['From'] = EMAIL_BOT.BOT_EMAIL
-        msg['To'] = ', '.join(recipients)
-        msg['Subject'] = EMAIL_BOT.SUBJECT
-        msg.attach(MIMEText(body, 'plain'))
-        self.msg = msg
-
-    def send(self):
-        text = self.msg.as_string()
-        self.server.sendmail(self.msg['From'], self.recipients, text)
-
-
 class EmailSendingBehaviour:
     message = cleandoc('''
                 You are violating {legitimate_owner_username}\'s reservation!
@@ -38,6 +21,7 @@ class EmailSendingBehaviour:
     def __init__(self):
         self.interval = datetime.timedelta(minutes=1)
         self.time_between_notifications = {}
+        self.mailer = Mailer(server=EMAIL_BOT.SMTP_SERVER, port=EMAIL_BOT.SMTP_PORT)
 
     def filter_sessions(self, sessions):
         result = []
@@ -76,15 +60,7 @@ class EmailSendingBehaviour:
             # to penalize (they must wait until timer resets)
             return
 
-        # Prepare mail server connection
-        server = smtplib.SMTP(EMAIL_BOT.SMTP_SERVER, EMAIL_BOT.SMTP_PORT)
-        server.starttls()
-
-        # Log in
-        password = os.getenv(EMAIL_BOT.PASSWORD_ENV_VAR)
-        assert password, 'TODO Refactor: Password env var is missing!'
-        server.login(EMAIL_BOT.BOT_EMAIL, password)
-
+        self.mailer.connect(login=EMAIL_BOT.SMTP_LOGIN, password=os.getenv(EMAIL_BOT.SMTP_PASSWORD_ENV))
         for session in sessions:
             recipients = []
             try:
@@ -109,5 +85,7 @@ class EmailSendingBehaviour:
                     legitimate_owner_username=session['LEGITIMATE_USER'],
                     gpu_uuid=session['GPU_UUID']
                 )
-                Email(server, recipients, email_body).send()
-        server.quit()
+                email = Message(author=EMAIL_BOT.SMTP_LOGIN, to=recipients, subject=EMAIL_BOT.SUBJECT, body=email_body)
+                self.mailer.send(email)
+                log.debug('Email sent to: {}'.format(email.recipients))
+        self.mailer.disconnect()
