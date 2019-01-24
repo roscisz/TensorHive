@@ -1,10 +1,11 @@
 from pathlib import PosixPath
 import configparser
 from typing import Dict, Optional, Any, List
-import logging
+from inspect import cleandoc
 import shutil
 import tensorhive
-
+import os
+import logging
 log = logging.getLogger(__name__)
 
 
@@ -79,6 +80,18 @@ def display_config(cls):
     for key, value in cls.__dict__.items():
         if key.isupper():
             print('{} = {}'.format(key, value))
+
+
+def check_env_var(name: str):
+    '''Makes sure that env variable is declared'''
+    if not os.getenv(name):
+        msg = cleandoc(
+            '''
+            {env} - undeclared environment variable!
+            Try this: `export {env}="..."`
+            ''').format(env=name).split('\n')
+        log.warning(msg[0])
+        log.warning(msg[1])
 
 
 class SSH:
@@ -186,12 +199,24 @@ class EMAIL_BOT:
     NOTIFY_ADMIN = config.getboolean(section, 'notify_admin', fallback=True)
     ADMIN_EMAIL = config.get(section, 'admin_email', fallback=None)
 
-    BOT_EMAIL = config.get(section, 'bot_email', fallback=None)
-    PASSWORD_ENV_VAR = config.get(section, 'password_env_var', fallback='TH_EMAIL_PASS')
+    # TODO Fill in missing fallbacks?
+    SMTP_LOGIN = config.get(section, 'email')
+    SMTP_PASSWORD_ENV = config.get(section, 'password_env_var')
     SUBJECT = config.get(section, 'subject')
 
     SMTP_SERVER = config.get(section, 'smtp_server', fallback=None)
     SMTP_PORT = config.getint(section, 'smtp_port', fallback=587)
+
+    if NOTIFY_INTRUDER or NOTIFY_ADMIN:
+        check_env_var(SMTP_LOGIN_ENV)
+        check_env_var(SMTP_PASSWORD_ENV)
+            '''
+            {env} - undeclared environment variable!
+            Try this: `export {env}='your_password_here'`
+            ''').format(env=SMTP_PASSWORD_ENV).split('\n')
+        log.warning(msg[0])
+        log.warning(msg[1])
+
 
 class AUTH:
     from datetime import timedelta
