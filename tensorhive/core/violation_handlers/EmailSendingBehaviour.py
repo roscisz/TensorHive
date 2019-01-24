@@ -43,7 +43,7 @@ class EmailSendingBehaviour:
                     del time_left[username]
                 else:
                     #FIXME Remove this later
-                    log.debug('Delaying email Next attempt in {}'.format(self.interval - (timenow - timer)))
+                    log.debug('Email warning postponed, next attempt in {}'.format(self.interval - (timenow - timer)))
                     # That session is not ready to be penalized
                     pass
             else:
@@ -69,9 +69,9 @@ class EmailSendingBehaviour:
     def trigger_action(self, connection, unauthorized_sessions):
         sessions = self.filter_sessions(unauthorized_sessions)
 
+        # There's no need to go further if we have no sessions
+        # to penalize (they must wait until timer resets)
         if not sessions:
-            # There's no need to go further if we have no sessions 
-            # to penalize (they must wait until timer resets)
             return
 
         self.mailer.connect(
@@ -81,14 +81,16 @@ class EmailSendingBehaviour:
 
         for session in sessions:
             recipients = []
+
+            # Try to fetch intruder's account
             try:
-                # Fetch user
                 username = session['USER']
                 user = User.find_by_username(username)
                 recipients.append(user.email)
-            except Exception as e:
+            except NoResultFound as e:
                 log.error('Cannot send email to {}, reason: no account!'.format(username))
-                #log.error(e) 
+            except Exception as e:
+                log.critical(e)
 
             # Admin should always get a notification
             # Even when intruder does not have an account

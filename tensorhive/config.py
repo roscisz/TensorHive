@@ -209,12 +209,9 @@ class MAILBOT:
     if NOTIFY_INTRUDER or NOTIFY_ADMIN:
         check_env_var(SMTP_LOGIN_ENV)
         check_env_var(SMTP_PASSWORD_ENV)
-            '''
+
     if NOTIFY_ADMIN and not ADMIN_EMAIL:
         log.warning('Invalid admin email address, check your config.')
-            ''').format(env=SMTP_PASSWORD_ENV).split('\n')
-        log.warning(msg[0])
-        log.warning(msg[1])
 
 
 class AUTH:
