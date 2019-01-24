@@ -53,6 +53,18 @@ class EmailSendingBehaviour:
         # self.time_between_notifications = time_left
         return result
 
+    def prepare_message(self, session: Dict[str, Any], recipients: List[str]) -> Message:
+        email_body = self.message.format(
+            legitimate_owner_username=session['LEGITIMATE_USER'],
+            gpu_uuid=session['GPU_UUID']
+        )
+        return Message(
+            author=os.getenv(MAILBOT.SMTP_LOGIN_ENV),
+            to=recipients,
+            subject='Reservation has been violated',
+            body=email_body
+        )
+
     @override
     def trigger_action(self, connection, unauthorized_sessions):
         sessions = self.filter_sessions(unauthorized_sessions)

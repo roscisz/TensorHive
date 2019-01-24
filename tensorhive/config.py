@@ -202,7 +202,6 @@ class MAILBOT:
     # TODO Fill in missing fallbacks?
     SMTP_LOGIN_ENV = config.get(section, 'email_env_var')
     SMTP_PASSWORD_ENV = config.get(section, 'password_env_var')
-    SUBJECT = config.get(section, 'subject')
 
     SMTP_SERVER = config.get(section, 'smtp_server', fallback=None)
     SMTP_PORT = config.getint(section, 'smtp_port', fallback=587)
