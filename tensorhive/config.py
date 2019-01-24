@@ -200,7 +200,7 @@ class MAILBOT:
     ADMIN_EMAIL = config.get(section, 'admin_email', fallback=None)
 
     # TODO Fill in missing fallbacks?
-    SMTP_LOGIN = config.get(section, 'email')
+    SMTP_LOGIN_ENV = config.get(section, 'email_env_var')
     SMTP_PASSWORD_ENV = config.get(section, 'password_env_var')
     SUBJECT = config.get(section, 'subject')
 
