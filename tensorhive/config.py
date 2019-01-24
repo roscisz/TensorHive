@@ -193,8 +193,8 @@ class PROTECTION_SERVICE:
     NOTIFY_ON_PTY = config.getboolean(section, 'notify_on_pty', fallback=True)
     NOTIFY_VIA_EMAIL = config.getboolean(section, 'notify_on_pty', fallback=True)
 
-class EMAIL_BOT:
-    section = 'email_bot'
+class MAILBOT:
+    section = 'mailbot'
     NOTIFY_INTRUDER = config.getboolean(section, 'notify_intruder', fallback=True)
     NOTIFY_ADMIN = config.getboolean(section, 'notify_admin', fallback=True)
     ADMIN_EMAIL = config.get(section, 'admin_email', fallback=None)
