@@ -1,7 +1,8 @@
 from tensorhive.core.utils.decorators.override import override
+from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.models.User import User
-from typing import Generator, Dict, List
-from tensorhive.config import EMAIL_BOT
+from typing import Generator, Dict, List, Any
+from tensorhive.config import MAILBOT
 from tensorhive.core.utils.mailer import Mailer, Message
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -22,7 +23,7 @@ class EmailSendingBehaviour:
     def __init__(self):
         self.interval = datetime.timedelta(minutes=1)
         self.time_between_notifications = {}
-        self.mailer = Mailer(server=EMAIL_BOT.SMTP_SERVER, port=EMAIL_BOT.SMTP_PORT)
+        self.mailer = Mailer(server=MAILBOT.SMTP_SERVER, port=MAILBOT.SMTP_PORT)
 
     def filter_sessions(self, sessions):
         result = []
@@ -61,7 +62,11 @@ class EmailSendingBehaviour:
             # to penalize (they must wait until timer resets)
             return
 
-        self.mailer.connect(login=EMAIL_BOT.SMTP_LOGIN, password=os.getenv(EMAIL_BOT.SMTP_PASSWORD_ENV))
+        self.mailer.connect(
+            login=os.getenv(MAILBOT.SMTP_LOGIN_ENV),
+            password=os.getenv(MAILBOT.SMTP_PASSWORD_ENV)
+        )
+
         for session in sessions:
             recipients = []
             try:

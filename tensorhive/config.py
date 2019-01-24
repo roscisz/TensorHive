@@ -197,7 +197,7 @@ class MAILBOT:
     section = 'mailbot'
     NOTIFY_INTRUDER = config.getboolean(section, 'notify_intruder', fallback=True)
     NOTIFY_ADMIN = config.getboolean(section, 'notify_admin', fallback=True)
-    ADMIN_EMAIL = config.get(section, 'admin_email', fallback=None)
+    ADMIN_EMAIL = config.get(section, 'admin_email', fallback='')
 
     # TODO Fill in missing fallbacks?
     SMTP_LOGIN_ENV = config.get(section, 'email_env_var')
@@ -211,8 +211,8 @@ class MAILBOT:
         check_env_var(SMTP_LOGIN_ENV)
         check_env_var(SMTP_PASSWORD_ENV)
             '''
-            {env} - undeclared environment variable!
-            Try this: `export {env}='your_password_here'`
+    if NOTIFY_ADMIN and not ADMIN_EMAIL:
+        log.warning('Invalid admin email address, check your config.')
             ''').format(env=SMTP_PASSWORD_ENV).split('\n')
         log.warning(msg[0])
         log.warning(msg[1])
