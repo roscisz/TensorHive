@@ -2,6 +2,7 @@ from tensorhive.core.utils.decorators.override import override
 from tensorhive.models.User import User
 from typing import Generator, Dict, List
 from tensorhive.config import EMAIL_BOT
+from tensorhive.core.utils.mailer import Mailer, Message
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from inspect import cleandoc
@@ -69,9 +70,9 @@ class EmailSendingBehaviour:
                 user = User.find_by_username(username)
                 recipients.append(user.email)
             except Exception as e:
-                log.error('Intruder does not have an account!')
-                log.error(e)
-            
+                log.error('Cannot send email to {}, reason: no account!'.format(username))
+                #log.error(e) 
+
             # Admin should always get a notification
             # Even when intruder does not have an account
             if EMAIL_BOT.NOTIFY_ADMIN:
