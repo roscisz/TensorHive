@@ -94,18 +94,18 @@ class EmailSendingBehaviour:
 
             # Admin should always get a notification
             # Even when intruder does not have an account
-            if EMAIL_BOT.NOTIFY_ADMIN:
-                recipients.append(EMAIL_BOT.ADMIN_EMAIL)    
+            # That's why it's separate try/except
+            try:
+                if MAILBOT.NOTIFY_ADMIN:
+                    recipients.append(MAILBOT.ADMIN_EMAIL)
 
-            # Send message only if intruder has an account
-            # and admin enabled self-notifications
-            if recipients:
                 # Prepare email and send
-                email_body = self.message.format(
-                    legitimate_owner_username=session['LEGITIMATE_USER'],
-                    gpu_uuid=session['GPU_UUID']
-                )
-                email = Message(author=EMAIL_BOT.SMTP_LOGIN, to=recipients, subject=EMAIL_BOT.SUBJECT, body=email_body)
+                assert recipients
+                email = self.prepare_message(session, recipients)
                 self.mailer.send(email)
                 log.debug('Email sent to: {}'.format(email.recipients))
+            except AssertionError as e:
+                pass
+            except Exception as e:
+                log.critical(e)
         self.mailer.disconnect()
