@@ -17,3 +17,6 @@ build/
 
 # database
 **/*.db
+
+# config
+tensorhive/app/web/dist/static/config.json
