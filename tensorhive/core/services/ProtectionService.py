@@ -117,7 +117,8 @@ class ProtectionService(Service):
         return [
             '/usr/lib/xorg/Xorg',
             '/usr/bin/X',
-            'X'
+            'X',
+            '-'  # nvidia-smi on TITAN X shows this for whatever reason...
         ]
 
     def gpu_users(self, node_processes, uuid) -> List[str]:
