@@ -227,6 +227,9 @@ class MAILBOT:
     INTRUDER_SUBJECT = mailbot_config.get(section, 'subject')
     INTRUDER_BODY_TEMPLATE = mailbot_config.get(section, 'html_body')
 
+    section = 'template/admin'
+    ADMIN_SUBJECT = mailbot_config.get(section, 'subject')
+    ADMIN_BODY_TEMPLATE = mailbot_config.get(section, 'html_body')
 
 class AUTH:
     from datetime import timedelta
