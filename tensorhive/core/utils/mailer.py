@@ -1,6 +1,6 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Union, List
+from typing import Union, Dict, Any, Optional, List
 import smtplib
 import os
 import logging
@@ -45,6 +45,30 @@ class Message:
             Subject: {}
             Body: {}
             '''.format(self.author, self.recipients, self.subject, self.body)
+
+class MessageBodyTemplater:
+    def __init__(self, template: str):
+        self.template = template
+
+    def fill_in(self, data: Dict[str, Any]) -> str:
+        try:
+            body = self.template.format(
+                hostname=data['HOSTNAME'],
+                gpu_name='TODO',
+                gpu_uuid=data['UUID'],
+                intruder_username=data['INTRUDER_USERNAME'],
+                intruder_email=data['INTRUDER_EMAIL'],
+                owner_username=data['RESERVATION_OWNER_USERNAME'],
+                owner_email=data['RESERVATION_OWNER_EMAIL'],
+                reservation_end=data['RESERVATION_END'],
+            )
+        except (KeyError, Exception) as e:
+            log.error(e)
+            # Put raw, unformatted body
+            body = self.template
+        finally:
+            return body
+
 
 class Mailer:
     def __init__(self, server: str, port: int):
