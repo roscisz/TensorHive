@@ -38,6 +38,13 @@ class Message:
     def body(self):
         return self.msg.as_string()
 
+    def __str__(self):
+        return '''
+            From: {}
+            To: {}
+            Subject: {}
+            Body: {}
+            '''.format(self.author, self.recipients, self.subject, self.body)
 
 class Mailer:
     def __init__(self, server: str, port: int):
