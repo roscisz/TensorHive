@@ -161,6 +161,15 @@ class ProtectionService(Service):
             node_processes = self.node_gpu_processes(hostname)
             reserved_gpu_process_owners = self.gpu_users(node_processes, uuid)
 
+            try:
+                # Priviliged user can be ignored on this list
+                reserved_gpu_process_owners.remove(username)
+            except ValueError:
+                pass
+            finally:
+                unpriviliged_gpu_process_owners = reserved_gpu_process_owners
+
+
             # 3. Any session that does not belong to a priviliged user should be remembered
             unauthorized_sessions = []
             for session in node_sessions:
@@ -174,8 +183,18 @@ class ProtectionService(Service):
 
             # 4. Execute handler's behaviour on unauthorized ttys
             if len(unauthorized_sessions) > 0:
-                for handler in self.violation_handlers:
-                    handler.trigger_action(node_connection, unauthorized_sessions)
+                self.violation_handlers[0].trigger_action(node_connection, unauthorized_sessions)
+
+            # FIXME Temporary solution, refactor
+            # Only reservation owner can use GPU
+            for intruder in unpriviliged_gpu_process_owners:
+                violation_data = {
+                    'INTRUDER': intruder,
+                    'RESERVATION_OWNER': username,
+                    'UUID': uuid,
+                    'HOSTNAME': hostname
+                }
+                self.violation_handlers[1].trigger_action(violation_data)
 
         end_time = time_func()
         execution_time = end_time - start_time
