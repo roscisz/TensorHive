@@ -30,33 +30,26 @@ class EmailSendingBehaviour:
         # self.time_between_notifications = time_left
         return result
 
-    # def time_since_last_email(self, username: str) -> datetime.timedelta:
-    #     '''
-    #     Keeps track of every email time since last email was sent to
-    #     a specific user.
-    #     '''
-    #     # Use shorter name (alias)
-    #     time_left = self.time_between_notifications
-    #     last_email_time = time_left.get(username)
-    #     timenow = datetime.datetime.utcnow()
-
-    #     if last_email_time:
-    #         if last_email_time + self.interval <= timenow:
-    #             del time_left[username]
-    #     else:
-    #         time_left[username] = timenow
-
     def prepare_message(self, violation_data: Dict[str, Any], recipients: List[str]) -> Message:
-        email_body = self.message.format(
-            legitimate_owner_username=violation_data['RESERVATION_OWNER'],
-            gpu_uuid=violation_data['UUID']
-        )
-        return Message(
-            author=os.getenv(MAILBOT.SMTP_LOGIN_ENV),
-            to=recipients,
-            subject='Reservation has been violated',
-            body=email_body
-        )
+        try:
+            email_body = MAILBOT.INTRUDER_BODY_TEMPLATE.format(
+                hostname=violation_data['HOSTNAME'],
+                gpu_name='TODO',
+                gpu_uuid=violation_data['UUID'],
+                reservation_owner=violation_data['RESERVATION_OWNER'],
+                reservation_end=violation_data['RESERVATION_END'],
+            )
+        except (KeyError, Exception) as e:
+            log.error(e)
+            # Put raw, unformatted body text
+            email_body = MAILBOT.INTRUDER_BODY_TEMPLATE
+        finally:
+            return Message(
+                author=os.getenv(MAILBOT.SMTP_LOGIN_ENV),
+                to=recipients,
+                subject=MAILBOT.INTRUDER_SUBJECT,
+                body=email_body
+            )
 
     def fetch_email_address(self, username: str) -> Optional[str]:
         email = None
@@ -112,7 +105,7 @@ class EmailSendingBehaviour:
             email = self.prepare_message(violation_data, recipients)
             self.mailer.send(email)
         except AssertionError as e:
-            log.error(e)
+            pass
         except Exception as e:
             log.critical(e)
         else:

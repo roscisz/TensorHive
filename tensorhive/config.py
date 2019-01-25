@@ -225,7 +225,7 @@ class MAILBOT:
     # FIXME Not sure if this should be required
     section = 'template/intruder'
     INTRUDER_SUBJECT = mailbot_config.get(section, 'subject')
-    INTRUDER_BODY_TEMPLATE = mailbot_config.get(section, 'body')
+    INTRUDER_BODY_TEMPLATE = mailbot_config.get(section, 'html_body')
 
 
 class AUTH:
