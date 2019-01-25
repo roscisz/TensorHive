@@ -79,10 +79,14 @@ class EmailSendingBehaviour:
     @override
     def trigger_action(self, violation_data: Dict[str, Any]):
         # TODO FRIDAY: Admin and intruder get different messages
+        # Expect proper keys beforehand
+        assert set([
+            'INTRUDER',
+            'RESERVATION_OWNER',
+            'RESERVATION_END',
+            'UUID',
+            'HOSTNAME']).issubset(violation_data), 'Invalid keys in violation_data'
         try:
-            # Expect proper keys beforehand
-            assert set(['INTRUDER', 'RESERVATION_OWNER', 'UUID', 'HOSTNAME']).issubset(violation_data), \
-                'Invalid keys in violation_data'
 
             # Set email's recipients
             recipients = []
