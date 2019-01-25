@@ -200,24 +200,32 @@ class PROTECTION_SERVICE:
     NOTIFY_VIA_EMAIL = config.getboolean(section, 'notify_on_pty', fallback=True)
 
 class MAILBOT:
-    section = 'mailbot'
-    NOTIFY_INTRUDER = config.getboolean(section, 'notify_intruder', fallback=True)
-    NOTIFY_ADMIN = config.getboolean(section, 'notify_admin', fallback=True)
-    ADMIN_EMAIL = config.get(section, 'admin_email', fallback='')
+    mailbot_config = ConfigLoader.load(CONFIG_FILES.MAILBOT_CONFIG_PATH, displayed_title='mailbot')
+    section = 'general'
+    INTERVAL = mailbot_config.getfloat(section, 'interval', fallback=1.0)
+    NOTIFY_INTRUDER = mailbot_config.getboolean(section, 'notify_intruder', fallback=True)
+    NOTIFY_ADMIN = mailbot_config.getboolean(section, 'notify_admin', fallback=True)
+    ADMIN_EMAIL = mailbot_config.get(section, 'admin_email', fallback='')
 
-    # TODO Fill in missing fallbacks?
-    SMTP_LOGIN_ENV = config.get(section, 'email_env_var')
-    SMTP_PASSWORD_ENV = config.get(section, 'password_env_var')
+    # FIXME Not sure if this should be required
+    section = 'smtp'
+    SMTP_LOGIN_ENV = mailbot_config.get(section, 'email_env_var')
+    SMTP_PASSWORD_ENV = mailbot_config.get(section, 'password_env_var')
+    SMTP_SERVER = mailbot_config.get(section, 'smtp_server', fallback=None)
+    SMTP_PORT = mailbot_config.getint(section, 'smtp_port', fallback=587)
 
-    SMTP_SERVER = config.get(section, 'smtp_server', fallback=None)
-    SMTP_PORT = config.getint(section, 'smtp_port', fallback=587)
-
+    # Simple checks between 'general' and 'smtp' section
     if NOTIFY_INTRUDER or NOTIFY_ADMIN:
         check_env_var(SMTP_LOGIN_ENV)
         check_env_var(SMTP_PASSWORD_ENV)
 
     if NOTIFY_ADMIN and not ADMIN_EMAIL:
         log.warning('Invalid admin email address, check your config.')
+
+    # FIXME Not sure if this should be required
+    section = 'template/intruder'
+    INTRUDER_SUBJECT = mailbot_config.get(section, 'subject')
+    INTRUDER_BODY_TEMPLATE = mailbot_config.get(section, 'body')
 
 
 class AUTH:
