@@ -10,15 +10,19 @@ log = logging.getLogger(__name__)
 
 
 class CONFIG_FILES:
-    # TensorHive tries to load these by default
+    # Where to copy files
+    # (TensorHive tries to load these by default)
     config_dir = PosixPath.home() / '.config/TensorHive'
     MAIN_CONFIG_PATH = str(config_dir / 'main_config.ini')
     HOSTS_CONFIG_PATH = str(config_dir / 'hosts_config.ini')
+    MAILBOT_CONFIG_PATH = str(config_dir / 'mailbot_config.ini')
 
-    # Clone these files when default files are not found (and user does not)
+    # Where to get file templates from
+    # (Clone file when it's not found in config directory)
     tensorhive_package_dir = PosixPath(__file__).parent
     MAIN_CONFIG_TEMPLATE_PATH = str(tensorhive_package_dir / 'main_config.ini')
     HOSTS_CONFIG_TEMPLATE_PATH = str(tensorhive_package_dir / 'hosts_config.ini')
+    MAILBOT_TEMPLATE_CONFIG_PATH = str(tensorhive_package_dir / 'mailbot_config.ini')
 
 
 class ConfigInitilizer:
@@ -26,10 +30,11 @@ class ConfigInitilizer:
 
     def __init__(self):
         # 1. Check if all config files exist
-        both_exist = PosixPath(CONFIG_FILES.MAIN_CONFIG_PATH).exists() and \
-            PosixPath(CONFIG_FILES.HOSTS_CONFIG_PATH).exists()
+        all_exist = PosixPath(CONFIG_FILES.MAIN_CONFIG_PATH).exists() and \
+            PosixPath(CONFIG_FILES.HOSTS_CONFIG_PATH).exists() and \
+            PosixPath(CONFIG_FILES.MAILBOT_CONFIG_PATH).exists()
 
-        if not both_exist:
+        if not all_exist:
             log.warning('[•] Detected missing default config file(s), recreating...')
             self.recreate_default_configuration_files()
 
@@ -41,6 +46,7 @@ class ConfigInitilizer:
             # 2. Clone templates safely from `tensorhive` package
             self.safe_copy(src=CONFIG_FILES.MAIN_CONFIG_TEMPLATE_PATH, dst=CONFIG_FILES.MAIN_CONFIG_PATH)
             self.safe_copy(src=CONFIG_FILES.HOSTS_CONFIG_TEMPLATE_PATH, dst=CONFIG_FILES.HOSTS_CONFIG_PATH)
+            self.safe_copy(src=CONFIG_FILES.MAILBOT_TEMPLATE_CONFIG_PATH, dst=CONFIG_FILES.MAILBOT_CONFIG_PATH)
         except Exception:
             log.error('[✘] Unable to recreate configuration files.')
 
