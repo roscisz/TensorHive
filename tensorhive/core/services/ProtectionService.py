@@ -117,7 +117,8 @@ class ProtectionService(Service):
         return [
             '/usr/lib/xorg/Xorg',
             '/usr/bin/X',
-            'X'
+            'X',
+            '-'  # nvidia-smi on TITAN X shows this for whatever reason...
         ]
 
     def gpu_users(self, node_processes, uuid) -> List[str]:
@@ -150,7 +151,8 @@ class ProtectionService(Service):
             # 1. Extract reservation info
             uuid = reservation.protected_resource_id
             hostname = self.find_hostname(uuid)
-            username = User.get(reservation.user_id).username
+            user = User.get(reservation.user_id)
+            username = user.username
             if hostname is None or username is None:
                 log.warning('Unable to process the reservation ({}@{}), skipping...'.format(username, hostname))
                 continue
@@ -189,8 +191,10 @@ class ProtectionService(Service):
             # Only reservation owner can use GPU
             for intruder in unpriviliged_gpu_process_owners:
                 violation_data = {
-                    'INTRUDER': intruder,
-                    'RESERVATION_OWNER': username,
+                    'INTRUDER_USERNAME': intruder,
+                    'RESERVATION_OWNER_USERNAME': username,
+                    'RESERVATION_OWNER_EMAIL': user.email,
+                    'RESERVATION_END': reservation.ends_at,
                     'UUID': uuid,
                     'HOSTNAME': hostname
                 }

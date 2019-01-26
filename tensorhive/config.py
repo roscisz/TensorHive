@@ -10,15 +10,19 @@ log = logging.getLogger(__name__)
 
 
 class CONFIG_FILES:
-    # TensorHive tries to load these by default
+    # Where to copy files
+    # (TensorHive tries to load these by default)
     config_dir = PosixPath.home() / '.config/TensorHive'
     MAIN_CONFIG_PATH = str(config_dir / 'main_config.ini')
     HOSTS_CONFIG_PATH = str(config_dir / 'hosts_config.ini')
+    MAILBOT_CONFIG_PATH = str(config_dir / 'mailbot_config.ini')
 
-    # Clone these files when default files are not found (and user does not)
+    # Where to get file templates from
+    # (Clone file when it's not found in config directory)
     tensorhive_package_dir = PosixPath(__file__).parent
     MAIN_CONFIG_TEMPLATE_PATH = str(tensorhive_package_dir / 'main_config.ini')
     HOSTS_CONFIG_TEMPLATE_PATH = str(tensorhive_package_dir / 'hosts_config.ini')
+    MAILBOT_TEMPLATE_CONFIG_PATH = str(tensorhive_package_dir / 'mailbot_config.ini')
 
 
 class ConfigInitilizer:
@@ -26,10 +30,11 @@ class ConfigInitilizer:
 
     def __init__(self):
         # 1. Check if all config files exist
-        both_exist = PosixPath(CONFIG_FILES.MAIN_CONFIG_PATH).exists() and \
-            PosixPath(CONFIG_FILES.HOSTS_CONFIG_PATH).exists()
+        all_exist = PosixPath(CONFIG_FILES.MAIN_CONFIG_PATH).exists() and \
+            PosixPath(CONFIG_FILES.HOSTS_CONFIG_PATH).exists() and \
+            PosixPath(CONFIG_FILES.MAILBOT_CONFIG_PATH).exists()
 
-        if not both_exist:
+        if not all_exist:
             log.warning('[•] Detected missing default config file(s), recreating...')
             self.recreate_default_configuration_files()
 
@@ -41,6 +46,7 @@ class ConfigInitilizer:
             # 2. Clone templates safely from `tensorhive` package
             self.safe_copy(src=CONFIG_FILES.MAIN_CONFIG_TEMPLATE_PATH, dst=CONFIG_FILES.MAIN_CONFIG_PATH)
             self.safe_copy(src=CONFIG_FILES.HOSTS_CONFIG_TEMPLATE_PATH, dst=CONFIG_FILES.HOSTS_CONFIG_PATH)
+            self.safe_copy(src=CONFIG_FILES.MAILBOT_TEMPLATE_CONFIG_PATH, dst=CONFIG_FILES.MAILBOT_CONFIG_PATH)
         except Exception:
             log.error('[✘] Unable to recreate configuration files.')
 
@@ -194,18 +200,21 @@ class PROTECTION_SERVICE:
     NOTIFY_VIA_EMAIL = config.getboolean(section, 'notify_on_pty', fallback=True)
 
 class MAILBOT:
-    section = 'mailbot'
-    NOTIFY_INTRUDER = config.getboolean(section, 'notify_intruder', fallback=True)
-    NOTIFY_ADMIN = config.getboolean(section, 'notify_admin', fallback=True)
-    ADMIN_EMAIL = config.get(section, 'admin_email', fallback='')
+    mailbot_config = ConfigLoader.load(CONFIG_FILES.MAILBOT_CONFIG_PATH, displayed_title='mailbot')
+    section = 'general'
+    INTERVAL = mailbot_config.getfloat(section, 'interval', fallback=1.0)
+    NOTIFY_INTRUDER = mailbot_config.getboolean(section, 'notify_intruder', fallback=True)
+    NOTIFY_ADMIN = mailbot_config.getboolean(section, 'notify_admin', fallback=True)
+    ADMIN_EMAIL = mailbot_config.get(section, 'admin_email', fallback='')
 
-    # TODO Fill in missing fallbacks?
-    SMTP_LOGIN_ENV = config.get(section, 'email_env_var')
-    SMTP_PASSWORD_ENV = config.get(section, 'password_env_var')
+    # FIXME Not sure if this should be required
+    section = 'smtp'
+    SMTP_LOGIN_ENV = mailbot_config.get(section, 'email_env_var')
+    SMTP_PASSWORD_ENV = mailbot_config.get(section, 'password_env_var')
+    SMTP_SERVER = mailbot_config.get(section, 'smtp_server', fallback=None)
+    SMTP_PORT = mailbot_config.getint(section, 'smtp_port', fallback=587)
 
-    SMTP_SERVER = config.get(section, 'smtp_server', fallback=None)
-    SMTP_PORT = config.getint(section, 'smtp_port', fallback=587)
-
+    # Simple checks between 'general' and 'smtp' section
     if NOTIFY_INTRUDER or NOTIFY_ADMIN:
         check_env_var(SMTP_LOGIN_ENV)
         check_env_var(SMTP_PASSWORD_ENV)
@@ -213,6 +222,14 @@ class MAILBOT:
     if NOTIFY_ADMIN and not ADMIN_EMAIL:
         log.warning('Invalid admin email address, check your config.')
 
+    # FIXME Not sure if this should be required
+    section = 'template/intruder'
+    INTRUDER_SUBJECT = mailbot_config.get(section, 'subject')
+    INTRUDER_BODY_TEMPLATE = mailbot_config.get(section, 'html_body')
+
+    section = 'template/admin'
+    ADMIN_SUBJECT = mailbot_config.get(section, 'subject')
+    ADMIN_BODY_TEMPLATE = mailbot_config.get(section, 'html_body')
 
 class AUTH:
     from datetime import timedelta

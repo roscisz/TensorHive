@@ -3,7 +3,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.models.User import User
 from typing import Generator, Dict, List, Any, Optional
 from tensorhive.config import MAILBOT
-from tensorhive.core.utils.mailer import Mailer, Message
+from tensorhive.core.utils.mailer import Mailer, Message, MessageBodyTemplater
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from inspect import cleandoc
@@ -30,31 +30,27 @@ class EmailSendingBehaviour:
         # self.time_between_notifications = time_left
         return result
 
-    # def time_since_last_email(self, username: str) -> datetime.timedelta:
-    #     '''
-    #     Keeps track of every email time since last email was sent to
-    #     a specific user.
-    #     '''
-    #     # Use shorter name (alias)
-    #     time_left = self.time_between_notifications
-    #     last_email_time = time_left.get(username)
-    #     timenow = datetime.datetime.utcnow()
+    def prepare_intruder_message(self, violation_data: Dict[str, Any], recipients: List[str]) -> Message:
+        email_body = MessageBodyTemplater(
+            template=MAILBOT.INTRUDER_BODY_TEMPLATE
+        ).fill_in(data=violation_data)
 
-    #     if last_email_time:
-    #         if last_email_time + self.interval <= timenow:
-    #             del time_left[username]
-    #     else:
-    #         time_left[username] = timenow
-
-    def prepare_message(self, violation_data: Dict[str, Any], recipients: List[str]) -> Message:
-        email_body = self.message.format(
-            legitimate_owner_username=violation_data['RESERVATION_OWNER'],
-            gpu_uuid=violation_data['UUID']
-        )
         return Message(
             author=os.getenv(MAILBOT.SMTP_LOGIN_ENV),
             to=recipients,
-            subject='Reservation has been violated',
+            subject=MAILBOT.INTRUDER_SUBJECT,
+            body=email_body
+        )
+
+    def prepare_admin_message(self, violation_data: Dict[str, Any], recipients: List[str]) -> Message:
+        email_body = MessageBodyTemplater(
+            template=MAILBOT.INTRUDER_BODY_TEMPLATE
+        ).fill_in(data=violation_data)
+
+        return Message(
+            author=os.getenv(MAILBOT.SMTP_LOGIN_ENV),
+            to=recipients,
+            subject=MAILBOT.INTRUDER_SUBJECT,
             body=email_body
         )
 
@@ -83,41 +79,67 @@ class EmailSendingBehaviour:
         finally:
             return ready_status
 
+    # TODO Refactor these two clunky, redundant methods
+    def send_email_to_intruder(self, violation_data: Dict[str, Any]):
+        author = os.getenv(MAILBOT.SMTP_LOGIN_ENV)
+        recipient = violation_data['INTRUDER_EMAIL']
+        email_body = MessageBodyTemplater(template=MAILBOT.INTRUDER_BODY_TEMPLATE).fill_in(data=violation_data)
+
+        email = Message(
+            author=author,
+            to=[recipient],
+            subject=MAILBOT.INTRUDER_SUBJECT,
+            body=email_body
+        )
+        self.mailer.send(email)
+        self.time_of_last_email[recipient] = datetime.datetime.utcnow()
+        log.debug('Email sent to: {}'.format(recipient))
+
+    def send_email_to_admin(self, violation_data: Dict[str, Any]):
+        author = os.getenv(MAILBOT.SMTP_LOGIN_ENV)
+        recipient = MAILBOT.ADMIN_EMAIL
+        email_body = MessageBodyTemplater(template=MAILBOT.ADMIN_BODY_TEMPLATE).fill_in(data=violation_data)
+
+        email = Message(
+            author=author,
+            to=[recipient],
+            subject=MAILBOT.ADMIN_SUBJECT,
+            body=email_body
+        )
+        self.mailer.send(email)
+        self.time_of_last_email[recipient] = datetime.datetime.utcnow()
+        log.debug('Email sent to: {}'.format(recipient))
+
     @override
     def trigger_action(self, violation_data: Dict[str, Any]):
-        # TODO FRIDAY: Admin and intruder get different messages
+        # Expect proper keys beforehand
+        assert set([
+            'INTRUDER_USERNAME',
+            'RESERVATION_OWNER_USERNAME',
+            'RESERVATION_OWNER_EMAIL',
+            'RESERVATION_END',
+            'UUID',
+            'HOSTNAME']).issubset(violation_data), 'Invalid keys in violation_data'
+        # Initialize mailer connection
+        self.mailer.connect(
+            login=os.getenv(MAILBOT.SMTP_LOGIN_ENV),
+            password=os.getenv(MAILBOT.SMTP_PASSWORD_ENV)
+        )
         try:
-            # Expect proper keys beforehand
-            assert set(['INTRUDER', 'RESERVATION_OWNER', 'UUID', 'HOSTNAME']).issubset(violation_data), \
-                'Invalid keys in violation_data'
+            # Fetch and store intruder's email
+            intruder_email = self.fetch_email_address(username=violation_data['INTRUDER_USERNAME'])
+            violation_data['INTRUDER_EMAIL'] = intruder_email
 
-            # Set email's recipients
-            recipients = []
-            intruder_username = violation_data['INTRUDER']
-            intruder_email = self.fetch_email_address(username=intruder_username)
-
+            # Send emails
             if intruder_email and self.ready_to_send(intruder_email):
-                recipients.append(intruder_email)
+                self.send_email_to_intruder(violation_data)
             if MAILBOT.NOTIFY_ADMIN and self.ready_to_send(MAILBOT.ADMIN_EMAIL):
-                recipients.append(MAILBOT.ADMIN_EMAIL)
-            assert recipients
-
-            # Initialize mailer connection
-            self.mailer.connect(
-                login=os.getenv(MAILBOT.SMTP_LOGIN_ENV),
-                password=os.getenv(MAILBOT.SMTP_PASSWORD_ENV)
-            )
-
-            # Prepare email and send
-            email = self.prepare_message(violation_data, recipients)
-            self.mailer.send(email)
+                self.send_email_to_admin(violation_data)
         except AssertionError as e:
-            log.error(e)
+            pass
         except Exception as e:
             log.critical(e)
+            import traceback
+            traceback.print_exc()
         else:
-            log.debug('Email sent to: {}'.format(email.recipients))
-            # Remember time email was sent
-            for email_address in recipients:
-                self.time_of_last_email[email_address] = datetime.datetime.utcnow()
             self.mailer.disconnect()
