@@ -202,7 +202,7 @@ class PROTECTION_SERVICE:
 class MAILBOT:
     mailbot_config = ConfigLoader.load(CONFIG_FILES.MAILBOT_CONFIG_PATH, displayed_title='mailbot')
     section = 'general'
-    INTERVAL = mailbot_config.getfloat(section, 'interval', fallback=1.0)
+    INTERVAL = mailbot_config.getfloat(section, 'interval', fallback=10.0)
     NOTIFY_INTRUDER = mailbot_config.getboolean(section, 'notify_intruder', fallback=True)
     NOTIFY_ADMIN = mailbot_config.getboolean(section, 'notify_admin', fallback=True)
     ADMIN_EMAIL = mailbot_config.get(section, 'admin_email', fallback='')
