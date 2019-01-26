@@ -21,7 +21,7 @@ class EmailSendingBehaviour:
                 ''')
 
     def __init__(self):
-        self.interval = datetime.timedelta(minutes=1)
+        self.interval = datetime.timedelta(minutes=MAILBOT.INTERVAL)
         self.time_of_last_email = {}
         self.mailer = Mailer(server=MAILBOT.SMTP_SERVER, port=MAILBOT.SMTP_PORT)
 
