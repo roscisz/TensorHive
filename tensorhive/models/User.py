@@ -76,8 +76,9 @@ class User(CRUDModel, Base):
         return username
 
     @validates('email')
-    def validate_username(self, key, email):
-        log.warning('TODO Validate email correctness!')
+    def validate_email(self, key, email):
+        assert re.search("[@.]", email), 'Email not correct'
+        assert 3 < len(username) < 64, 'Email must be between 3 and 64 characters long'
         return email
 
     @classmethod
