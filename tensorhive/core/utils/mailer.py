@@ -54,7 +54,7 @@ class MessageBodyTemplater:
         try:
             body = self.template.format(
                 hostname=data['HOSTNAME'],
-                gpu_name='TODO',
+                gpu_name=data['GPU_NAME'],
                 gpu_uuid=data['UUID'],
                 intruder_username=data['INTRUDER_USERNAME'],
                 intruder_email=data['INTRUDER_EMAIL'],

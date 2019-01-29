@@ -59,7 +59,8 @@ class EmailSendingBehaviour:
         try:
             intruder = User.find_by_username(username)
         except NoResultFound as e:
-            log.error('Cannot find email address for {}, reason: no account!'.format(username))
+            # User does not exist or has no email address
+            pass
         except Exception as e:
             log.critical(e)
         else:

@@ -197,7 +197,7 @@ class PROTECTION_SERVICE:
     ENABLED = config.getboolean(section, 'enabled', fallback=True)
     UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=2.0)
     NOTIFY_ON_PTY = config.getboolean(section, 'notify_on_pty', fallback=True)
-    NOTIFY_VIA_EMAIL = config.getboolean(section, 'notify_on_pty', fallback=True)
+    NOTIFY_VIA_EMAIL = config.getboolean(section, 'notify_via_email', fallback=False)
 
 class MAILBOT:
     mailbot_config = ConfigLoader.load(CONFIG_FILES.MAILBOT_CONFIG_PATH, displayed_title='mailbot')

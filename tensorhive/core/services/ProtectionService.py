@@ -136,6 +136,13 @@ class ProtectionService(Service):
         unique_owners = list(set(owners))
         return unique_owners
 
+    def gpu_name(self, hostname: str, uuid: str) -> str:
+        '''Fetches the value of 'name' attribute for GPU with specific UUID'''
+        infrastructure = self.infrastructure_manager.infrastructure
+        all_gpus = infrastructure.get(hostname, {}).get('GPU', {})
+        gpu = all_gpus.get(uuid, {})
+        return gpu.get('name', '<GPU Name not available>')
+
     @override
     def do_run(self):
         time_func = time.perf_counter
@@ -196,6 +203,7 @@ class ProtectionService(Service):
                     'RESERVATION_OWNER_EMAIL': user.email,
                     'RESERVATION_END': reservation.ends_at,
                     'UUID': uuid,
+                    'GPU_NAME': self.gpu_name(hostname, uuid),
                     'HOSTNAME': hostname
                 }
                 self.violation_handlers[1].trigger_action(violation_data)

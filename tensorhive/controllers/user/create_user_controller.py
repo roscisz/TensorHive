@@ -14,6 +14,7 @@ def create(user):
     try:
         new_user = User(
             username=user['username'],
+            email=user['email'],
             password=user['password'],
             roles=[Role(name='user')]
         )
