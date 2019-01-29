@@ -170,6 +170,9 @@ class ProtectionService(Service):
             node_processes = self.node_gpu_processes(hostname)
             reserved_gpu_process_owners = self.gpu_users(node_processes, uuid)
 
+            is_unpriviliged = lambda sess: sess['USER'] in reserved_gpu_process_owners
+            intruder_ttys = [sess for sess in node_sessions if is_unpriviliged(sess)]
+
             try:
                 # Priviliged user can be ignored on this list
                 reserved_gpu_process_owners.remove(username)
@@ -179,23 +182,7 @@ class ProtectionService(Service):
                 unpriviliged_gpu_process_owners = reserved_gpu_process_owners
 
 
-            # 3. Any session that does not belong to a priviliged user should be remembered
-            unauthorized_sessions = []
-            for session in node_sessions:
-                session_opened_by_unpriviliged_user = session['USER'] != username
-                unpriviliged_user_has_active_gpu_processes = session['USER'] in reserved_gpu_process_owners
-                if session_opened_by_unpriviliged_user and unpriviliged_user_has_active_gpu_processes:
-                    # Inject additional data for handler
-                    session['LEGITIMATE_USER'] = username
-                    session['GPU_UUID'] = uuid
-                    unauthorized_sessions.append(session)
-
-            # 4. Execute handler's behaviour on unauthorized ttys
-            if len(unauthorized_sessions) > 0:
-                self.violation_handlers[0].trigger_action(node_connection, unauthorized_sessions)
-
-            # FIXME Temporary solution, refactor
-            # Only reservation owner can use GPU
+            # 3. Execute protection handlers
             for intruder in unpriviliged_gpu_process_owners:
                 violation_data = {
                     'INTRUDER_USERNAME': intruder,
@@ -204,9 +191,12 @@ class ProtectionService(Service):
                     'RESERVATION_END': reservation.ends_at,
                     'UUID': uuid,
                     'GPU_NAME': self.gpu_name(hostname, uuid),
-                    'HOSTNAME': hostname
+                    'HOSTNAME': hostname,
+                    'TTY_SESSIONS': intruder_ttys,
+                    'SSH_CONNECTION': node_connection
                 }
-                self.violation_handlers[1].trigger_action(violation_data)
+                for handler in self.violation_handlers:
+                    handler.trigger_action(violation_data)
 
         end_time = time_func()
         execution_time = end_time - start_time
