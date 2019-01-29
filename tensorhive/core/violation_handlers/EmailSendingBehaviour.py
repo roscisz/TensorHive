@@ -94,7 +94,7 @@ class EmailSendingBehaviour:
         )
         self.mailer.send(email)
         self.time_of_last_email[recipient] = datetime.datetime.utcnow()
-        log.debug('Email sent to: {}'.format(recipient))
+        log.warning('Email sent to: {}'.format(recipient))
 
     def send_email_to_admin(self, violation_data: Dict[str, Any]):
         author = os.getenv(MAILBOT.SMTP_LOGIN_ENV)
@@ -109,7 +109,7 @@ class EmailSendingBehaviour:
         )
         self.mailer.send(email)
         self.time_of_last_email[recipient] = datetime.datetime.utcnow()
-        log.debug('Email sent to: {}'.format(recipient))
+        log.warning('Email sent to: {}'.format(recipient))
 
     @override
     def trigger_action(self, violation_data: Dict[str, Any]):
