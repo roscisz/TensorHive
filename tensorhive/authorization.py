@@ -24,7 +24,7 @@ def init_jwt(app):
         try:
             current_user = User.get(current_user_id)
             roles = current_user.role_names
-        except Exception as _:  # NOQA: F841
+        except Exception:
             roles = []
         finally:
             return {'roles': roles}

@@ -27,7 +27,7 @@ def get_selected(resources_ids: List, start: str, end: str):
         except (ValueError, AssertionError) as reason:
             content = {'msg': '{}. {}'.format(G['bad_request'], reason)}
             status = 400
-        except Exception as e:  # NOQA: F841
+        except Exception:
             content = {'msg': G['internal_error']}
             status = 500
         else:

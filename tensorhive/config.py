@@ -97,7 +97,6 @@ class SSH:
             if section == 'proxy_tunneling':
                 continue
 
-            # TODO Handle more options (https://github.com/ParallelSSH/parallel-ssh/blob/2e9668cf4b58b38316b1d515810d7e6c595c76f3/pssh/clients/base_pssh.py#L119) # NOQA: E501
             hostname = section
             result[hostname] = {
                 'user': hosts_config.get(hostname, 'user'),
@@ -201,7 +200,7 @@ class AUTH:
             raw_arguments = config.get('auth', option)
             parsed_arguments = ast.literal_eval(raw_arguments)
             return parsed_arguments
-        except (configparser.Error, ValueError) as e:  # NOQA: F841
+        except (configparser.Error, ValueError):
             log.warning('Parsing [auth] config section failed for option "{}", using fallback value: {}'.format(
                 option, fallback))
             return fallback
