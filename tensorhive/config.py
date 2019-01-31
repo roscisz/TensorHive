@@ -47,6 +47,12 @@ class ConfigInitilizer:
             self.safe_copy(src=CONFIG_FILES.MAIN_CONFIG_TEMPLATE_PATH, dst=CONFIG_FILES.MAIN_CONFIG_PATH)
             self.safe_copy(src=CONFIG_FILES.HOSTS_CONFIG_TEMPLATE_PATH, dst=CONFIG_FILES.HOSTS_CONFIG_PATH)
             self.safe_copy(src=CONFIG_FILES.MAILBOT_TEMPLATE_CONFIG_PATH, dst=CONFIG_FILES.MAILBOT_CONFIG_PATH)
+
+            # 3. Change config files permission
+            rw_owner_only = 0o600
+            os.chmod(CONFIG_FILES.MAIN_CONFIG_PATH, rw_owner_only)
+            os.chmod(CONFIG_FILES.HOSTS_CONFIG_PATH, rw_owner_only)
+            os.chmod(CONFIG_FILES.MAILBOT_CONFIG_PATH, rw_owner_only)
         except Exception:
             log.error('[✘] Unable to recreate configuration files.')
 
