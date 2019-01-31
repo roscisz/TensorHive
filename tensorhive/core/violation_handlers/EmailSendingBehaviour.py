@@ -36,7 +36,7 @@ class EmailSendingBehaviour:
         ).fill_in(data=violation_data)
 
         return Message(
-            author=os.getenv(MAILBOT.SMTP_LOGIN_ENV),
+            author=MAILBOT.SMTP_LOGIN,
             to=recipients,
             subject=MAILBOT.INTRUDER_SUBJECT,
             body=email_body
@@ -48,7 +48,7 @@ class EmailSendingBehaviour:
         ).fill_in(data=violation_data)
 
         return Message(
-            author=os.getenv(MAILBOT.SMTP_LOGIN_ENV),
+            author=MAILBOT.SMTP_LOGIN,
             to=recipients,
             subject=MAILBOT.INTRUDER_SUBJECT,
             body=email_body
@@ -82,7 +82,7 @@ class EmailSendingBehaviour:
 
     # TODO Refactor these two clunky, redundant methods
     def send_email_to_intruder(self, violation_data: Dict[str, Any]):
-        author = os.getenv(MAILBOT.SMTP_LOGIN_ENV)
+        author = MAILBOT.SMTP_LOGIN
         recipient = violation_data['INTRUDER_EMAIL']
         email_body = MessageBodyTemplater(template=MAILBOT.INTRUDER_BODY_TEMPLATE).fill_in(data=violation_data)
 
@@ -97,7 +97,7 @@ class EmailSendingBehaviour:
         log.warning('Email sent to: {}'.format(recipient))
 
     def send_email_to_admin(self, violation_data: Dict[str, Any]):
-        author = os.getenv(MAILBOT.SMTP_LOGIN_ENV)
+        author = MAILBOT.SMTP_LOGIN
         recipient = MAILBOT.ADMIN_EMAIL
         email_body = MessageBodyTemplater(template=MAILBOT.ADMIN_BODY_TEMPLATE).fill_in(data=violation_data)
 
@@ -123,8 +123,8 @@ class EmailSendingBehaviour:
             'HOSTNAME']).issubset(violation_data), 'Invalid keys in violation_data'
         # Initialize mailer connection
         self.mailer.connect(
-            login=os.getenv(MAILBOT.SMTP_LOGIN_ENV),
-            password=os.getenv(MAILBOT.SMTP_PASSWORD_ENV)
+            login=MAILBOT.SMTP_LOGIN,
+            password=MAILBOT.SMTP_PASSWORD
         )
         try:
             # Fetch and store intruder's email
