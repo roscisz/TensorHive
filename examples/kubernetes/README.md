@@ -1,7 +1,8 @@
 ## Table of contents
 - [x] [Why Kubernetes](#why-kubernetes)
 - [x] [Usage options](#usage-options)
-- [x] [Installation](#installation)
+- [x] [Minikube Installation](#minikube-installation)
+- [x] [Microk8s installation and configuration](#microk8s-installation-and-configuration)
 - [x] [Running single process learning](#running-single-process-learning)
 - [x] [Running distributed learning](#running-distributed-learning)
 - [x] [Summary](#summary)
@@ -11,14 +12,30 @@
 
 
 ## Why Kubernetes
-Kubernetes allows for an easy, production ready, container orchestration. For us that means deploying machine learning trainings easily on multiple nodes with multiple GPUs with automated configuration. Without such a solution, in typical company, even after obtaining access to machine(s) with GPU(s), one would have to manually take care of setting accessiblle nodes and/or GPUs and make sure his traning will not interfere with somebodys else. Kubernetes will take care of that for us. We just need to set the amount of needed GPUs for our traning and kubernetes will make sure to provide it.
+Kubernetes allows for an easy, production-ready, container orchestration. It helps in deployment of machine learning trainings on multiple nodes with many GPUs and automating its configuration.
+
+In most companies that are not using any solution of that kind, one would need to **manually**:
+
+* obtain access to all machines having particular GPUs
+* make sure not to interrupt somebody else's training
+* configure `CUDA_VISIBLE_DEVICES` on each machine
+* make training command adjustments and launch it everywhere
+
+Kubernetes will take care of all this for us. We just need to set the amount of GPUs needed for our traning and it will make sure to provide it
 
 ## Usage options
-Kubernetes is designed primarily for cloud usage, however it provides locally hosted options mainly for testing and development. It provides multiple solutions, a list of which can be found here - https://kubernetes.io/docs/setup/pick-right-solution/#local-machine-solutions. 
-Even though kubeadm is proposed in Nvidia docs here - https://docs.nvidia.com/datacenter/kubernetes-install-guide/index.html we decided to use minikube as it didn't require adding additional machine acting as a master node. We run into a few problems with minikube and after trying a few solutions we decided to switch to microk8s. I turned out to be much better option for our purpose due to easier installation, configuration and unistallation (it wasn't that easy to clean everything after minikube).
+Kubernetes is designed primarily for cloud use cases, however it also provides [multiple options to run locally](https://kubernetes.io/docs/setup/pick-right-solution/#local-machine-solutions) (essential for development and testing purposes)
 
-## Installation
-Docker (version <= 18.06) and Nvidia plugin installation (version > 2.0)
+We decided to try `minikube` first instead of `kubeadm` ([proposed in Nvidia docs here](https://docs.nvidia.com/datacenter/kubernetes-install-guide/index.html)) because it would require an additional machine acting as a master node.
+
+Then we run into a few problems with `minikube`: blocked port, broken certificates, new configuration not being picked up, some of the containers not running correctly, files and folders being created in different locations and no simple way to remove it.
+After trying a few other solutions we switched to `microk8s`, which turned out to be much easier to install, configure and remove.
+
+## Minikube Installation
+
+### Prerequisites
+* Docker (version <= 18.06)
+* Nvidia plugin installation (version > 2.0)
 
 ```
 sudo apt-get install docker-ce=18.03.1~ce-0~ubuntu
@@ -31,7 +48,8 @@ Test nvidia-docker
 
 `sudo docker run --runtime=nvidia --rm nvidia/cuda:9.0-base nvidia-smi`
 
-Minikube installation. Normally minikube uses a virtual machine with docker inside. We chose to use docker from host not to add additional layer of abstraction.
+### Minikube
+Normally `minikube` uses a virtual machine with Docker inside. We chose to use Docker provided directly by the host instead, so we don't build additional layer of abstraction.
 
 ```
 sudo apt-get update && sudo apt-get install -y apt-transport-https
@@ -46,31 +64,32 @@ curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/miniku
 sudo cp minikube /usr/local/bin && rm minikube
 ```
 
-Allow kubernetes to use GPU (Nvidia driver must be ~> 361.93)
+Allow kubernetes to use GPU by setting `nvidia-docker` as default runtime (**Nvidia driver must be ~> 361.93**)
 
-Set nvidia-docker as default runtime
+Overwrite `daemon.json` under `/etc/docker/add`:
 
-In daemon.json which should be located in /etc/docker/ add:
-
+```
 "default-runtime": "nvidia",
+```
+with:
 
-Afterwards it should look something like this:
-
-{
+```
+{  
     "default-runtime": "nvidia",
-    "runtimes": {
-        "nvidia": {
+    "runtimes": {  
+        "nvidia": {  
             "path": "/usr/bin/nvidia-container-runtime",
             "runtimeArgs": []
         }
     }
 }
+```
 
 Starting kubernetes through minikube
 
 `sudo minikube start --vm-driver=none`
 
-When minikube tells us everything look all right we need to deploy nvidia plugin allowing to use GPUs on our node(s)
+When minikube tells us that everything looks all right , we need to deploy `nvidia-device-plugin` which will allow to use GPUs on our node(s).
 
 ```
 sudo kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v1.11/nvidia-device-plugin.yml
@@ -84,7 +103,8 @@ sudo service docker start
 sudo minikube start --vm-driver=none
 ```
 
-Microk8s installation and configuration.
+## Microk8s installation and configuration
+
 
 ```
 sudo snap install microk8s --classic
@@ -94,32 +114,42 @@ microk8s.enable gpu
 sudo microk8s.stop
 sudo microk8s.start
 ```
+As shown above, `microk8s` is easier and requires much less configuration. There is also quite a lot of built-in add-ons that can be turned on the same way as the GPU one.
 
-As shown microk8s is easier and require less configuration. There is also quite a lot of built in addons that can be turned on the same way as gpu one. Due to the usage of snap, unistallation is easier and there is no need to worry about leftovers. Micro8s also comes with its own kubectl so it won't after existing configuration if there is any but can be also aliased to be used with kubectl command. 
+Because `microk8s` is distributed as `snap` package, removal process is trivial and there is no need to worry about leftovers.
+Micro8s also comes with its own `kubectl` so it won't interfere with existing configuration (though it can be aliased to be used via `kubectl` command).
 
+To see available nodes:
 `sudo kubectl get nodes`
-Should output available nodes
 
-To see more info about a node pod or job use kubectl describe node/pod/job <name>
-
+To see more info about a node, pod or job:
+`sudo kubectl describe node/pod/job <name>`
+Example:
 `sudo kubectl describe node minikube`
-Somewhere in capactity it should show nvidia.com/gpu: x 
-with x being number of available GPUs on our machine
+Somewhere in `capactity` it should output `nvidia.com/gpu: X` with X being number of available GPUs on this machine.
 
+If everything worked correctly, now we should be able to create a pod using yaml template file from one of our examples:
 
-If everything worked correctlly we should be able to create a pod using a yaml template. Download a Dockerfile and build an image from it first. After that download the template, fill in a correct image name and run it. To see a detailed instrucion on how to run an example see README in deepspeech directory. 
+1. Download `Dockerfile` and build image from it
+2. Download template `sh` script, optionally adjust image name (`image:`) and run it.
 
-Template will create a traning job for Mozilla's Deepspeech using a single GPU.
+### Running training examples
+To see more detailed instructions on how to run specific training example check out [DeepSpeech README](https://github.com/roscisz/TensorHive/tree/kubernetes/examples/kubernetes/deepspeech) and [T2T README](https://github.com/roscisz/TensorHive/tree/kubernetes/examples/kubernetes/t2t_transformer)
 
-To output availavle nodes or pods use kubectl get pod/node.
-To see logs from a given node or pod use kubectl logs pod/node <name>.
-To remove pod use kubectl delete pod <name>.
+<This should probably go directly into that single, specific README>
+Template will create a training job for Mozilla's Deepspeech using a single GPU.
+
+Commands to try out:
+
 ```
-sudo kubectl logs pod <ds>
-sudo kubectl describe pod <ds>
-sudo kubectl delete pod <ds>
+# Replace <name> with: 
+# - ds (DeepSpeech)
+# - t2t (T2T)
+sudo kubectl get pod<name>
+sudo kubectl logs pod <name>
+sudo kubectl describe pod <name>
+sudo kubectl delete pod <name>
 ```
-
 
 
 ## Running single process learning
@@ -162,5 +192,9 @@ There are two ways of running distributed training using kubernetes: deploying o
 ## Experimental results
 
 ### Summary
-Kubernetes can be very usefull in this age of containerization and cloud. It allows for an easy orchestration and automatization. However, it requires a lot of configuration besides that the whole ecosystem is quite new and in constant development which means things are changing fast! Its main focus is on cloud providers so local solutions are mainly for development and testing. Becuase of the fact how Docker handle cacheing development can be really slow. For example DeepSpeech's original Dockerfile contains building everything from scratch so after changing anything in code that can't be applied after this process rebuilding image takes hours. On top of that a popular option is to build and test images on different computer and that means uploading and downloading at least a few GB in case of rebuilding bigger layers.  
+Kubernetes can be very useful in this age of containerization and cloud. However, it requires a significant amount of time and effort to configure on each machine. This whole ecosystem is quite new, under constant development which results in frequent changes and backward compatibility issues.
+
+It's meant to be used by cloud providers, so local solutions are mainly restricted to development and testing.
+Additionally, considering how Docker handles layer caching, development can be really slow. For example DeepSpeech's original Dockerfile rebuilds everything from scratch when the code changes and that whole process can takes hours.
+An alternative way is to build and test images on different computers, but it leads to uploading and downloading at least a few GB in case of rebuilding **bigger / heavier** layers.
 
