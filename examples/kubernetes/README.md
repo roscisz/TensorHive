@@ -1,6 +1,15 @@
-## Table of content
-- [] 
-- 
+## Table of contents
+- [x] [Why Kubernetes](#why-kubernetes)
+- [x] [Usage options](#usage-options)
+- [x] [Installation](#installation)
+- [x] [Running single process learning](#running-single-process-learning)
+- [x] [Running distributed learning](#running-distributed-learning)
+- [x] [Summary](#summary)
+- [ ] [Experimental results](#experimental-results)
+
+
+
+
 ## Why Kubernetes
 Kubernetes allows for an easy, production ready, container orchestration. For us that means deploying machine learning trainings easily on multiple nodes with multiple GPUs with automated configuration. Without such a solution, in typical company, even after obtaining access to machine(s) with GPU(s), one would have to manually take care of setting accessiblle nodes and/or GPUs and make sure his traning will not interfere with somebodys else. Kubernetes will take care of that for us. We just need to set the amount of needed GPUs for our traning and kubernetes will make sure to provide it.
 
@@ -150,5 +159,8 @@ Even though we passed two GPUs to CUDA_VISIBLE_DEVICES it will not be able to "c
 ## Running distributed learning
 There are two ways of running distributed training using kubernetes: deploying one container which has access to multiple GPUs and has multiple processes running inside of it or deploying multiple containers - one for each gpu with only one process running.
 
+## Experimental results
+
 ### Summary
 Kubernetes can be very usefull in this age of containerization and cloud. It allows for an easy orchestration and automatization. However, it requires a lot of configuration besides that the whole ecosystem is quite new and in constant development which means things are changing fast! Its main focus is on cloud providers so local solutions are mainly for development and testing. Becuase of the fact how Docker handle cacheing development can be really slow. For example DeepSpeech's original Dockerfile contains building everything from scratch so after changing anything in code that can't be applied after this process rebuilding image takes hours. On top of that a popular option is to build and test images on different computer and that means uploading and downloading at least a few GB in case of rebuilding bigger layers.  
+
