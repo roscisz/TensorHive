@@ -85,8 +85,6 @@ export default {
       },
       startDate: null,
       endDate: null,
-      minReservationTime: '',
-      maxReservationTime: '',
       resourcesCheckboxes: []
     }
   },
@@ -294,8 +292,6 @@ export default {
           }
           self.startDate = startDate.toDate()
           self.endDate = endDate.toDate()
-          self.minReservationTime = startDate.format()
-          self.maxReservationTime = endDate.format()
           self.showModalReserve = true
         }
       },
