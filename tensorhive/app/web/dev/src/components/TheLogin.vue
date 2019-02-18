@@ -60,10 +60,6 @@ export default {
   },
 
   methods: {
-    create () {
-      this.$router.push('/create')
-    },
-
     checkCreds () {
       const { username, password } = this
 
