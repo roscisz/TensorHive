@@ -15,6 +15,9 @@
         Close
       </v-btn>
     </v-snackbar>
+    <section id="schedule_section">
+      <MySchedule @showSnackbar="showSnackbar(...arguments)" @loadResources="loadResources(...arguments)" :parsed-nodes="parsedNodes"/>
+    </section>
     <section id="calendar_section">
       <v-btn
         color= "info"
@@ -107,9 +110,11 @@
 import api from '../../api'
 import _ from 'lodash'
 import FullCalendar from './reserve_resources/FullCalendar.vue'
+import MySchedule from './reserve_resources/MySchedule.vue'
 export default {
   components: {
-    FullCalendar
+    FullCalendar,
+    MySchedule
   },
 
   data () {
@@ -149,6 +154,22 @@ export default {
   },
 
   methods: {
+    loadResources: function (resources) {
+      this.selectedResources = []
+      for (var id in resources) {
+        if (resources[id].selected) {
+          var obj = {
+            nodeName: resources[id].nodeName,
+            name: resources[id].resourceName,
+            uuid: id,
+            index: resources[id].resourceIndex
+          }
+          this.selectedResources.push(obj)
+        }
+      }
+      this.updateCalendar = !this.updateCalendar
+    },
+
     toggle: function (node) {
       node.open = !node.open
     },
@@ -163,6 +184,7 @@ export default {
           resourceType = node[resourceTypeName]
           for (var resourceUUID in resourceType) {
             tempResource = {
+              nodeName: nodeName,
               resourceUUID: resourceUUID,
               resourceName: resourceType[resourceUUID].name,
               resourceIndex: resourceType[resourceUUID].index,
@@ -254,7 +276,7 @@ export default {
             resource = resourceType.resources[k]
             if (resource.metrics.checked) {
               obj = {
-                nodeName: node.nodeName,
+                nodeName: resource.nodeName,
                 name: resource.resourceName,
                 uuid: resource.resourceUUID,
                 index: resource.resourceIndex
