@@ -111,36 +111,12 @@ export default {
               window.localStorage.setItem('role', role)
               window.localStorage.setItem('userId', id)
             }
-            let self = this
-            window.setTimeout(function () {
-              self.refreshToken()
-            }, 55000)
             this.$router.push('/')
           }
         })
         .catch(error => {
           this.errorMessage = error.response.data.msg
           this.alert = true
-        })
-    },
-
-    refreshToken () {
-      api
-        .request('get', '/user/refresh', this.$store.state.refreshToken)
-        .then(response => {
-          this.$store.commit('SET_ACCESS_TOKEN', 'Bearer ' + response.data.access_token)
-          if (window.localStorage) {
-            window.localStorage.setItem('accessToken', 'Bearer ' + response.data.access_token)
-          }
-          let self = this
-          window.setTimeout(function () {
-            self.refreshToken()
-          }, 55000)
-        })
-        .catch(error => {
-          this.errorMessage = error.response.data.msg
-          this.alert = true
-          this.logout()
         })
     },
 
