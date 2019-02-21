@@ -25,7 +25,7 @@ class MessageSendingBehaviour():
         command = 'echo "{msg}" | write {intruder_name} {tty}'.format(
             msg=msg,
             intruder_name=recipient,
-            tty=tty)
+            tty=tty['TTY'])
         return command
 
     def merged_commands(self, recipient: str, ttys: List[str], msg: str) -> str:
