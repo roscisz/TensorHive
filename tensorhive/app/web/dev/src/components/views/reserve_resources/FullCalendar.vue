@@ -5,24 +5,23 @@
     @close="showModalReserve = false"
     :startDate="startDate"
     :endDate="endDate"
-    :min-reservation-time="minReservationTime"
-    :max-reservation-time="maxReservationTime"
     :resources-checkboxes="resourcesCheckboxes"
     :number-of-resources="selectedResources.length"
     :add-reservation="addReservation"
   ></full-calendar-reserve>
-  <full-calendar-cancel
-    :show-modal="showModalCancel"
-    @close="showModalCancel = false"
+  <full-calendar-info
+    :show-modal="showModalInfo"
+    @close="showModalInfo = false"
     :reservation="reservation"
     :cancel="cancelReservation"
-  ></full-calendar-cancel>
+    :update="updateReservation"
+  ></full-calendar-info>
 </div>
 </template>
 
 <script>
 import FullCalendarReserve from './FullCalendarReserve.vue'
-import FullCalendarCancel from './FullCalendarCancel.vue'
+import FullCalendarInfo from './FullCalendarInfo.vue'
 import api from '../../../api'
 import config from '../../../config'
 import $ from 'jquery'
@@ -32,7 +31,7 @@ require('../../../../static/fullcalendar/fullcalendar.js')
 export default {
   components: {
     FullCalendarReserve,
-    FullCalendarCancel
+    FullCalendarInfo
   },
 
   props: {
@@ -76,8 +75,14 @@ export default {
     return {
       calendar: null,
       showModalReserve: false,
-      showModalCancel: false,
-      reservation: null,
+      showModalInfo: false,
+      reservation: {
+        title: '',
+        description: '',
+        resourceId: '',
+        start: new Date(),
+        end: new Date()
+      },
       startDate: null,
       endDate: null,
       minReservationTime: '',
@@ -121,6 +126,37 @@ export default {
       return color
     },
 
+    updateReservation: function (reservation, newTime, newTitle, newDescription) {
+      var toUpdate = {
+        id: reservation.id
+      }
+      if (reservation.start.toISOString() !== newTime[0].toISOString()) {
+        toUpdate['start'] = newTime[0].toISOString()
+      }
+      if (reservation.end.toISOString() !== newTime[1].toISOString()) {
+        toUpdate['end'] = newTime[1].toISOString()
+      }
+      if (reservation.title !== newTitle) {
+        toUpdate['title'] = newTitle
+      }
+      if (reservation.description !== newDescription) {
+        toUpdate['description'] = newDescription
+      }
+      api
+        .request('put', '/reservations', this.$store.state.accessToken, toUpdate)
+        .then(response => {
+          this.calendar.fullCalendar('refetchEvents')
+          this.addResourcesHeader()
+        })
+        .catch(error => {
+          if (!error.hasOwnProperty('response')) {
+            this.$emit('showSnackbar', error.message)
+          } else {
+            this.$emit('showSnackbar', error.response.data.msg)
+          }
+        })
+    },
+
     cancelReservation: function (reservation) {
       api
         .request('delete', '/reservations/' + reservation.id.toString(), this.$store.state.accessToken)
@@ -128,8 +164,11 @@ export default {
           this.calendar.fullCalendar('removeEvents', reservation._id)
         })
         .catch(error => {
-          this.errorMessage = error.response.data.msg
-          this.alert = true
+          if (!error.hasOwnProperty('response')) {
+            this.$emit('showSnackbar', error.message)
+          } else {
+            this.$emit('showSnackbar', error.response.data.msg)
+          }
         })
     },
 
@@ -141,7 +180,11 @@ export default {
           this.addResourcesHeader()
         })
         .catch(error => {
-          this.$emit('showSnackbar', error.response.data.msg)
+          if (!error.hasOwnProperty('response')) {
+            this.$emit('showSnackbar', error.message)
+          } else {
+            this.$emit('showSnackbar', error.response.data.msg)
+          }
         })
     }
   },
@@ -190,7 +233,11 @@ export default {
               element.find('.fc-title').prepend((response.data.username).bold().big().italics() + '<br/>')
             })
             .catch(error => {
-              this.$emit('showSnackbar', error.response.data.msg)
+              if (!error.hasOwnProperty('response')) {
+                this.$emit('showSnackbar', error.message)
+              } else {
+                this.$emit('showSnackbar', error.response.data.msg)
+              }
             })
         }
       },
@@ -255,7 +302,7 @@ export default {
 
       eventClick: function (calEvent, jsEvent, view) {
         if ((calEvent.userId === self.$store.state.id || self.$store.state.role === 'admin') && !calEvent.allDay) {
-          self.showModalCancel = true
+          self.showModalInfo = true
           self.reservation = calEvent
         }
       },
