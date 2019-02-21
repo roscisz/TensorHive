@@ -188,7 +188,7 @@ class ProtectionService(Service):
                     'INTRUDER_USERNAME': intruder,
                     'RESERVATION_OWNER_USERNAME': username,
                     'RESERVATION_OWNER_EMAIL': user.email,
-                    'RESERVATION_END': reservation.ends_at,
+                    'RESERVATION_END': Reservation.parsed_output_datetime(reservation.ends_at),
                     'UUID': uuid,
                     'GPU_NAME': self.gpu_name(hostname, uuid),
                     'HOSTNAME': hostname,

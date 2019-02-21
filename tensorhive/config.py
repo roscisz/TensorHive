@@ -210,7 +210,7 @@ class MAILBOT:
     section = 'general'
     INTERVAL = mailbot_config.getfloat(section, 'interval', fallback=10.0)
     NOTIFY_INTRUDER = mailbot_config.getboolean(section, 'notify_intruder', fallback=True)
-    NOTIFY_ADMIN = mailbot_config.getboolean(section, 'notify_admin', fallback=True)
+    NOTIFY_ADMIN = mailbot_config.getboolean(section, 'notify_admin', fallback=False)
     ADMIN_EMAIL = mailbot_config.get(section, 'admin_email', fallback=None)
 
     # FIXME Not sure if this should be required
