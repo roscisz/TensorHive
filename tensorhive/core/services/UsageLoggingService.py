@@ -31,9 +31,6 @@ def object_serializer(obj):
     elif isinstance(obj, set):
         return list(obj)
 
-class LogFileBrowser:
-    pass
-
 class JSONLogFile:
     '''
     Encapsulates JSON file operations
@@ -110,28 +107,6 @@ class Log:
         log_file.write(updated_log_content, default=object_serializer)
 
         log.debug('Log file has been updated {}'.format(out_path))
-
-
-class Summary:
-    '''Represents small JSON log file, created when standard log file expires'''
-    def __init__(self, in_path: PosixPath) -> None:
-        self.in_path = in_path
-        log_contents = JSONLogFile(self.in_path).read()
-        self.summary = {
-            # TODO May want to rewrite name, index, uuid, etc.
-            'gpu_util_avg': avg(log_contents['metrics']['gpu_util']['values']),
-            'mem_util_avg': avg(log_contents['metrics']['mem_util']['values'])
-        }
-
-    def save(self, out_path: PosixPath) -> None:
-        try:
-            JSONLogFile(out_path).write(self.summary)
-        except:
-            raise
-        else:
-            log.info('Summary generated from {}'.format(self.in_path))
-            log.debug(self.summary)
-
 
 class UsageLoggingService(Service):
     '''
@@ -215,8 +190,8 @@ class UsageLoggingService(Service):
         since its last modification and when corresponding reservation record 
         is also expired.
 
-        If such file is found it generates summary file and cleans up the original log file.
-        Summary filenames are like: summary_10.json
+        # If such file is found it generates summary file and cleans up the original log file.
+        # Summary filenames are like: summary_10.json
         '''
         time_now = datetime.datetime.utcnow()
 
@@ -227,8 +202,6 @@ class UsageLoggingService(Service):
                 try:
                     id_from_filename = int(item.stem)
                     reservation = Reservation.get(id=id_from_filename)
-
-                    # Check if file and its corresponding reservation record are both expired
                     reservation_expired = reservation.ends_at < time_now
 
                     if reservation_expired:
