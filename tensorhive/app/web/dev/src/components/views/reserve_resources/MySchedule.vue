@@ -19,7 +19,7 @@
           prepend-icon="event"
           readonly
         ></v-text-field>
-        <v-date-picker v-model="picker" @input="menu = false"></v-date-picker>
+        <v-date-picker v-model="picker" @input="menu = false; changeSchedule()"></v-date-picker>
       </v-menu>
       <v-text-field
         class="range-input"
@@ -28,9 +28,8 @@
         step="1"
         type="number"
         label="Schedule range in days"
+        @input="changeSchedule()"
       ></v-text-field>
-      <v-btn color="info" @click="changeSchedule()">Load schedule</v-btn>
-      <v-btn color="info" @click="loadResources()">Load calendar</v-btn>
     </div>
     <div class="container" :key="tableKey">
       <div class="left-table">
@@ -167,6 +166,7 @@ export default {
 
     toggle: function (resource) {
       resource.selected = !resource.selected
+      this.loadResources()
       this.forceRerenderTable()
     },
 
