@@ -15,15 +15,6 @@
         class="navbar navbar-static-top"
         role="navigation"
       >
-        <!-- Sidebar toggle button-->
-        <a
-          href="javascript:;"
-          class="sidebar-toggle"
-          data-toggle="offcanvas"
-          role="button"
-        >
-          <span class="sr-only">Toggle navigation</span>
-        </a>
         <v-menu
           class="user_chip"
           :close-on-content-click="false"
@@ -67,9 +58,6 @@
       <router-view></router-view>
     </div>
     <!-- /.content-wrapper -->
-    <!-- Main Footer -->
-    <footer class="main-footer">
-    </footer>
   </div>
   <!-- ./wrapper -->
 </template>
@@ -149,6 +137,9 @@ export default {
   position: absolute;
   right: 0;
   margin-top: 50px;
+}
+.content-wrapper {
+  min-height: 100vh;
 }
 .wrapper.fixed_layout {
   .main-header {

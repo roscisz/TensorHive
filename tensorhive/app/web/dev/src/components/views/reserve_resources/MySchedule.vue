@@ -303,6 +303,7 @@ export default {
 }
 .small-button {
   height: 25px;
+  width: 25px;
 }
 .left-table {
   min-width: 205px;
@@ -310,7 +311,7 @@ export default {
   display: inline-block;
 }
 .right-table {
-  width: 70vw;
+  width: calc(100vw - 350px);
   overflow-x: scroll;
   display: inline-block;
 }
@@ -328,14 +329,14 @@ export default {
   background: #41c641;
 }
 table {
-  border: 0px solid grey;
+  border: 0px solid #dddddd;
   border-radius: 3px;
   border-collapse: collapse;
   border-spacing: 0;
 }
 th {
   background: #fafafa;
-  border: 1px solid grey;
+  border: 1px solid #dddddd;
   min-width: 960px;
   height: 40px;
   max-height: 40px;
@@ -344,7 +345,7 @@ th {
 }
 td {
   background: transparent;
-  border: 1px solid grey;
+  border: 1px solid #dddddd;
   min-width: 20px;
   height: 40px;
   max-height: 40px;
