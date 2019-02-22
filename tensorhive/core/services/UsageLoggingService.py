@@ -178,8 +178,7 @@ class UsageLoggingService(Service):
             file = new_file
             msg = 'Log file has been renamed'
 
-        modification_time = datetime.datetime.fromtimestamp(file.lstat().st_mtime)
-        log.info('{}. (path: {}, mtime: {})'.format(msg, file, modification_time))
+        log.info(msg)
 
     def handle_expired_logs(self):
         '''
@@ -213,10 +212,8 @@ class UsageLoggingService(Service):
                 except NoResultFound:
                     log.debug('Log file for inexisting reservation has been found, cleaning up the file...')
                     self._clean_up_old_log_file(file=item)
-                    break
                 except Exception as e:
                     log.debug(e)
-                    break
 
     def extract_specific_gpu_data(self, uuid: str, infrastructure: Dict) -> Dict:
         '''Returns whole right-hand side value (dictionary) for given key (uuid)'''
