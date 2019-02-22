@@ -200,18 +200,29 @@ class UsageLoggingService(Service):
         for item in self.log_dir.glob('[0-9]*.json'):
             if item.is_file():
                 try:
+                    log.debug('Processing file: {}'.format(item))
                     id_from_filename = int(item.stem)
                     reservation = Reservation.get(id=id_from_filename)
                     reservation_expired = reservation.ends_at < time_now
 
                     if reservation_expired:
-                        # Generate summary immidiately
-                        summary_file_path = item.parent / 'summary_{old_name}'.format(old_name=item.name)
-                        Summary(in_path=item).save(out_path=summary_file_path)
+                        log.debug('Reservation id={} has endend.'.format(id_from_filename))
+
+                        # Generate and persist summary
+                        log_contents = JSONLogFile(path=item).read()
+                        reservation.gpu_util_avg = avg(log_contents['metrics']['gpu_util']['values'])
+                        reservation.mem_util_avg = avg(log_contents['metrics']['mem_util']['values'])
+                        log.debug('Saving summary...')
+                        reservation.save()
 
                         # Clean up log immidiately
                         self._clean_up_old_log_file(file=item)
-                except:
+                except NoResultFound:
+                    log.debug('Log file for inexisting reservation has been found, cleaning up the file...')
+                    self._clean_up_old_log_file(file=item)
+                    break
+                except Exception as e:
+                    log.debug(e)
                     break
 
     def extract_specific_gpu_data(self, uuid: str, infrastructure: Dict) -> Dict:
