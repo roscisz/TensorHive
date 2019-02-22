@@ -1,3 +1,4 @@
+from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.utils.decorators.override import override
 from tensorhive.core.utils.enums import LogFileCleanupAction
@@ -13,7 +14,7 @@ import json
 import logging
 log = logging.getLogger(__name__)
 
-# TODO Move both to utils
+# TODO Maybe move both functions to utils?
 def avg(data: List[Union[int, float]]) -> float:
     '''Calculates average from a list of values'''
     try:
@@ -24,7 +25,7 @@ def avg(data: List[Union[int, float]]) -> float:
 def object_serializer(obj):
     '''
     All non-JSON-serializable classes must be handled explicitly
-    Usage example: json.dump(..., default=object_serializer)
+    Usage example: json.dump(..., default=object_serializer)ss
     '''
     if isinstance(obj, datetime.datetime):
         return obj.__str__()
@@ -32,10 +33,7 @@ def object_serializer(obj):
         return list(obj)
 
 class JSONLogFile:
-    '''
-    Encapsulates JSON file operations
-    TODO Handle exceptions
-    '''
+    '''Encapsulates JSON file operations.'''
     def __init__(self, path: PosixPath) -> None:
         self.path = path
 
@@ -51,7 +49,7 @@ class JSONLogFile:
                 raise
 
 class Log:
-    '''Represents ordinary JSON log file, alters original input data before persisting'''
+    '''Represents ordinary JSON log file'''
     # Template structure for .json log files
     empty_log_file_format = {
         'name': str(),
@@ -74,7 +72,7 @@ class Log:
         self.data = data
 
     def updated_log(self, log_file: JSONLogFile) -> Dict:
-        '''Reads a log file, returns its content plus new data'''
+        '''Reads a log file, returns its content updated/extended by new data'''
         log = log_file.read()
 
         log['name'] = self.data['name']
@@ -87,7 +85,7 @@ class Log:
             log['timestamps'].append(datetime.datetime.utcnow())
             log['metrics']['gpu_util']['values'].append(gpu_util)
             log['metrics']['mem_util']['values'].append(mem_util)
-            # TODO Add more metrics
+            # TODO Add more metrics here
         else:
             err_msg = '`mem_util` or `gpu_util` is not supported by this GPU'
             # Append message only once
@@ -114,7 +112,7 @@ class UsageLoggingService(Service):
     1. Gathering infrastracture data within active reservation time
     2. Storing data as files in suitable format and location
     3. Preparing short summary when reservation time ends
-    3. Deleting log files when they become useless
+    3. Handling log files when they become useless
     '''
     # What to do when log file is expired
     log_cleanup_action = USAGE_LOGGING_SERVICE.LOG_CLEANUP_ACTION
@@ -147,7 +145,7 @@ class UsageLoggingService(Service):
             gevent.sleep(self.interval - execution_time)
 
     def log_current_usage(self):
-        '''Updates all log files related to current reservations'''
+        '''Updates log files related to current reservations'''
         current_reservations = Reservation.current_events()
         infrastructure = self.infrastructure_manager.infrastructure
         for reservation in current_reservations:
@@ -161,7 +159,7 @@ class UsageLoggingService(Service):
 
     def _clean_up_old_log_file(self, file: PosixPath):
         '''
-        Triggers an action on expired/summarized log file
+        Triggers an action on expired log file
         depending on the value specified by self.log_cleanup_action
         '''
         action = self.log_cleanup_action
@@ -185,13 +183,8 @@ class UsageLoggingService(Service):
 
     def handle_expired_logs(self):
         '''
-        Seeks for expired, ordinary JSON log files.
-        Log file expires after given amount of time (self.log_expiration_time) 
-        since its last modification and when corresponding reservation record 
-        is also expired.
-
-        # If such file is found it generates summary file and cleans up the original log file.
-        # Summary filenames are like: summary_10.json
+        Seeks for ordinary JSON log files related to expired reservations.
+        It creates very simple summary (avg) and fills in existing reservation database record.
         '''
         time_now = datetime.datetime.utcnow()
 
