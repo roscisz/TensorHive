@@ -95,16 +95,15 @@ class User(CRUDModel, Base):
         '''Serializes model instance into dict (which is interpreted as json automatically)'''
         try:
             roles = self.role_names
-        except Exception as e:
+        except Exception:
             roles = []
         finally:
             return {
                 'id': self.id,
                 'username': self.username,
                 'createdAt': self.created_at.isoformat(),
-                'roles':  roles
+                'roles': roles
             }
-
 
     @staticmethod
     def verify_hash(password, hash):

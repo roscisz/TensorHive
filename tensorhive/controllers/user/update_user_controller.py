@@ -7,6 +7,7 @@ from flask_jwt_extended import jwt_required
 R = API.RESPONSES['user']
 G = API.RESPONSES['general']
 
+
 @admin_required
 def update(user):
     if user.get('id') is not None:
@@ -23,7 +24,7 @@ def update(user):
         except AssertionError as e:
             content = {'msg': R['update']['failure']['invalid'].format(reason=e)}
             status = 422
-        except Exception as e:
+        except Exception:
             content = {'msg': G['internal_error']}
             status = 500
         else:
@@ -37,4 +38,3 @@ def update(user):
             status = 400
 
     return content, status
-

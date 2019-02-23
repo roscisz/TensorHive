@@ -114,7 +114,7 @@ class Reservation(CRUDModel, Base):
             ),
             # Case concerns the same resource
         ).filter(Reservation.id != self.id)\
-      .filter(Reservation.protected_resource_id == self.protected_resource_id).first()
+         .filter(Reservation.protected_resource_id == self.protected_resource_id).first()
 
     @classmethod
     def filter_by_uuids_and_time_range(cls, uuids: List[str], start: datetime.datetime, end: datetime.datetime):
