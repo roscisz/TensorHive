@@ -143,10 +143,10 @@ export default {
       if (reservation.end.toISOString() !== newTime[1].toISOString()) {
         toUpdate['end'] = newTime[1].toISOString()
       }
-      if (reservation.title !== newTitle) {
+      if (reservation.title !== newTitle && newTitle !== '') {
         toUpdate['title'] = newTitle
       }
-      if (reservation.description !== newDescription) {
+      if (reservation.description !== newDescription && newDescription !== '') {
         toUpdate['description'] = newDescription
       }
       api
