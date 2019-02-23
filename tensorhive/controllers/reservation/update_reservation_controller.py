@@ -4,24 +4,25 @@ from tensorhive.config import API
 R = API.RESPONSES['reservation']
 G = API.RESPONSES['general']
 
+
 @jwt_required
 def update(reservation):
     if reservation.get('id') is not None:
         try:
             found_reservation = Reservation.get(reservation['id'])
-            found_reservation.title = reservation['title'] if reservation.get('title') is not None else found_reservation.title
-            found_reservation.description = reservation['description'] if reservation.get('description') is not None else found_reservation.description
-            found_reservation.protected_resource_id = reservation['resourceId'] if  reservation.get('resourceId') is not None else found_reservation.protected_resource_id
-            found_reservation.user_id = reservation['userId'] if reservation.get('userId') is not None else found_reservation.user_id
-            found_reservation.starts_at = reservation['start'] if reservation.get('start') is not None else found_reservation.starts_at
-            found_reservation.ends_at = reservation['end'] if reservation.get('end') is not None else found_reservation.ends_at
+
+            updateable_field_names = ['title', 'description', 'start', 'end']
+
+            for field_name in updateable_field_names:
+                if reservation.get(field_name) is not None:
+                    setattr(found_reservation, field_name, reservation[field_name])
 
             found_reservation.save()
 
         except AssertionError as e:
             content = {'msg': R['update']['failure']['invalid'].format(reason=e)}
             status = 422
-        except Exception as e:
+        except Exception:
             content = {'msg': G['internal_error']}
             status = 500
         else:
@@ -35,4 +36,3 @@ def update(reservation):
             status = 400
 
     return content, status
-
