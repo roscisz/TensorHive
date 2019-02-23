@@ -19,89 +19,7 @@
       <MySchedule @showSnackbar="showSnackbar(...arguments)" @loadResources="loadResources(...arguments)" :parsed-nodes="parsedNodes"/>
     </section>
     <section id="calendar_section">
-      <v-btn
-        color= "info"
-        small
-        outline
-        round
-        href="#filter_section"
-      >
-        Adjust filters
-      </v-btn>
       <FullCalendar @showSnackbar="showSnackbar(...arguments)" :update-calendar="updateCalendar" :selected-resources="selectedResources"/>
-    </section>
-    <section id="filter_section">
-      <v-btn
-        color= "info"
-        small
-        outline
-        round
-        href="#calendar_section"
-      >
-        Jump up
-      </v-btn>
-      <div class="infrastructure_table">
-        <div
-          class="infrastructure_box"
-          v-for="node in parsedNodes"
-          :key="node.nodeName"
-        >
-          <div
-            class="paragraph"
-          >
-            <v-checkbox
-              :label="node.nodeName"
-              v-model="node.checked"
-              @change="changeNode(node)"
-            >
-            </v-checkbox>
-            <v-btn
-              color="indigo"
-              fab
-              dark
-              small
-              outline
-              @click="toggle(node)"
-            >
-              <v-icon dark>{{ node.open ? 'remove' : 'add' }}</v-icon>
-            </v-btn>
-            <div
-              class="paragraph"
-              v-show="node.open"
-              v-for="resourceType in node.resourceTypes"
-              :key="resourceType.name"
-            >
-              <v-checkbox
-                :label="resourceType.name"
-                v-model="resourceType.checked"
-                @change="changeResourceType(resourceType, node)"
-              ></v-checkbox>
-              <v-btn
-                color="indigo"
-                fab
-                dark
-                small
-                outline
-                @click="toggle(resourceType)"
-              >
-                <v-icon dark>{{ resourceType.open ? 'remove' : 'add' }}</v-icon>
-              </v-btn>
-              <div
-                class="paragraph"
-                v-show="resourceType.open"
-                v-for="resource in resourceType.resources"
-                :key="resource.resourceIndex"
-              >
-                <v-checkbox
-                  :label="`GPU${ resource.resourceIndex } ${ resource.resourceName }`"
-                  v-model="resource.metrics.checked"
-                  @change="changeResource(resource, resourceType, node)"
-                ></v-checkbox>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </section>
   </section>
 </template>
@@ -213,58 +131,6 @@ export default {
       this.loadCalendar()
     },
 
-    changeNode (node) {
-      this.nodeCheckbox = true
-      for (var resourceTypeName in node.resourceTypes) {
-        node.resourceTypes[resourceTypeName].checked = node.checked
-        this.changeResourceType(node.resourceTypes[resourceTypeName])
-      }
-      this.loadCalendar()
-      this.nodeCheckbox = false
-    },
-
-    changeResourceType (resourceType, node) {
-      this.resourceTypeCheckbox = true
-      if (!this.resourceCheckbox) {
-        for (var resourceName in resourceType.resources) {
-          resourceType.resources[resourceName].metrics.checked = resourceType.checked
-          this.changeResource(resourceType.resources[resourceName])
-        }
-      }
-      if (!this.nodeCheckbox) {
-        var checked = true
-        for (var resourceTypeName in node.resourceTypes) {
-          if (!node.resourceTypes[resourceTypeName].checked) {
-            checked = false
-            break
-          }
-        }
-        node.checked = checked
-        this.loadCalendar()
-      }
-      this.resourceTypeCheckbox = false
-    },
-
-    changeResource (resource, resourceType, node) {
-      this.resourceCheckbox = true
-      if (!this.resourceTypeCheckbox && !this.nodeCheckbox) {
-        this.loadCalendar()
-      }
-      if (!this.resourceTypeCheckbox) {
-        var checked = true
-        for (var resourceName in resourceType.resources) {
-          if (!resourceType.resources[resourceName].metrics.checked) {
-            checked = false
-            break
-          }
-        }
-        resourceType.checked = checked
-        this.changeResourceType(resourceType, node)
-        this.loadCalendar()
-      }
-      this.resourceCheckbox = false
-    },
-
     loadCalendar () {
       var node, resourceType, resource, obj
       this.selectedResources = []
@@ -297,19 +163,3 @@ export default {
   }
 }
 </script>
-
-<style>
-.paragraph{
-  margin-left: 30px;
-  display:flex;
-  flex-wrap: wrap;
-}
-.infrastructure_table{
-  display: flex;
-  flex-wrap: wrap;
-}
-.infrastructure_box{
-  width: 20vw;
-  margin-left: 1vw;
-}
-</style>
