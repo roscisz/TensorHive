@@ -30,25 +30,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN apt-get install -y python3 python3-pip
 RUN pip3 install 'tensorflow-gpu==1.6.0' pandas python_speech_features pyxdg progressbar2 scipy
-# >> START Configure Tensorflow Build
-RUN apt-get install -y software-properties-common
-RUN add-apt-repository ppa:git-core/ppa
-RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
-RUN apt-get install -y git-lfs
-RUN git lfs install
 
 RUN git clone https://github.com/mozilla/DeepSpeech.git
 WORKDIR /DeepSpeech/
 RUN git reset --hard e00bfd0f413912855eb2312bc1efe3bd2b023b25
-# >> START Configure Tensorflow Build
-RUN apt-get install -y software-properties-common
-RUN add-apt-repository ppa:git-core/ppa
-RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
-RUN apt-get install -y git-lfs
-RUN git lfs install
-
-
-
 
 # GPU Environment Setup
 ENV TF_NEED_CUDA 1
@@ -79,7 +64,7 @@ ENV TF_CUDA_CLANG 0
 ENV TF_NEED_MKL 0
 ENV TF_ENABLE_XLA 0
 
-# << END Configure Tensorflow Build
+ENV GIT_LFS_SKIP_SMUDGE=1 
 
 RUN ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1
 RUN cp /usr/include/cudnn.h /usr/local/cuda/include/cudnn.h
@@ -88,10 +73,9 @@ RUN cp /usr/include/cudnn.h /usr/local/cuda/include/cudnn.h
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/usr/local/cuda/extras/CUPTI/lib64:/usr/local/cuda/lib64:/usr/lib/x86_64-linux-gnu/:/usr/local/cuda/lib64/stubs/
 WORKDIR /DeepSpeech/
 
-
 RUN python3 util/taskcluster.py --arch gpu --target native_client/ --branch=v0.2.0
 RUN python3 bin/import_ldc93s1.py ldc93s1
 RUN wget https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/deepspeech/deepspeech_benchmarking.patch
 RUN git apply deepspeech_benchmarking.patch
 ENV LD_LIBRARY_PATH=native_client/
-ENV CUDA_VISIBLE_DEVICES=0
+
