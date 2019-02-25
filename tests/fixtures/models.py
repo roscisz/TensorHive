@@ -32,3 +32,18 @@ def new_reservation(new_user):
         starts_at=now,
         ends_at=now + duration,
     )
+
+
+@pytest.fixture(scope='function')
+def new_reservation_2(new_user):
+    now = datetime.utcnow()
+    duration = timedelta(minutes=60)
+
+    return Reservation(
+        user_id=2,
+        title='TEST TITLE',
+        description='TEST_DESCRIPTION',
+        protected_resource_id='0123456789012345678901234567890123456789',
+        starts_at=now,
+        ends_at=now + duration,
+    )

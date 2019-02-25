@@ -37,10 +37,10 @@ class User(CRUDModel, Base):
     def check_assertions(self):
         # TODO Check if user has roles assigned
         pass
-     
+
     def __repr__(self):
         return '<User id={id}, username={username}>'.format(
-            id=self.id, 
+            id=self.id,
             username=self.username)
 
     @hybrid_property
@@ -78,12 +78,12 @@ class User(CRUDModel, Base):
     def find_by_username(cls, username):
         try:
             result = db_session.query(cls).filter_by(username=username).one()
-        except MultipleResultsFound as e:
+        except MultipleResultsFound:
             # Theoretically cannot happen because of model built-in constraints
             msg = 'Multiple users with identical usernames has been found!'
             log.critical(msg)
             raise MultipleResultsFound(msg)
-        except NoResultFound as e:
+        except NoResultFound:
             msg = 'There is no user with username={}!'.format(username)
             log.warning(msg)
             raise NoResultFound(msg)
@@ -95,18 +95,16 @@ class User(CRUDModel, Base):
         '''Serializes model instance into dict (which is interpreted as json automatically)'''
         try:
             roles = self.role_names
-        except Exception as e:
+        except Exception:
             roles = []
         finally:
             return {
                 'id': self.id,
                 'username': self.username,
                 'createdAt': self.created_at.isoformat(),
-                'roles':  roles
+                'roles': roles
             }
-
 
     @staticmethod
     def verify_hash(password, hash):
         return sha256.verify(password, hash)
-

@@ -9,7 +9,6 @@ G = API.RESPONSES['general']
 @jwt_required
 def create(reservation):
     try:
-        #with flask_app.app_context():
         new_reservation = Reservation(
             title=reservation['title'],
             description=reservation['description'],
@@ -22,7 +21,7 @@ def create(reservation):
     except AssertionError as e:
         content = {'msg': R['create']['failure']['invalid'].format(reason=e)}
         status = 422
-    except Exception as e:
+    except Exception:
         content = {'msg': G['internal_error']}
         status = 500
     else:

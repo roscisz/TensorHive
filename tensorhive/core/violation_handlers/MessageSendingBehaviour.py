@@ -15,7 +15,7 @@ class MessageSendingBehaviour():
 
     def _merged_command(self, sessions: List):
         '''
-        Concatenates multiple commands into one, 
+        Concatenates multiple commands into one,
         It allows using ssh connection only once instead of multiple times (for each tty separately)
 
         Example: 'echo ... | write A pty/1; echo ... | write A pty/2; echo ... | write A pty/3'
@@ -40,7 +40,7 @@ class MessageSendingBehaviour():
     def _send_message_to_ttys(self, connection, sessions):
         '''Sends a mesage to all user's terminal sessions within given connection (node)'''
         command = self._merged_command(sessions)
-        _ = connection.run_command(command)#, stop_on_errors=False)
+        connection.run_command(command)  # , stop_on_errors=False)
 
         for session in sessions:
             log.warning('Violation warning sent to {username}, {tty_name}'.format(

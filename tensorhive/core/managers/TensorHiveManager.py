@@ -30,7 +30,6 @@ class TensorHiveManager(metaclass=Singleton):
         self.connection_manager = SSHConnectionManager(config=SSH.AVAILABLE_NODES)
         self.service_manager = None
 
-
     @staticmethod
     def instantiate_services_from_config() -> List[Service]:
         '''Creates preconfigured instances of services based on config'''
@@ -42,7 +41,7 @@ class TensorHiveManager(metaclass=Singleton):
                 monitors.append(gpu_monitor)
             # TODO Add more monitors here
             monitoring_service = MonitoringService(
-                monitors=monitors, 
+                monitors=monitors,
                 interval=MONITORING_SERVICE.UPDATE_INTERVAL
             )
             services.append(monitoring_service)
@@ -52,12 +51,11 @@ class TensorHiveManager(metaclass=Singleton):
                 message_sending_handler = ProtectionHandler(behaviour=MessageSendingBehaviour())
                 violation_handlers.append(message_sending_handler)
             protection_service = ProtectionService(
-                handlers=violation_handlers, 
+                handlers=violation_handlers,
                 interval=PROTECTION_SERVICE.UPDATE_INTERVAL
             )
             services.append(protection_service)
         return services
-
 
     def configure_services_from_config(self):
         services = self.instantiate_services_from_config()
@@ -65,11 +63,9 @@ class TensorHiveManager(metaclass=Singleton):
                                               infrastructure_manager=self.infrastructure_manager,
                                               connection_manager=self.connection_manager)
 
-
     def init(self):
         log.info('[⚙] Initializing services...'.format(self.__class__.__name__))
         self.service_manager.start_all_services()
-
 
     def shutdown(self):
         log.info('[⚙] Shutting down all services...')
