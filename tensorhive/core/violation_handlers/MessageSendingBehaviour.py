@@ -47,6 +47,9 @@ class MessageSendingBehaviour():
         intruder_username = violation_data['INTRUDER_USERNAME']
         connection = violation_data['SSH_CONNECTION']
 
+        if not len(tty_sessions):
+            return
+
         command = self.merged_commands(recipient=intruder_username, ttys=tty_sessions, msg=message)
         _ = connection.run_command(command)#, stop_on_errors=False)
 
