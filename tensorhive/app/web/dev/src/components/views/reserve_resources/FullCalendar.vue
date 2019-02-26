@@ -5,26 +5,24 @@
     @close="showModalReserve = false"
     :startDate="startDate"
     :endDate="endDate"
-    :min-reservation-time="minReservationTime"
-    :max-reservation-time="maxReservationTime"
     :resources-checkboxes="resourcesCheckboxes"
     :number-of-resources="selectedResources.length"
     :add-reservation="addReservation"
   ></full-calendar-reserve>
-  <full-calendar-cancel
-    :show-modal="showModalCancel"
-    @close="showModalCancel = false"
+  <full-calendar-info
+    :show-modal="showModalInfo"
+    @close="showModalInfo = false"
     :reservation="reservation"
     :cancel="cancelReservation"
-  ></full-calendar-cancel>
+    :update="updateReservation"
+  ></full-calendar-info>
 </div>
 </template>
 
 <script>
 import FullCalendarReserve from './FullCalendarReserve.vue'
-import FullCalendarCancel from './FullCalendarCancel.vue'
+import FullCalendarInfo from './FullCalendarInfo.vue'
 import api from '../../../api'
-import config from '../../../config'
 import $ from 'jquery'
 import _ from 'lodash'
 require('../../../../static/fullcalendar/fullcalendar.js')
@@ -32,7 +30,7 @@ require('../../../../static/fullcalendar/fullcalendar.js')
 export default {
   components: {
     FullCalendarReserve,
-    FullCalendarCancel
+    FullCalendarInfo
   },
 
   props: {
@@ -42,6 +40,30 @@ export default {
 
   watch: {
     updateCalendar () {
+      this.calendar.fullCalendar('refetchEvents')
+    }
+  },
+
+  data () {
+    return {
+      calendar: null,
+      showModalReserve: false,
+      showModalInfo: false,
+      reservation: {
+        title: '',
+        description: '',
+        resourceId: '',
+        start: new Date(),
+        end: new Date()
+      },
+      startDate: null,
+      endDate: null,
+      resourcesCheckboxes: []
+    }
+  },
+
+  methods: {
+    getEvents: function (start, end, callback) {
       var resourcesString = ''
       if (this.selectedResources.length > 0) {
         resourcesString = this.selectedResources[0].uuid
@@ -49,12 +71,18 @@ export default {
           resourcesString += ',' + this.selectedResources[i].uuid
         }
       }
-      this.calendar.fullCalendar('removeEventSources')
-      this.calendar.fullCalendar('addEventSource', {
-        url: config.serverURI + '/reservations?resources_ids=' + resourcesString,
-        headers: { Authorization: this.$store.state.accessToken },
-        cache: true
-      })
+      api
+        .request('get', '/reservations?resources_ids=' + resourcesString + '&start=' + start.toISOString() + '&end=' + end.toISOString(), this.$store.state.accessToken)
+        .then(response => {
+          callback(response.data)
+        })
+        .catch(error => {
+          if (!error.hasOwnProperty('response')) {
+            this.$emit('showSnackbar', error.message)
+          } else {
+            this.$emit('showSnackbar', error.response.data.msg)
+          }
+        })
       var obj
       this.resourcesCheckboxes = []
       for (i = 0; i < this.selectedResources.length; i++) {
@@ -69,24 +97,8 @@ export default {
         this.resourcesCheckboxes[i] = obj
       }
       this.addResourcesHeader()
-    }
-  },
+    },
 
-  data () {
-    return {
-      calendar: null,
-      showModalReserve: false,
-      showModalCancel: false,
-      reservation: null,
-      startDate: null,
-      endDate: null,
-      minReservationTime: '',
-      maxReservationTime: '',
-      resourcesCheckboxes: []
-    }
-  },
-
-  methods: {
     addResourcesHeader: function () {
       var dayStart = _.cloneDeep(this.calendar.fullCalendar('getView').start)
       for (var i = 0; i < 7; i++) {
@@ -101,7 +113,7 @@ export default {
           }
           this.calendar.fullCalendar('renderEvent', tempReservation)
         }
-        dayStart = dayStart.add(1, 'days')
+        if (dayStart) dayStart = dayStart.add(1, 'days')
       }
     },
 
@@ -121,6 +133,37 @@ export default {
       return color
     },
 
+    updateReservation: function (reservation, newTime, newTitle, newDescription) {
+      var toUpdate = {
+        id: reservation.id
+      }
+      if (reservation.start.toISOString() !== newTime[0].toISOString()) {
+        toUpdate['start'] = newTime[0].toISOString()
+      }
+      if (reservation.end.toISOString() !== newTime[1].toISOString()) {
+        toUpdate['end'] = newTime[1].toISOString()
+      }
+      if (reservation.title !== newTitle && newTitle !== '') {
+        toUpdate['title'] = newTitle
+      }
+      if (reservation.description !== newDescription && newDescription !== '') {
+        toUpdate['description'] = newDescription
+      }
+      api
+        .request('put', '/reservations', this.$store.state.accessToken, toUpdate)
+        .then(response => {
+          this.calendar.fullCalendar('refetchEvents')
+          this.addResourcesHeader()
+        })
+        .catch(error => {
+          if (!error.hasOwnProperty('response')) {
+            this.$emit('showSnackbar', error.message)
+          } else {
+            this.$emit('showSnackbar', error.response.data.msg)
+          }
+        })
+    },
+
     cancelReservation: function (reservation) {
       api
         .request('delete', '/reservations/' + reservation.id.toString(), this.$store.state.accessToken)
@@ -128,8 +171,11 @@ export default {
           this.calendar.fullCalendar('removeEvents', reservation._id)
         })
         .catch(error => {
-          this.errorMessage = error.response.data.msg
-          this.alert = true
+          if (!error.hasOwnProperty('response')) {
+            this.$emit('showSnackbar', error.message)
+          } else {
+            this.$emit('showSnackbar', error.response.data.msg)
+          }
         })
     },
 
@@ -141,7 +187,11 @@ export default {
           this.addResourcesHeader()
         })
         .catch(error => {
-          this.$emit('showSnackbar', error.response.data.msg)
+          if (!error.hasOwnProperty('response')) {
+            this.$emit('showSnackbar', error.message)
+          } else {
+            this.$emit('showSnackbar', error.response.data.msg)
+          }
         })
     }
   },
@@ -165,21 +215,25 @@ export default {
       timezone: 'local',
       defaultView: 'agendaWeek',
       header: {
-        left: 'prev,next today',
+        left: 'prev,next, today, agendaWeek, week2',
         center: 'title',
-        right: 'agendaWeek, week2'
+        right: ''
       },
       views: {
         week: {
-          columnHeaderFormat: 'ddd D/M'
+          columnHeaderFormat: 'ddd D/M',
+          buttonText: 'One week jump'
         },
         week2: {
           type: 'agendaWeek',
           duration: { days: 7 },
-          buttonText: '+-1 day',
+          buttonText: 'One day jump',
           dateIncrement: { days: 1 },
           columnHeaderFormat: 'ddd D/M'
         }
+      },
+      events: function (start, end, timezone, callback) {
+        self.getEvents(start, end, callback)
       },
       eventRender: function (event, element) {
         element.find('.fc-title').append('<br/>' + event.description)
@@ -190,7 +244,11 @@ export default {
               element.find('.fc-title').prepend((response.data.username).bold().big().italics() + '<br/>')
             })
             .catch(error => {
-              this.$emit('showSnackbar', error.response.data.msg)
+              if (!error.hasOwnProperty('response')) {
+                this.$emit('showSnackbar', error.message)
+              } else {
+                this.$emit('showSnackbar', error.response.data.msg)
+              }
             })
         }
       },
@@ -247,15 +305,13 @@ export default {
           }
           self.startDate = startDate.toDate()
           self.endDate = endDate.toDate()
-          self.minReservationTime = startDate.format()
-          self.maxReservationTime = endDate.format()
           self.showModalReserve = true
         }
       },
 
       eventClick: function (calEvent, jsEvent, view) {
         if ((calEvent.userId === self.$store.state.id || self.$store.state.role === 'admin') && !calEvent.allDay) {
-          self.showModalCancel = true
+          self.showModalInfo = true
           self.reservation = calEvent
         }
       },
