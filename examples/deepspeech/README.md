@@ -9,14 +9,15 @@ implementation in TensorFlow that supports distributed training using Distribute
 ## Table of contents
 - [x] [Installation instructions](#installation)
 - [ ] [Instructions for running the benchmarks](#running-the-benchmarks)
-  - [x] [Manually](#running-manually)
-  - [x] [Using run_cluster.sh](#using-runcluster.sh-to-run-distributed-benchmarks)
-  - [ ] [Using TensorHive](#running-using-tensorhive)
+  - [x] [Manually](#manually)
+  - [x] [Using run_cluster.sh](#run-clustersh)
+  - [x] [Using Docker](#docker)
+  - [x] [Using Kubernetes](#kubernetes)
+  - [ ] [Using TensorHive](#tensorhive)
 - [ ] [Experimental results](#experimental-results):
   - [x] [Batch size influence on training performance on various GPUs](#batch-size)
   - [x] [Scalability on multiple GPUs](#multigpu-scalability)
   - [ ] Scalability in a distributed setting
-- [x] [Kubernetes](#kubernetes)  
 
 ## Installation
 
@@ -74,7 +75,7 @@ git apply deepspeech_benchmarking.patch
 In this section we describe the steps to reproduce the [experimental results](#experimental-results),
 assuming that the DeepSpeech training program is installed and the benchmarking patch is applied.
 
-### Running manually
+### Manually
 
 To run the benchmark, specify the number of "global steps" to be benchmarked using the `benchmark_steps` parameter:
 
@@ -98,7 +99,7 @@ For example, to use GPUs 1 and 2, set CUDA_VISIBLE_DEVICES=1,2 and to use all GP
 CUDA_VISIBLE_DEVICES=0,1,2,3. The in-graph replication method for data-parallel, synchronized training implemented in
 Mozilla DeepSpeech will be used.
 
-## Using run-cluster.sh to run distributed benchmarks
+### run-cluster.sh
 
 The Mozilla DeepSpeech implementation supports distributed training using Distributed TensorFlow with a
 parameter server and worker processes. The 'bin/run-cluster.sh' script is helpful for configuring and running
@@ -116,7 +117,58 @@ LD_LIBRARY_PATH=native_client/ bin/run-cluster.sh 1:4:1 --script="python3 DeepSp
 It should be noted that the distributed training introduces a startup overhead, so increasing the number of
 warmup steps can be necessary to collect reliable results.
 
-### Running using TensorHive
+### Docker
+
+We provide a Dockerfile that allows to build and run the benchmark as a Docker image:
+
+
+```bash
+docker build -t deepspeech .
+```
+
+If there is a need to share the image between distributed machines, the repository has to be given
+in the image tag, and the image has to be pushed in to a Docker repository:
+
+```bash
+docker build -t <repositoryname>/deepspeech .
+docker push <repositoryname>/deepspeech
+```
+ 
+Now, the benchmark can be executed in a Docker container, so that no dependencies need to be installed
+on the host machine: 
+ 
+```bash
+docker run deepspeech python3 ./DeepSpeech.py --train_files=ldc93s1/ldc93s1.csv --dev_files=ldc93s1/ldc93s1.csv --test_files=ldc93s1/ldc93s1.csv --log_level=3 --benchmark_steps=10 --train_batch_size=128
+```
+
+
+### Kubernetes
+
+In order to enqueue the benchmark in a Kubernetes installation
+[(for example microk8s)](https://gist.github.com/PiotrowskiD/07a57ad0f21e2b4de78454d02b34865c),
+create an adequate deployment file (example provided in ds.yaml) and create the resource:
+
+```bash
+kubectl create -f ds.yaml
+```
+
+The status of the resulting Pod, its detailed description and logs can be fetch as follows:
+
+```bash
+kubectl get pod
+kubectl describe pod ds
+kubectl logs ds
+``` 
+
+Unfortunately Kubernetes doesn't take into account other process using GPUs which leads to conflicts if
+somebody else runs their jobs manually. Because CUDA_VISIBLE_DEVICES env variable is used inside the
+container, it can only chose from GPUs kubernetes assigns to the container. So if we would like to deploy
+our training to GPU number 3 we would have to set GPUs limit to 4 and set CVD to "3". That is if the GPUs
+are on a single node. If they would be on different ones we could use
+[node labels and selectors](https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes/).
+
+
+### TensorHive
 
 ## Experimental results
 
@@ -150,27 +202,3 @@ Overhead of the Distributed TensorFlow implementation is also visible in the mul
 
 The results show that in the investigated setup it is better to run many processes utilizing single GPUs than 
 to run one process utilizing multiple GPUs. 
-
-
-## Kubernetes
-
-### Running example
-To build docker image using provided Dockerfile run
-`docker build -t <yourdockerhub>/deepspeech .`
-while in directory with Dockerfile.
-Afterwards to push image to dockerhub (no need if it's been built on the same machine it will be tested later on)
-`docker push <yourdockerhub>/deepspeech`
-To run example change image docker name in ds.yaml for a correct one and run
-`sudo kubectl create -f ds.yaml`
-```
-sudo kubectl get pod //see current pods
-sudo kubectl describe pod ds //check pod specification
-sudo kubectl logs ds //check logs from pod
-```
-
-
-### Configuring GPUs
-Unfortunately kubernetes doesn't take into account other process using GPUs which leads to out-of-memory errors if somebody else runs their trening manually. Because CUDA_VISIBLE_DEVICES env variable is used inside the container it can only chose from GPUs kubernetes assigns to the container. So if we would like to deploy our training to GPU number 3 we would have to set GPUs limit to 4 and set CVD to "3". That is if the GPUs are on a single node. If they would be on different ones we could use [node labels and selectors](https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes/).
-
-### Benchmarking results
-After running benchmarks on same commit and envoirment as natively we got very simlliar results which means docker is not adding any overhead (the results may vary a bit due to small variables as temperature of the machine and/or in the room). A significant advantage of Kubernetes is a possibility to just schedule all of the test jobs at once and Kubernetes will deal with running them on free GPUs whenever possible. However while we where testing it we found out that running benchmark on one GPU is noticeably faster if other GPUs are free.
