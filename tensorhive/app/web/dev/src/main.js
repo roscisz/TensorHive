@@ -74,6 +74,29 @@ axios.get('static/config.json').then(response => {
 
   sync(store, router)
 
+  axios.interceptors.response.use(null, (error) => {
+    if (error.config && error.response && error.response.status === 401) {
+      axios.defaults.headers.common['Authorization'] = store.state.refreshToken
+      return axios({ method: 'get', url: config.serverURI + '/user/refresh', data: null })
+        .then(response => {
+          store.commit('SET_ACCESS_TOKEN', 'Bearer ' + response.data.access_token)
+          if (window.localStorage) {
+            window.localStorage.setItem('accessToken', 'Bearer ' + response.data.access_token)
+          }
+          error.config.headers['Authorization'] = 'Bearer ' + response.data.access_token
+          return axios.request(error.config)
+        })
+        .catch(error => {
+          if (!error.hasOwnProperty('response')) {
+            console.log(error.message)
+          } else {
+            console.log(error.response.data.msg)
+          }
+          logout()
+        })
+    }
+    return Promise.reject(error)
+  })
   // Check local storage to handle refreshes
   if (window.localStorage) {
     var localUserString = window.localStorage.getItem('user') || 'null'
@@ -85,29 +108,6 @@ axios.get('static/config.json').then(response => {
       store.commit('SET_REFRESH_TOKEN', window.localStorage.getItem('refreshToken'))
       store.commit('SET_ROLE', window.localStorage.getItem('role'))
       store.commit('SET_ID', window.localStorage.getItem('userId'))
-    }
-    window.setTimeout(function () {
-      refreshToken()
-    }, 1000)
-  }
-
-  function refreshToken () {
-    if (store.state.refreshToken !== null) {
-      api
-        .request('get', '/user/refresh', store.state.refreshToken)
-        .then(response => {
-          store.commit('SET_ACCESS_TOKEN', 'Bearer ' + response.data.access_token)
-          if (window.localStorage) {
-            window.localStorage.setItem('accessToken', 'Bearer ' + response.data.access_token)
-          }
-          window.setTimeout(function () {
-            refreshToken()
-          }, 55000)
-        })
-        .catch(error => {
-          console.log(error)
-          logout()
-        })
     }
   }
 

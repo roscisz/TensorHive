@@ -117,7 +117,8 @@ class ProtectionService(Service):
         return [
             '/usr/lib/xorg/Xorg',
             '/usr/bin/X',
-            'X'
+            'X',
+            '-'  # nvidia-smi on TITAN X shows this for whatever reason...
         ]
 
     def gpu_users(self, node_processes, uuid) -> List[str]:
@@ -135,6 +136,13 @@ class ProtectionService(Service):
         unique_owners = list(set(owners))
         return unique_owners
 
+    def gpu_name(self, hostname: str, uuid: str) -> str:
+        '''Fetches the value of 'name' attribute for GPU with specific UUID'''
+        infrastructure = self.infrastructure_manager.infrastructure
+        all_gpus = infrastructure.get(hostname, {}).get('GPU', {})
+        gpu = all_gpus.get(uuid, {})
+        return gpu.get('name', '<GPU Name not available>')
+
     @override
     def do_run(self):
         time_func = time.perf_counter
@@ -150,7 +158,8 @@ class ProtectionService(Service):
             # 1. Extract reservation info
             uuid = reservation.protected_resource_id
             hostname = self.find_hostname(uuid)
-            username = User.get(reservation.user_id).username
+            user = User.get(reservation.user_id)
+            username = user.username
             if hostname is None or username is None:
                 log.warning('Unable to process the reservation ({}@{}), skipping...'.format(username, hostname))
                 continue
@@ -161,21 +170,33 @@ class ProtectionService(Service):
             node_processes = self.node_gpu_processes(hostname)
             reserved_gpu_process_owners = self.gpu_users(node_processes, uuid)
 
-            # 3. Any session that does not belong to a priviliged user should be remembered
-            unauthorized_sessions = []
-            for session in node_sessions:
-                session_opened_by_unpriviliged_user = session['USER'] != username
-                unpriviliged_user_has_active_gpu_processes = session['USER'] in reserved_gpu_process_owners
-                if session_opened_by_unpriviliged_user and unpriviliged_user_has_active_gpu_processes:
-                    # Inject additional data for handler
-                    session['LEGITIMATE_USER'] = username
-                    session['GPU_UUID'] = uuid
-                    unauthorized_sessions.append(session)
+            is_unpriviliged = lambda sess: sess['USER'] in reserved_gpu_process_owners
+            intruder_ttys = [sess for sess in node_sessions if is_unpriviliged(sess)]
 
-            # 4. Execute handler's behaviour on unauthorized ttys
-            if len(unauthorized_sessions) > 0:
+            try:
+                # Priviliged user can be ignored on this list
+                reserved_gpu_process_owners.remove(username)
+            except ValueError:
+                pass
+            finally:
+                unpriviliged_gpu_process_owners = reserved_gpu_process_owners
+
+
+            # 3. Execute protection handlers
+            for intruder in unpriviliged_gpu_process_owners:
+                violation_data = {
+                    'INTRUDER_USERNAME': intruder,
+                    'RESERVATION_OWNER_USERNAME': username,
+                    'RESERVATION_OWNER_EMAIL': user.email,
+                    'RESERVATION_END': Reservation.parsed_output_datetime(reservation.ends_at),
+                    'UUID': uuid,
+                    'GPU_NAME': self.gpu_name(hostname, uuid),
+                    'HOSTNAME': hostname,
+                    'TTY_SESSIONS': intruder_ttys,
+                    'SSH_CONNECTION': node_connection
+                }
                 for handler in self.violation_handlers:
-                    handler.trigger_action(node_connection, unauthorized_sessions)
+                    handler.trigger_action(violation_data)
 
         end_time = time_func()
         execution_time = end_time - start_time

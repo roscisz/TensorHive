@@ -30,8 +30,6 @@
               range type="datetime"
               lang="en"
               format="YYYY-MM-DD HH:mm"
-              :not-before="minReservationTime"
-              :not-after="maxReservationTime"
               :time-picker-options="timePickerOptions"
             ></date-picker>
           </label>
@@ -79,8 +77,6 @@ export default {
     showModal: Boolean,
     startDate: Date,
     endDate: Date,
-    minReservationTime: String,
-    maxReservationTime: String,
     resourcesCheckboxes: Array,
     numberOfResources: Number,
     addReservation: Function

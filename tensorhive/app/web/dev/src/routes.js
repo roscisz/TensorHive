@@ -1,6 +1,5 @@
 import DashView from './components/TheDash.vue'
 import LoginView from './components/TheLogin.vue'
-import CreateView from './components/TheCreate.vue'
 import NotFoundView from './components/404.vue'
 // Import Views - Dash
 import CalendarView from './components/views/ReservationsOverview.vue'
@@ -52,14 +51,6 @@ const routes = [
     component: LoginView,
     meta: {
       role: 'user'
-    }
-  },
-  {
-    path: '/create',
-    component: CreateView,
-    meta: {
-      requiresAuth: true,
-      role: 'admin'
     }
   },
   {

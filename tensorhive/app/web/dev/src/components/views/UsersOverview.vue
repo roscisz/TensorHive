@@ -7,9 +7,97 @@
     >
       {{ errorMessage }}
     </v-alert>
+    <v-alert
+      v-model="created"
+      dismissible
+      type="info"
+    >
+      User successfully created
+    </v-alert>
+    <v-layout row justify-center>
+      <v-dialog
+        persistent
+        width="50vw"
+        v-model="showModal"
+      >
+        <v-card>
+          <v-card-title>
+            <span class="headline">Create new user</span>
+          </v-card-title>
+          <v-card-text>
+            <form @submit.prevent="createUser">
+              Create new user
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                <input
+                  class="form-control"
+                  name="modalUsername"
+                  placeholder="Username"
+                  type="text"
+                  v-model="modalUsername"
+                >
+              </div>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                <input
+                  class="form-control"
+                  name="modalEmail"
+                  placeholder="Email"
+                  type="text"
+                  v-model="modalEmail"
+                >
+              </div>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-lock"></i></span>
+                <input
+                  class="form-control"
+                  name="modalPassword"
+                  placeholder="Password"
+                  type="password"
+                  v-model="modalPassword"
+                >
+              </div>
+              Repeat password
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-lock"></i></span>
+                <input
+                  class="form-control"
+                  name="modalPassword2"
+                  placeholder="Password2"
+                  type="password"
+                  v-model="modalPassword2"
+                >
+              </div>
+              <v-alert
+                v-model="modalAlert"
+                dismissible
+                type="error"
+              >
+                {{ errorMessage }}
+              </v-alert>
+              <v-btn
+                color="info"
+                small
+                outline
+                round
+                @click="showModal=false"
+              >
+                Cancel
+              </v-btn>
+              <v-btn
+                color="success"
+                type="submit"
+              >
+                Create
+              </v-btn>
+            </form>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-layout>
     <div>
       <div class="text-xs-center pt-2">
-        <v-btn color="primary" @click="createUser()">Create user</v-btn>
+        <v-btn color="primary" @click="showModal=true">Create user</v-btn>
       </div>
       <v-dialog v-model="dialog" max-width="500px">
         <v-card>
@@ -31,6 +119,22 @@
                 placeholder="Username"
                 type="text"
                 v-model="user.username"
+              >
+            </div>
+            <v-card-text>
+              Current email: {{currentUser.email}}
+            </v-card-text>
+            <v-card-text>
+              New email
+            </v-card-text>
+            <div class="input-group">
+              <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+              <input
+                class="form-control"
+                name="modalEmail"
+                placeholder="Email"
+                type="text"
+                v-model="user.email"
               >
             </div>
             <v-card-text>
@@ -90,6 +194,7 @@
           <tr>
             <td>{{ props.item.id }}</td>
             <td>{{ props.item.username }}</td>
+            <td>{{ props.item.email }}</td>
             <td>{{ props.item.createdAt }}</td>
             <td>{{ props.item.role }}</td>
             <td>
@@ -128,6 +233,7 @@ export default {
       headers: [
         { text: 'User id', value: 'id' },
         { text: 'Username', value: 'username' },
+        { text: 'Email', value: 'email' },
         { text: 'Created at', value: 'createdAt' },
         { text: 'Role', value: 'role' },
         { text: 'Actions', value: 'id' }
@@ -136,6 +242,7 @@ export default {
       user: {
         id: -1,
         username: '',
+        email: '',
         password: '',
         password2: '',
         roles: []
@@ -145,7 +252,14 @@ export default {
       alert: false,
       errorMessage: '',
       userCheckbox: false,
-      adminCheckbox: false
+      adminCheckbox: false,
+      modalUsername: '',
+      modalEmail: '',
+      modalPassword: '',
+      modalPassword2: '',
+      modalAlert: false,
+      created: false,
+      showModal: false
     }
   },
 
@@ -164,9 +278,24 @@ export default {
   },
 
   methods: {
-    createUser: function () {
-      this.$router.push('/create')
-      this.checkUsers()
+    createUser () {
+      if (this.modalPassword === this.modalPassword2) {
+        const { modalUsername, modalEmail, modalPassword } = this
+        api
+          .request('post', '/user/create', this.$store.state.accessToken, { 'username': modalUsername, 'email': modalEmail, 'password': modalPassword })
+          .then(response => {
+            this.showModal = false
+            this.created = true
+            this.checkUsers()
+          })
+          .catch(error => {
+            this.errorMessage = error.response.data.msg
+            this.modalAlert = true
+          })
+      } else {
+        this.errorMessage = 'Passwords do not match'
+        this.modalAlert = true
+      }
     },
 
     editUser: function (currentUser) {
@@ -194,6 +323,9 @@ export default {
         if (this.user.username !== '') {
           updatedUser['username'] = this.user.username
         }
+        if (this.user.email !== '') {
+          updatedUser['email'] = this.user.email
+        }
         if (this.user.password !== '') {
           updatedUser['password'] = this.user.password
         }
@@ -206,6 +338,7 @@ export default {
             this.user = {
               id: -1,
               username: '',
+              email: '',
               password: '',
               password2: '',
               roles: []
@@ -279,3 +412,37 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.input-group {
+  padding-bottom: 2em;
+  height: 4em;
+  width: 100%;
+}
+
+.input-group span.input-group-addon {
+  width: 2em;
+  height: 4em;
+}
+
+@media (max-width: 1241px) {
+  .input-group input {
+    height: 4em;
+  }
+}
+@media (min-width: 1242px) {
+  form {
+    padding-left: 20em;
+    padding-right: 20em;
+  }
+
+  .input-group input {
+    height: 6em;
+  }
+}
+
+.input-group-addon i {
+  height: 15px;
+  width: 15px;
+}
+</style>
