@@ -37,7 +37,16 @@
                   v-model="modalUsername"
                 >
               </div>
-
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                <input
+                  class="form-control"
+                  name="modalEmail"
+                  placeholder="Email"
+                  type="text"
+                  v-model="modalEmail"
+                >
+              </div>
               <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-lock"></i></span>
                 <input
@@ -113,6 +122,22 @@
               >
             </div>
             <v-card-text>
+              Current email: {{currentUser.email}}
+            </v-card-text>
+            <v-card-text>
+              New email
+            </v-card-text>
+            <div class="input-group">
+              <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+              <input
+                class="form-control"
+                name="modalEmail"
+                placeholder="Email"
+                type="text"
+                v-model="user.email"
+              >
+            </div>
+            <v-card-text>
               New password
             </v-card-text>
             <div class="input-group">
@@ -169,6 +194,7 @@
           <tr>
             <td>{{ props.item.id }}</td>
             <td>{{ props.item.username }}</td>
+            <td>{{ props.item.email }}</td>
             <td>{{ props.item.createdAt }}</td>
             <td>{{ props.item.role }}</td>
             <td>
@@ -207,6 +233,7 @@ export default {
       headers: [
         { text: 'User id', value: 'id' },
         { text: 'Username', value: 'username' },
+        { text: 'Email', value: 'email' },
         { text: 'Created at', value: 'createdAt' },
         { text: 'Role', value: 'role' },
         { text: 'Actions', value: 'id' }
@@ -215,6 +242,7 @@ export default {
       user: {
         id: -1,
         username: '',
+        email: '',
         password: '',
         password2: '',
         roles: []
@@ -226,6 +254,7 @@ export default {
       userCheckbox: false,
       adminCheckbox: false,
       modalUsername: '',
+      modalEmail: '',
       modalPassword: '',
       modalPassword2: '',
       modalAlert: false,
@@ -251,9 +280,9 @@ export default {
   methods: {
     createUser () {
       if (this.modalPassword === this.modalPassword2) {
-        const { modalUsername, modalPassword } = this
+        const { modalUsername, modalEmail, modalPassword } = this
         api
-          .request('post', '/user/create', this.$store.state.accessToken, { 'username': modalUsername, 'password': modalPassword })
+          .request('post', '/user/create', this.$store.state.accessToken, { 'username': modalUsername, 'email': modalEmail, 'password': modalPassword })
           .then(response => {
             this.showModal = false
             this.created = true
@@ -294,6 +323,9 @@ export default {
         if (this.user.username !== '') {
           updatedUser['username'] = this.user.username
         }
+        if (this.user.email !== '') {
+          updatedUser['email'] = this.user.email
+        }
         if (this.user.password !== '') {
           updatedUser['password'] = this.user.password
         }
@@ -306,6 +338,7 @@ export default {
             this.user = {
               id: -1,
               username: '',
+              email: '',
               password: '',
               password2: '',
               roles: []
