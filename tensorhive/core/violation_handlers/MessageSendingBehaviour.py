@@ -13,11 +13,11 @@ class MessageSendingBehaviour():
             You are violating {owner_name}\'s reservation!
             Please, stop all your computations on {gpu_name} ({gpu_uuid}).
             ''')
-        
+
         message = message_template.format(
-                        owner_name=data['RESERVATION_OWNER_USERNAME'],
-                        gpu_name=data['GPU_NAME'],
-                        gpu_uuid=data['UUID'])
+            owner_name=data['RESERVATION_OWNER_USERNAME'],
+            gpu_name=data['GPU_NAME'],
+            gpu_uuid=data['UUID'])
         return message
 
     def _build_single_command(self, recipient: str, tty: str, msg: str) -> str:
@@ -51,7 +51,7 @@ class MessageSendingBehaviour():
             return
 
         command = self.merged_commands(recipient=intruder_username, ttys=tty_sessions, msg=message)
-        _ = connection.run_command(command)#, stop_on_errors=False)
+        connection.run_command(command)  # , stop_on_errors=False)
 
         for tty in tty_sessions:
             log.warning('Violation warning sent to {username}, {tty_name}'.format(

@@ -58,7 +58,7 @@ class EmailSendingBehaviour:
         email = None
         try:
             intruder = User.find_by_username(username)
-        except NoResultFound as e:
+        except NoResultFound:
             # User does not exist or has no email address
             pass
         except Exception as e:
@@ -75,7 +75,7 @@ class EmailSendingBehaviour:
         '''
         try:
             ready_status = self.time_of_last_email[email_address] + self.interval < datetime.datetime.utcnow()
-        except KeyError as e:
+        except KeyError:
             ready_status = True
         finally:
             return ready_status
@@ -136,7 +136,7 @@ class EmailSendingBehaviour:
                 self.send_email_to_intruder(violation_data)
             if MAILBOT.NOTIFY_ADMIN and self.ready_to_send(MAILBOT.ADMIN_EMAIL):
                 self.send_email_to_admin(violation_data)
-        except AssertionError as e:
+        except AssertionError:
             pass
         except Exception as e:
             log.critical(e)

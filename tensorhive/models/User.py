@@ -42,7 +42,7 @@ class User(CRUDModel, Base):
 
     def __repr__(self):
         return '<User id={id}, username={username} email={email}>'.format(
-            id=self.id, 
+            id=self.id,
             username=self.username,
             email=self.email)
 
@@ -111,7 +111,7 @@ class User(CRUDModel, Base):
                 'id': self.id,
                 'username': self.username,
                 'createdAt': self.created_at.isoformat(),
-                'roles':  roles,
+                'roles': roles,
                 'email': self.email
             }
 

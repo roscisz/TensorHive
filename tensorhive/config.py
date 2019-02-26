@@ -204,6 +204,7 @@ class PROTECTION_SERVICE:
     NOTIFY_ON_PTY = config.getboolean(section, 'notify_on_pty', fallback=True)
     NOTIFY_VIA_EMAIL = config.getboolean(section, 'notify_via_email', fallback=False)
 
+
 class MAILBOT:
     mailbot_config = ConfigLoader.load(CONFIG_FILES.MAILBOT_CONFIG_PATH, displayed_title='mailbot')
     section = 'general'
@@ -237,6 +238,7 @@ class MAILBOT:
     section = 'template/admin'
     ADMIN_SUBJECT = mailbot_config.get(section, 'subject')
     ADMIN_BODY_TEMPLATE = mailbot_config.get(section, 'html_body')
+
 
 class AUTH:
     from datetime import timedelta

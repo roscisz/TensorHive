@@ -46,6 +46,7 @@ class Message:
             Body: {}
             '''.format(self.author, self.recipients, self.subject, self.body)
 
+
 class MessageBodyTemplater:
     def __init__(self, template: str):
         self.template = template

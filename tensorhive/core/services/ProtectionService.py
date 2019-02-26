@@ -181,7 +181,6 @@ class ProtectionService(Service):
             finally:
                 unpriviliged_gpu_process_owners = reserved_gpu_process_owners
 
-
             # 3. Execute protection handlers
             for intruder in unpriviliged_gpu_process_owners:
                 violation_data = {
