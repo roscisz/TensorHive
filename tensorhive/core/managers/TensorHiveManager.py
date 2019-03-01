@@ -6,13 +6,14 @@ from tensorhive.core.managers.ServiceManager import ServiceManager
 from tensorhive.core.services.Service import Service
 from typing import List, Dict
 from tensorhive.core.utils.decorators.override import override
-from tensorhive.config import SSH, MONITORING_SERVICE, PROTECTION_SERVICE
+from tensorhive.config import SSH, MONITORING_SERVICE, PROTECTION_SERVICE, USAGE_LOGGING_SERVICE
 from tensorhive.api.APIServer import APIServer
 from tensorhive.core.utils.StoppableThread import StoppableThread
 from tensorhive.core.monitors.Monitor import Monitor
 from tensorhive.core.monitors.GPUMonitoringBehaviour import GPUMonitoringBehaviour
 from tensorhive.core.services.MonitoringService import MonitoringService
 from tensorhive.core.services.ProtectionService import ProtectionService
+from tensorhive.core.services.UsageLoggingService import UsageLoggingService
 from tensorhive.core.violation_handlers.ProtectionHandler import ProtectionHandler
 from tensorhive.core.violation_handlers.MessageSendingBehaviour import MessageSendingBehaviour
 from tensorhive.core.violation_handlers.EmailSendingBehaviour import EmailSendingBehaviour
@@ -59,6 +60,9 @@ class TensorHiveManager(metaclass=Singleton):
                 interval=PROTECTION_SERVICE.UPDATE_INTERVAL
             )
             services.append(protection_service)
+        if USAGE_LOGGING_SERVICE.ENABLED:
+            usage_logging_service = UsageLoggingService(interval=USAGE_LOGGING_SERVICE.UPDATE_INTERVAL)
+            services.append(usage_logging_service)
         return services
 
     def configure_services_from_config(self):
