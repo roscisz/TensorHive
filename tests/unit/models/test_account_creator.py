@@ -5,7 +5,7 @@ import pytest
 
 
 @pytest.mark.parametrize('test_name, test_input', [
-    ('will_pass', ['y', 'some_username', 'some_password', 'some_password', 'y', 'n'])
+    ('will_pass', ['y', 'some_username', 'some@email.com', 'some_password', 'some_password', 'y', 'n'])
 ])
 def test_prompts(tables, test_name, test_input):
     mocked_input = '\n'.join(test_input)

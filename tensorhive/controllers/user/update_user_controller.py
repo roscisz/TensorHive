@@ -9,18 +9,23 @@ G = API.RESPONSES['general']
 
 
 @admin_required
+@jwt_required
 def update(user):
+    print('REQ', user)
     if user.get('id') is not None:
         try:
             found_user = User.get(user['id'])
-            found_user.username = user['username'] if user.get('username') is not None else found_user.username
-            if user.get('password') is not None:
-                found_user.password = user['password']
-            if user.get('roles') is not None:
-                roles = [Role(name=role_name) for role_name in user['roles']]
-                found_user.roles = roles
-            found_user.save()
+            updateable_field_names = ['username', 'password', 'email']
 
+            for field_name in updateable_field_names:
+                if user.get(field_name) is not None:
+                    if field_name == 'roles':
+                        new_value = [Role(name=role_name) for role_name in user['roles']]
+                    else:
+                        new_value = user[field_name]
+                    setattr(found_user, field_name, new_value)
+
+            found_user.save()
         except AssertionError as e:
             content = {'msg': R['update']['failure']['invalid'].format(reason=e)}
             status = 422

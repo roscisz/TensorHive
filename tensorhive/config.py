@@ -1,23 +1,28 @@
 from pathlib import PosixPath
 import configparser
 from typing import Dict, Optional, Any, List
-import logging
+from inspect import cleandoc
 import shutil
 import tensorhive
-
+import os
+import logging
 log = logging.getLogger(__name__)
 
 
 class CONFIG_FILES:
-    # TensorHive tries to load these by default
+    # Where to copy files
+    # (TensorHive tries to load these by default)
     config_dir = PosixPath.home() / '.config/TensorHive'
     MAIN_CONFIG_PATH = str(config_dir / 'main_config.ini')
     HOSTS_CONFIG_PATH = str(config_dir / 'hosts_config.ini')
+    MAILBOT_CONFIG_PATH = str(config_dir / 'mailbot_config.ini')
 
-    # Clone these files when default files are not found (and user does not)
+    # Where to get file templates from
+    # (Clone file when it's not found in config directory)
     tensorhive_package_dir = PosixPath(__file__).parent
     MAIN_CONFIG_TEMPLATE_PATH = str(tensorhive_package_dir / 'main_config.ini')
     HOSTS_CONFIG_TEMPLATE_PATH = str(tensorhive_package_dir / 'hosts_config.ini')
+    MAILBOT_TEMPLATE_CONFIG_PATH = str(tensorhive_package_dir / 'mailbot_config.ini')
 
 
 class ConfigInitilizer:
@@ -25,10 +30,11 @@ class ConfigInitilizer:
 
     def __init__(self):
         # 1. Check if all config files exist
-        both_exist = PosixPath(CONFIG_FILES.MAIN_CONFIG_PATH).exists() and \
-            PosixPath(CONFIG_FILES.HOSTS_CONFIG_PATH).exists()
+        all_exist = PosixPath(CONFIG_FILES.MAIN_CONFIG_PATH).exists() and \
+            PosixPath(CONFIG_FILES.HOSTS_CONFIG_PATH).exists() and \
+            PosixPath(CONFIG_FILES.MAILBOT_CONFIG_PATH).exists()
 
-        if not both_exist:
+        if not all_exist:
             log.warning('[•] Detected missing default config file(s), recreating...')
             self.recreate_default_configuration_files()
 
@@ -40,6 +46,13 @@ class ConfigInitilizer:
             # 2. Clone templates safely from `tensorhive` package
             self.safe_copy(src=CONFIG_FILES.MAIN_CONFIG_TEMPLATE_PATH, dst=CONFIG_FILES.MAIN_CONFIG_PATH)
             self.safe_copy(src=CONFIG_FILES.HOSTS_CONFIG_TEMPLATE_PATH, dst=CONFIG_FILES.HOSTS_CONFIG_PATH)
+            self.safe_copy(src=CONFIG_FILES.MAILBOT_TEMPLATE_CONFIG_PATH, dst=CONFIG_FILES.MAILBOT_CONFIG_PATH)
+
+            # 3. Change config files permission
+            rw_owner_only = 0o600
+            os.chmod(CONFIG_FILES.MAIN_CONFIG_PATH, rw_owner_only)
+            os.chmod(CONFIG_FILES.HOSTS_CONFIG_PATH, rw_owner_only)
+            os.chmod(CONFIG_FILES.MAILBOT_CONFIG_PATH, rw_owner_only)
         except Exception:
             log.error('[✘] Unable to recreate configuration files.')
 
@@ -79,6 +92,18 @@ def display_config(cls):
     for key, value in cls.__dict__.items():
         if key.isupper():
             print('{} = {}'.format(key, value))
+
+
+def check_env_var(name: str):
+    '''Makes sure that env variable is declared'''
+    if not os.getenv(name):
+        msg = cleandoc(
+            '''
+            {env} - undeclared environment variable!
+            Try this: `export {env}="..."`
+            ''').format(env=name).split('\n')
+        log.warning(msg[0])
+        log.warning(msg[1])
 
 
 class SSH:
@@ -177,6 +202,42 @@ class PROTECTION_SERVICE:
     ENABLED = config.getboolean(section, 'enabled', fallback=True)
     UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=2.0)
     NOTIFY_ON_PTY = config.getboolean(section, 'notify_on_pty', fallback=True)
+    NOTIFY_VIA_EMAIL = config.getboolean(section, 'notify_via_email', fallback=False)
+
+
+class MAILBOT:
+    mailbot_config = ConfigLoader.load(CONFIG_FILES.MAILBOT_CONFIG_PATH, displayed_title='mailbot')
+    section = 'general'
+    INTERVAL = mailbot_config.getfloat(section, 'interval', fallback=10.0)
+    NOTIFY_INTRUDER = mailbot_config.getboolean(section, 'notify_intruder', fallback=True)
+    NOTIFY_ADMIN = mailbot_config.getboolean(section, 'notify_admin', fallback=False)
+    ADMIN_EMAIL = mailbot_config.get(section, 'admin_email', fallback=None)
+
+    # FIXME Not sure if this should be required
+    section = 'smtp'
+    SMTP_LOGIN = mailbot_config.get(section, 'email', fallback=None)
+    SMTP_PASSWORD = mailbot_config.get(section, 'password', fallback=None)
+    SMTP_SERVER = mailbot_config.get(section, 'smtp_server', fallback=None)
+    SMTP_PORT = mailbot_config.getint(section, 'smtp_port', fallback=587)
+
+    # Simple checks between 'general' and 'smtp' section
+    if PROTECTION_SERVICE.NOTIFY_VIA_EMAIL and (NOTIFY_INTRUDER or NOTIFY_ADMIN):
+        try:
+            assert SMTP_LOGIN and SMTP_PASSWORD and SMTP_SERVER
+        except AssertionError:
+            log.warning('[MAILBOT] Incomplete SMTP configuration, check your config')
+
+        if NOTIFY_ADMIN and not ADMIN_EMAIL:
+            log.warning('[MAILBOT] Invalid admin email address, check your config.')
+
+    # FIXME Not sure if this should be required
+    section = 'template/intruder'
+    INTRUDER_SUBJECT = mailbot_config.get(section, 'subject')
+    INTRUDER_BODY_TEMPLATE = mailbot_config.get(section, 'html_body')
+
+    section = 'template/admin'
+    ADMIN_SUBJECT = mailbot_config.get(section, 'subject')
+    ADMIN_BODY_TEMPLATE = mailbot_config.get(section, 'html_body')
 
 
 class AUTH:
