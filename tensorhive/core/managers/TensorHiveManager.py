@@ -5,7 +5,7 @@ from tensorhive.core.managers.SSHConnectionManager import SSHConnectionManager
 from tensorhive.core.managers.ServiceManager import ServiceManager
 from tensorhive.core.services.Service import Service
 from typing import List, Dict
-from tensorhive.core.utils.decorators.override import override
+from tensorhive.core.utils.decorators import override
 from tensorhive.config import SSH, MONITORING_SERVICE, PROTECTION_SERVICE, USAGE_LOGGING_SERVICE
 from tensorhive.api.APIServer import APIServer
 from tensorhive.core.utils.StoppableThread import StoppableThread

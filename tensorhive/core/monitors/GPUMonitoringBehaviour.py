@@ -1,5 +1,5 @@
 from tensorhive.core.monitors.MonitoringBehaviour import MonitoringBehaviour
-from tensorhive.core.utils.decorators.override import override
+from tensorhive.core.utils.decorators import override
 from typing import Dict, List
 from tensorhive.core.utils.NvidiaSmiParser import NvidiaSmiParser
 from pssh.exceptions import Timeout, UnknownHostException, ConnectionErrorException, AuthenticationException

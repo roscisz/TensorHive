@@ -1,5 +1,5 @@
 from tensorhive.core.violation_handlers.ProtectionHandler import ProtectionHandler
-from tensorhive.core.utils.decorators.override import override
+from tensorhive.core.utils.decorators.import override
 from typing import Generator, Dict, List, Any
 from inspect import cleandoc
 import logging
