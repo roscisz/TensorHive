@@ -8,48 +8,41 @@
       <v-card>
         <v-card-text>
           <v-btn
-            small
-            outline
-            round
+            class="float-right-button"
+            flat
+            icon
+            color="black"
             @click="close()"
           >
-            Close
-          </v-btn>
-          <v-btn
-            color="error"
-            small
-            round
-            @click="cancelCard=!cancelCard; updateCard=false"
-          >
-            Cancel reservation
-          </v-btn>
-          <v-btn
-            color="info"
-            small
-            round
-            @click="updateCard=!updateCard; cancelCard=false"
-          >
-            Edit reservation
+            <v-icon>close</v-icon>
           </v-btn>
         </v-card-text>
         <v-card-text>
-          Title: {{reservation.title}}
+          <b>Title:</b> {{reservation.title}}
         </v-card-text>
-        <v-textarea v-if="updateCard"
-            outline
-            label="Title"
-            v-model="newTitle"
-          ></v-textarea>
+        <v-textarea
+          v-if="updateCard"
+          outline
+          label="Title"
+          v-model="newTitle"
+        ></v-textarea>
         <v-card-text>
-          Description: {{reservation.description}}
+          <b>Description:</b> {{reservation.description}}
         </v-card-text>
-        <v-textarea v-if="updateCard"
-            outline
-            label="Description"
-            v-model="newDescription"
-          ></v-textarea>
+        <v-textarea
+          v-if="updateCard"
+          outline
+          label="Description"
+          v-model="newDescription"
+        ></v-textarea>
         <v-card-text>
-          Start: {{reservation.start.toString()}} End: {{reservation.end.toString()}}
+          <b>Average GPU utilization:</b> {{gpuUtilAvg}}
+        </v-card-text>
+        <v-card-text>
+          <b>Average GPU memory utilization:</b> {{memUtilAvg}}
+        </v-card-text>
+        <v-card-text>
+          <b>Start:</b> {{reservation.start.toString()}} <b>End:</b> {{reservation.end.toString()}}
         </v-card-text>
         <div v-if="updateCard">
           <date-picker
@@ -62,7 +55,27 @@
           ></date-picker>
         </div>
         <v-card-text>
-          GPU UUID: {{reservation.resourceId}}
+          <b>GPU UUID:</b> {{reservation.resourceId}}
+        </v-card-text>
+        <v-card-text class="container">
+          <v-btn
+            class="float-right-button"
+            color="error"
+            small
+            round
+            @click="cancelCard=!cancelCard; updateCard=false"
+          >
+            Cancel reservation
+          </v-btn>
+          <v-btn
+            class="float-right-button"
+            color="info"
+            small
+            round
+            @click="updateCard=!updateCard; cancelCard=false"
+          >
+            Edit reservation
+          </v-btn>
         </v-card-text>
         <v-card-text v-if="cancelCard">
           Do you want to cancel selected reservation?
@@ -118,6 +131,26 @@ export default {
     update: Function
   },
   computed: {
+    gpuUtilAvg () {
+      if (this.reservation.gpuUtilAvg === null) {
+        return 'Reservation is not completed yet, no data'
+      } else if (this.reservation.gpuUtilAvg === -1) {
+        return 'This GPU does not support NVIDIA-SMI'
+      } else {
+        return this.reservation.gpuUtilAvg + '%'
+      }
+    },
+
+    memUtilAvg () {
+      if (this.reservation.memUtilAvg === null) {
+        return 'Reservation is not completed yet, no data'
+      } else if (this.reservation.memUtilAvg === -1) {
+        return 'This GPU does not support NVIDIA-SMI'
+      } else {
+        return this.reservation.memUtilAvg + '%'
+      }
+    },
+
     selectedTimeChanged () {
       if (this.reservation.start instanceof Date) return [this.reservation.start, this.reservation.end]
       else return [new Date(this.reservation.start), new Date(this.reservation.end)]
@@ -165,3 +198,12 @@ export default {
   }
 }
 </script>
+
+<style>
+.float-right-button {
+  float: right;
+}
+.container {
+  overflow: hidden;
+}
+</style>

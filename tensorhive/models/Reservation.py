@@ -10,11 +10,16 @@ log = logging.getLogger(__name__)
 
 class Reservation(CRUDModel, Base):
     __tablename__ = 'reservations'
+    __table_args__ = {'sqlite_autoincrement': True}
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     title = Column(String(60), unique=False, nullable=False)
     description = Column(String(200), nullable=True)
     protected_resource_id = Column(String(60), nullable=False)
+
+    gpu_util_avg = Column(Integer, nullable=True)
+    mem_util_avg = Column(Integer, nullable=True)
 
     # Stored as UTC time
     _starts_at = Column(DateTime, nullable=False)
@@ -141,13 +146,20 @@ class Reservation(CRUDModel, Base):
     description={3}
     protected_resource_id={4}
 
-    starts_at={5}
-    ends_at={6}
-    created_at={7}'''.format(
+    gpu_util_avg={5}
+    mem_util_avg={6}
+
+    starts_at={7}
+    ends_at={8}
+    created_at={9}'''.format(
             self.id, self.user_id,
-            self.title, self.description,
+            self.title,
+            self.description,
             self.protected_resource_id,
-            self.starts_at, self.ends_at,
+            self.gpu_util_avg,
+            self.mem_util_avg,
+            self.starts_at,
+            self.ends_at,
             self.created_at)
 
     @property
@@ -159,6 +171,8 @@ class Reservation(CRUDModel, Base):
             'description': self.description,
             'resourceId': self.protected_resource_id,
             'userId': self.user_id,
+            'gpuUtilAvg': self.gpu_util_avg,
+            'memUtilAvg': self.mem_util_avg,
             'start': self.parsed_output_datetime(self.starts_at),
             'end': self.parsed_output_datetime(self.ends_at),
             'createdAt': self.parsed_output_datetime(self.created_at)

@@ -153,7 +153,6 @@ export default {
         .request('put', '/reservations', this.$store.state.accessToken, toUpdate)
         .then(response => {
           this.calendar.fullCalendar('refetchEvents')
-          this.addResourcesHeader()
         })
         .catch(error => {
           if (!error.hasOwnProperty('response')) {
@@ -184,7 +183,6 @@ export default {
         .request('post', '/reservations', this.$store.state.accessToken, reservation)
         .then(response => {
           this.calendar.fullCalendar('refetchEvents')
-          this.addResourcesHeader()
         })
         .catch(error => {
           if (!error.hasOwnProperty('response')) {
@@ -317,7 +315,6 @@ export default {
       },
       viewRender: function (view, element) {
         self.calendar.fullCalendar('refetchEvents')
-        self.addResourcesHeader()
       }
     })
   }

@@ -572,6 +572,8 @@ definitions:
       - description
       - resourceId
       - userId
+      - gpuUtilAvg
+      - memUtilAvg
       - start
       - end
     properties:
@@ -596,6 +598,11 @@ definitions:
       userId:
         type: integer
         example: 1
+      gpuUtilAvg:
+        type: integer
+        example: 99
+      memUtilAvg:
+        example: 67
       start:
         type: string
         format: date-time

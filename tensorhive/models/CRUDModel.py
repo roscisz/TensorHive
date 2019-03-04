@@ -57,7 +57,7 @@ class CRUDModel:
             raise MultipleResultsFound(msg)
         except NoResultFound:
             msg = 'There is no record {} with id={}!'.format(cls.__name__, id)
-            log.warning(msg)
+            log.debug(msg)
             raise NoResultFound(msg)
         else:
             return result
