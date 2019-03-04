@@ -23,7 +23,6 @@
 import FullCalendarReserve from './FullCalendarReserve.vue'
 import FullCalendarInfo from './FullCalendarInfo.vue'
 import api from '../../../api'
-import config from '../../../config'
 import $ from 'jquery'
 import _ from 'lodash'
 require('../../../../static/fullcalendar/fullcalendar.js')
@@ -41,33 +40,7 @@ export default {
 
   watch: {
     updateCalendar () {
-      var resourcesString = ''
-      if (this.selectedResources.length > 0) {
-        resourcesString = this.selectedResources[0].uuid
-        for (var i = 1; i < this.selectedResources.length; i++) {
-          resourcesString += ',' + this.selectedResources[i].uuid
-        }
-      }
-      this.calendar.fullCalendar('removeEventSources')
-      this.calendar.fullCalendar('addEventSource', {
-        url: config.serverURI + '/reservations?resources_ids=' + resourcesString,
-        headers: { Authorization: this.$store.state.accessToken },
-        cache: true
-      })
-      var obj
-      this.resourcesCheckboxes = []
-      for (i = 0; i < this.selectedResources.length; i++) {
-        obj = {
-          nodeName: this.selectedResources[i].nodeName,
-          name: this.selectedResources[i].name,
-          uuid: this.selectedResources[i].uuid,
-          index: this.selectedResources[i].index,
-          checked: false,
-          disabled: false
-        }
-        this.resourcesCheckboxes[i] = obj
-      }
-      this.addResourcesHeader()
+      this.calendar.fullCalendar('refetchEvents')
     }
   },
 
@@ -85,13 +58,47 @@ export default {
       },
       startDate: null,
       endDate: null,
-      minReservationTime: '',
-      maxReservationTime: '',
       resourcesCheckboxes: []
     }
   },
 
   methods: {
+    getEvents: function (start, end, callback) {
+      var resourcesString = ''
+      if (this.selectedResources.length > 0) {
+        resourcesString = this.selectedResources[0].uuid
+        for (var i = 1; i < this.selectedResources.length; i++) {
+          resourcesString += ',' + this.selectedResources[i].uuid
+        }
+      }
+      api
+        .request('get', '/reservations?resources_ids=' + resourcesString + '&start=' + start.toISOString() + '&end=' + end.toISOString(), this.$store.state.accessToken)
+        .then(response => {
+          callback(response.data)
+        })
+        .catch(error => {
+          if (!error.hasOwnProperty('response')) {
+            this.$emit('showSnackbar', error.message)
+          } else {
+            this.$emit('showSnackbar', error.response.data.msg)
+          }
+        })
+      var obj
+      this.resourcesCheckboxes = []
+      for (i = 0; i < this.selectedResources.length; i++) {
+        obj = {
+          nodeName: this.selectedResources[i].nodeName,
+          name: this.selectedResources[i].name,
+          uuid: this.selectedResources[i].uuid,
+          index: this.selectedResources[i].index,
+          checked: false,
+          disabled: false
+        }
+        this.resourcesCheckboxes[i] = obj
+      }
+      this.addResourcesHeader()
+    },
+
     addResourcesHeader: function () {
       var dayStart = _.cloneDeep(this.calendar.fullCalendar('getView').start)
       for (var i = 0; i < 7; i++) {
@@ -106,7 +113,7 @@ export default {
           }
           this.calendar.fullCalendar('renderEvent', tempReservation)
         }
-        dayStart = dayStart.add(1, 'days')
+        if (dayStart) dayStart = dayStart.add(1, 'days')
       }
     },
 
@@ -136,10 +143,10 @@ export default {
       if (reservation.end.toISOString() !== newTime[1].toISOString()) {
         toUpdate['end'] = newTime[1].toISOString()
       }
-      if (reservation.title !== newTitle) {
+      if (reservation.title !== newTitle && newTitle !== '') {
         toUpdate['title'] = newTitle
       }
-      if (reservation.description !== newDescription) {
+      if (reservation.description !== newDescription && newDescription !== '') {
         toUpdate['description'] = newDescription
       }
       api
@@ -208,21 +215,25 @@ export default {
       timezone: 'local',
       defaultView: 'agendaWeek',
       header: {
-        left: 'prev,next today',
+        left: 'prev,next, today, agendaWeek, week2',
         center: 'title',
-        right: 'agendaWeek, week2'
+        right: ''
       },
       views: {
         week: {
-          columnHeaderFormat: 'ddd D/M'
+          columnHeaderFormat: 'ddd D/M',
+          buttonText: 'One week jump'
         },
         week2: {
           type: 'agendaWeek',
           duration: { days: 7 },
-          buttonText: '+-1 day',
+          buttonText: 'One day jump',
           dateIncrement: { days: 1 },
           columnHeaderFormat: 'ddd D/M'
         }
+      },
+      events: function (start, end, timezone, callback) {
+        self.getEvents(start, end, callback)
       },
       eventRender: function (event, element) {
         element.find('.fc-title').append('<br/>' + event.description)
@@ -294,8 +305,6 @@ export default {
           }
           self.startDate = startDate.toDate()
           self.endDate = endDate.toDate()
-          self.minReservationTime = startDate.format()
-          self.maxReservationTime = endDate.format()
           self.showModalReserve = true
         }
       },

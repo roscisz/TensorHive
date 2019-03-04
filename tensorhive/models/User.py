@@ -11,6 +11,7 @@ from usernames import is_safe_username
 from sqlalchemy.ext.hybrid import hybrid_property
 import safe
 import logging
+import re
 log = logging.getLogger(__name__)
 
 
@@ -25,6 +26,7 @@ class User(CRUDModel, Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
+    email = Column(String(64), unique=False, nullable=False, server_default='<email_missing>')
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     reservations = relationship('Reservation', cascade='all,delete', backref=backref('user'))
 
@@ -39,9 +41,10 @@ class User(CRUDModel, Base):
         pass
 
     def __repr__(self):
-        return '<User id={id}, username={username}>'.format(
+        return '<User id={id}, username={username} email={email}>'.format(
             id=self.id,
-            username=self.username)
+            username=self.username,
+            email=self.email)
 
     @hybrid_property
     def roles(self):
@@ -74,6 +77,12 @@ class User(CRUDModel, Base):
         assert 2 < len(username) < 16, 'Username must be between 3 and 15 characters long'
         return username
 
+    @validates('email')
+    def validate_email(self, key, email):
+        assert re.search("[@.]", email), 'Email not correct'
+        assert 3 < len(email) < 64, 'Email must be between 3 and 64 characters long'
+        return email
+
     @classmethod
     def find_by_username(cls, username):
         try:
@@ -102,7 +111,8 @@ class User(CRUDModel, Base):
                 'id': self.id,
                 'username': self.username,
                 'createdAt': self.created_at.isoformat(),
-                'roles': roles
+                'roles': roles,
+                'email': self.email
             }
 
     @staticmethod

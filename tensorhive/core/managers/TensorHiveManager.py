@@ -15,6 +15,7 @@ from tensorhive.core.services.MonitoringService import MonitoringService
 from tensorhive.core.services.ProtectionService import ProtectionService
 from tensorhive.core.violation_handlers.ProtectionHandler import ProtectionHandler
 from tensorhive.core.violation_handlers.MessageSendingBehaviour import MessageSendingBehaviour
+from tensorhive.core.violation_handlers.EmailSendingBehaviour import EmailSendingBehaviour
 import logging
 log = logging.getLogger(__name__)
 
@@ -50,6 +51,9 @@ class TensorHiveManager(metaclass=Singleton):
             if PROTECTION_SERVICE.NOTIFY_ON_PTY:
                 message_sending_handler = ProtectionHandler(behaviour=MessageSendingBehaviour())
                 violation_handlers.append(message_sending_handler)
+            if PROTECTION_SERVICE.NOTIFY_VIA_EMAIL:
+                email_sending_handler = ProtectionHandler(behaviour=EmailSendingBehaviour())
+                violation_handlers.append(email_sending_handler)
             protection_service = ProtectionService(
                 handlers=violation_handlers,
                 interval=PROTECTION_SERVICE.UPDATE_INTERVAL

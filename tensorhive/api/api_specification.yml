@@ -236,7 +236,7 @@ paths:
           name: user
           required: true
           schema:
-            $ref: '#/definitions/UserForm'
+            $ref: '#/definitions/UserLoginForm'
       responses:
         200:
           description: {{RESPONSES['user']['login']['success']}}
@@ -510,6 +510,9 @@ definitions:
       username:
         type: string
         example: foobar
+      email:
+        type: string
+        example: foo@bar.com
       createdAt:
         type: string
         format: date-time
@@ -537,8 +540,24 @@ definitions:
   UserForm:
     type: object
     required:
-    - username
-    - password
+      - username
+      - email
+      - password
+    properties:
+      username:
+        type: string
+        example: foobar
+      email:
+        type: string
+        example: foo@bar.com
+      password:
+        type: string
+        example: difficult_password
+  UserLoginForm:
+    type: object
+    required:
+      - username
+      - password
     properties:
       username:
         type: string

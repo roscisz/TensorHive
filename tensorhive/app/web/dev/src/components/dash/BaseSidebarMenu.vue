@@ -7,7 +7,7 @@
       to="/reservations_overview"
     >
       <a>
-        <i class="fa fa-table"></i>
+        <i class="fa fa-calendar-check-o"></i>
         <span class="page">Reservations Overview</span>
       </a>
     </router-link>
@@ -18,7 +18,7 @@
       to="/nodes_overview"
     >
       <a>
-        <i class="fa fa-table"></i>
+        <i class="fa fa-bar-chart"></i>
         <span class="page">Nodes Overview</span>
       </a>
     </router-link>
@@ -35,7 +35,7 @@
       v-if="$store.state.role === 'admin'"
     >
       <a>
-        <i class="fa fa-table"></i>
+        <i class="fa fa-users"></i>
         <span class="page">Users Overview</span>
       </a>
     </router-link>
@@ -47,6 +47,9 @@ export default {
 }
 </script>
 <style>
+.fa {
+  font-size: 18px;
+}
 /* override default */
 .sidebar-menu > li > a {
   padding: 12px 15px 12px 15px;
