@@ -240,6 +240,19 @@ class MAILBOT:
     ADMIN_BODY_TEMPLATE = mailbot_config.get(section, 'html_body')
 
 
+class USAGE_LOGGING_SERVICE:
+    section = 'usage_logging_service'
+    default_path = '~/.config/TensorHive/logs/'
+
+    def full_path(path: str) -> str:
+        return str(PosixPath(path).expanduser())
+
+    ENABLED = config.getboolean(section, 'enabled', fallback=True)
+    UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=2.0)
+    LOG_DIR = full_path(config.get(section, 'log_dir', fallback=default_path))
+    LOG_CLEANUP_ACTION = config.getint(section, 'log_cleanup_action', fallback=2)
+
+
 class AUTH:
     from datetime import timedelta
     section = 'auth'

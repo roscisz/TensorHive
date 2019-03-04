@@ -39,7 +39,7 @@ def update(user):
             }
             status = 201
     else:
-            content = {'msg': G['bad_request']}
-            status = 400
+        content = {'msg': G['bad_request']}
+        status = 400
 
     return content, status
