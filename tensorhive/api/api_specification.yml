@@ -499,6 +499,26 @@ paths:
           description: {{RESPONSES['general']['auth_error']}}
       security:
         - Bearer: []
+  /task-templates:
+    get:
+    post:
+  /task-templates/{id}:
+    get:
+    put:
+    delete:
+  /tasks:
+    get:
+    post:
+  /tasks/{id}:
+    get:
+    put:
+    delete:
+  /tasks/running:
+    get:
+  /tasks/{id}/start:
+    get:
+  /tasks/{id}/terminate:
+    get:
 definitions:
   UserToDisplay:
     type: object
