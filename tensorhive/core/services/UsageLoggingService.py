@@ -1,18 +1,25 @@
 from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.utils.decorators.override import override
-from tensorhive.core.utils.enums import LogFileCleanupAction
 from tensorhive.core.services.Service import Service
 from tensorhive.models.Reservation import Reservation
 from typing import Dict, List, Optional, Union
 from tensorhive.config import USAGE_LOGGING_SERVICE
 from pathlib import PosixPath
+from enum import IntEnum
 import datetime
 import time
 import gevent
 import json
 import logging
 log = logging.getLogger(__name__)
+
+
+class LogFileCleanupAction(IntEnum):
+    REMOVE = 0
+    HIDE = 1
+    RENAME = 2
+
 
 # TODO Maybe move both functions to utils?
 def avg(data: List[Union[int, float]]) -> float:
@@ -21,6 +28,7 @@ def avg(data: List[Union[int, float]]) -> float:
         return sum(data) // len(data)
     except ZeroDivisionError:
         return float(-1)
+
 
 def object_serializer(obj):
     '''
@@ -32,8 +40,10 @@ def object_serializer(obj):
     elif isinstance(obj, set):
         return list(obj)
 
+
 class JSONLogFile:
     '''Encapsulates JSON file operations.'''
+
     def __init__(self, path: PosixPath) -> None:
         self.path = path
 
@@ -45,8 +55,9 @@ class JSONLogFile:
         with self.path.open(mode='w') as file:
             try:
                 json.dump(data, file, **kwargs)
-            except:
+            except Exception:
                 raise
+
 
 class Log:
     '''Represents ordinary JSON log file'''
@@ -106,6 +117,7 @@ class Log:
 
         log.debug('Log file has been updated {}'.format(out_path))
 
+
 class UsageLoggingService(Service):
     '''
     Responsible for:
@@ -152,7 +164,9 @@ class UsageLoggingService(Service):
             filename = '{id}.json'.format(id=reservation.id)
             log_file_path = self.log_dir / filename
             try:
-                gpu_data = self.extract_specific_gpu_data(uuid=reservation.protected_resource_id, infrastructure=infrastructure)
+                gpu_data = self.extract_specific_gpu_data(
+                    uuid=reservation.protected_resource_id,
+                    infrastructure=infrastructure)
                 Log(data=gpu_data).save(out_path=log_file_path)
             except Exception as e:
                 log.error(e)
@@ -162,7 +176,7 @@ class UsageLoggingService(Service):
         Triggers an action on expired log file
         depending on the value specified by self.log_cleanup_action
         '''
-        action = self.log_cleanup_action
+        action = self.log_cleanup_actionP
         assert LogFileCleanupAction(action)
 
         if action == LogFileCleanupAction.REMOVE:

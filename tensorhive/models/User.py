@@ -16,10 +16,10 @@ log = logging.getLogger(__name__)
 
 
 class PASS_COMPLEXITY:
-        TERRIBLE = 0
-        SIMPLE = 1
-        MEDIUM = 2
-        STRONG = 3
+    TERRIBLE = 0
+    SIMPLE = 1
+    MEDIUM = 2
+    STRONG = 3
 
 
 class User(CRUDModel, Base):

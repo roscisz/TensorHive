@@ -252,6 +252,7 @@ class USAGE_LOGGING_SERVICE:
     LOG_DIR = full_path(config.get(section, 'log_dir', fallback=default_path))
     LOG_CLEANUP_ACTION = config.getint(section, 'log_cleanup_action', fallback=2)
 
+
 class AUTH:
     from datetime import timedelta
     section = 'auth'
