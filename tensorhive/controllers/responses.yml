@@ -49,6 +49,12 @@ task:
       invalid: Requirements not met - {reason}
   spawn:
     success: Task has been successfully spawned 
+    failure:
+      already_spawned: Task is already spawned (assigned pid)
+  terminate:
+    success: Task has been successfully terminated 
+    failure:
+      invalid_state: Cannot terminate task without pid or that has already exited
 token:
   revoke:
     success: '{token_type} has been revoked'

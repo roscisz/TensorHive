@@ -535,12 +535,15 @@ paths:
       # security:
       #   - Bearer: []
   #   get:
-  # /tasks/{id}:
+  # /tasks/{id}:  
   #   get:
   #   put:
   #   delete:
   # /tasks/running:
   #   get:
+  #     tags:
+  #      - tasks
+  #     summary: Get running 
   /tasks/{id}/spawn:
     get:
       tags: 
@@ -571,8 +574,36 @@ paths:
           description: {{RESPONSES['general']['auth_error']}}
       # security:
       #   - Bearer: []
-  # /tasks/{id}/terminate:
-  #   get:
+  /tasks/{id}/terminate:
+    get:
+      tags: 
+        - tasks
+      parameters:
+        - description: Task ID
+          in: path
+          name: id
+          required: true
+          type: integer
+      summary: Terminates task by id
+      operationId: tensorhive.controllers.task.terminate
+      responses:
+        200:
+          description: {{RESPONSES['general']['ok']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['task']['terminate']['success']}}
+              pid:
+                type: integer
+                example: 4321
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
+      # security:
+      #   - Bearer: []
 definitions:
   UserToDisplay:
     type: object
