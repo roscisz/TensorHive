@@ -54,26 +54,41 @@ def running():
 
 # GET /tasks/{id}/terminate
 def terminate(id):
-    raise NotImplementedError
+    # FIXME Check for pid being None
+    try:
+        print(Task.all())
+        task = Task.get(id)
+        assert task.pid and task.exit_code is None
+        exit_code = task_nursery.terminate(task.pid, task.host, task.user.username)
+
+        # Allow to spawn that object again
+        task.pid = None
+        task.exit_code = exit_code
+        task.save()
+    except AssertionError:
+        content, status = {'msg': T['terminate']['failure']['invalid_state']}, 405    
+    else:
+        # FIXME Display success only with code==0
+        content, status = {'msg': T['terminate']['success'], 'exit_code': exit_code}, 200
+    finally:
+        return content, status
 
 # GET /tasks/{id}/start
 #@jwt_required
 def spawn(id):
     # FIXME Check exceptions, etc.
     # FIXME Redesign
-    task = Task.get(id)
-    
-    config = {
-        # FIXME Move
-        task.host: {
-            'user': task.user.username,
-            'pkey': '~/.ssh/id_rsa'
-        }
-    }
-    print(config)
-    client = ssh.get_client(config)
-    task = task_nursery.Task(task.host, task.command)
-    pid = task.spawn(client)
-    content, status = {'msg': 'Task spawned', 'pid': pid}, 200
-    return content, status
+    try:
+        task = Task.get(id)
+        assert task.pid is None
+        pid = task_nursery.spawn(task.command, task.host, task.user.username)
+        task.pid = pid
+        task.exit_code = None
+        task.save()
+    except AssertionError:
+        content, status = {'msg': T['spawn']['failure']['already_spawned']}, 405    
+    else:
+        content, status = {'msg': T['spawn']['success'], 'pid': pid}, 200
+    finally:
+        return content, status
 
