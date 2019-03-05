@@ -26,9 +26,9 @@
           </v-card-title>
           <v-card-text>
             <form @submit.prevent="createUser">
-              Create new user
+              Username
               <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                <span class="input-group-addon"><i class="fa fa-user"></i></span>
                 <input
                   class="form-control"
                   name="modalUsername"
@@ -37,6 +37,7 @@
                   v-model="modalUsername"
                 >
               </div>
+              Email
               <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
                 <input
@@ -47,6 +48,7 @@
                   v-model="modalEmail"
                 >
               </div>
+              Password
               <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-lock"></i></span>
                 <input
