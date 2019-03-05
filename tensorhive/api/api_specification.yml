@@ -539,11 +539,47 @@ paths:
   #   get:
   #   put:
   #   delete:
-  # /tasks/running:
-  #   get:
-  #     tags:
-  #      - tasks
-  #     summary: Get running 
+  /tasks/running:
+    get:
+      tags:
+       - tasks
+      summary: TODO
+      parameters:
+        - description: User ID
+          in: query
+          name: user_id # FIXME userId may be more consistent for web app
+          required: true
+          type: integer
+        - description: Hostname
+          in: query
+          name: hostname
+          required: true
+          type: string
+      summary: Returns pids of running tasks
+      operationId: tensorhive.controllers.task.running
+      responses:
+        200:
+          description: {{RESPONSES['general']['ok']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['task']['running']['success']}}
+              pids:
+                type: array
+                example:
+                  - 1234
+                  - 2345
+                  - 3456
+                items:
+                  type: integer
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
+      # security:
+      #   - Bearer: []
   /tasks/{id}/spawn:
     get:
       tags: 

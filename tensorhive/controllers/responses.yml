@@ -55,6 +55,8 @@ task:
     success: Task has been successfully terminated 
     failure:
       invalid_state: Cannot terminate task without pid or that has already exited
+  running:
+    success: Running pids successfully aquired
 token:
   revoke:
     success: '{token_type} has been revoked'

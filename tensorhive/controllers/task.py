@@ -48,15 +48,28 @@ def update(id):
 def destroy():
     raise NotImplementedError
 
-# GET /tasks/running
-def running():
-    raise NotImplementedError
+# GET /tasks/running?user_id=X&hostname=X
+# FIXME This endpoint should probably return ORM objects, not pids
+def running(user_id, hostname):
+    try:
+        assert user_id and hostname
+        # TODO Maybe ORM objects should be updated here
+        user = User.get(user_id)
+        pids = task_nursery.running(host=hostname, user=user.username)
+    except AssertionError:
+        raise NotImplementedError
+    except Exception:
+        raise NotImplementedError
+    else:
+        content, status = {'msg': T['running']['success'], 'pids': pids}, 200
+    finally:
+        return content, status
+        
 
 # GET /tasks/{id}/terminate
 def terminate(id):
     # FIXME Check for pid being None
     try:
-        print(Task.all())
         task = Task.get(id)
         assert task.pid and task.exit_code is None
         exit_code = task_nursery.terminate(task.pid, task.host, task.user.username)
@@ -66,7 +79,9 @@ def terminate(id):
         task.exit_code = exit_code
         task.save()
     except AssertionError:
-        content, status = {'msg': T['terminate']['failure']['invalid_state']}, 405    
+        content, status = {'msg': T['terminate']['failure']['invalid_state']}, 405
+    except AssertionError:
+        raise NotImplementedError
     else:
         # FIXME Display success only with code==0
         content, status = {'msg': T['terminate']['success'], 'exit_code': exit_code}, 200
@@ -87,6 +102,8 @@ def spawn(id):
         task.save()
     except AssertionError:
         content, status = {'msg': T['spawn']['failure']['already_spawned']}, 405    
+    except AssertionError:
+        raise NotImplementedError
     else:
         content, status = {'msg': T['spawn']['success'], 'pid': pid}, 200
     finally:
