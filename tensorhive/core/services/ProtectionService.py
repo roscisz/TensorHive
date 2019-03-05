@@ -2,7 +2,7 @@ from tensorhive.core.services.Service import Service
 from tensorhive.models.Reservation import Reservation
 from tensorhive.models.User import User
 from tensorhive.database import db_session
-from tensorhive.core.utils.decorators.import override
+from tensorhive.core.utils.decorators import override
 from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.managers.SSHConnectionManager import SSHConnectionManager
 from pssh.clients.native import ParallelSSHClient
