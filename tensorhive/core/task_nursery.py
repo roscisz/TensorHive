@@ -1,5 +1,5 @@
 from tensorhive.core import ssh
-from tensorhive.core.ssh import HostsConfig, ProxyConfig
+from tensorhive.core.ssh import HostsConfig, ProxyConfig, Hostname, Username
 from pssh.clients.native import ParallelSSHClient
 from typing import List, Optional, Dict
 import time
@@ -62,17 +62,13 @@ class ScreenCommandBuilder:
 class Task:
     """Represents task executed on one machine."""
 
-    __slots__ = ['hostname', 'command', '_pid', '_command_builder']
+    __slots__ = ['hostname', 'command', 'pid', '_command_builder']
 
-    def __init__(self, hostname: str, command: str):
+    def __init__(self, hostname: str, command: str = None, pid: int = None):
         self.hostname = hostname
         self.command = command
-        self._pid = None
+        self.pid = pid
         self._command_builder = ScreenCommandBuilder
-
-    @property
-    def pid(self) -> int:
-        return self._pid
 
     def spawn(self, client: ParallelSSHClient) -> int:
         """Spawns defined command via ssh client.
@@ -85,8 +81,8 @@ class Task:
 
         # FIXME May want to decouple it somehow
         pid = stdout.split().pop()
-        self._pid = int(pid)
-        return self._pid
+        self.pid = int(pid)
+        return self.pid
 
     def terminate(self, client: ParallelSSHClient) -> int:
         """Terminates the task using it's pid.
@@ -94,27 +90,39 @@ class Task:
         Returns:
             exit code of the operation
         """
-        assert self._pid, 'You must spawn the task first.'
-        command = self._command_builder.terminate(self._pid)
+        assert self.pid, 'You must first spawn the task or provide pid manually.'
+        command = self._command_builder.terminate(self.pid)
         output = ssh.run_command(client, command)
         exit_code = output[self.hostname].exit_code
         return exit_code
 
+def spawn(command: str, host: Hostname, user: Username) -> int:
+    config = ssh.build_dedicated_config_for(host, user)
+    client = ssh.get_client(config)
+    task = Task(host, command)
+    pid = task.spawn(client)
+    return pid
 
-# class TaskNursery:
-#     Task = namedtuple('Delegate', ['client', 'task'])
-#     def __init__(self, tasks, user, pkey_path):
-#         self.tasks = tasks
-        
-#         for task in tasks:
-#             config = {task.hostname: {'user': user, 'pkey': pkey_path}}
-#             self.delegates.append(Delegate(client=get_client(config)))
+def terminate(pid: int, host: Hostname, user: Username) -> int:
+    config = ssh.build_dedicated_config_for(host, user)
+    client = ssh.get_client(config)
+    task = Task(host, pid=pid)
+    exit_code = task.terminate(client)
+    return exit_code
 
-#     def launch_tasks():
-#         raise
-
-#     def terminate_tasks()
-#         raise
+# def running(hostname: str, username: str) -> List[]:
+#     config = {
+#         hostname: {
+#             'user': username,
+#             'pkey': '~/.ssh/id_rsa'  # TODO Read from config
+#         }
+#     }
+#     client = ssh.get_client(config)
+#     pattern = '.*tensorhive_'
+#     command = ScreenCommandBuilder.get_active_sessions(pattern)
+#     task = Task(hostname, command)
+#     pid = task.spawn(client)
+#     return pid
 
 # FIXME Prototype functions thats need refactoring and decoupling
 def kill_all_screen_sessions(host, user, pkey):
@@ -138,7 +146,6 @@ def kill_all_screen_sessions(host, user, pkey):
             output = ssh.run_command(client, command)
         except (ValueError, IndexError):
             pass
-
 
 
 def distribute_tasks(user, pkey, tasks: List[Task]):

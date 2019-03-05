@@ -12,15 +12,18 @@ class Task(CRUDModel, Base):
     user_id = Column(Integer, ForeignKey('users.id'))
     host = Column(String(40), nullable=False)
     pid = Column(Integer, nullable=True)
+    exit_code = Column(Integer, nullable=True)
     command = Column(String(400), nullable=False)
 
     def __repr__(self):
-        return '<Task id={id}, user={user}, hostname={hostname}, pid={pid}, command={command}>'.format(
+        return '<Task id={id}, user={user}, hostname={hostname}, command={command}\n' \
+            '\tpid={pid}, exit_code={exit_code}>'.format(
             id=self.id,
             user=self.user,
             hostname=self.host,
+            command=self.command,
             pid=self.pid,
-            command=self.command)
+            exit_code=self.exit_code)
 
     def check_assertions(self):
         pass
@@ -32,5 +35,6 @@ class Task(CRUDModel, Base):
             'user_id': self.user_id,
             'hostname': self.host,
             'pid': self.pid,
+            'exit_code': self.exit_code,
             'command': self.command
         }

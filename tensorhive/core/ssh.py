@@ -14,7 +14,16 @@ __all__ = [
 HostsConfig = Dict[str, str]
 ProxyConfig = Dict[str, str]
 Hostname = str
+Username = str
 CommandResult = Dict[Hostname, pssh.output.HostOutput]
+
+def build_dedicated_config_for(host: Hostname, user: Username) -> HostsConfig:
+    return {
+        host: {
+            'user': user,
+            'pkey': '~/.ssh/id_rsa'  # TODO Read from config
+        }
+    }
 
 @hashable_cache(lru_cache())
 def get_client(config: HostsConfig, pconfig: Optional[ProxyConfig] = None, **kwargs) -> ParallelSSHClient:
