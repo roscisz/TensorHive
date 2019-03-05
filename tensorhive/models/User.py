@@ -29,6 +29,7 @@ class User(CRUDModel, Base):
     email = Column(String(64), unique=False, nullable=False, server_default='<email_missing>')
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     reservations = relationship('Reservation', cascade='all,delete', backref=backref('user'))
+    tasks = relationship('Task', backref='user', lazy='dynamic')
 
     # Managed via property getters and setters
     _hashed_password = Column(String(120), nullable=False)

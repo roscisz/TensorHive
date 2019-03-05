@@ -30,6 +30,7 @@ def init_db() -> None:
     from tensorhive.models.Reservation import Reservation
     from tensorhive.models.RevokedToken import RevokedToken
     from tensorhive.models.Role import Role
+    from tensorhive.models.Task import Task
 
     if not database_exists(DB.SQLALCHEMY_DATABASE_URI):
         Base.metadata.create_all(bind=engine, checkfirst=True)
