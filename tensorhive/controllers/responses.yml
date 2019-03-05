@@ -42,6 +42,13 @@ reservation:
 users:
   get:
     success: Fetched successfully
+task:
+  create:
+    success: Task has been successfully created
+    failure:
+      invalid: Requirements not met - {reason}
+  spawn:
+    success: Task has been successfully spawned 
 token:
   revoke:
     success: '{token_type} has been revoked'
