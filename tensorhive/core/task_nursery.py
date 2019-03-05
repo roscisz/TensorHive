@@ -9,23 +9,10 @@ __author__ = '@micmarty'
 __all__ = [
     'ScreenCommandBuilder',
     'Task',
-    'succeeded'
+    'spawn',
+    'terminate',
+    'running'
 ]
-
-"""TODO Implement controller
-
-Example request with tasks to the API:
-{
-    'userId': 20,
-    'commandTemplate': 'CUDA_VISIBLE_DEVICES={CVD} train.py --task-id {TID}',
-    'values': [
-        {'hostname': 'galileo', 'CVD': 0, 'TID': 'ps'},
-        {'hostname': 'galileo', 'CVD': 1, 'TID': 'worker'},
-        {'hostname': 'galileo', 'CVD': 1, 'TID': 'worker'},
-        {'hostname': 'galileo', 'CVD': 1, 'TID': 'worker'},
-    ]
-}
-"""
 
 class ScreenCommandBuilder:
     """Set of configurable commands built on top of **screen** program."""
@@ -33,7 +20,7 @@ class ScreenCommandBuilder:
     @staticmethod
     def spawn(command: str, session_name: str, capture_output=True, keep_alive=True) -> str:
         """Command that runs inside daemonized screen session.
-        
+
         Command is put into background manually (-D + & instead of simply usin -d) -> we want to know the PID
         Ways to capture output:
             * standard way (implemented): keep session alive, user resumes and inspects it by himself.
@@ -58,6 +45,7 @@ class ScreenCommandBuilder:
     def get_active_sessions(grep_pattern: str) -> List[str]:
         """Fetches the full names of screen sessions matching given grep pattern."""
         return 'screen -ls | cut -f 2 | sed -e "1d;$d" | grep -e "{}"'.format(grep_pattern)
+
 
 class Task:
     """Represents task executed on one machine."""
@@ -86,7 +74,7 @@ class Task:
 
     def terminate(self, client: ParallelSSHClient) -> int:
         """Terminates the task using it's pid.
-        
+
         Returns:
             exit code of the operation
         """
@@ -96,12 +84,14 @@ class Task:
         exit_code = output[self.hostname].exit_code
         return exit_code
 
+
 def spawn(command: str, host: Hostname, user: Username) -> int:
     config = ssh.build_dedicated_config_for(host, user)
     client = ssh.get_client(config)
     task = Task(host, command)
     pid = task.spawn(client)
     return pid
+
 
 def terminate(pid: int, host: Hostname, user: Username) -> int:
     config = ssh.build_dedicated_config_for(host, user)
@@ -110,88 +100,40 @@ def terminate(pid: int, host: Hostname, user: Username) -> int:
     exit_code = task.terminate(client)
     return exit_code
 
-# def running(hostname: str, username: str) -> List[]:
-#     config = {
-#         hostname: {
-#             'user': username,
-#             'pkey': '~/.ssh/id_rsa'  # TODO Read from config
-#         }
-#     }
-#     client = ssh.get_client(config)
-#     pattern = '.*tensorhive_'
-#     command = ScreenCommandBuilder.get_active_sessions(pattern)
-#     task = Task(hostname, command)
-#     pid = task.spawn(client)
-#     return pid
 
-# FIXME Prototype functions thats need refactoring and decoupling
-def kill_all_screen_sessions(host, user, pkey):
-    config = {
-        host: {
-            'user': user,
-            'pkey': pkey_path
-        }
-    }
+def running(host: Hostname, user: Username) -> List[int]:
+    config = ssh.build_dedicated_config_for(host, user)
     client = ssh.get_client(config)
-    pattern = '.*tensorhive_'
-    print('Killing screen sessions with names: {}'.format(pattern))
+    pattern = '.*tensorhive_task'
     command = ScreenCommandBuilder.get_active_sessions(pattern)
     output = ssh.run_command(client, command)
-    stdout = ssh.get_stdout(host=tasks[-1].hostname, output=output)
-    for line in stdout.split('\n'):
-        try:
-            pid = int(line.split('.')[0])
-            command = ScreenCommandBuilder.terminate(pid)
-            print('Killing session "{}"'.format(pid))
-            output = ssh.run_command(client, command)
-        except (ValueError, IndexError):
-            pass
+    stdout = ssh.get_stdout(host, output)
+    if not stdout:
+        return []
 
+    # '4321.foobar_session' -> 4321
+    pid_from_session_name = lambda name: int(name.split('.')[0])
+    pids = [pid_from_session_name(line) for line in stdout.split('\n')]
+    return pids
 
-def distribute_tasks(user, pkey, tasks: List[Task]):
-    for task in tasks:
-        config = {
-            task.hostname: {
-                'user': user,
-                'pkey': pkey_path
-            }
-        }
-        # Run user's commands
-        client = ssh.get_client(config)
-        pid = task.spawn(client)
-        print('Task spawned with PID=', pid)
-    
-    # From last client!
-    command = ScreenCommandBuilder.get_active_sessions('tensorhive')
-    output = ssh.run_command(client, command)
-    stdout = ssh.get_stdout(host=tasks[-1].hostname, output=output)
-    print(stdout)
-
-def terminate_tasks(user, pkey, tasks: List[Task]):
-    for task in tasks:
-        config = {
-            task.hostname: {
-                'user': user,
-                'pkey': pkey_path
-            }
-        }
-        # Run user's commands
-        client = ssh.get_client(config)
-        exit_code = task.terminate(client)
-        print('Task with PID={} has been terminated with exit_code={})'.format(task.pid, exit_code))
 
 if __name__ == '__main__':
+    # Quick testing: python -m tensorhive.core.task_nursery
     # FIXME Mock: Received data digested by API controller
-    user = 'someone'
-    pkey_path = '~/.ssh/id_rsa' # storage for public and private keys, common for all users
+    user = '155136mm'
+    pkey_path = '~/.ssh/id_rsa'  # storage for public and private keys, common for all users
     tasks = [
         Task('galileo.eti.pg.gda.pl', 'sleep 20; echo $USER'),
         Task('galileo.eti.pg.gda.pl', 'sleep 20; echo b'),
         Task('galileo.eti.pg.gda.pl', 'sleep 20; echo c'),
         Task('galileo.eti.pg.gda.pl', 'sleep 20; echo d')
     ]
-    kill_all_screen_sessions('galileo.eti.pg.gda.pl', user, pkey_path)
-    distribute_tasks(user, pkey_path, tasks)
-    print('[Mock] Waiting for 20s...')
-    time.sleep(20)
-    terminate_tasks(user, pkey_path, tasks)
+    # config = ssh.build_dedicated_config_for('galileo.eti.pg.gda.pl', user)
+    # client = ssh.get_client(config)
+    # [task.spawn(client) for task in tasks]
+    print(running('galileo.eti.pg.gda.pl', user))
+    # kill_all_screen_sessions('galileo.eti.pg.gda.pl', user, pkey_path)
+    # distribute_tasks(user, pkey_path, tasks)
+    # print('[Mock] Waiting for 20s...')
+    # time.sleep(20)
+    # terminate_tasks(user, pkey_path, tasks)
