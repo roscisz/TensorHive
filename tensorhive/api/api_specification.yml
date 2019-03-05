@@ -44,9 +44,7 @@ paths:
         200:
           description: {{RESPONSES['users']['get']['success']}}
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/UserToDisplay'
+            $ref: '#/definitions/UserToDisplay'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
@@ -78,9 +76,7 @@ paths:
                 type: string
                 example: {{RESPONSES['user']['create']['success']}}
               user:
-                type: array
-                items:
-                  $ref: '#/definitions/UserToDisplay'
+                $ref: '#/definitions/UserToDisplay'
         400:
           description: {{RESPONSES['general']['bad_request']}}
         401:
@@ -118,9 +114,7 @@ paths:
                 type: string
                 example: {{RESPONSES['user']['update']['success']}}
               user:
-                type: array
-                items:
-                  $ref: '#/definitions/UserToDisplay'
+                $ref: '#/definitions/UserToDisplay'
         400:
           description: {{RESPONSES['general']['bad_request']}}
         401:
@@ -319,9 +313,7 @@ paths:
                 type: string
                 example: {{RESPONSES['reservation']['create']['success']}}
               reservation:
-                type: array
-                items:
-                  $ref: '#/definitions/Reservation'
+                $ref: '#/definitions/Reservation'
         400:
           description: {{RESPONSES['general']['bad_request']}}
         401:
@@ -354,9 +346,7 @@ paths:
                 type: string
                 example: {{RESPONSES['reservation']['update']['success']}}
               reservation:
-                type: array
-                items:
-                  $ref: '#/definitions/Reservation'
+                $ref: '#/definitions/Reservation'
         400:
           description: {{RESPONSES['general']['bad_request']}}
         401:
@@ -529,9 +519,7 @@ paths:
                 type: string
                 example: {{RESPONSES['task']['create']['success']}}
               task:
-                type: array
-                items:
-                  $ref: '#/definitions/TaskToDisplay'
+                $ref: '#/definitions/TaskToDisplay'
         400:
           description: {{RESPONSES['general']['bad_request']}}
         401:
