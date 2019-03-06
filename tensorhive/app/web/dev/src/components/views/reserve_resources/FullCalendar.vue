@@ -56,6 +56,7 @@ export default {
         start: new Date(),
         end: new Date()
       },
+      reservationId: -1,
       startDate: null,
       endDate: null,
       resourcesCheckboxes: []
@@ -71,9 +72,18 @@ export default {
           resourcesString += ',' + this.selectedResources[i].uuid
         }
       }
+      let self = this
       api
         .request('get', '/reservations?resources_ids=' + resourcesString + '&start=' + start.toISOString() + '&end=' + end.toISOString(), this.$store.state.accessToken)
         .then(response => {
+          if (self.reservationId !== -1) {
+            for (var reservation in response.data) {
+              if (response.data[reservation].id === self.reservationId) {
+                self.reservation = response.data[reservation]
+              }
+            }
+            self.reservationId = -1
+          }
           callback(response.data)
         })
         .catch(error => {
@@ -309,8 +319,9 @@ export default {
 
       eventClick: function (calEvent, jsEvent, view) {
         if ((calEvent.userId === self.$store.state.id || self.$store.state.role === 'admin') && !calEvent.allDay) {
+          self.reservationId = calEvent.id
+          self.calendar.fullCalendar('refetchEvents')
           self.showModalInfo = true
-          self.reservation = calEvent
         }
       },
       viewRender: function (view, element) {
