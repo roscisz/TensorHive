@@ -282,7 +282,8 @@ export default {
 </script>
 <style scoped>
 .container {
-  width: 85vw;
+  width: 100%;
+  max-width: 100%;
   margin-left: 0;
   white-space: nowrap;
   display: inline-block;
@@ -311,7 +312,7 @@ export default {
   display: inline-block;
 }
 .right-table {
-  width: calc(100vw - 350px);
+  width: calc(100% - 205px);
   overflow-x: scroll;
   display: inline-block;
 }
