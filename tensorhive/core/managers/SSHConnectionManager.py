@@ -1,7 +1,10 @@
 
 from tensorhive.config import SSH
 from pssh.clients.native import ParallelSSHClient
+from paramiko.rsakey import RSAKey
 from typing import Dict
+from tensorhive.core.utils import ssh
+from pathlib import PosixPath
 import logging
 log = logging.getLogger(__name__)
 
@@ -13,6 +16,16 @@ class SSHConnectionManager():
 
     def __init__(self, config: Dict):
         self._connection_group = self.new_parallel_ssh_client(config)
+        self.ssh_key = self.init_ssh_key(PosixPath(SSH.KEY_FILE).expanduser())
+
+    def init_ssh_key(self, path: PosixPath):
+        if path.exists():
+            key = RSAKey.from_private_key_file(str(path))
+            log.info('Using existing SSH key in {}'.format(path))
+        else:
+            key = ssh.generate_cert(path)
+            log.info('Generated SSH key in {}'.format(path))
+        return key
 
     @classmethod
     def new_parallel_ssh_client(cls, config) -> ParallelSSHClient:

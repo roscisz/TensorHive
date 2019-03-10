@@ -112,6 +112,7 @@ class SSH:
     TEST_ON_STARTUP = config.getboolean(section, 'test_on_startup', fallback=True)
     TIMEOUT = config.getfloat(section, 'timeout', fallback=10.0)
     NUM_RETRIES = config.getint(section, 'number_of_retries', fallback=1)
+    KEY_FILE = config.get(section, 'key_file', fallback='~/.config/TensorHive/ssh_key')
 
     def hosts_config_to_dict(path: str) -> Dict:  # type: ignore
         '''Parses sections containing hostnames'''
