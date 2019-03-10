@@ -78,6 +78,5 @@ def test_invalid_reservation_time_range(tables, new_reservation, faker):
     with pytest.raises(AssertionError):
         # Duration too long (2 days at last)
         new_reservation.starts_at = faker.future_datetime()
-        new_reservation.ends_at = new_reservation.starts_at + timedelta(days=2, seconds=1)
-        print(new_reservation)
+        new_reservation.ends_at = new_reservation.starts_at + timedelta(days=8, seconds=1)
         new_reservation.save()
