@@ -4,8 +4,8 @@ TensorHive
 ===
 
 
-![](https://img.shields.io/badge/release-v0.2.2-brightgreen.svg?style=popout-square)
-![](https://img.shields.io/badge/pypi-v0.2.2-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/release-v0.2.3-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/pypi-v0.2.3-brightgreen.svg?style=popout-square)
 ![](https://img.shields.io/badge/platform-Linux-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=popout-square)
@@ -87,10 +87,10 @@ Features
 - [x] :mag_right: Monitor GPU parameters on each host
 - [x] :customs: Protection of reserved resources
     - [x] :warning:	Send warning messages to terminal of users who violate the rules
-    - [ ] :mailbox_with_no_mail: Send e-mail warnings
+    - [x] :mailbox_with_no_mail: Send e-mail warnings
     - [ ] :bomb: Kill unwated processes
 - [ ] :rocket: Automatic execution of user's predefined command
-- [ ] :watch: Track wasted reservation time (idle)
+- [x] :watch: Track wasted reservation time (idle)
     - [ ] Remind user when his reservation starts and ends
     - [ ] Send e-mail if idle for too long
 #### Dashboard
@@ -99,7 +99,7 @@ Features
     - [ ] CPU, RAM, HDD metrics
 - [x] :calendar: Calendar view
     - [x] Allow making reservations for selected GPUs
-    - [ ] Edit reservations
+    - [x] Edit reservations
     - [x] Cancel reservations
 - [ ] :scroll: Detailed hardware specification view
 - [ ] :penguin: Admin panel
