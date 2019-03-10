@@ -27,7 +27,7 @@ class Reservation(CRUDModel, Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     __min_reservation_time = datetime.timedelta(minutes=30)
-    __max_reservation_time = datetime.timedelta(days=2)
+    __max_reservation_time = datetime.timedelta(days=8)
 
     def check_assertions(self):
         assert self.user_id, 'Reservation owner must be given!'
@@ -37,8 +37,8 @@ class Reservation(CRUDModel, Base):
         assert self.duration >= self.__min_reservation_time, 'Reservation duration is too short!'
         assert self.duration <= self.__max_reservation_time, 'Reservation duration is too long!'
 
-        assert 8 < len(self.title) < 60, 'Reservation title length has incorrect length!'
-        assert 8 < len(self.description) < 200, 'Reservation description has incorrect length!'
+        assert 0 < len(self.title) < 60, 'Reservation title length has incorrect length!'
+        assert len(self.description) < 200, 'Reservation description has incorrect length!'
         assert len(self.protected_resource_id) == 40, 'Protected resource UUID has incorrect length!'
 
         collision = self.would_interfere()
