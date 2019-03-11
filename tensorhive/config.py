@@ -1,11 +1,68 @@
 from pathlib import PosixPath
 import configparser
 from typing import Dict, Optional, Any, List
-import logging
+from inspect import cleandoc
+import shutil
 import tensorhive
-
+import os
+import logging
 log = logging.getLogger(__name__)
-MAIN_CONFIG_PATH = '~/.config/TensorHive/main_config.ini'
+
+
+class CONFIG_FILES:
+    # Where to copy files
+    # (TensorHive tries to load these by default)
+    config_dir = PosixPath.home() / '.config/TensorHive'
+    MAIN_CONFIG_PATH = str(config_dir / 'main_config.ini')
+    HOSTS_CONFIG_PATH = str(config_dir / 'hosts_config.ini')
+    MAILBOT_CONFIG_PATH = str(config_dir / 'mailbot_config.ini')
+
+    # Where to get file templates from
+    # (Clone file when it's not found in config directory)
+    tensorhive_package_dir = PosixPath(__file__).parent
+    MAIN_CONFIG_TEMPLATE_PATH = str(tensorhive_package_dir / 'main_config.ini')
+    HOSTS_CONFIG_TEMPLATE_PATH = str(tensorhive_package_dir / 'hosts_config.ini')
+    MAILBOT_TEMPLATE_CONFIG_PATH = str(tensorhive_package_dir / 'mailbot_config.ini')
+
+
+class ConfigInitilizer:
+    '''Makes sure that all default config files exist'''
+
+    def __init__(self):
+        # 1. Check if all config files exist
+        all_exist = PosixPath(CONFIG_FILES.MAIN_CONFIG_PATH).exists() and \
+            PosixPath(CONFIG_FILES.HOSTS_CONFIG_PATH).exists() and \
+            PosixPath(CONFIG_FILES.MAILBOT_CONFIG_PATH).exists()
+
+        if not all_exist:
+            log.warning('[•] Detected missing default config file(s), recreating...')
+            self.recreate_default_configuration_files()
+
+    def recreate_default_configuration_files(self) -> None:
+        try:
+            # 1. Create directory for stroing config files
+            CONFIG_FILES.config_dir.mkdir(parents=True, exist_ok=True)
+
+            # 2. Clone templates safely from `tensorhive` package
+            self.safe_copy(src=CONFIG_FILES.MAIN_CONFIG_TEMPLATE_PATH, dst=CONFIG_FILES.MAIN_CONFIG_PATH)
+            self.safe_copy(src=CONFIG_FILES.HOSTS_CONFIG_TEMPLATE_PATH, dst=CONFIG_FILES.HOSTS_CONFIG_PATH)
+            self.safe_copy(src=CONFIG_FILES.MAILBOT_TEMPLATE_CONFIG_PATH, dst=CONFIG_FILES.MAILBOT_CONFIG_PATH)
+
+            # 3. Change config files permission
+            rw_owner_only = 0o600
+            os.chmod(CONFIG_FILES.MAIN_CONFIG_PATH, rw_owner_only)
+            os.chmod(CONFIG_FILES.HOSTS_CONFIG_PATH, rw_owner_only)
+            os.chmod(CONFIG_FILES.MAILBOT_CONFIG_PATH, rw_owner_only)
+        except Exception:
+            log.error('[✘] Unable to recreate configuration files.')
+
+    def safe_copy(self, src: str, dst: str) -> None:
+        '''Safe means that it won't override existing configuration'''
+        if PosixPath(dst).exists():
+            log.info('Skipping, file already exists: {}'.format(dst))
+        else:
+            shutil.copy(src, dst)
+            log.info('Copied {} to {}'.format(src, dst))
 
 
 class ConfigLoader:
@@ -15,14 +72,15 @@ class ConfigLoader:
         config = configparser.ConfigParser(strict=False)
         full_path = PosixPath(path).expanduser()
         if config.read(str(full_path)):
-            log.info('[•] Reading {} config from {}'.format(displayed_title, path))
+            log.info('[•] Reading {} config from {}'.format(displayed_title, full_path))
         else:
-            log.warning('[✘] Missing configuration file ({})'.format(path))
-            log.warning('Using default settings from config.py')
+            log.warning('[✘] Configuration file not found ({})'.format(full_path))
+            log.info('Using default {} settings from config.py'.format(displayed_title))
         return config
 
 
-config = ConfigLoader.load(MAIN_CONFIG_PATH, displayed_title='main')
+ConfigInitilizer()
+config = ConfigLoader.load(CONFIG_FILES.MAIN_CONFIG_PATH, displayed_title='main')
 
 
 def display_config(cls):
@@ -36,9 +94,21 @@ def display_config(cls):
             print('{} = {}'.format(key, value))
 
 
+def check_env_var(name: str):
+    '''Makes sure that env variable is declared'''
+    if not os.getenv(name):
+        msg = cleandoc(
+            '''
+            {env} - undeclared environment variable!
+            Try this: `export {env}="..."`
+            ''').format(env=name).split('\n')
+        log.warning(msg[0])
+        log.warning(msg[1])
+
+
 class SSH:
     section = 'ssh'
-    HOSTS_CONFIG_FILE = config.get(section, 'hosts_config_file', fallback='~/.config/TensorHive/hosts_config.ini')
+    HOSTS_CONFIG_FILE = config.get(section, 'hosts_config_file', fallback=CONFIG_FILES.HOSTS_CONFIG_PATH)
     TEST_ON_STARTUP = config.getboolean(section, 'test_on_startup', fallback=True)
     TIMEOUT = config.getfloat(section, 'timeout', fallback=10.0)
     NUM_RETRIES = config.getint(section, 'number_of_retries', fallback=1)
@@ -52,7 +122,6 @@ class SSH:
             if section == 'proxy_tunneling':
                 continue
 
-            # TODO Handle more options (https://github.com/ParallelSSH/parallel-ssh/blob/2e9668cf4b58b38316b1d515810d7e6c595c76f3/pssh/clients/base_pssh.py#L119)
             hostname = section
             result[hostname] = {
                 'user': hosts_config.get(hostname, 'user'),
@@ -87,7 +156,7 @@ class DB:
         return 'sqlite:///{}'.format(PosixPath(path).expanduser())
 
     SQLALCHEMY_DATABASE_URI = uri_for_path(config.get(section, 'path', fallback=default_path))
-    TEST_DATABASE_URI = 'sqlite:///test_database.sqlite'  # or 'sqlite://' for in-memory, faster database
+    TEST_DATABASE_URI = 'sqlite://'  # Use in-memory (before: sqlite:///test_database.sqlite)
 
 
 class API:
@@ -133,6 +202,55 @@ class PROTECTION_SERVICE:
     ENABLED = config.getboolean(section, 'enabled', fallback=True)
     UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=2.0)
     NOTIFY_ON_PTY = config.getboolean(section, 'notify_on_pty', fallback=True)
+    NOTIFY_VIA_EMAIL = config.getboolean(section, 'notify_via_email', fallback=False)
+
+
+class MAILBOT:
+    mailbot_config = ConfigLoader.load(CONFIG_FILES.MAILBOT_CONFIG_PATH, displayed_title='mailbot')
+    section = 'general'
+    INTERVAL = mailbot_config.getfloat(section, 'interval', fallback=10.0)
+    NOTIFY_INTRUDER = mailbot_config.getboolean(section, 'notify_intruder', fallback=True)
+    NOTIFY_ADMIN = mailbot_config.getboolean(section, 'notify_admin', fallback=False)
+    ADMIN_EMAIL = mailbot_config.get(section, 'admin_email', fallback=None)
+
+    # FIXME Not sure if this should be required
+    section = 'smtp'
+    SMTP_LOGIN = mailbot_config.get(section, 'email', fallback=None)
+    SMTP_PASSWORD = mailbot_config.get(section, 'password', fallback=None)
+    SMTP_SERVER = mailbot_config.get(section, 'smtp_server', fallback=None)
+    SMTP_PORT = mailbot_config.getint(section, 'smtp_port', fallback=587)
+
+    # Simple checks between 'general' and 'smtp' section
+    if PROTECTION_SERVICE.NOTIFY_VIA_EMAIL and (NOTIFY_INTRUDER or NOTIFY_ADMIN):
+        try:
+            assert SMTP_LOGIN and SMTP_PASSWORD and SMTP_SERVER
+        except AssertionError:
+            log.warning('[MAILBOT] Incomplete SMTP configuration, check your config')
+
+        if NOTIFY_ADMIN and not ADMIN_EMAIL:
+            log.warning('[MAILBOT] Invalid admin email address, check your config.')
+
+    # FIXME Not sure if this should be required
+    section = 'template/intruder'
+    INTRUDER_SUBJECT = mailbot_config.get(section, 'subject')
+    INTRUDER_BODY_TEMPLATE = mailbot_config.get(section, 'html_body')
+
+    section = 'template/admin'
+    ADMIN_SUBJECT = mailbot_config.get(section, 'subject')
+    ADMIN_BODY_TEMPLATE = mailbot_config.get(section, 'html_body')
+
+
+class USAGE_LOGGING_SERVICE:
+    section = 'usage_logging_service'
+    default_path = '~/.config/TensorHive/logs/'
+
+    def full_path(path: str) -> str:
+        return str(PosixPath(path).expanduser())
+
+    ENABLED = config.getboolean(section, 'enabled', fallback=True)
+    UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=2.0)
+    LOG_DIR = full_path(config.get(section, 'log_dir', fallback=default_path))
+    LOG_CLEANUP_ACTION = config.getint(section, 'log_cleanup_action', fallback=2)
 
 
 class AUTH:
@@ -156,7 +274,7 @@ class AUTH:
             raw_arguments = config.get('auth', option)
             parsed_arguments = ast.literal_eval(raw_arguments)
             return parsed_arguments
-        except (configparser.Error, ValueError) as e:
+        except (configparser.Error, ValueError):
             log.warning('Parsing [auth] config section failed for option "{}", using fallback value: {}'.format(
                 option, fallback))
             return fallback
@@ -166,7 +284,9 @@ class AUTH:
         'JWT_BLACKLIST_ENABLED': config.getboolean(section, 'jwt_blacklist_enabled', fallback=True),
         'JWT_BLACKLIST_TOKEN_CHECKS': config_get_parsed('jwt_blacklist_token_checks', fallback=['access', 'refresh']),
         'BUNDLE_ERRORS': config.getboolean(section, 'bundle_errors', fallback=True),
-        'JWT_ACCESS_TOKEN_EXPIRES': timedelta(minutes=config.getint(section, 'jwt_access_token_expires_minutes', fallback=1)),
-        'JWT_REFRESH_TOKEN_EXPIRES': timedelta(days=config.getint(section, 'jwt_refresh_token_expires_days', fallback=1)),
+        'JWT_ACCESS_TOKEN_EXPIRES': timedelta(minutes=config.getint(section, 'jwt_access_token_expires_minutes',
+                                                                    fallback=1)),
+        'JWT_REFRESH_TOKEN_EXPIRES': timedelta(days=config.getint(section, 'jwt_refresh_token_expires_days',
+                                                                  fallback=1)),
         'JWT_TOKEN_LOCATION': config_get_parsed('jwt_token_location', fallback=['headers'])
     }

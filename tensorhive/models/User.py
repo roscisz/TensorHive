@@ -11,20 +11,22 @@ from usernames import is_safe_username
 from sqlalchemy.ext.hybrid import hybrid_property
 import safe
 import logging
+import re
 log = logging.getLogger(__name__)
 
 
 class PASS_COMPLEXITY:
-        TERRIBLE = 0
-        SIMPLE = 1
-        MEDIUM = 2
-        STRONG = 3
+    TERRIBLE = 0
+    SIMPLE = 1
+    MEDIUM = 2
+    STRONG = 3
 
 
 class User(CRUDModel, Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
+    email = Column(String(64), unique=False, nullable=False, server_default='<email_missing>')
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     reservations = relationship('Reservation', cascade='all,delete', backref=backref('user'))
 
@@ -37,11 +39,12 @@ class User(CRUDModel, Base):
     def check_assertions(self):
         # TODO Check if user has roles assigned
         pass
-     
+
     def __repr__(self):
-        return '<User id={id}, username={username}>'.format(
-            id=self.id, 
-            username=self.username)
+        return '<User id={id}, username={username} email={email}>'.format(
+            id=self.id,
+            username=self.username,
+            email=self.email)
 
     @hybrid_property
     def roles(self):
@@ -74,16 +77,22 @@ class User(CRUDModel, Base):
         assert 2 < len(username) < 16, 'Username must be between 3 and 15 characters long'
         return username
 
+    @validates('email')
+    def validate_email(self, key, email):
+        assert re.search("[@.]", email), 'Email not correct'
+        assert 3 < len(email) < 64, 'Email must be between 3 and 64 characters long'
+        return email
+
     @classmethod
     def find_by_username(cls, username):
         try:
             result = db_session.query(cls).filter_by(username=username).one()
-        except MultipleResultsFound as e:
+        except MultipleResultsFound:
             # Theoretically cannot happen because of model built-in constraints
             msg = 'Multiple users with identical usernames has been found!'
             log.critical(msg)
             raise MultipleResultsFound(msg)
-        except NoResultFound as e:
+        except NoResultFound:
             msg = 'There is no user with username={}!'.format(username)
             log.warning(msg)
             raise NoResultFound(msg)
@@ -93,13 +102,19 @@ class User(CRUDModel, Base):
     @property
     def as_dict(self):
         '''Serializes model instance into dict (which is interpreted as json automatically)'''
-        return {
-            'id': self.id,
-            'username': self.username,
-            'createdAt': self.created_at.isoformat()
-        }
+        try:
+            roles = self.role_names
+        except Exception:
+            roles = []
+        finally:
+            return {
+                'id': self.id,
+                'username': self.username,
+                'createdAt': self.created_at.isoformat(),
+                'roles': roles,
+                'email': self.email
+            }
 
     @staticmethod
     def verify_hash(password, hash):
         return sha256.verify(password, hash)
-

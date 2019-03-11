@@ -57,7 +57,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         {
             'example_host_0': {
                 'GPU': {
-                    '<GPU0 UUID>': { 
+                    '<GPU0 UUID>': {
                         'name': 'GeForce GTX 660',
                         'index': 0,
                         'metrics': { "fan_speed": 10, ... }
@@ -80,7 +80,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
 
         result = {}
         for host, host_out in output.items():
-            if host_out.exit_code is 0:
+            if host_out.exit_code == 0:
                 # Command executed successfully
                 metrics = NvidiaSmiParser.parse_query_gpu_stdout(host_out.stdout)
             else:
@@ -96,7 +96,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
     def _get_process_owner(self, pid: int, hostname: str, connection) -> str:
         '''Use single-host connection to acquire process owner using `ps`'''
         command = 'ps --no-headers -o user {}'.format(pid)
-        connection = connection.host_clients[hostname]  # type: SSHClient
+        connection = connection.host_clients[hostname]
 
         output = connection.run_command(command)
         _, hostname, stdout, stderr, _ = output
@@ -152,7 +152,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
                     else
                         echo "[PMON NOT SUPPORTED]"
                     fi
-                done 
+                done
             else
                 # nvidia-smi failed
                 exit $?
@@ -181,7 +181,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
 
         result = {}
         for host, host_out in output.items():
-            if host_out.exit_code is 0:
+            if host_out.exit_code == 0:
                 processes = NvidiaSmiParser.parse_pmon_stdout(host_out.stdout)
                 # Find process owner for each process
                 for process in processes:

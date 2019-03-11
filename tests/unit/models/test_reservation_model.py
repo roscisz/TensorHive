@@ -6,38 +6,34 @@ def test_reservation_creation(tables, new_reservation):
     new_reservation.save()
 
 
-def test_interference_detection(tables, new_reservation):
+def test_interfering_reservation_cannot_be_saved(tables, new_reservation, new_reservation_2):
     # Create initial record
     new_reservation.save()
-
-    # Try to trigger interference
     offset = timedelta(minutes=5)
+
     with pytest.raises(AssertionError):
         # | A    A |
-        new_reservation.starts_at += offset
-        new_reservation.ends_at -= offset
-        new_reservation.save()
+        new_reservation_2.starts_at = new_reservation.starts_at + offset
+        new_reservation_2.ends_at = new_reservation.ends_at - offset
+        new_reservation_2.save()
 
     with pytest.raises(AssertionError):
         # A |     A |
-        offset = timedelta(minutes=5)
-        new_reservation.starts_at -= offset
-        new_reservation.ends_at -= offset
-        new_reservation.save()
+        new_reservation_2.starts_at = new_reservation.starts_at - offset
+        new_reservation_2.ends_at = new_reservation.ends_at - offset
+        new_reservation_2.save()
 
     with pytest.raises(AssertionError):
         # | A     | A
-        offset = timedelta(minutes=5)
-        new_reservation.starts_at += offset
-        new_reservation.ends_at += offset
-        new_reservation.save()
+        new_reservation_2.starts_at = new_reservation.starts_at + offset
+        new_reservation_2.ends_at = new_reservation.starts_at + offset
+        new_reservation_2.save()
 
     with pytest.raises(AssertionError):
         # A |      | A
-        offset = timedelta(minutes=5)
-        new_reservation.starts_at -= offset
-        new_reservation.ends_at += offset
-        new_reservation.save()
+        new_reservation_2.starts_at = new_reservation.starts_at - offset
+        new_reservation_2.ends_at = new_reservation.ends_at + offset
+        new_reservation_2.save()
 
 
 @pytest.mark.usefixtures('faker')
@@ -82,6 +78,5 @@ def test_invalid_reservation_time_range(tables, new_reservation, faker):
     with pytest.raises(AssertionError):
         # Duration too long (2 days at last)
         new_reservation.starts_at = faker.future_datetime()
-        new_reservation.ends_at = new_reservation.starts_at + timedelta(days=2, seconds=1)
-        print(new_reservation)
+        new_reservation.ends_at = new_reservation.starts_at + timedelta(days=8, seconds=1)
         new_reservation.save()

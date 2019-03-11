@@ -51,13 +51,13 @@ class CRUDModel:
     def get(cls, id):
         try:
             result = db_session.query(cls).filter_by(id=id).one()
-        except MultipleResultsFound as e:
+        except MultipleResultsFound:
             msg = 'There are multiple {} records with the same id={}!'.format(cls.__name__, id)
             log.critical(msg)
             raise MultipleResultsFound(msg)
-        except NoResultFound as e:
+        except NoResultFound:
             msg = 'There is no record {} with id={}!'.format(cls.__name__, id)
-            log.warning(msg)
+            log.debug(msg)
             raise NoResultFound(msg)
         else:
             return result

@@ -6,5 +6,8 @@ python:
 cache: pip
 install: 
   - pip install .
+  - pip install -r requirements-dev.txt
+before_script:
+  - python -m flake8 tensorhive
 script:
-  - python -m tensorhive --version
+  - pytest

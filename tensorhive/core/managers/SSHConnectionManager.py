@@ -14,32 +14,30 @@ class SSHConnectionManager():
     def __init__(self, config: Dict):
         self._connection_group = self.new_parallel_ssh_client(config)
 
-
     @classmethod
     def new_parallel_ssh_client(cls, config) -> ParallelSSHClient:
         hostnames = config.keys()
         if SSH.PROXY:
             return ParallelSSHClient(
-                        hosts=hostnames,
-                        host_config=config,
-                        proxy_host=SSH.PROXY['proxy_host'],
-                        proxy_user=SSH.PROXY['proxy_user'],
-                        proxy_port=SSH.PROXY['proxy_port']
-                        # Ignore timeout and num_retires for proxy
-                        )
-        
-        return ParallelSSHClient(
-                    hosts=hostnames,
-                    host_config=config,
-                    timeout=SSH.TIMEOUT,
-                    num_retries=SSH.NUM_RETRIES)
+                hosts=hostnames,
+                host_config=config,
+                proxy_host=SSH.PROXY['proxy_host'],
+                proxy_user=SSH.PROXY['proxy_user'],
+                proxy_port=SSH.PROXY['proxy_port']
+                # Ignore timeout and num_retires for proxy
+            )
 
+        return ParallelSSHClient(
+            hosts=hostnames,
+            host_config=config,
+            timeout=SSH.TIMEOUT,
+            num_retries=SSH.NUM_RETRIES)
 
     def add_host(self, host_config: Dict):
         '''
         Appends a host (as hostname + config) directly into parallel ssh client instance.
 
-        Expected dict structure: 
+        Expected dict structure:
         host_config = {'<some_hostname>': {'user': '<some_username>'}}
         '''
         hostname = [*host_config][0]
@@ -47,7 +45,6 @@ class SSHConnectionManager():
         self.connections.host_config = {
             **self.connections.host_config, **host_config
         }
-
 
     def single_connection(self, hostname: str):
         config = {hostname: SSH.AVAILABLE_NODES[hostname]}
@@ -59,18 +56,16 @@ class SSHConnectionManager():
         # Return cached object
         return self._connection_container[hostname]
 
-
     @property
     def connections(self):
         return self._connection_group
-
 
     @staticmethod
     def test_all_connections(config):
         '''
         It checks if all of the defined hosts are accessible via SSH.
         Typically runs on each TensorHive startup.
-        You can turn it off (INI config -> [ssh] -> test_on_startup = off 
+        You can turn it off (INI config -> [ssh] -> test_on_startup = off
         '''
         log.info('[⚙] Testing SSH configuration...')
         if not config:
@@ -102,9 +97,9 @@ class SSHConnectionManager():
                     icon='✘',
                     host=host,
                     msg=error_message))
-                    
+
         # 4. Show simple summary of failed connections
         if num_failed > 0:
             log.critical('Summary: {failed}/{all} failed to connect.'.format(
-                failed=num_failed, 
+                failed=num_failed,
                 all=len(output)))

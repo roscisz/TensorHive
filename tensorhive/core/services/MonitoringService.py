@@ -3,7 +3,8 @@ from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.managers.SSHConnectionManager import SSHConnectionManager
 from tensorhive.core.services.Service import Service
 from typing import List, Dict, Any
-import time, gevent
+import time
+import gevent
 from tensorhive.core.utils.decorators.override import override
 import logging
 log = logging.getLogger(__name__)
@@ -17,7 +18,7 @@ class MonitoringService(Service):
     monitors = []
     connections = []
     infrastructure_manager = None
-    
+
     def __init__(self, monitors, interval=0.0):
         super().__init__()
         self.monitors = monitors
@@ -29,7 +30,6 @@ class MonitoringService(Service):
             self.infrastructure_manager = injected_object
         elif isinstance(injected_object, SSHConnectionManager):
             self.connection_manager = injected_object
-
 
     @override
     def do_run(self):
@@ -47,8 +47,8 @@ class MonitoringService(Service):
 
         # Hold on until next interval
         if execution_time < self.interval:
-           gevent.sleep(self.interval - execution_time)
+            gevent.sleep(self.interval - execution_time)
         waiting_time = time_func() - end_time
         total_time = execution_time + waiting_time
         log.debug('MonitoringService loop took: {:.2f}s (waiting {:.2f}) = {:.2f}'.format(
-           execution_time, waiting_time, total_time))
+            execution_time, waiting_time, total_time))
