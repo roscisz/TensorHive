@@ -1,5 +1,88 @@
 <template>
   <div id="login">
+    <v-layout row justify-center>
+      <v-dialog
+        persistent
+        width="50vw"
+        v-model="showModal"
+      >
+        <v-card>
+          <v-card-title>
+            <span class="headline">Create account</span>
+          </v-card-title>
+          <v-card-text>
+            <form @submit.prevent="createUser">
+              Create account
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                <input
+                  class="form-control"
+                  name="modalUsername"
+                  placeholder="Username"
+                  type="text"
+                  v-model="modalUsername"
+                >
+              </div>
+              Email
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                <input
+                  class="form-control"
+                  name="modalEmail"
+                  placeholder="Email"
+                  type="text"
+                  v-model="modalEmail"
+                >
+              </div>
+              Pasword
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-lock"></i></span>
+                <input
+                  class="form-control"
+                  name="modalPassword"
+                  placeholder="Password"
+                  type="password"
+                  v-model="modalPassword"
+                >
+              </div>
+              Repeat password
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-lock"></i></span>
+                <input
+                  class="form-control"
+                  name="modalPassword2"
+                  placeholder="Password2"
+                  type="password"
+                  v-model="modalPassword2"
+                >
+              </div>
+              <v-alert
+                v-model="modalAlert"
+                dismissible
+                type="error"
+              >
+                {{ errorMessage }}
+              </v-alert>
+              <v-btn
+                color="info"
+                small
+                outline
+                round
+                @click="showModal=false"
+              >
+                Cancel
+              </v-btn>
+              <v-btn
+                color="success"
+                type="submit"
+              >
+                Create
+              </v-btn>
+            </form>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-layout>
     <div class="text-center col-sm-12">
       <!-- login form -->
       <form @submit.prevent="checkCreds">
@@ -32,6 +115,14 @@
         >
           {{ errorMessage }}
         </v-alert>
+        <v-alert
+          v-model="created"
+          dismissible
+          type="info"
+        >
+          User successfully created
+        </v-alert>
+        <v-btn color="info" @click="showModal=true">Create account</v-btn>
         <v-btn
           color="success"
           type="submit"
@@ -53,13 +144,37 @@ export default {
     return {
       section: 'Login',
       username: '',
+      modalUername: '',
       password: '',
+      modalPassword: '',
+      modalPassword2: '',
       alert: false,
-      errorMessage: ''
+      modalAlert: false,
+      created: false,
+      errorMessage: '',
+      showModal: false
     }
   },
 
   methods: {
+    createUser () {
+      if (this.modalPassword === this.modalPassword2) {
+        const { modalUsername, modalEmail, modalPassword } = this
+        api
+          .request('post', '/user/create_local', this.$store.state.accessToken, { 'username': modalUsername, 'email': modalEmail, 'password': modalPassword })
+          .then(response => {
+            this.showModal = false
+            this.created = true
+          })
+          .catch(error => {
+            this.errorMessage = error.response.data.msg
+            this.modalAlert = true
+          })
+      } else {
+        this.errorMessage = 'Passwords do not match'
+        this.modalAlert = true
+      }
+    },
     checkCreds () {
       const { username, password } = this
 
