@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ds
+spec:
+  containers:
+    - args:
+      - python3
+      - ./DeepSpeech.py
+      - --train_files=ldc93s1/ldc93s1.csv
+      - --dev_files=ldc93s1/ldc93s1.csv
+      - --test_files=ldc93s1/ldc93s1.csv
+      - --log_level=0
+      - --train_batch_size=32
+      - --benchmark_steps=30
+      - --notest
+      name: ds-container
+      image: <yourdockerhub>/deepspeech
+      env:
+        - name: CUDA_VISIBLE_DEVICES
+          value: "0"
+      resources:
+        limits:
+          nvidia.com/gpu: 1
+  restartPolicy: Never

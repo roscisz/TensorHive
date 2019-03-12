@@ -1,8 +1,8 @@
 diff --git a/DeepSpeech.py b/DeepSpeech.py
-index 8e1b529..598b4be 100755
+index 8e1b529..c5e26a2 100755
 --- a/DeepSpeech.py
 +++ b/DeepSpeech.py
-@@ -22,6 +22,7 @@ from six.moves import zip, range, filter, urllib, BaseHTTPServer
+@@ -22,12 +22,14 @@ from six.moves import zip, range, filter, urllib, BaseHTTPServer
  from tensorflow.python.tools import freeze_graph
  from threading import Thread, Lock
  from util.audio import audiofile_to_input_vector
@@ -10,7 +10,14 @@ index 8e1b529..598b4be 100755
  from util.feeding import DataSet, ModelFeeder
  from util.gpu import get_available_gpus
  from util.shared_lib import check_cupti
-@@ -160,6 +161,11 @@ tf.app.flags.DEFINE_string  ('one_shot_infer',       '',       'one-shot inferen
+ from util.text import sparse_tensor_value_to_texts, wer, levenshtein, Alphabet, ndarray_to_text
+ from xdg import BaseDirectory as xdg
+ import numpy as np
++import signal
+ 
+ 
+ # Importer
+@@ -160,6 +162,11 @@ tf.app.flags.DEFINE_string  ('one_shot_infer',       '',       'one-shot inferen
  
  tf.app.flags.DEFINE_string  ('initialize_from_frozen_model', '', 'path to frozen model to initialize from. This behaves like a checkpoint, loading the weights from the frozen model and starting training with those weights. The optimizer parameters aren\'t restored, so remember to adjust the learning rate.')
  
@@ -22,7 +29,7 @@ index 8e1b529..598b4be 100755
  for var in ['b1', 'h1', 'b2', 'h2', 'b3', 'h3', 'b5', 'h5', 'b6', 'h6']:
      tf.app.flags.DEFINE_float('%s_stddev' % var, None, 'standard deviation to use when initialising %s' % var)
  
-@@ -228,6 +234,9 @@ def initialize_globals():
+@@ -228,6 +235,9 @@ def initialize_globals():
      if len(FLAGS.checkpoint_dir) == 0:
          FLAGS.checkpoint_dir = xdg.save_data_path(os.path.join('deepspeech','checkpoints'))
  
@@ -32,7 +39,7 @@ index 8e1b529..598b4be 100755
      # Set default summary dir
      if len(FLAGS.summary_dir) == 0:
          FLAGS.summary_dir = xdg.save_data_path(os.path.join('deepspeech','summaries'))
-@@ -483,7 +492,7 @@ def decode_with_lm(inputs, sequence_length, beam_width=100,
+@@ -483,7 +493,7 @@ def decode_with_lm(inputs, sequence_length, beam_width=100,
        custom_op_module.ctc_beam_search_decoder_with_lm(
            inputs, sequence_length, beam_width=beam_width,
            model_path=FLAGS.lm_binary_path, trie_path=FLAGS.lm_trie_path, alphabet_path=FLAGS.alphabet_config_path,
@@ -41,7 +48,25 @@ index 8e1b529..598b4be 100755
            top_paths=top_paths, merge_repeated=merge_repeated))
  
    return (
-@@ -1551,14 +1560,21 @@ def train(server=None):
+@@ -1322,7 +1332,8 @@ class TrainingCoordinator(object):
+                     return str
+                 if status == 204: # We use 204 (no content) to indicate end of training
+                     return default
+-            except urllib.error.HTTPError as error:
++            except Exception:
++                os.kill(os.getpid(), signal.SIGTERM)
+                 log_traffic('Problem reaching coordinator - url: %s, HTTP code: %d' % (url, error.code))
+                 pass
+             time.sleep(10)
+@@ -1449,6 +1460,7 @@ def send_token_to_ps(session, kill=False):
+         log_debug('Sending %s token to ps %d...' % (kind, index))
+         session.run(enqueue, feed_dict={ token_placeholder: token })
+         log_debug('Sent %s token to ps %d.' % (kind, index))
++        os.kill(os.getpid(), signal.SIGTERM)
+ 
+ def train(server=None):
+     r'''
+@@ -1551,14 +1563,21 @@ def train(server=None):
          hooks.append(optimizer.make_session_run_hook(is_chief))
  
      # Hook to save TensorBoard summaries
@@ -65,15 +90,26 @@ index 8e1b529..598b4be 100755
      if len(FLAGS.initialize_from_frozen_model) > 0:
          with tf.gfile.FastGFile(FLAGS.initialize_from_frozen_model, 'rb') as fin:
              graph_def = tf.GraphDef()
-@@ -1595,6 +1611,7 @@ def train(server=None):
+@@ -1595,8 +1614,10 @@ def train(server=None):
          with tf.train.MonitoredTrainingSession(master='' if server is None else server.target,
                                                 is_chief=is_chief,
                                                 hooks=hooks,
 +                                               chief_only_hooks=chief_only_hooks,
                                                 checkpoint_dir=FLAGS.checkpoint_dir,
                                                 save_checkpoint_secs=None, # already taken care of by a hook
++                                               save_summaries_secs=None, save_summaries_steps=None,
                                                 config=session_config) as session:
-@@ -1864,7 +1881,7 @@ def main(_) :
+             if len(FLAGS.initialize_from_frozen_model) > 0:
+                 log_info('Initializing from frozen model: {}'.format(FLAGS.initialize_from_frozen_model))
+@@ -1840,6 +1861,7 @@ def main(_) :
+                             log_debug('Got a kill switch token from worker %i.' % abs(token + 1))
+                             break
+                         log_debug('Got a stop token from worker %i.' % token)
++                        os.kill(os.getpid(), signal.SIGTERM)
+                 log_debug('Session closed.')
+             elif FLAGS.job_name == 'worker':
+                 # We are a worker and therefore we have to do some work.
+@@ -1864,7 +1886,7 @@ def main(_) :
          do_single_file_inference(FLAGS.one_shot_infer)
  
      # Stopping the coordinator
