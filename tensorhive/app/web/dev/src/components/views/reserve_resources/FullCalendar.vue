@@ -24,6 +24,7 @@ import FullCalendarReserve from './FullCalendarReserve.vue'
 import FullCalendarInfo from './FullCalendarInfo.vue'
 import api from '../../../api'
 import $ from 'jquery'
+import moment from 'moment'
 import _ from 'lodash'
 require('../../../../static/fullcalendar/fullcalendar.js')
 
@@ -80,6 +81,8 @@ export default {
             for (var reservation in response.data) {
               if (response.data[reservation].id === self.reservationId) {
                 self.reservation = response.data[reservation]
+                self.reservation.start = moment(self.reservation.start)
+                self.reservation.end = moment(self.reservation.end)
               }
             }
             self.reservationId = -1
