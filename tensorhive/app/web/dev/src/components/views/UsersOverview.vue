@@ -303,6 +303,8 @@ export default {
     editUser: function (currentUser) {
       this.dialog = true
       this.user.id = currentUser.id
+      this.user.username = currentUser.username
+      this.user.email = currentUser.email
       var admin = false
       for (var role in currentUser.roles) {
         if (currentUser.roles[role] === 'admin') {
@@ -322,16 +324,16 @@ export default {
         var updatedUser = {
           id: this.user.id
         }
-        if (this.user.username !== '') {
+        if (this.user.username !== this.currentUser.username && this.user.username !== '') {
           updatedUser['username'] = this.user.username
         }
-        if (this.user.email !== '') {
+        if (this.user.email !== this.currentUser.email && this.user.email !== '') {
           updatedUser['email'] = this.user.email
         }
         if (this.user.password !== '') {
           updatedUser['password'] = this.user.password
         }
-        if (this.user.roles.length > 0) {
+        if (this.user.roles.length !== this.currentUser.roles.length) {
           updatedUser['roles'] = this.user.roles
         }
         api
