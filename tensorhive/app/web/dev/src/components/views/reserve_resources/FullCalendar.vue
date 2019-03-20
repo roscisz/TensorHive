@@ -180,7 +180,7 @@ export default {
       api
         .request('delete', '/reservations/' + reservation.id.toString(), this.$store.state.accessToken)
         .then(response => {
-          this.calendar.fullCalendar('removeEvents', reservation._id)
+          this.calendar.fullCalendar('refetchEvents')
         })
         .catch(error => {
           if (!error.hasOwnProperty('response')) {
