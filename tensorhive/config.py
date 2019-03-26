@@ -113,7 +113,7 @@ class SSH:
     TIMEOUT = config.getfloat(section, 'timeout', fallback=10.0)
     NUM_RETRIES = config.getint(section, 'number_of_retries', fallback=1)
 
-    def hosts_config_to_dict(path: str) -> Dict:
+    def hosts_config_to_dict(path: str) -> Dict:  # type: ignore
         '''Parses sections containing hostnames'''
         hosts_config = ConfigLoader.load(path, displayed_title='hosts')
         result = {}
@@ -129,7 +129,7 @@ class SSH:
             }
         return result
 
-    def proxy_config_to_dict(path: str) -> Optional[Dict]:
+    def proxy_config_to_dict(path: str) -> Optional[Dict]:  # type: ignore
         '''Parses [proxy_tunneling] section'''
         config = ConfigLoader.load(path, displayed_title='proxy')
         section = 'proxy_tunneling'
@@ -152,7 +152,7 @@ class DB:
     section = 'database'
     default_path = '~/.config/TensorHive/database.sqlite'
 
-    def uri_for_path(path: str) -> str:
+    def uri_for_path(path: str) -> str:  # type: ignore
         return 'sqlite:///{}'.format(PosixPath(path).expanduser())
 
     SQLALCHEMY_DATABASE_URI = uri_for_path(config.get(section, 'path', fallback=default_path))
@@ -244,7 +244,7 @@ class USAGE_LOGGING_SERVICE:
     section = 'usage_logging_service'
     default_path = '~/.config/TensorHive/logs/'
 
-    def full_path(path: str) -> str:
+    def full_path(path: str) -> str:  # type: ignore
         return str(PosixPath(path).expanduser())
 
     ENABLED = config.getboolean(section, 'enabled', fallback=True)
@@ -257,7 +257,7 @@ class AUTH:
     from datetime import timedelta
     section = 'auth'
 
-    def config_get_parsed(option: str, fallback: Any) -> List[str]:
+    def config_get_parsed(option: str, fallback: Any) -> List[str]:  # type: ignore
         '''
         Parses value for option from string to a valid python list.
         Fallback value is returned when anything goes wrong (e.g. option or value not present)
