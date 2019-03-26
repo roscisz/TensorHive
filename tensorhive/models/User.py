@@ -22,7 +22,7 @@ class PASS_COMPLEXITY:
     STRONG = 3
 
 
-class User(CRUDModel, Base):
+class User(CRUDModel, Base):  # type: ignore
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)

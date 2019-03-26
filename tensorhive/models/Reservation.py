@@ -8,7 +8,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class Reservation(CRUDModel, Base):
+class Reservation(CRUDModel, Base):  # type: ignore
     __tablename__ = 'reservations'
     __table_args__ = {'sqlite_autoincrement': True}
 
