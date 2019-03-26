@@ -176,7 +176,7 @@ class UsageLoggingService(Service):
         Triggers an action on expired log file
         depending on the value specified by self.log_cleanup_action
         '''
-        action = self.log_cleanup_actionP
+        action = self.log_cleanup_action
         assert LogFileCleanupAction(action)
 
         if action == LogFileCleanupAction.REMOVE:
