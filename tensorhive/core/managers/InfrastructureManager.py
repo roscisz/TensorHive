@@ -8,7 +8,7 @@ class InfrastructureManager():
     '''
     Holds the state/representation of discovered/known infrastruture with metrics
     '''
-    _infrastructure = {}
+    _infrastructure: Dict = {}
 
     @property
     def infrastructure(self) -> Dict:

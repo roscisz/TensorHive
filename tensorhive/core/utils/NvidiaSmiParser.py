@@ -192,7 +192,7 @@ class NvidiaSmiParser():
         # Each chunk is transformed into a dictionary.
         # key=UUID, value=pmon's stdout lines corresponding GPU witch such UUID
         uuid_regex = re.compile('^UUID=(.*)$')
-        stdout_of_all_gpus = {}
+        stdout_of_all_gpus: Dict = {}
         for line in list(stdout_lines):
             uuid_match = uuid_regex.match(line)
             if uuid_match:

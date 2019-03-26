@@ -35,7 +35,7 @@ class TensorHiveManager(metaclass=Singleton):
     @staticmethod
     def instantiate_services_from_config() -> List[Service]:
         '''Creates preconfigured instances of services based on config'''
-        services = []
+        services: List[Service] = []
         if MONITORING_SERVICE.ENABLED:
             monitors = []
             if MONITORING_SERVICE.ENABLE_GPU_MONITOR:
