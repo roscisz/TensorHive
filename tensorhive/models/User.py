@@ -50,7 +50,7 @@ class User(CRUDModel, Base):  # type: ignore
     def roles(self):
         return self._roles
 
-    @roles.setter
+    @roles.setter  # type: ignore
     def roles(self, new_roles):
         self._roles = new_roles
 
@@ -65,7 +65,7 @@ class User(CRUDModel, Base):  # type: ignore
     def password(self):
         return self._hashed_password
 
-    @password.setter
+    @password.setter  # type: ignore
     def password(self, raw: str):
         result = safe.check(raw, length=self.min_password_length, freq=0, min_types=1, level=PASS_COMPLEXITY.TERRIBLE)
         assert result, 'Incorrect password, reason: {}'.format(result.message)

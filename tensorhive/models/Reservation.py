@@ -69,7 +69,7 @@ class Reservation(CRUDModel, Base):  # type: ignore
     def starts_at(self):
         return self._starts_at
 
-    @starts_at.setter
+    @starts_at.setter  # type: ignore
     def starts_at(self, value):
         if isinstance(value, str):
             self._starts_at = self.parsed_input_datetime(value)
@@ -83,7 +83,7 @@ class Reservation(CRUDModel, Base):  # type: ignore
     def ends_at(self):
         return self._ends_at
 
-    @ends_at.setter
+    @ends_at.setter  # type: ignore
     def ends_at(self, value):
         if isinstance(value, str):
             try:
