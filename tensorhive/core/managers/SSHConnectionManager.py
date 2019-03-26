@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 class SSHConnectionManager():
     '''Responsible for configuring, establishing and holding shell sessions'''
     _connection_group = None
-    _connection_container: Dict = {}
+    _connection_container = {}  # type: Dict
 
     def __init__(self, config: Dict):
         self._connection_group = self.new_parallel_ssh_client(config)

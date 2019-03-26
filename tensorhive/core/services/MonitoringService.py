@@ -15,8 +15,8 @@ class MonitoringService(Service):
     Periodically updates infrastructure
     Can be configured to use multiple monitors against nodes with available connection
     '''
-    monitors: List = []
-    connections: List = []
+    monitors = []  # type: List
+    connections = []  # type: List
     infrastructure_manager = None
 
     def __init__(self, monitors, interval=0.0):

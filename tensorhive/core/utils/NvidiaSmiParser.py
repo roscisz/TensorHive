@@ -68,7 +68,7 @@ class NvidiaSmiParser():
                 result[short_key_name] = {'value': value, 'unit': unit}
             else:
                 # If there's no unit provided, just assign the value
-                result[short_key_name] = value
+                result[short_key_name] = value  # type: ignore
         return result
 
     @classmethod
@@ -148,7 +148,7 @@ class NvidiaSmiParser():
         return result
 
     @classmethod
-    def parse_pmon_stdout(cls, stdout: Generator) -> Dict[str, Dict]:
+    def parse_pmon_stdout(cls, stdout: Generator) -> List[Dict]:
         '''
         Example of expected stdout:
             UUID=GPU-c6d01ed6-8240-2e11-efe9-1111111111111
@@ -192,7 +192,7 @@ class NvidiaSmiParser():
         # Each chunk is transformed into a dictionary.
         # key=UUID, value=pmon's stdout lines corresponding GPU witch such UUID
         uuid_regex = re.compile('^UUID=(.*)$')
-        stdout_of_all_gpus: Dict = {}
+        stdout_of_all_gpus = {}  # type: Dict
         for line in list(stdout_lines):
             uuid_match = uuid_regex.match(line)
             if uuid_match:
