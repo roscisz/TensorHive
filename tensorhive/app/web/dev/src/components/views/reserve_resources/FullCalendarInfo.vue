@@ -52,6 +52,7 @@
             lang="en"
             format="YYYY-MM-DD HH:mm"
             :time-picker-options="timePickerOptions"
+            confirm
           ></date-picker>
         </div>
         <v-card-text>
