@@ -14,6 +14,6 @@ def test_prompts(tables, test_name, test_input):
     def click_wrapper():
         prompt_to_create_first_account()
         assert True
-        
+
     result = CliRunner().invoke(click_wrapper, input=mocked_input)
     assert result.exception is None, 'Account creator failed'
