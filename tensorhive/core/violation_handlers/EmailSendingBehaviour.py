@@ -14,7 +14,9 @@ log = logging.getLogger(__name__)
 
 
 class LastEmailTime:
-    '''TODO'''
+    '''Simple struct-like class that allows remembering when X were last emailed.
+    Each intruder has it's own timer for notifying admin.
+    '''
 
     def __init__(self):
         self.to_admin = datetime.datetime.min
@@ -22,25 +24,75 @@ class LastEmailTime:
 
 
 class EmailSendingBehaviour:
-    '''TODO'''
+    '''
+    When violation is triggered by ProtectionHandler it tries to contact
+    intruder and/or admin via email.
+
+    They get individual email message based on different HTML templates.
+    It will send messages periodically (every `self.interval` time)
+
+    There is `self.timers` memory which stores who and when was recentyl emailed.
+    If intruder does not have email assigned (or no account at all),
+    only admin will be notified (MAILBOT.NOTIFY_ADMIN and MAILBOT.ADMIN_EMAIL must be configured)
+
+    If SMTP configuration (server or credentials) are incorrect,
+    it will be logged each time `trigger_action` is called.
+    '''
 
     def __init__(self) -> None:
-        '''TODO'''
         self.mailer = Mailer(server=MAILBOT.SMTP_SERVER, port=MAILBOT.SMTP_PORT)
-        self.test_smtp_configuration()
+        self._test_smtp_configuration()
         self.interval = datetime.timedelta(minutes=MAILBOT.INTERVAL)
-        self.timers = {}
+        self.timers = {}  # type: Dict[str, LastEmailTime]
 
-    def time_to_resend(self, timer: LastEmailTime, to_admin: Optional[bool] = False) -> bool:
-        '''TODO'''
+    @override
+    def trigger_action(self, violation_data: Dict[str, Any]) -> None:
+        '''Contains business logic for intruder and admin email notifications.
+        It relies on early returns if any error occures.
+
+        :param violation_data: data received from ProtectionService
+        '''
+        # Expect certain keys beforehand
+        assert {'INTRUDER_USERNAME', 'RESERVATION_OWNER_USERNAME',
+                'RESERVATION_OWNER_EMAIL', 'RESERVATION_END', 'UUID', 'HOSTNAME'
+                }.issubset(violation_data), 'Invalid keys in violation_data'
+
+        if not self._test_smtp_configuration():
+            return
+
+        try:
+            # Fetch intruder email address and extend violation data
+            intruder_email = User.find_by_username(violation_data['INTRUDER_USERNAME']).email
+        except NoResultFound as e:
+            intruder_email = None
+            log.warning(e)
+        finally:
+            violation_data['INTRUDER_EMAIL'] = intruder_email
+
+        if not intruder_email:
+            # Intruder has no account or email assigned, try notify admin then
+            timer = self._get_timer(violation_data['INTRUDER_USERNAME'])
+            if MAILBOT.NOTIFY_ADMIN and self._time_to_resend(timer, to_admin=True):
+                self._email_admin(violation_data, timer)
+            return
+
+        # Intruder has account and email address, try email him and admin then
+        timer = self._get_timer(intruder_email)
+        if MAILBOT.NOTIFY_INTRUDER and self._time_to_resend(timer):
+            self._email_intruder(intruder_email, violation_data, timer)
+        if MAILBOT.NOTIFY_ADMIN and self._time_to_resend(timer, to_admin=True):
+            self._email_admin(violation_data, timer)
+
+    def _time_to_resend(self, timer: LastEmailTime, to_admin: Optional[bool] = False) -> bool:
+        '''Returns whether last email was sent min X time ago.'''
         if to_admin:
             last_notification_time = timer.to_admin
         else:
             last_notification_time = timer.to_intruder
         return last_notification_time + self.interval <= datetime.datetime.utcnow()
 
-    def get_timer(self, keyname: str) -> Dict[str, datetime.datetime]:
-        '''TODO'''
+    def _get_timer(self, keyname: str) -> LastEmailTime:
+        '''Safe dict fetching. It will create missing key with default value.'''
         try:
             timer = self.timers[keyname]
         except KeyError:
@@ -49,7 +101,11 @@ class EmailSendingBehaviour:
         else:
             return timer
 
-    def test_smtp_configuration(self) -> bool:
+    def _test_smtp_configuration(self) -> bool:
+        '''Does very basic checks whether config variables are not None (which is the default).
+        Then, it tries to establish an SMTP connection.
+        It logs error reason and appropriate hint.
+        '''
         try:
             assert MAILBOT.SMTP_SERVER and MAILBOT.SMTP_PORT, 'Incomplete SMTP server configuration'
             assert MAILBOT.SMTP_LOGIN and MAILBOT.SMTP_PASSWORD, 'Incomplete SMTP server credentials'
@@ -66,55 +122,19 @@ class EmailSendingBehaviour:
         else:
             return True
 
-    def email_intruder(self, email: str, violation_data: Dict, timer: LastEmailTime) -> None:
+    def _email_intruder(self, email_address: str, violation_data: Dict, timer: LastEmailTime) -> None:
+        '''Prepare message, send and update timer.'''
         email_body = MessageBodyTemplater(template=MAILBOT.INTRUDER_BODY_TEMPLATE).fill_in(data=violation_data)
-        email = Message(author=MAILBOT.SMTP_LOGIN, to=email, subject=MAILBOT.INTRUDER_SUBJECT, body=email_body)
+        email = Message(author=MAILBOT.SMTP_LOGIN, to=email_address, subject=MAILBOT.INTRUDER_SUBJECT, body=email_body)
         self.mailer.send(email)
         timer.to_intruder = datetime.datetime.utcnow()
         log.info('Email to intruder has been sent: {}'.format(email))
 
-    def email_admin(self, violation_data: Dict, timer: LastEmailTime) -> None:
+    def _email_admin(self, violation_data: Dict, timer: LastEmailTime) -> None:
+        '''Prepare message, send and update timer.'''
         email_body = MessageBodyTemplater(template=MAILBOT.ADMIN_BODY_TEMPLATE).fill_in(data=violation_data)
         email = Message(author=MAILBOT.SMTP_LOGIN, to=MAILBOT.ADMIN_EMAIL,
                         subject=MAILBOT.ADMIN_SUBJECT, body=email_body)
         self.mailer.send(email)
         timer.to_admin = datetime.datetime.utcnow()
         log.info('Email to admin has been sent: {}'.format(email))
-
-    @override
-    def trigger_action(self, violation_data: Dict[str, Any]) -> None:
-        '''TODO'''
-        # Expect proper keys beforehand
-        assert {
-            'INTRUDER_USERNAME',
-            'RESERVATION_OWNER_USERNAME',
-            'RESERVATION_OWNER_EMAIL',
-            'RESERVATION_END',
-            'UUID',
-            'HOSTNAME'}.issubset(violation_data), 'Invalid keys in violation_data'
-
-        if not self.test_smtp_configuration():
-            return
-
-        try:
-            # Fetch email address and extend violation data
-            intruder_email = User.find_by_username(violation_data['INTRUDER_USERNAME']).email
-        except NoResultFound as e:
-            intruder_email = None
-            log.warning(e)
-        finally:
-            violation_data['INTRUDER_EMAIL'] = intruder_email
-
-        if not intruder_email:
-            # At least try notify admin
-            timer = self.get_timer(violation_data['INTRUDER_USERNAME'])
-            if MAILBOT.NOTIFY_ADMIN and self.time_to_resend(timer, to_admin=True):
-                self.email_admin(violation_data, timer)
-            return
-
-        # Try email both
-        timer = self.get_timer(intruder_email)
-        if MAILBOT.NOTIFY_INTRUDER and self.time_to_resend(timer):
-            self.email_intruder(intruder_email, violation_data, timer)
-        if MAILBOT.NOTIFY_ADMIN and self.time_to_resend(timer, to_admin=True):
-            self.email_admin(violation_data, timer)

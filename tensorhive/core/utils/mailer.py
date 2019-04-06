@@ -68,7 +68,7 @@ class Mailer:
     def __init__(self, server: str, port: int) -> None:
         self.smtp_server = server
         self.smtp_port = port
-        self.server = None
+        self.server = None  # type: smtplib.SMTP
 
     def send(self, message: Message) -> None:
         assert self.server, 'Must call connect() first!'
