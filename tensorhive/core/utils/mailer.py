@@ -19,7 +19,7 @@ class Message:
         msg['From'] = author
         msg['To'] = ', '.join(to) if isinstance(to, list) else to
         msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'html'))
+        msg.attach(MIMEText(body or '', 'html'))
         self.msg = msg
 
     @property
