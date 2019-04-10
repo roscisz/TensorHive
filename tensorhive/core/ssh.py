@@ -1,7 +1,7 @@
 from typing import Optional, Dict
 from pssh.clients.native import ParallelSSHClient
 import pssh
-from tensorhive.core.utils.decorators import hashable_cache, timeit
+from tensorhive.core.utils.decorators import memoize, timeit
 import functools
 
 __author__ = '@micmarty'
@@ -18,7 +18,6 @@ Username = str
 CommandResult = Dict[Hostname, pssh.output.HostOutput]
 
 
-
 def build_dedicated_config_for(host: Hostname, user: Username) -> HostsConfig:
     return {
         host: {
@@ -27,38 +26,11 @@ def build_dedicated_config_for(host: Hostname, user: Username) -> HostsConfig:
         }
     }
 
-def memoize(func):
-    '''Decorator which enables caching function's return values when called with the exact same arguments.
-
-    When decorated function is called with arguments that are already in cache (key exists) it won't be executed
-    but cached value will be returned instead. All arguments are serlialized into a single string.
-
-    Cached values can be inspected by: print(decorated_func.cache)
-
-    Note:
-    This is extremely rare and probably won't be exploited by accident :)
-    1) key = basic_key
-        foo(True) and foo('True') are cached under same key name
-    2) key = bulletproof_key
-        foo(True) and foo('True') will be treated separately (different key in dict)
-    '''
-    cache = func.cache = {}
-    @functools.wraps(func)
-    def memoized_func(*args, **kwargs):
-        basic_key = str(args) + str(kwargs)
-        cls_name = lambda val: val.__class__.__name__
-        bulletproof_key = basic_key + str([cls_name(arg) for arg in args]) + str([cls_name(val) for val in kwargs.values()])
-        key = bulletproof_key
-        print(key)
-        if key not in cache:
-            cache[key] = func(*args, **kwargs)
-        return cache[key]
-    return memoized_func
 
 @memoize
 def get_client(config: HostsConfig, pconfig: Optional[ProxyConfig] = None, **kwargs) -> ParallelSSHClient:
     """Builds and returns an ssh client object for given configuration.
-    
+
     Client is fetched directly from cache if identical arguments were used recently.
     # TODO May not be thread-safe
     """
@@ -74,6 +46,7 @@ def get_client(config: HostsConfig, pconfig: Optional[ProxyConfig] = None, **kwa
         num_retries=0,
         **kwargs
     )
+
 
 @timeit
 def run_command(client: ParallelSSHClient, command: str) -> Optional[CommandResult]:
@@ -101,6 +74,7 @@ def run_command(client: ParallelSSHClient, command: str) -> Optional[CommandResu
         # print('Command `{}` finished'.format(command))
         return result
 
+
 def get_stdout(host: Hostname, output: pssh.output.HostOutput) -> str:
     """Unwraps stdout generator for given hostname."""
     try:
@@ -114,6 +88,7 @@ def get_stdout(host: Hostname, output: pssh.output.HostOutput) -> str:
         # TODO Log something
         # client.reset_output_generators(output)
         raise
+
 
 def succeeded(host: Hostname, output: pssh.output.HostOutput) -> bool:
     """Checks whether command's output was executed without any exception and exit code was 0."""

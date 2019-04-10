@@ -1,15 +1,15 @@
-from tensorhive.core import ssh
+from tensorhive.core.utils.decorators import memoize
 from unittest.mock import patch
 import time
 
 def test_memoize_for_correct_func_call_count():
-    @ssh.memoize
+    @memoize
     def add(x, y):
         # Simulates time-expensive operation
         time.sleep(10)
         return x + y
 
-    @ssh.memoize
+    @memoize
     def foo(a: dict, b: dict, c: bool) -> bool:
         time.sleep(10)
         return a and b and c
