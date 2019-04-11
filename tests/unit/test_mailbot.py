@@ -36,7 +36,7 @@ def test_mailer_sending_with_invalid_message():
             mailer.send(message)
 
 
-def test_building_message():
+def test_message_properly_processes_init_arguments():
     # Single recipient
     message = Message(author='foo', to='bar', subject='foo', body='bar')
     assert message.author == 'foo'
@@ -50,7 +50,7 @@ def test_building_message():
     assert message.recipients == 'foo, bar, fizz'
 
 
-def test_message_sending():
+def test_sendmail_is_reached_with_mock_smtp_server():
     with patch('smtplib.SMTP') as mock_smtp:
         mailer = Mailer('foo', 123)
         message = Message(author='foo', to='bar', subject='foo', body='bar')
@@ -60,7 +60,7 @@ def test_message_sending():
         assert mailer.server.sendmail.call_count == 1
 
 # Test that send real email (must check manually for now)
-# def test_email_sending(violation_data):
+# def test_sending_real_email_to_inbox(violation_data):
 #     MAILBOT.SMTP_SERVER = 'smtp.gmail.com'
 #     MAILBOT.SMTP_PORT = 587
 #     MAILBOT.SMTP_LOGIN = 'tensorhive.mailbot@gmail.com'
