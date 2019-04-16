@@ -28,7 +28,7 @@ def test_mailer_when_try_to_send_before_connect():
 
 
 def test_mailer_sending_with_invalid_message():
-    with patch('smtplib.SMTP') as mock_smtp:
+    with patch('smtplib.SMTP'):
         mailer = Mailer('foo', 123)
         mailer.connect(login=Any, password=Any)
         with pytest.raises(AssertionError):
