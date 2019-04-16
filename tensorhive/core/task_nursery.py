@@ -3,7 +3,9 @@ from tensorhive.core.ssh import HostsConfig, ProxyConfig, Hostname, Username
 from pssh.clients.native import ParallelSSHClient
 from typing import List, Optional, Dict
 import time
-
+import logging
+from datetime import datetime
+log = logging.getLogger(__name__)
 
 __author__ = '@micmarty'
 __all__ = [
@@ -14,31 +16,68 @@ __all__ = [
     'running'
 ]
 
+
 class ScreenCommandBuilder:
     """Set of configurable commands built on top of **screen** program."""
 
     @staticmethod
-    def spawn(command: str, session_name: str, capture_output=True, keep_alive=True) -> str:
+    def spawn(command: str, session_name: str, capture_output=True, keep_alive=False) -> str:
         """Command that runs inside daemonized screen session.
 
         Command is put into background manually (-D + & instead of simply usin -d) -> we want to know the PID
         Ways to capture output:
-            * standard way (implemented): keep session alive, user resumes and inspects it by himself.
+            * standard way: keep session alive, user resumes and inspects it by himself.
                 May need to use some workarounds if we want to know when command stops.
             * alternative way: screen should run ``script some_output.log -c "sleep 20; echo TensorHive"`
+            * tee way (implemented here): redirect command's output from within screen with tee
+                When used with -i, --ignore-interrupts options it won't accept SIGINT so that
+                the main command will catch it instead of tee. Use case for this is when your command
+                prints something important after SIGINT and you want to see it + put that into log file.
             * the screen way: use `screen -L -Logfile name.log`, unfortunately not all versions supports that feature...
+
+        Side effects (incompatible with capture_output=True):
+            * keep_alive will prevent saving command's output to log file.
+            It is advised to keep this turned off, unless you really want to keep session
+            alive even when the command has finished execution - sometimes useful!
         """
-        return 'screen -Dm {log} -S {sess_name} bash -c "{cmd}{block}" {to_bg}'.format(
-            log='-L' if capture_output else '',
-            sess_name=session_name,
+        if capture_output:
+            if keep_alive:
+                log.debug('keep_alive is set to False - incompatible with capture_output=True')
+                keep_alive = False
+            create_logfile_command = ScreenCommandBuilder.tmp_log_file()
+            capturing_command = '| tee --ignore-interrupts $({})'.format(create_logfile_command)
+
+        return 'screen -Dm -S {sess_name} bash -c "{cmd}{keep_alive} {log}" {to_bg}'.format(
+            sess_name=session_name,  # will help distinguishing between TensorHive and user's sessions
             cmd=command,
-            block='; exec sh' if keep_alive else '',
-            to_bg='& echo $!'
+            log=capturing_command if capture_output else '',  # see method description
+            keep_alive='; exec sh' if keep_alive else '',  # prevents screen from terminating session when command finished executing
+            to_bg='& echo $!'  # will print process pid
         )
 
     @staticmethod
+    def tmp_log_file() -> str:
+        """Command that creates tmp file for storing log content.
+
+        Target directory is created automatically.
+        Current implementation uses week number for easier differentiation.
+        """
+        target_dir = '~/TensorHiveLogs'
+        week_no = datetime.today().strftime('%U')  # type: str
+        name_template = 'week_' + week_no + '_XXXX'  # at least 3 'X' are required by mktemp
+        return 'mkdir --parents {target_dir} && mktemp {target_dir}/{name_template} --suffix .log'.format(
+            target_dir=target_dir, name_template=name_template
+        )
+
+    # TODO Use me instead of terminate?
+    @staticmethod
+    def interrupt(pid: int) -> str:
+        """Command that sends SIGINT to screen session. Should be used to gracefully terminate running command."""
+        return 'screen -S {} -X stuff $\'\cc\''.format(pid)
+
+    @staticmethod
     def terminate(pid: int) -> str:
-        """Terminates screen session using only pid (we don't need the full name: 1234.tensorhive)."""
+        """Command that terminates screen session using only pid (we don't need the full name: 1234.tensorhive)."""
         return 'screen -X -S {} quit'.format(pid)
 
     @staticmethod

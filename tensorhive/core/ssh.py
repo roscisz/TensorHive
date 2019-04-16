@@ -8,6 +8,7 @@ __author__ = '@micmarty'
 __all__ = [
     'get_client',
     'run_command',
+    'get_stdout'
     'succeeded'
 ]
 
