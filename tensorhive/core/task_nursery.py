@@ -102,7 +102,7 @@ class Task:
         Returns:
             pid of the process
         """
-        command = self._command_builder.spawn(self.command, session_name='tensorhive_task')
+        command = self._command_builder.spawn(self.command, session_name='tensorhive_task', keep_alive=False)
         output = ssh.run_command(client, command)
         stdout = ssh.get_stdout(host=self.hostname, output=output)
 
@@ -111,6 +111,10 @@ class Task:
         self.pid = int(pid)
         return self.pid
 
+    '''
+    Note: These two methods are nearly identical, but I wanted
+    to keep them separate because of logging and adding specialized logic later
+    '''
     def terminate(self, client: ParallelSSHClient) -> int:
         """Terminates the task using it's pid.
 
@@ -119,6 +123,18 @@ class Task:
         """
         assert self.pid, 'You must first spawn the task or provide pid manually.'
         command = self._command_builder.terminate(self.pid)
+        output = ssh.run_command(client, command)
+        exit_code = output[self.hostname].exit_code
+        return exit_code
+    
+    def interrupt(self, client: ParallelSSHClient) -> int:
+        """Interrupts the task gracefully by sending SIGINT signal
+
+        Returns:
+            exit code of the operation
+        """
+        assert self.pid, 'You must first spawn the task or provide pid manually.'
+        command = self._command_builder.interrupt(self.pid)
         output = ssh.run_command(client, command)
         exit_code = output[self.hostname].exit_code
         return exit_code
@@ -132,11 +148,15 @@ def spawn(command: str, host: Hostname, user: Username) -> int:
     return pid
 
 
-def terminate(pid: int, host: Hostname, user: Username) -> int:
+def terminate(pid: int, host: Hostname, user: Username, gracefully: bool = True) -> int:
     config = ssh.build_dedicated_config_for(host, user)
     client = ssh.get_client(config)
     task = Task(host, pid=pid)
-    exit_code = task.terminate(client)
+    
+    if gracefully:
+        exit_code = task.interrupt(client)
+    else:
+        exit_code = task.terminate(client)
     return exit_code
 
 
@@ -159,20 +179,26 @@ def running(host: Hostname, user: Username) -> List[int]:
 if __name__ == '__main__':
     # Quick testing: python -m tensorhive.core.task_nursery
     # FIXME Mock: Received data digested by API controller
-    user = '155136mm'
-    pkey_path = '~/.ssh/id_rsa'  # storage for public and private keys, common for all users
-    tasks = [
-        Task('galileo.eti.pg.gda.pl', 'sleep 20; echo $USER'),
-        Task('galileo.eti.pg.gda.pl', 'sleep 20; echo b'),
-        Task('galileo.eti.pg.gda.pl', 'sleep 20; echo c'),
-        Task('galileo.eti.pg.gda.pl', 'sleep 20; echo d')
-    ]
+    # user = '155136mm'
+    # pkey_path = '~/.ssh/id_rsa'  # storage for public and private keys, common for all users
+    # tasks = [
+    #     Task('galileo.eti.pg.gda.pl', 'sleep 20; echo $USER'),
+    #     Task('galileo.eti.pg.gda.pl', 'sleep 20; echo b'),
+    #     Task('galileo.eti.pg.gda.pl', 'sleep 20; echo c'),
+    #     Task('galileo.eti.pg.gda.pl', 'sleep 20; echo d')
+    # ]
     # config = ssh.build_dedicated_config_for('galileo.eti.pg.gda.pl', user)
     # client = ssh.get_client(config)
     # [task.spawn(client) for task in tasks]
-    print(running('galileo.eti.pg.gda.pl', user))
-    # kill_all_screen_sessions('galileo.eti.pg.gda.pl', user, pkey_path)
-    # distribute_tasks(user, pkey_path, tasks)
-    # print('[Mock] Waiting for 20s...')
-    # time.sleep(20)
-    # terminate_tasks(user, pkey_path, tasks)
+
+    user = 'bwroblew'
+    host = 'ai.eti.pg.gda.pl'
+
+    # Interrupt all
+    running_tasks = running(host, user)
+    for task in running_tasks:
+        terminate(task, host, user, gracefully=True)
+
+    # Spawn one
+    spawn('cd ~/Simulators/095; DISPLAY= ./CarlaUE4.sh Town04', host, user)
+    print(running(host, user))
