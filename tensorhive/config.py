@@ -214,24 +214,12 @@ class MAILBOT:
     NOTIFY_ADMIN = mailbot_config.getboolean(section, 'notify_admin', fallback=False)
     ADMIN_EMAIL = mailbot_config.get(section, 'admin_email', fallback=None)
 
-    # FIXME Not sure if this should be required
     section = 'smtp'
     SMTP_LOGIN = mailbot_config.get(section, 'email', fallback=None)
     SMTP_PASSWORD = mailbot_config.get(section, 'password', fallback=None)
     SMTP_SERVER = mailbot_config.get(section, 'smtp_server', fallback=None)
     SMTP_PORT = mailbot_config.getint(section, 'smtp_port', fallback=587)
 
-    # Simple checks between 'general' and 'smtp' section
-    if PROTECTION_SERVICE.NOTIFY_VIA_EMAIL and (NOTIFY_INTRUDER or NOTIFY_ADMIN):
-        try:
-            assert SMTP_LOGIN and SMTP_PASSWORD and SMTP_SERVER
-        except AssertionError:
-            log.warning('[MAILBOT] Incomplete SMTP configuration, check your config')
-
-        if NOTIFY_ADMIN and not ADMIN_EMAIL:
-            log.warning('[MAILBOT] Invalid admin email address, check your config.')
-
-    # FIXME Not sure if this should be required
     section = 'template/intruder'
     INTRUDER_SUBJECT = mailbot_config.get(section, 'subject')
     INTRUDER_BODY_TEMPLATE = mailbot_config.get(section, 'html_body')
