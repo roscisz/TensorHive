@@ -48,7 +48,7 @@ def create(user):
     return do_create(user)
 
 
-def create_local(user):
+def ssh_signup(user):
     # TODO: configure nodes used for authentication
     auth_node = next(iter(SSH.AVAILABLE_NODES))
 

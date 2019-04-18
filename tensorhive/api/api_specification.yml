@@ -135,12 +135,12 @@ paths:
           description: {{RESPONSES['general']['internal_error']}}
       security:
       - Bearer: []
-  /user/create_local:
+  /user/ssh_signup:
     post:
       tags:
         - users
-      summary: Create new user based on local authentication
-      operationId: tensorhive.controllers.user.create_user_controller.create_local
+      summary: Create new user account based on SSH authentication
+      operationId: tensorhive.controllers.user.create_user_controller.ssh_signup
       parameters:
         - description: User object
           in: body
