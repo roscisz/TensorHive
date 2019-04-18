@@ -9,6 +9,7 @@ from tensorhive.core.utils.decorators.override import override
 from tensorhive.config import SSH, MONITORING_SERVICE, PROTECTION_SERVICE, USAGE_LOGGING_SERVICE
 from tensorhive.api.APIServer import APIServer
 from tensorhive.core.utils.StoppableThread import StoppableThread
+from tensorhive.core.utils.exceptions import ConfigurationException
 from tensorhive.core.monitors.Monitor import Monitor
 from tensorhive.core.monitors.GPUMonitoringBehaviour import GPUMonitoringBehaviour
 from tensorhive.core.services.MonitoringService import MonitoringService
@@ -27,6 +28,11 @@ class TensorHiveManager(metaclass=Singleton):
     def __init__(self):
         super().__init__()
         self.infrastructure_manager = InfrastructureManager()
+
+        if not SSH.AVAILABLE_NODES:
+            log.error('[!] Empty ssh configuration. Please check {}'.format(SSH.HOSTS_CONFIG_FILE))
+            raise ConfigurationException
+
         if SSH.TEST_ON_STARTUP:
             SSHConnectionManager.test_all_connections(config=SSH.AVAILABLE_NODES)
         self.connection_manager = SSHConnectionManager(config=SSH.AVAILABLE_NODES)

@@ -80,9 +80,7 @@ class SSHConnectionManager():
         Typically runs on each TensorHive startup.
         You can turn it off (INI config -> [ssh] -> test_on_startup = off
         '''
-        log.info('[⚙] Testing SSH configuration...')
-        if not config:
-            log.warning('[!] Empty ssh configuration. Please check {}'.format(SSH.HOSTS_CONFIG_FILE))
+        log.info('[⚙] Testing SSH connections...')
 
         # 1. Establish connection
         connections = SSHConnectionManager.new_parallel_ssh_client(config)
