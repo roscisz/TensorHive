@@ -52,6 +52,7 @@
             lang="en"
             format="YYYY-MM-DD HH:mm"
             :time-picker-options="timePickerOptions"
+            confirm
           ></date-picker>
         </div>
         <v-card-text>
@@ -150,14 +151,28 @@ export default {
         return this.reservation.memUtilAvg + '%'
       }
     },
+    reservationTitle () {
+      return this.reservation.title
+    },
+
+    reservationDescription () {
+      return this.reservation.description
+    },
 
     selectedTimeChanged () {
       if (this.reservation.start instanceof Date) return [this.reservation.start, this.reservation.end]
       else return [new Date(this.reservation.start), new Date(this.reservation.end)]
     }
   },
-
   watch: {
+    reservationTitle () {
+      this.newTitle = this.reservationTitle
+    },
+
+    reservationDescription () {
+      this.newDescription = this.reservationDescription
+    },
+
     selectedTimeChanged () {
       this.newTime = this.selectedTimeChanged
     }

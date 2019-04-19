@@ -31,6 +31,7 @@
               lang="en"
               format="YYYY-MM-DD HH:mm"
               :time-picker-options="timePickerOptions"
+              confirm
             ></date-picker>
           </label>
           <v-textarea

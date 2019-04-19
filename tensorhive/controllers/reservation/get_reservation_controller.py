@@ -31,7 +31,7 @@ def get_selected(resources_ids: List, start: str, end: str):
             content = {'msg': G['internal_error']}
             status = 500
         else:
-            content = matches
+            content = matches  # type: ignore
             status = 200
     else:
         content = {'msg': G['bad_request']}

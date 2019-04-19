@@ -5,7 +5,7 @@ from tensorhive.core.monitors.MonitoringBehaviour import MonitoringBehaviour
 
 class Monitor():
     _monitoring_behaviour = None
-    _gathered_data = {}
+    _gathered_data = {}  # type: Dict
 
     def __init__(self, behaviour: MonitoringBehaviour):
         self._monitoring_behaviour = behaviour

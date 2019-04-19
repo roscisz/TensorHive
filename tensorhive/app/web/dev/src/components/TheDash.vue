@@ -20,6 +20,9 @@
         >
           <span class="sr-only">Toggle navigation</span>
         </a>
+        <div class="version_info">
+          <b>TensorHive</b> v{{version}} <b>API</b> v{{apiVersion}}
+        </div>
         <v-menu
           class="user_chip"
           :close-on-content-click="false"
@@ -84,6 +87,12 @@ export default {
   computed: {
     displayName () {
       return this.$store.state.user
+    },
+    version () {
+      return config.version
+    },
+    apiVersion () {
+      return config.apiVersion
     }
   },
 
@@ -93,35 +102,48 @@ export default {
     },
 
     logout: function () {
-      api
-        .request('delete', '/user/logout', this.$store.state.accessToken)
-        .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            this.errorMessage = error.message
-          } else {
-            this.errorMessage = error.response.data.msg
-          }
-          this.alert = true
-        })
-      api
-        .request('delete', '/user/logout/refresh_token', this.$store.state.refreshToken)
-        .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            this.errorMessage = error.message
-          } else {
-            this.errorMessage = error.response.data.msg
-          }
-          this.alert = true
-        })
+      if (this.$store.state.accessToken !== null) {
+        api
+          .request('delete', '/user/logout', this.$store.state.accessToken)
+          .then(response => {
+            this.$store.commit('SET_ACCESS_TOKEN', null)
+
+            if (window.localStorage) {
+              window.localStorage.setItem('accessToken', null)
+            }
+            if (this.$store.state.refreshToken !== null) {
+              api
+                .request('delete', '/user/logout/refresh_token', this.$store.state.refreshToken)
+                .then(response => {
+                  this.$store.commit('SET_REFRESH_TOKEN', null)
+                  if (window.localStorage) {
+                    window.localStorage.setItem('refreshToken', null)
+                  }
+                })
+                .catch(error => {
+                  if (!error.hasOwnProperty('response')) {
+                    this.errorMessage = error.message
+                  } else {
+                    this.errorMessage = error.response.data.msg
+                  }
+                  this.alert = true
+                })
+            }
+          })
+          .catch(error => {
+            if (!error.hasOwnProperty('response')) {
+              this.errorMessage = error.message
+            } else {
+              this.errorMessage = error.response.data.msg
+            }
+            this.alert = true
+          })
+      }
       this.$store.commit('SET_USER', null)
-      this.$store.commit('SET_ACCESS_TOKEN', null)
-      this.$store.commit('SET_REFRESH_TOKEN', null)
       this.$store.commit('SET_ROLE', null)
 
       if (window.localStorage) {
         window.localStorage.setItem('user', null)
-        window.localStorage.setItem('accessToken', null)
-        window.localStorage.setItem('refreshToken', null)
         window.localStorage.setItem('role', null)
         window.localStorage.setItem('visibleResources', null)
         window.localStorage.setItem('watches', null)
@@ -134,8 +156,16 @@ export default {
 </script>
 
 <style lang="scss">
+.version_info {
+  position: absolute !important;
+  right: 0;
+  margin-right: 10px;
+  margin-top: 10px;
+  font-size: 20px;
+  color: white;
+}
 .user_chip {
-  position: absolute;
+  position: absolute !important;
   right: 0;
   margin-top: 50px;
 }

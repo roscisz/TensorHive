@@ -176,7 +176,7 @@ class UsageLoggingService(Service):
         Triggers an action on expired log file
         depending on the value specified by self.log_cleanup_action
         '''
-        action = self.log_cleanup_actionP
+        action = self.log_cleanup_action
         assert LogFileCleanupAction(action)
 
         if action == LogFileCleanupAction.REMOVE:
@@ -185,7 +185,7 @@ class UsageLoggingService(Service):
         elif action == LogFileCleanupAction.HIDE:
             new_name = file.parent / ('.' + file.name)
             file.rename(new_name)
-            msg = 'Log file is now hidden'
+            msg = 'Log file {} is now hidden'.format(file)
         elif action == LogFileCleanupAction.RENAME:
             new_file = file.parent / ('old_' + file.name)
             file.rename(new_file)

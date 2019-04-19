@@ -1,5 +1,97 @@
 <template>
   <div id="login">
+    <v-layout row justify-center>
+      <v-dialog
+        persistent
+        width="50vw"
+        v-model="showModal"
+      >
+        <v-card>
+          <v-card-title>
+            <span class="headline">Register new account</span>
+          </v-card-title>
+          <v-card-text>
+            <form @submit.prevent="createUser">
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                <input
+                  class="form-control"
+                  name="modalUsername"
+                  placeholder="UNIX username"
+                  type="text"
+                  v-model="modalUsername"
+                >
+              </div>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                <input
+                  class="form-control"
+                  name="modalEmail"
+                  placeholder="Email"
+                  type="text"
+                  v-model="modalEmail"
+                >
+              </div>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-lock"></i></span>
+                <input
+                  class="form-control"
+                  name="modalPassword"
+                  placeholder="Password"
+                  type="password"
+                  v-model="modalPassword"
+                >
+              </div>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-lock"></i></span>
+                <input
+                  class="form-control"
+                  name="modalPassword2"
+                  placeholder="Repeat password"
+                  type="password"
+                  v-model="modalPassword2"
+                >
+              </div>
+              Please copy the key below and paste it into <b>~/.ssh/authorized_keys</b>.<br>It will allow TensorHive to confirm you identity and access machines with provided UNIX username.
+              <v-textarea
+                solo
+                name="entry"
+                :value="entry"
+                id="entry">
+              </v-textarea>
+              <v-btn
+                color="info"
+                @click="copyEntryToClipboard"
+                small
+              >Copy to clipboard</v-btn>
+              <br>
+              <v-alert
+                v-model="modalAlert"
+                dismissible
+                type="error"
+              >
+                {{ errorMessage }}
+              </v-alert>
+              <v-btn
+                color="info"
+                small
+                outline
+                round
+                @click="showModal=false"
+              >
+                Go back
+              </v-btn>
+              <v-btn
+                color="success"
+                type="submit"
+              >
+                Register
+              </v-btn>
+            </form>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-layout>
     <div class="text-center col-sm-12">
       <!-- login form -->
       <form @submit.prevent="checkCreds">
@@ -32,6 +124,14 @@
         >
           {{ errorMessage }}
         </v-alert>
+        <v-alert
+          v-model="created"
+          dismissible
+          type="info"
+        >
+          Account successfully created
+        </v-alert>
+        <v-btn color="info" @click="requestEntry">Register</v-btn>
         <v-btn
           color="success"
           type="submit"
@@ -54,12 +154,66 @@ export default {
       section: 'Login',
       username: '',
       password: '',
+      modalUsername: '',
+      modalEmail: '',
+      modalPassword: '',
+      modalPassword2: '',
       alert: false,
-      errorMessage: ''
+      modalAlert: false,
+      created: false,
+      errorMessage: '',
+      showModal: false,
+      entry: ''
     }
   },
 
   methods: {
+    requestEntry () {
+      api
+        .request('get', '/user/authorized_keys_entry', this.$store.state.accessToken)
+        .then(response => {
+          this.entry = response.data
+          this.showModal = true
+        })
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.modalAlert = true
+        })
+    },
+    copyEntryToClipboard () {
+      let entryInput = document.querySelector('#entry')
+      entryInput.setAttribute('type', 'text')
+      entryInput.select()
+      try {
+        if (document.execCommand('copy')) {
+          alert('Authorized keys entry is in your clipboard')
+        } else {
+          alert('Something went wrong, try again')
+        }
+      } catch (e) {
+        alert('Unable to copy')
+      }
+      window.getSelection().removeAllRanges()
+    },
+    createUser () {
+      if (this.modalPassword === this.modalPassword2) {
+        const { modalUsername, modalEmail, modalPassword } = this
+        api
+          .request('post', '/user/ssh_signup', this.$store.state.accessToken, { 'username': modalUsername, 'email': modalEmail, 'password': modalPassword })
+          .then(response => {
+            this.showModal = false
+            this.created = true
+          })
+          .catch(error => {
+            this.errorMessage = error.response.data.msg
+            this.modalAlert = true
+          })
+      } else {
+        this.errorMessage = 'Passwords do not match'
+        this.modalAlert = true
+      }
+    },
+
     checkCreds () {
       const { username, password } = this
 
@@ -114,36 +268,6 @@ export default {
           this.errorMessage = error.response.data.msg
           this.alert = true
         })
-    },
-
-    logout: function () {
-      api
-        .request('delete', '/user/logout', this.$store.state.accessToken)
-        .catch(error => {
-          this.errorMessage = error.response.data.msg
-          this.alert = true
-        })
-      api
-        .request('delete', '/user/logout/refresh_token', this.$store.state.refreshToken)
-        .catch(error => {
-          this.errorMessage = error.response.data.msg
-          this.alert = true
-        })
-      this.$store.commit('SET_USER', null)
-      this.$store.commit('SET_ACCESS_TOKEN', null)
-      this.$store.commit('SET_REFRESH_TOKEN', null)
-      this.$store.commit('SET_ROLE', null)
-
-      if (window.localStorage) {
-        window.localStorage.setItem('user', null)
-        window.localStorage.setItem('accessToken', null)
-        window.localStorage.setItem('refreshToken', null)
-        window.localStorage.setItem('role', null)
-        window.localStorage.setItem('visibleResources', null)
-        window.localStorage.setItem('watches', null)
-        window.localStorage.setItem('watchIds', null)
-      }
-      this.$router.push('/login')
     },
 
     toggleLoading () {
