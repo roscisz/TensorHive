@@ -301,9 +301,8 @@ paths:
       operationId: 'tensorhive.controllers.user.create_user_controller.authorized_keys_entry'
       responses:
         200:
-          description: {{RESPONSES['user']['login']['success']}}
+          description: {{RESPONSES['user']['authorized_keys_entry']['success']}}
           schema:
-            type: string
             example: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCWuvmEw9RWI0WMv9aseFadgDXZbHW7KjQt6H7keoQ13y/XQX0+vosmEq70DQ9HCxmwvrSruR63DLe8eW5k80OBeAcHZ+e6f6g/017tCKfYTibCEboB7v7TgGO74kWcihZK5jPHg/jxwKktxDdbCfqvl6hrR5hwE2sJ5gVAx6UPJNVoZYRD2rAPhjKJ1NlENhCWrxrt72c/a6Qe9aRSvJ/Yxn+PWr5BbxyFFKEcmos9bUwh7NgdmsZphVrKeGnx9Nl1q46/PLBW2V4FbBpsv6OD6FksIdZF0irFNmfq1LGHDLlRwVrEXrTdQST2FqyNZJSXRxblEchzYijLA1J03xir tensorhive@ai'
         500:
           description: {{RESPONSES['general']['internal_error']}}
