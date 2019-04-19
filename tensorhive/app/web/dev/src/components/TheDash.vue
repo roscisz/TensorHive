@@ -20,6 +20,9 @@
         >
           <span class="sr-only">Toggle navigation</span>
         </a>
+        <div class="version_info">
+          <b>TensorHive</b> v{{version}} <b>API</b> v{{apiVersion}}
+        </div>
         <v-menu
           class="user_chip"
           :close-on-content-click="false"
@@ -84,6 +87,12 @@ export default {
   computed: {
     displayName () {
       return this.$store.state.user
+    },
+    version () {
+      return config.version
+    },
+    apiVersion () {
+      return config.apiVersion
     }
   },
 
@@ -147,8 +156,16 @@ export default {
 </script>
 
 <style lang="scss">
+.version_info {
+  position: absolute !important;
+  right: 0;
+  margin-right: 10px;
+  margin-top: 10px;
+  font-size: 20px;
+  color: white;
+}
 .user_chip {
-  position: absolute;
+  position: absolute !important;
   right: 0;
   margin-top: 50px;
 }

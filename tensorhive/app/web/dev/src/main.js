@@ -65,7 +65,6 @@ axios.get('static/config.json').then(response => {
 
   // Some middleware to help us ensure the user is authenticated.
   router.beforeEach((to, from, next) => {
-    document.title = 'Tensorhive v' + config.version + ' API ' + config.apiVersion
     if (
       to.matched.some(record => record.meta.requiresAuth) &&
       (!router.app.$store.state.accessToken || router.app.$store.state.accessToken === 'null')
