@@ -93,35 +93,48 @@ export default {
     },
 
     logout: function () {
-      api
-        .request('delete', '/user/logout', this.$store.state.accessToken)
-        .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            this.errorMessage = error.message
-          } else {
-            this.errorMessage = error.response.data.msg
-          }
-          this.alert = true
-        })
-      api
-        .request('delete', '/user/logout/refresh_token', this.$store.state.refreshToken)
-        .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            this.errorMessage = error.message
-          } else {
-            this.errorMessage = error.response.data.msg
-          }
-          this.alert = true
-        })
+      if (this.$store.state.accessToken !== null) {
+        api
+          .request('delete', '/user/logout', this.$store.state.accessToken)
+          .then(response => {
+            this.$store.commit('SET_ACCESS_TOKEN', null)
+
+            if (window.localStorage) {
+              window.localStorage.setItem('accessToken', null)
+            }
+            if (this.$store.state.refreshToken !== null) {
+              api
+                .request('delete', '/user/logout/refresh_token', this.$store.state.refreshToken)
+                .then(response => {
+                  this.$store.commit('SET_REFRESH_TOKEN', null)
+                  if (window.localStorage) {
+                    window.localStorage.setItem('refreshToken', null)
+                  }
+                })
+                .catch(error => {
+                  if (!error.hasOwnProperty('response')) {
+                    this.errorMessage = error.message
+                  } else {
+                    this.errorMessage = error.response.data.msg
+                  }
+                  this.alert = true
+                })
+            }
+          })
+          .catch(error => {
+            if (!error.hasOwnProperty('response')) {
+              this.errorMessage = error.message
+            } else {
+              this.errorMessage = error.response.data.msg
+            }
+            this.alert = true
+          })
+      }
       this.$store.commit('SET_USER', null)
-      this.$store.commit('SET_ACCESS_TOKEN', null)
-      this.$store.commit('SET_REFRESH_TOKEN', null)
       this.$store.commit('SET_ROLE', null)
 
       if (window.localStorage) {
         window.localStorage.setItem('user', null)
-        window.localStorage.setItem('accessToken', null)
-        window.localStorage.setItem('refreshToken', null)
         window.localStorage.setItem('role', null)
         window.localStorage.setItem('visibleResources', null)
         window.localStorage.setItem('watches', null)

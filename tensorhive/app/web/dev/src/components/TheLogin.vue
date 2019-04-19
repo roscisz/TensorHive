@@ -231,36 +231,6 @@ export default {
         })
     },
 
-    logout: function () {
-      api
-        .request('delete', '/user/logout', this.$store.state.accessToken)
-        .catch(error => {
-          this.errorMessage = error.response.data.msg
-          this.alert = true
-        })
-      api
-        .request('delete', '/user/logout/refresh_token', this.$store.state.refreshToken)
-        .catch(error => {
-          this.errorMessage = error.response.data.msg
-          this.alert = true
-        })
-      this.$store.commit('SET_USER', null)
-      this.$store.commit('SET_ACCESS_TOKEN', null)
-      this.$store.commit('SET_REFRESH_TOKEN', null)
-      this.$store.commit('SET_ROLE', null)
-
-      if (window.localStorage) {
-        window.localStorage.setItem('user', null)
-        window.localStorage.setItem('accessToken', null)
-        window.localStorage.setItem('refreshToken', null)
-        window.localStorage.setItem('role', null)
-        window.localStorage.setItem('visibleResources', null)
-        window.localStorage.setItem('watches', null)
-        window.localStorage.setItem('watchIds', null)
-      }
-      this.$router.push('/login')
-    },
-
     toggleLoading () {
       this.loading = this.loading === '' ? 'loading' : ''
     },

@@ -94,25 +94,34 @@ axios.get('static/config.json').then(response => {
   sync(store, router)
 
   axios.interceptors.response.use(null, (error) => {
-    if (error.config && error.response && error.response.status === 401) {
-      axios.defaults.headers.common['Authorization'] = store.state.refreshToken
-      return axios({ method: 'get', url: config.serverURI + '/user/refresh', data: null })
-        .then(response => {
-          store.commit('SET_ACCESS_TOKEN', 'Bearer ' + response.data.access_token)
-          if (window.localStorage) {
-            window.localStorage.setItem('accessToken', 'Bearer ' + response.data.access_token)
-          }
-          error.config.headers['Authorization'] = 'Bearer ' + response.data.access_token
-          return axios.request(error.config)
-        })
-        .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            console.log(error.message)
-          } else {
-            console.log(error.response.data.msg)
-          }
-          logout()
-        })
+    if (error.config.url === config.serverURI + '/user/refresh') {
+      window.localStorage.clear()
+      store.commit('SET_USER', null)
+      store.commit('SET_ROLE', null)
+      store.commit('SET_ACCESS_TOKEN', null)
+      store.commit('SET_REFRESH_TOKEN', null)
+      router.push('/login')
+    } else {
+      if (error.config && error.response && error.response.status === 401) {
+        axios.defaults.headers.common['Authorization'] = store.state.refreshToken
+        return axios({ method: 'get', url: config.serverURI + '/user/refresh', data: null })
+          .then(response => {
+            store.commit('SET_ACCESS_TOKEN', 'Bearer ' + response.data.access_token)
+            if (window.localStorage) {
+              window.localStorage.setItem('accessToken', 'Bearer ' + response.data.access_token)
+            }
+            error.config.headers['Authorization'] = 'Bearer ' + response.data.access_token
+            return axios.request(error.config)
+          })
+          .catch(error => {
+            if (!error.hasOwnProperty('response')) {
+              console.log(error.message)
+            } else {
+              console.log(error.response.data.msg)
+            }
+            logout()
+          })
+      }
     }
     return Promise.reject(error)
   })
@@ -131,19 +140,45 @@ axios.get('static/config.json').then(response => {
   }
 
   function logout () {
-    api
-      .request('delete', '/user/logout', store.state.accessToken)
-    api
-      .request('delete', '/user/logout/refresh_token', store.state.refreshToken)
+    if (store.state.accessToken !== null) {
+      api
+        .request('delete', '/user/logout', store.state.accessToken)
+        .then(response => {
+          store.commit('SET_ACCESS_TOKEN', null)
+          if (window.localStorage) {
+            window.localStorage.setItem('accessToken', null)
+          }
+          if (store.state.refreshToken !== null) {
+            api
+              .request('delete', '/user/logout/refresh_token', store.state.refreshToken)
+              .then(response => {
+                store.commit('SET_REFRESH_TOKEN', null)
+                if (window.localStorage) {
+                  window.localStorage.setItem('refreshToken', null)
+                }
+              })
+              .catch(error => {
+                if (!error.hasOwnProperty('response')) {
+                  console.log(error.message)
+                } else {
+                  console.log(error.response.data.msg)
+                }
+              })
+          }
+        })
+        .catch(error => {
+          if (!error.hasOwnProperty('response')) {
+            console.log(error.message)
+          } else {
+            console.log(error.response.data.msg)
+          }
+        })
+    }
     store.commit('SET_USER', null)
-    store.commit('SET_ACCESS_TOKEN', null)
-    store.commit('SET_REFRESH_TOKEN', null)
     store.commit('SET_ROLE', null)
 
     if (window.localStorage) {
       window.localStorage.setItem('user', null)
-      window.localStorage.setItem('accessToken', null)
-      window.localStorage.setItem('refreshToken', null)
       window.localStorage.setItem('role', null)
       window.localStorage.setItem('visibleResources', null)
       window.localStorage.setItem('watches', null)
