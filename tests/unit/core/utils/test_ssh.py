@@ -25,7 +25,8 @@ def test_generate_cert_generating_twice_throws_exception(saved_key, key_path):
 
 
 def test_generate_cert_generated_cert_has_proper_permissions(saved_key, key_path):
-    assert oct(os.stat(str(key_path))[stat.ST_MODE])[-3:] == '600'
+    mode = os.stat(str(key_path)).st_mode
+    assert stat.S_IMODE(mode) == 0o600
 
 
 def test_generate_cert_with_replace_generates_different_key(saved_key, key_path):
