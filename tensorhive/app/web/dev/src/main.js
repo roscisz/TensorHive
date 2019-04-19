@@ -24,6 +24,24 @@ import axios from 'axios'
 import config from './config'
 axios.get('static/config.json').then(response => {
   config.serverURI = response.data.apiPath
+  config.apiVersion = response.data.apiVersion
+  config.version = response.data.version
+  if (window.localStorage) {
+    var apiVersion = JSON.parse(window.localStorage.getItem('apiVersion'))
+    var version = JSON.parse(window.localStorage.getItem('version'))
+    if (apiVersion === null) {
+      window.localStorage.setItem('apiVersion', JSON.stringify(config.apiVersion))
+    } else if (apiVersion !== config.apiVersion) {
+      window.localStorage.clear()
+      location.reload(true)
+    }
+    if (version === null) {
+      window.localStorage.setItem('version', JSON.stringify(config.version))
+    } else if (version !== config.version) {
+      window.localStorage.clear()
+      location.reload(true)
+    }
+  }
 
   Vue.use(Vuetify)
 
@@ -47,6 +65,7 @@ axios.get('static/config.json').then(response => {
 
   // Some middleware to help us ensure the user is authenticated.
   router.beforeEach((to, from, next) => {
+    document.title = 'Tensorhive v' + config.version + ' API ' + config.apiVersion
     if (
       to.matched.some(record => record.meta.requiresAuth) &&
       (!router.app.$store.state.accessToken || router.app.$store.state.accessToken === 'null')
