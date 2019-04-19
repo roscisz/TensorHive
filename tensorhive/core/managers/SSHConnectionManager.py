@@ -1,7 +1,10 @@
 
 from tensorhive.config import SSH
 from pssh.clients.native import ParallelSSHClient
+from paramiko.rsakey import RSAKey
 from typing import Dict
+from tensorhive.core.utils import ssh
+from pathlib import PosixPath
 import logging
 log = logging.getLogger(__name__)
 
@@ -13,6 +16,16 @@ class SSHConnectionManager():
 
     def __init__(self, config: Dict):
         self._connection_group = self.new_parallel_ssh_client(config)
+        self.ssh_key = self.init_ssh_key(PosixPath(SSH.KEY_FILE).expanduser())
+
+    def init_ssh_key(self, path: PosixPath):
+        if path.exists():
+            key = RSAKey.from_private_key_file(str(path))
+            log.info('Using existing SSH key in {}'.format(path))
+        else:
+            key = ssh.generate_cert(path)
+            log.info('Generated SSH key in {}'.format(path))
+        return key
 
     @classmethod
     def new_parallel_ssh_client(cls, config) -> ParallelSSHClient:
@@ -67,9 +80,7 @@ class SSHConnectionManager():
         Typically runs on each TensorHive startup.
         You can turn it off (INI config -> [ssh] -> test_on_startup = off
         '''
-        log.info('[⚙] Testing SSH configuration...')
-        if not config:
-            log.warning('[!] Empty ssh configuration. Please check {}'.format(SSH.HOSTS_CONFIG_FILE))
+        log.info('[⚙] Testing SSH connections...')
 
         # 1. Establish connection
         connections = SSHConnectionManager.new_parallel_ssh_client(config)
