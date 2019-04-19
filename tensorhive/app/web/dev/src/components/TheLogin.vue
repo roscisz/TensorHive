@@ -8,22 +8,20 @@
       >
         <v-card>
           <v-card-title>
-            <span class="headline">Create account</span>
+            <span class="headline">Register new account</span>
           </v-card-title>
           <v-card-text>
             <form @submit.prevent="createUser">
-              Create account
               <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-user"></i></span>
                 <input
                   class="form-control"
                   name="modalUsername"
-                  placeholder="Username"
+                  placeholder="UNIX username"
                   type="text"
                   v-model="modalUsername"
                 >
               </div>
-              Email
               <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
                 <input
@@ -34,7 +32,6 @@
                   v-model="modalEmail"
                 >
               </div>
-              Pasword
               <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-lock"></i></span>
                 <input
@@ -45,17 +42,29 @@
                   v-model="modalPassword"
                 >
               </div>
-              Repeat password
               <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-lock"></i></span>
                 <input
                   class="form-control"
                   name="modalPassword2"
-                  placeholder="Password2"
+                  placeholder="Repeat password"
                   type="password"
                   v-model="modalPassword2"
                 >
               </div>
+              Please copy the key below and paste it into <b>~/.ssh/authorized_keys</b>.<br>It will allow TensorHive to confirm you identity and access machines with provided UNIX username.
+              <v-textarea
+                solo
+                name="entry"
+                :value="entry"
+                id="entry">
+              </v-textarea>
+              <v-btn
+                color="info"
+                @click="copyEntryToClipboard"
+                small
+              >Copy to clipboard</v-btn>
+              <br>
               <v-alert
                 v-model="modalAlert"
                 dismissible
@@ -70,13 +79,13 @@
                 round
                 @click="showModal=false"
               >
-                Cancel
+                Go back
               </v-btn>
               <v-btn
                 color="success"
                 type="submit"
               >
-                Create
+                Register
               </v-btn>
             </form>
           </v-card-text>
@@ -120,9 +129,9 @@
           dismissible
           type="info"
         >
-          User successfully created
+          Account successfully created
         </v-alert>
-        <v-btn color="info" @click="showModal=true">Create account</v-btn>
+        <v-btn color="info" @click="requestEntry">Register</v-btn>
         <v-btn
           color="success"
           type="submit"
@@ -144,24 +153,53 @@ export default {
     return {
       section: 'Login',
       username: '',
-      modalUername: '',
       password: '',
+      modalUsername: '',
+      modalEmail: '',
       modalPassword: '',
       modalPassword2: '',
       alert: false,
       modalAlert: false,
       created: false,
       errorMessage: '',
-      showModal: false
+      showModal: false,
+      entry: ''
     }
   },
 
   methods: {
+    requestEntry () {
+      api
+        .request('get', '/user/authorized_keys_entry', this.$store.state.accessToken)
+        .then(response => {
+          this.entry = response.data
+          this.showModal = true
+        })
+        .catch(error => {
+          this.errorMessage = error.response.data.msg
+          this.modalAlert = true
+        })
+    },
+    copyEntryToClipboard () {
+      let entryInput = document.querySelector('#entry')
+      entryInput.setAttribute('type', 'text')
+      entryInput.select()
+      try {
+        if (document.execCommand('copy')) {
+          alert('Authorized keys entry is in your clipboard')
+        } else {
+          alert('Something went wrong, try again')
+        }
+      } catch (e) {
+        alert('Unable to copy')
+      }
+      window.getSelection().removeAllRanges()
+    },
     createUser () {
       if (this.modalPassword === this.modalPassword2) {
         const { modalUsername, modalEmail, modalPassword } = this
         api
-          .request('post', '/user/create_local', this.$store.state.accessToken, { 'username': modalUsername, 'email': modalEmail, 'password': modalPassword })
+          .request('post', '/user/ssh_signup', this.$store.state.accessToken, { 'username': modalUsername, 'email': modalEmail, 'password': modalPassword })
           .then(response => {
             this.showModal = false
             this.created = true
@@ -175,6 +213,7 @@ export default {
         this.modalAlert = true
       }
     },
+
     checkCreds () {
       const { username, password } = this
 
