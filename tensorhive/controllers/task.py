@@ -1,4 +1,4 @@
-from tensorhive.models.Task import Task
+from tensorhive.models.Task import Task, TaskStatus
 from tensorhive.models.User import User
 from tensorhive.core import task_nursery, ssh
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -6,100 +6,138 @@ from sqlalchemy.orm.exc import NoResultFound
 # from tensorhive.database import flask_app
 from tensorhive.config import API
 from functools import wraps
+from typing import List, Optional, Callable, Any, Dict
 import logging
 log = logging.getLogger(__name__)
 T = API.RESPONSES['task']
 G = API.RESPONSES['general']
 
 # TODO print -> logging
+# TODO add new responses to yml
 
 
-def synchronize(func):
-    """Updates state of Task stored in database.
-    It compares current db record with list of active screen session (pids in general)
-    on node defined in Task object (task.user.username@task.host)
+def synchronize(task_id: int) -> None:
+    """Updates state of a Task stored in database.
 
-    Decorated funciton MUST HAVE task id as FIRST ARGUMENT
+    It compares current db record with list of active screen session (their pids in general)
+    on node defined by Task object (task.user.username@task.host)
+    """
+    print('Syncing Task {}...'.format(task_id))
+    try:
+        task = Task.get(task_id)
+        assert task.host, 'hostname is empty'
+        assert task.user, 'user does not exist'
+        pids = task_nursery.running(host=task.host, user=task.user.username)
+    except NoResultFound:
+        # This exception must be handled within try/except block when using Task.get()
+        pass
+    except (AssertionError, Exception) as e:
+        # task_nursery.running pssh exceptions are also catched here
+        print('Unable to synchronize Task {}, reason: {}'.format(task_id, e))
+        task.status = TaskStatus.unsynchronized
+        task.save()
+        print('Task {} current status is: {}'.format(task_id, task.status))
+    else:
+        if task.pid in pids:
+            # Nothing to do
+            pass
+        else:
+            if task.status is TaskStatus.running:
+                task.status = TaskStatus.terminated
+            task.pid = None
+            task.save()
+        print('Task {} current status is: {}'.format(task_id, task.status))
+
+
+def synchronize_task_record(func) -> Callable[[int], Any]:
+    """Decorated function MUST CONTAIN task id (int).
+    (function can take more arguments though)
     """
 
     @wraps(func)
     def sync_wrapper(*args, **kwargs):
-        task_id = args[0]
-        print('Syncing Task {}...'.format(task_id))
         try:
-            task = Task.get(task_id)
-            pids = task_nursery.running(
-                host=task.host, user=task.user.username)
-        except NoResultFound:
-            # Let func handle this
-            pass
-        except Exception as e:
-            # task_nursery.running may raise pssh exceptions
-            print('Unable to synchronize, reason: ', e)
-            task.exit_code = 90  # FIXME Set unsynchronized status
-            task.save()
-        else:
-            if task.pid in pids:
-                print('Task {} is alive'.format(task_id))
-            else:
-                print('Task {} is dead'.format(task_id))
-                task.exit_code = 44  # FIXME Set terminated status
-                task.pid = None
-                task.save()
-        finally:
-            return func(*args, **kwargs)
+            task_id = args[0]
+        except IndexError:
+            task_id = kwargs.get('id') or kwargs.get('task_id') or kwargs.get('taskId')
 
-#  GET /tasks
-def all(user_id):
+        print('AAAAAAAAAAAAA', task_id)
+        if task_id:
+            synchronize(task_id)
+        return func(*args, **kwargs)
+
+    return sync_wrapper
+
+
+# FIXME Case
+#  GET /tasks?user_id=X?syncall=1
+def get_all(user_id: Optional[int], sync_all: Optional[bool]) -> List[Dict]:
+    """"""
     # FIXME Handle exceptions etc.
-    # TODO Should sync all?
-    print('Not synced records!')
     if user_id:
         tasks = Task.query.filter(Task.user_id == user_id).all()
     else:
         tasks = Task.all()
-    return [task.as_dict for task in tasks]
+
+    # Wanted to decouple syncing from dict conversion with 2 oneliners (list comprehension),
+    # but this code is O(n) instead of O(2n)
+    results = []
+    for task in tasks:
+        if sync_all:
+            synchronize(task.id)
+        results.append(task.as_dict)
+    return results, 200
 
 
 # POST /tasks
 def create(task):
     try:
-        new_task = Task(
-            user_id=task['userId'],
-            host=task['hostname'],
-            command=task['command']
-        )
+        new_task = Task(user_id=task['userId'], host=task['hostname'], command=task['command'])
+        assert all(task.values()), 'fields cannot be blank or null'
         new_task.save()
     except AssertionError as e:
         content = {'msg': T['create']['failure']['invalid'].format(reason=e)}
         status = 422
-    except Exception:
+    except Exception as e:
+        print(e)
         content = {'msg': G['internal_error']}
         status = 500
     else:
-        content = {
-            'msg': T['create']['success'],
-            'task': new_task.as_dict
-        }
+        content = {'msg': T['create']['success'], 'task': new_task.as_dict}
         status = 201
     finally:
+        print('=================')
         return content, status
 
+
 # GET /tasks/{id}
+@synchronize_task_record
 def get(id):
-    raise NotImplementedError
+    try:
+        task = Task.get(id)
+    except NoResultFound:
+        content = {'msg': 'BAD TODO'}
+        status = 123
+    else:
+        content = {'msg': 'GIT TODO', 'task': task.as_dict}
+        status = 123
+    finally:
+        print('=================')
+        return content, status
+
 
 # PUT /tasks/{id}:
 def update(id):
     raise NotImplementedError
 
+
 # DELETE /tasks/{id}
 def destroy():
     raise NotImplementedError
 
-# GET /tasks/running?user_id=X&hostname=X
-# FIXME This endpoint should probably return ORM objects, not pids
-def running(user_id, hostname):
+
+# FIXME Unused: screen-specific endpoint
+def running_sessions(user_id, hostname):
     try:
         assert user_id and hostname
         # TODO Maybe ORM objects should be updated here
