@@ -2,15 +2,64 @@ from tensorhive.models.Task import Task
 from tensorhive.models.User import User
 from tensorhive.core import task_nursery, ssh
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy.orm.exc import NoResultFound
 # from tensorhive.database import flask_app
 from tensorhive.config import API
+from functools import wraps
+import logging
+log = logging.getLogger(__name__)
 T = API.RESPONSES['task']
 G = API.RESPONSES['general']
 
+# TODO print -> logging
+
+
+def synchronize(func):
+    """Updates state of Task stored in database.
+    It compares current db record with list of active screen session (pids in general)
+    on node defined in Task object (task.user.username@task.host)
+
+    Decorated funciton MUST HAVE task id as FIRST ARGUMENT
+    """
+
+    @wraps(func)
+    def sync_wrapper(*args, **kwargs):
+        task_id = args[0]
+        print('Syncing Task {}...'.format(task_id))
+        try:
+            task = Task.get(task_id)
+            pids = task_nursery.running(
+                host=task.host, user=task.user.username)
+        except NoResultFound:
+            # Let func handle this
+            pass
+        except Exception as e:
+            # task_nursery.running may raise pssh exceptions
+            print('Unable to synchronize, reason: ', e)
+            task.exit_code = 90  # FIXME Set unsynchronized status
+            task.save()
+        else:
+            if task.pid in pids:
+                print('Task {} is alive'.format(task_id))
+            else:
+                print('Task {} is dead'.format(task_id))
+                task.exit_code = 44  # FIXME Set terminated status
+                task.pid = None
+                task.save()
+        finally:
+            return func(*args, **kwargs)
 
 #  GET /tasks
-def all():
-    raise NotImplementedError
+def all(user_id):
+    # FIXME Handle exceptions etc.
+    # TODO Should sync all?
+    print('Not synced records!')
+    if user_id:
+        tasks = Task.query.filter(Task.user_id == user_id).all()
+    else:
+        tasks = Task.all()
+    return [task.as_dict for task in tasks]
+
 
 # POST /tasks
 def create(task):
