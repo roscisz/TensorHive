@@ -8,20 +8,17 @@ from datetime import datetime
 log = logging.getLogger(__name__)
 
 __author__ = '@micmarty'
-__all__ = [
-    'ScreenCommandBuilder',
-    'Task',
-    'spawn',
-    'terminate',
-    'running'
-]
+__all__ = ['ScreenCommandBuilder', 'Task', 'spawn', 'terminate', 'running']
 
 
 class ScreenCommandBuilder:
     """Set of configurable commands built on top of **screen** program."""
 
     @staticmethod
-    def spawn(command: str, session_name: str, capture_output=True, keep_alive=False) -> str:
+    def spawn(command: str,
+              session_name: str,
+              capture_output=True,
+              keep_alive=False) -> str:
         """Command that runs inside daemonized screen session.
 
         Command is put into background manually (-D + & instead of simply usin -d) -> we want to know the PID
@@ -42,16 +39,22 @@ class ScreenCommandBuilder:
         """
         if capture_output:
             if keep_alive:
-                log.debug('keep_alive is set to False - incompatible with capture_output=True')
+                log.debug(
+                    'keep_alive is set to False - incompatible with capture_output=True'
+                )
                 keep_alive = False
             create_logfile_command = ScreenCommandBuilder.tmp_log_file()
-            capturing_command = '| tee --ignore-interrupts $({})'.format(create_logfile_command)
+            capturing_command = '| tee --ignore-interrupts $({})'.format(
+                create_logfile_command)
 
         return 'screen -Dm -S {sess_name} bash -c "{cmd}{keep_alive} {log}" {to_bg}'.format(
-            sess_name=session_name,  # will help distinguishing between TensorHive and user's sessions
+            sess_name=
+            session_name,  # will help distinguishing between TensorHive and user's sessions
             cmd=command,
-            log=capturing_command if capture_output else '',  # see method description
-            keep_alive='; exec sh' if keep_alive else '',  # prevents screen from terminating session when command finished executing
+            log=capturing_command
+            if capture_output else '',  # see method description
+            keep_alive='; exec sh' if keep_alive else
+            '',  # prevents screen from terminating session when command finished executing
             to_bg='& echo $!'  # will print process pid
         )
 
@@ -66,8 +69,7 @@ class ScreenCommandBuilder:
         week_no = datetime.today().strftime('%U')  # type: str
         name_template = 'week_' + week_no + '_XXXX'  # at least 3 'X' are required by mktemp
         return 'mkdir --parents {target_dir} && mktemp {target_dir}/{name_template} --suffix .log'.format(
-            target_dir=target_dir, name_template=name_template
-        )
+            target_dir=target_dir, name_template=name_template)
 
     # TODO Use me instead of terminate?
     @staticmethod
@@ -83,7 +85,8 @@ class ScreenCommandBuilder:
     @staticmethod
     def get_active_sessions(grep_pattern: str) -> List[str]:
         """Fetches the full names of screen sessions matching given grep pattern."""
-        return 'screen -ls | cut -f 2 | sed -e "1d;$d" | grep -e "{}"'.format(grep_pattern)
+        return 'screen -ls | cut -f 2 | sed -e "1d;$d" | grep -e "{}"'.format(
+            grep_pattern)
 
 
 class Task:
@@ -102,11 +105,18 @@ class Task:
         Returns:
             pid of the process
         """
-        command = self._command_builder.spawn(self.command, session_name='tensorhive_task', keep_alive=False)
+        command = self._command_builder.spawn(
+            self.command, session_name='tensorhive_task', keep_alive=False)
         output = ssh.run_command(client, command)
         stdout = ssh.get_stdout(host=self.hostname, output=output)
 
+        if not stdout:
+            reason = output[self.hostname].exception
+            raise ValueError(
+                'Unable to acquire pid from empty stdout, reason: {}'.format(
+                    reason))
         # FIXME May want to decouple it somehow
+        # FIXME pop() may theoretically fail (never stumbled upon this issue)
         pid = stdout.split().pop()
         self.pid = int(pid)
         return self.pid
@@ -115,6 +125,7 @@ class Task:
     Note: These two methods are nearly identical, but I wanted
     to keep them separate because of logging and adding specialized logic later
     '''
+
     def terminate(self, client: ParallelSSHClient) -> int:
         """Terminates the task using it's pid.
 
@@ -126,7 +137,7 @@ class Task:
         output = ssh.run_command(client, command)
         exit_code = output[self.hostname].exit_code
         return exit_code
-    
+
     def interrupt(self, client: ParallelSSHClient) -> int:
         """Interrupts the task gracefully by sending SIGINT signal
 
@@ -140,19 +151,32 @@ class Task:
         return exit_code
 
 
+class SpawnError(Exception):
+    pass
+
+
 def spawn(command: str, host: Hostname, user: Username) -> int:
     config = ssh.build_dedicated_config_for(host, user)
     client = ssh.get_client(config)
     task = Task(host, command)
-    pid = task.spawn(client)
-    return pid
+    try:
+        pid = task.spawn(client)
+    except ValueError as e:
+        raise SpawnError('Unable to spawn {} on {}@{}, reason: {}'.format(
+            command, user, host, e))
+    else:
+        log.debug('Command spawned, pid: {}'.format(pid))
+        return pid
 
 
-def terminate(pid: int, host: Hostname, user: Username, gracefully: bool = True) -> int:
+def terminate(pid: int,
+              host: Hostname,
+              user: Username,
+              gracefully: bool = True) -> int:
     config = ssh.build_dedicated_config_for(host, user)
     client = ssh.get_client(config)
     task = Task(host, pid=pid)
-    
+
     if gracefully:
         exit_code = task.interrupt(client)
     else:
@@ -173,6 +197,7 @@ def running(host: Hostname, user: Username) -> List[int]:
     # '4321.foobar_session' -> 4321
     pid_from_session_name = lambda name: int(name.split('.')[0])
     pids = [pid_from_session_name(line) for line in stdout.split('\n')]
+    log.debug('Running pids: {}'.format(pids))
     return pids
 
 
@@ -193,12 +218,36 @@ if __name__ == '__main__':
 
     user = 'bwroblew'
     host = 'ai.eti.pg.gda.pl'
-
-    # Interrupt all
-    running_tasks = running(host, user)
-    for task in running_tasks:
-        terminate(task, host, user, gracefully=True)
-
-    # Spawn one
-    spawn('cd ~/Simulators/095; DISPLAY= ./CarlaUE4.sh Town04', host, user)
-    print(running(host, user))
+    'cd ~/Simulators/095; DISPLAY= ./CarlaUE4.sh Town04'
+    import os
+    while True:
+        print('''
+Select action:
+1) List active TH screen sessions pids (no database)
+2) Spawn command
+3) Interrupt task with pid
+4) Kill all screen sessions
+Any other key to clear console
+        ''')
+        action = input()[0]
+        if action == '1':
+            print(running(host, user))
+        elif action == '2':
+            cmd = input('Command > ')
+            pid = spawn(cmd, host, user)
+            print('Spawned with PID: ', pid)
+        elif action == '3':
+            pid = input('PID > ')
+            exit_code = terminate(pid, host, user, gracefully=True)
+            print('Interruption exit_code: ', exit_code)
+        elif action == '4':
+            running_tasks = running(host, user)
+            if not running_tasks:
+                print('No running tasks')
+            for task in running_tasks:
+                print('Terminating: ', task)
+                exit_code = terminate(task, host, user)
+                print('Kill exit_code: ', exit_code)
+        else:
+            os.system('clear')
+            continue
