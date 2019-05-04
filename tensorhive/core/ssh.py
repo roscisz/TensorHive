@@ -5,12 +5,7 @@ from tensorhive.core.utils.decorators import memoize, timeit
 import functools
 
 __author__ = '@micmarty'
-__all__ = [
-    'get_client',
-    'run_command',
-    'get_stdout'
-    'succeeded'
-]
+__all__ = ['get_client', 'run_command', 'get_stdout', 'succeeded']
 
 HostsConfig = Dict[str, str]
 ProxyConfig = Dict[str, str]
@@ -20,6 +15,12 @@ CommandResult = Dict[Hostname, pssh.output.HostOutput]
 
 
 def build_dedicated_config_for(host: Hostname, user: Username) -> HostsConfig:
+    """Takes off the responsibility for building correct HostsConfig manually.
+
+    This function is supposed to provide high-level interface for providing
+    valid `config` parameter to `get_client()` function.
+    """
+    assert host and user, 'Arguments must not be None!'
     return {
         host: {
             'user': user,
@@ -29,7 +30,9 @@ def build_dedicated_config_for(host: Hostname, user: Username) -> HostsConfig:
 
 
 @memoize
-def get_client(config: HostsConfig, pconfig: Optional[ProxyConfig] = None, **kwargs) -> ParallelSSHClient:
+def get_client(config: HostsConfig,
+               pconfig: Optional[ProxyConfig] = None,
+               **kwargs) -> ParallelSSHClient:
     """Builds and returns an ssh client object for given configuration.
 
     Client is fetched directly from cache if identical arguments were used recently.
@@ -45,12 +48,12 @@ def get_client(config: HostsConfig, pconfig: Optional[ProxyConfig] = None, **kwa
         proxy_user=pconfig.get('proxy_user'),
         proxy_port=pconfig.get('proxy_port'),
         num_retries=0,
-        **kwargs
-    )
+        **kwargs)
 
 
-@timeit
-def run_command(client: ParallelSSHClient, command: str) -> Optional[CommandResult]:
+# @timeit
+def run_command(client: ParallelSSHClient,
+                command: str) -> Optional[CommandResult]:
     """Executes identical command for all client's hosts.
 
     Will wait until all hosts complete the command execution or timeout is reached.
@@ -80,12 +83,17 @@ def get_stdout(host: Hostname, output: pssh.output.HostOutput) -> str:
     """Unwraps stdout generator for given hostname."""
     try:
         host_result = output[host]
-        assert not host_result.exception
-        assert host_result.stdout
+        if host_result.exception:
+            raise host_result.exception
         return '\n'.join(list(host_result.stdout))
-    except (AssertionError, KeyError):
-        raise
-    except pssh.exceptions.Timeout:
+    except KeyError:
+        print("Could not unwrap HostOutput object")
+    except (TypeError, ):
+        print('Could not extract stdout for {}'.format(host))
+        print(output)
+        return None
+    except Exception:
+        # Base for all pssh exceptions: https://github.com/ParallelSSH/parallel-ssh/blob/master/pssh/exceptions.py
         # TODO Log something
         # client.reset_output_generators(output)
         raise
