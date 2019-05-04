@@ -228,3 +228,66 @@ def spawn(id):
         print('=================')
         return content, status
 
+
+if __name__ == '__main__':
+    import os
+    from tensorhive.database import init_db
+    init_db()
+
+    user = '155136mm'
+    host = 'galileo.eti.pg.gda.pl'
+    cmd = './long.sh'  # cd ~/Simulators/095; DISPLAY= ./CarlaUE4.sh Town04'
+
+    wait_for_clear = lambda: input('Press enter to show menu...')
+    while True:
+        print('''
+==> Manual task controller test suite: <==
+
+1) Create task record
+2) Spawn (id)
+3) Get one (id)
+4) Get all (user id)
+5) Terminate (id)
+Any other key to clear console
+        ''')
+        action = input('> ')[0]
+        if action == '1':
+            content, status = create(dict(userId=1, hostname=host, command=cmd))
+            print(content, status)
+        elif action == '2':
+            task_id = input('ID > ')
+            content, status = spawn(int(task_id))
+            print(content, status)
+        elif action == '3':
+            task_id = input('ID > ')
+            task = get(int(task_id))
+            print(task)
+        elif action == '4':
+            task_id = input('User ID > ')
+            if task_id:
+                tasks = get_all(user_id=int(task_id))
+            else:
+                tasks = get_all(user_id=None)
+            print('[')
+            print(*tasks, sep=',\n')
+            print(']')
+        elif action == '5':
+            task_id = input('ID > ')
+            content, status = terminate(int(task_id))
+            print(content, status)
+            # pid = input('PID > ')
+            # exit_code = terminate(pid, host, user, gracefully=True)
+            # print('Interruption exit_code: ', exit_code)
+        # elif action == '4':
+        #     running_tasks = running(host, user)
+        #     if not running_tasks:
+        #         print('No running tasks')
+        #     for task in running_tasks:
+        #         print('Terminating: ', task)
+        #         exit_code = terminate(task, host, user)
+        #         print('Kill exit_code: ', exit_code)
+        else:
+            os.system('clear')
+            continue
+        wait_for_clear()
+        os.system('clear')
