@@ -497,6 +497,30 @@ paths:
   #   put:
   #   delete:
   /tasks:
+    get:
+      tags: 
+        - tasks
+      operationId: tensorhive.controllers.task.get_all
+      description: TODO
+      parameters:
+        - description: User ID
+          in: query
+          name: user_id # FIXME userId may be more consistent for web app
+          type: integer
+          required: false
+          default: null
+          x-nullable: true
+        - description: Synchronize all tasks
+          in: query
+          name: sync_all # FIXME syncAll may be more consistent for web app
+          type: boolean
+          required: false
+          default: false
+      responses:
+        200:
+          description: TODO
+      # security:
+      #   - Bearer: []
     post:
       tags: 
         - tasks
@@ -534,9 +558,21 @@ paths:
           description: {{RESPONSES['general']['internal_error']}}
       # security:
       #   - Bearer: []
-  #   get:
-  # /tasks/{id}:  
-  #   get:
+  /tasks/{id}:
+    get:
+      tags: 
+        - tasks
+      operationId: tensorhive.controllers.task.get
+      description: TODO
+      parameters:
+        - description: Task ID
+          in: path
+          name: id
+          type: integer
+          required: true
+      responses:
+        200:
+          description: TODO
   #   put:
   #   delete:
   /tasks/running:
@@ -556,7 +592,7 @@ paths:
           required: true
           type: string
       summary: Returns pids of running tasks
-      operationId: tensorhive.controllers.task.running
+      operationId: tensorhive.controllers.task.running_tasks
       responses:
         200:
           description: {{RESPONSES['general']['ok']}}
