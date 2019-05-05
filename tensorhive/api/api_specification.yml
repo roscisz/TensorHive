@@ -635,7 +635,10 @@ paths:
     get:
       tags:
        - tasks
-      summary: TODO
+      summary: Returns PIDs of active screen sessions running on username@hostname
+      description: |
+        It shows only sessions labeled by TensorHive and ignores anything else.
+        This endpoint is purely informational and does not rely on usage of any Task object.
       parameters:
         - description: Username
           in: query
@@ -657,7 +660,7 @@ paths:
             properties:
               msg:
                 type: string
-                example: {{RESPONSES['task']['running']['success']}}
+                example: {{RESPONSES['screen-sessions']['success']}}
               pids:
                 type: array
                 example:
@@ -668,8 +671,24 @@ paths:
                   type: integer
         401:
           description: {{RESPONSES['general']['unauthorized']}}
+        404:
+          description: {{RESPONSES['ssh']['failure']['connection']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['ssh']['failure']['connection']}}
         422:
-          description: {{RESPONSES['general']['auth_error']}}
+          description: {{RESPONSES['screen-sessions']['failure']['assertions']}} or {{RESPONSES['general']['auth_error']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['screen-sessions']['failure']['assertions']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       # security:
       #   - Bearer: []
   /tasks/{id}/spawn:
@@ -711,6 +730,12 @@ paths:
           description: {{RESPONSES['general']['unauthorized']}}
         422:
           description: {{RESPONSES['task']['spawn']['failure']['assertions']}} or {{RESPONSES['general']['auth_error']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['task']['spawn']['failure']['assertions']}}
         500:
           description: {{RESPONSES['task']['spawn']['failure']['backend']}} or {{RESPONSES['general']['internal_error']}}
           schema:

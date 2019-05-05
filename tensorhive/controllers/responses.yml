@@ -42,6 +42,10 @@ reservation:
 users:
   get:
     success: Fetched successfully
+screen-sessions:
+  success: PIDs of active screen sessions acquired successfully
+  failure:
+    assertions: Unable to fetch screen sessions, {reason}
 task:
   not_found: Task has not been found
   create:
@@ -59,8 +63,6 @@ task:
     failure:
       state: Cannot terminate, {reason}
       exit_code: Accepted, but termination operation did not succeed (exit_code)
-  running:
-    success: Running pids successfully aquired
 token:
   revoke:
     success: '{token_type} has been revoked'
@@ -77,3 +79,6 @@ token:
 nodes:
   hostname:
     not_found: Hostname has not been found
+ssh:
+  failure:
+    connection: Unable to establish connection with host

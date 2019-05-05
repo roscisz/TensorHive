@@ -2,6 +2,7 @@ from tensorhive.models.Task import Task, TaskStatus
 from tensorhive.models.User import User
 from tensorhive.core import task_nursery, ssh
 from tensorhive.core.task_nursery import SpawnError
+from pssh.exceptions import ConnectionErrorException
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.orm.exc import NoResultFound
 # from tensorhive.database import flask_app
@@ -11,6 +12,7 @@ from typing import List, Optional, Callable, Any, Dict, Tuple
 import logging
 log = logging.getLogger(__name__)
 T = API.RESPONSES['task']
+S = API.RESPONSES['screen-sessions']
 G = API.RESPONSES['general']
 
 # TODO print -> logging
@@ -214,22 +216,28 @@ def screen_sessions(username: str, hostname: str) -> Tuple[Content, HttpStatusCo
     currently there's no need to use it.
     """
     try:
-        assert username and hostname, 'arguments must not be empty'
+        assert username and hostname, 'parameters must not be empty'
         pids = task_nursery.running(host=hostname, user=username)
     except AssertionError as e:
-        # FIXME
-        content, status = {'msg': 'TODO running failed' + str(e), 'pids': None}, 400
+        content, status = {'msg': S['failure']['assertions'].format(reason=e)}, 422
+    except ConnectionErrorException as e:
+        # Dev note:
+        # There are much more pssh.exceptions to handle, but treating them all as
+        # built-in Exception should be sufficient, API client does not require to have full knowledge.
+        log.error(e)
+        content, status = {'msg': API.RESPONSES['ssh']['failure']['connection']}, 404
     except Exception as e:
-        # FIXME
-        content, status = {'msg': 'TODO Exception' + str(e), 'pids': None}, 500
+        log.critical(e)
+        content, status = {'msg': G['internal_error']}, 500
     else:
         # FIXME
-        content, status = {'msg': T['running']['success'], 'pids': pids}, 200
+        content, status = {'msg': S['success'], 'pids': pids}, 200
     finally:
         return content, status
 
 
 # GET /tasks/{id}/terminate
+# FIXME Revert @jwt_required
 @synchronize_task_record
 def terminate(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     """Sends SIGINT (default) or SIGKILL to process with pid that is stored in Task db record.
