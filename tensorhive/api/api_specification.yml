@@ -584,12 +584,12 @@ paths:
           name: id
           required: true
           type: integer
-      - description: Task object with fields to overwrite
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/TaskUpdateForm'
+        - description: Task object with fields to overwrite
+          in: body
+          name: user
+          required: true
+          schema:
+            $ref: '#/definitions/TaskUpdateForm'
       responses:
         123:
           description: TODO Update succ
