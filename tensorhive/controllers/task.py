@@ -134,7 +134,7 @@ def get(id):
 def update(id: int, new_values: Dict[str, Any]):
     allowed_fields = {'command', 'hostname'}
     try:
-        assert set(new_values.keys()).issubset(allowed_fields), 'Invalid field is present'
+        assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
         task = Task.get(id)
 
         for field_name, new_value in new_values.items():
@@ -143,7 +143,7 @@ def update(id: int, new_values: Dict[str, Any]):
                 field_name = 'host'
             else:
                 # Check every other field matches
-                assert hasattr(task, field_name), 'Task has no {} field'.format(field_name)
+                assert hasattr(task, field_name), 'task object has no {} attribute'.format(field_name)
             setattr(task, field_name, new_value)
         task.save()
     except NoResultFound:
@@ -294,9 +294,12 @@ if __name__ == '__main__':
 1) Create task record
 2) Spawn (id)
 3) Get one (id)
-4) Get all (user id)
+4) Get multiple (all or by user id)
 5) Terminate (id)
 6) Update task command and hostname (id)
+7) Destroy task (id)
+8) Create random user with 3 tasks
+9) Destroy user (user id) - cascade deletion test
 Any other key to clear console
         ''')
         action = input('> ')[0]
