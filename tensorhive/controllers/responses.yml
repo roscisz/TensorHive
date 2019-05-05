@@ -43,6 +43,7 @@ users:
   get:
     success: Fetched successfully
 task:
+  not_found: Task has not been found
   create:
     success: Task has been successfully created
     failure:
@@ -51,10 +52,13 @@ task:
     success: Task has been successfully spawned 
     failure:
       already_spawned: Task is already spawned (assigned pid)
+      assertions: Unable to spawn task, {reason}
+      backend: Unable to spawn task, {reason}
   terminate:
-    success: Task has been successfully terminated 
+    success: Accepted, task has been successfully asked to terminate
     failure:
-      invalid_state: Cannot terminate task without pid or that has already exited
+      state: Cannot terminate, {reason}
+      exit_code: Accepted, but termination operation did not succeed (exit_code)
   running:
     success: Running pids successfully aquired
 token:

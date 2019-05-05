@@ -7,7 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound
 # from tensorhive.database import flask_app
 from tensorhive.config import API
 from functools import wraps
-from typing import List, Optional, Callable, Any, Dict
+from typing import List, Optional, Callable, Any, Dict, Tuple
 import logging
 log = logging.getLogger(__name__)
 T = API.RESPONSES['task']
@@ -17,9 +17,12 @@ G = API.RESPONSES['general']
 # TODO add new responses to yml
 # TODO proper content, status in every endpoint
 # TODO Add @jwt_required
+Content = Dict[str, Any]
+HttpStatusCode = int
+TaskId = int
 
 
-def synchronize(task_id: int) -> None:
+def synchronize(task_id: TaskId) -> None:
     """Updates state of a Task object stored in database.
 
     It compares current db record with list of active screen session (their pids in general)
@@ -106,7 +109,7 @@ def get_all(user_id: Optional[int], sync_all: Optional[bool]) -> List[Dict]:
 
 
 # POST /tasks
-def create(task):
+def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     try:
         new_task = Task(user_id=task['userId'], host=task['hostname'], command=task['command'])
         assert all(task.values()), 'fields cannot be blank or null'
@@ -134,13 +137,11 @@ def create(task):
 
 # GET /tasks/{id}
 @synchronize_task_record
-def get(id):
+def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
     except NoResultFound:
-        # FIXME
-        content = {'msg': 'TODO not found'}
-        status = 200
+        content, status = {'msg': T['not_found']}, 404
     except Exception:
         # FIXME
         content = {'msg': 'TODO Exception'}
@@ -155,7 +156,7 @@ def get(id):
 
 
 # PUT /tasks/{id}
-def update(id: int, new_values: Dict[str, Any]):
+def update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     allowed_fields = {'command', 'hostname'}
     try:
         assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
@@ -171,8 +172,7 @@ def update(id: int, new_values: Dict[str, Any]):
             setattr(task, field_name, new_value)
         task.save()
     except NoResultFound:
-        content = {'msg': 'TODO Not found'}
-        status = 404
+        content, status = {'msg': T['not_found']}, 404
     # FIXME Remove, won't occur
     # except KeyError as e:
     #     content = {'msg': 'TODO Mismatche' + str(e)}
@@ -191,13 +191,11 @@ def update(id: int, new_values: Dict[str, Any]):
 
 
 # DELETE /tasks/{id}
-def destroy(id: int):
+def destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     try:
         Task.get(id).destroy()
     except NoResultFound:
-        # FIXME
-        content = {'msg': 'TODO Not found'}
-        status = 404
+        content, status = {'msg': T['not_found']}, 404
     except Exception as e:
         # FIXME
         content, status = {'msg': G['internal_error'] + str(e)}, 500
@@ -209,7 +207,7 @@ def destroy(id: int):
 
 
 # GET /screen-sessions?username=foo&hostname=bar
-def screen_sessions(username: str, hostname: str) -> List[int]:
+def screen_sessions(username: str, hostname: str) -> Tuple[Content, HttpStatusCode]:
     """Returns pids of running `screen` sessions.
 
     This endpoint is for purely development purposes,
@@ -233,7 +231,7 @@ def screen_sessions(username: str, hostname: str) -> List[int]:
 
 # GET /tasks/{id}/terminate
 @synchronize_task_record
-def terminate(id):
+def terminate(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     """Sends SIGINT (default) or SIGKILL to process with pid that is stored in Task db record.
 
     In order to send SIGKILL, pass `gracefully=False` to `terminate` function.
@@ -244,8 +242,8 @@ def terminate(id):
     """
     try:
         task = Task.get(id)
-        assert task.status is TaskStatus.running, 'Only running tasks can be terminated'
-        assert task.pid, 'Task has no pid assigned'  # It means there's inconsistency
+        assert task.status is TaskStatus.running, 'only running tasks can be terminated'
+        assert task.pid, 'task has no pid assigned'  # It means there's inconsistency
 
         exit_code = task_nursery.terminate(task.pid, task.host, task.user.username, gracefully=True)
 
@@ -254,30 +252,26 @@ def terminate(id):
         task.status = TaskStatus.terminated
         task.save()
     except NoResultFound:
-        # FIXME
-        content, status = {'msg': 'TODO Not found'}, 404
+        content, status = {'msg': T['not_found']}, 404
     except AssertionError as e:
-        # FIXME
-        content, status = {'msg': str(e)}, 405
+        content, status = {'msg': T['terminate']['failure']['state'].format(reason=e)}, 409
     # TODO What if terminate could not connect?
     except Exception as e:
-        # FIXME
-        content, status = {'msg': 'TODO Exception' + str(e)}, 500
+        log.critical(e)
+        content, status = {'msg': G['internal_error']}, 500
     else:
         if exit_code == 0:
-            # FIXME
             content, status = {'msg': T['terminate']['success'], 'exit_code': exit_code}, 200
         else:
-            # FIXME
-            content, status = {'msg': 'Termination operation failed', 'exit_code': exit_code}, 400
+            content, status = {'msg': T['terminate']['failure']['exit_code'], 'exit_code': exit_code}, 202
     finally:
         return content, status
 
 
 # GET /tasks/{id}/spawn
-#@jwt_required
+# FIXME Revert @jwt_required
 @synchronize_task_record
-def spawn(id):
+def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     """Spawns command stored in Task db record (task.command).
 
     It won't allow for spawning task which is currently running (sync + status check).
@@ -293,24 +287,19 @@ def spawn(id):
         task.pid = pid
         task.status = TaskStatus.running
         task.save()
-    # except AssertionError as e:
-    #     print(e)
-    #     content, status = {
-    #         'msg': T['spawn']['failure']['already_spawned']
-    #     }, 405
     except NoResultFound:
-        # FIXME
-        content, status = {'msg': 'Task with id={} does not exist'.format(id)}, 404
-    except (AssertionError, SpawnError) as e:
-        # FIXME
-        content, status = {'msg': 'Unable to spawn task, reason: {}'.format(e)}, 422
+        content, status = {'msg': T['not_found']}, 404
+    except AssertionError as e:
+        content, status = {'msg': T['spawn']['failure']['assertions'].format(reason=e)}, 422
+    except SpawnError as e:
+        log.warning(e)
+        content, status = {'msg': T['spawn']['failure']['backend'].format(reason=e)}, 500
     except Exception as e:
-        # FIXME
-        content, status = str(e), 500
+        log.critical(e)
+        content, status = {'msg': G['internal_error']}, 500
     else:
         content, status = {'msg': T['spawn']['success'], 'pid': pid}, 200
     finally:
-        print('=================')
         return content, status
 
 
