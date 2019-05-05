@@ -120,11 +120,17 @@ def get(id):
     try:
         task = Task.get(id)
     except NoResultFound:
-        content = {'msg': 'BAD TODO'}
-        status = 123
+        # FIXME
+        content = {'msg': 'TODO not found'}
+        status = 200
+    except Exception:
+        # FIXME
+        content = {'msg': 'TODO Exception'}
+        status = 200
     else:
+        # FIXME
         content = {'msg': 'GIT TODO', 'task': task.as_dict}
-        status = 123
+        status = 200
     finally:
         print('=================')
         return content, status
@@ -184,32 +190,39 @@ def destroy(id: int):
         return content, status
 
 
-# FIXME Unused: screen-specific endpoint
-def running_sessions(user_id, hostname):
+# GET /screen-sessions?username=foo&hostname=bar
+def screen_sessions(username: str, hostname: str) -> List[int]:
+    """Returns pids of running `screen` sessions.
+
+    This endpoint is meant for development purposes,
+    there's no need to use it
+    """
     try:
-        assert user_id and hostname
-        # TODO Maybe ORM objects should be updated here
-        user = User.get(user_id)
-        pids = task_nursery.running(host=hostname, user=user.username)
-    except AssertionError:
-        raise NotImplementedError
-    except Exception:
-        raise NotImplementedError
+        assert username and hostname, 'arguments must not be empty'
+        pids = task_nursery.running(host=hostname, user=username)
+    except AssertionError as e:
+        # FIXME
+        content, status = {'msg': 'TODO running failed' + str(e), 'pids': None}, 400
+    except Exception as e:
+        # FIXME
+        content, status = {'msg': 'TODO Exception' + str(e), 'pids': None}, 500
     else:
+        # FIXME
         content, status = {'msg': T['running']['success'], 'pids': pids}, 200
     finally:
         return content, status
 
 
 # GET /tasks/running?user_id=X&hostname=X
+# FIXME Remove, unused - replaced by synchronization method
 # FIXME Handle exceptions etc.
-def running_tasks(user_id, hostname):
-    """List of Tasks (from database) that are actually running (active screen session)"""
-    assert user_id and hostname
-    user = User.get(user_id)
-    pids = task_nursery.running(host=hostname, user=user.username)
-    tasks = Task.query.filter(Task.pid.in_(pids)).all()
-    return {'msg': T['running']['success'], 'tasks': [task.as_dict for task in tasks]}, 200
+# def running_tasks(user_id, hostname):
+#     """List of Tasks (from database) that are actually running (active screen session)"""
+#     assert user_id and hostname
+#     user = User.get(user_id)
+#     pids = task_nursery.running(host=hostname, user=user.username)
+#     tasks = Task.query.filter(Task.pid.in_(pids)).all()
+#     return {'msg': T['running']['success'], 'tasks': [task.as_dict for task in tasks]}, 200
 
 
 # GET /tasks/{id}/terminate
