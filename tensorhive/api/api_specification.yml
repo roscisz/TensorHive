@@ -586,7 +586,7 @@ paths:
           type: integer
         - description: Task object with fields to overwrite
           in: body
-          name: user
+          name: new_values
           required: true
           schema:
             $ref: '#/definitions/TaskUpdateForm'
@@ -683,6 +683,9 @@ paths:
           required: true
           type: integer
       summary: Spawns a task by id
+      description: |
+        Task which is already running will not be spawned.
+        Task's state will be synced automatically.
       operationId: tensorhive.controllers.task.spawn
       responses:
         200:
@@ -696,10 +699,26 @@ paths:
               pid:
                 type: integer
                 example: 4321
+        404:
+          description: {{RESPONSES['task']['not_found']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['task']['not_found']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         422:
-          description: {{RESPONSES['general']['auth_error']}}
+          description: {{RESPONSES['task']['spawn']['failure']['assertions']}} or {{RESPONSES['general']['auth_error']}}
+        500:
+          description: {{RESPONSES['task']['spawn']['failure']['backend']}} or {{RESPONSES['general']['internal_error']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['task']['not_found']}}
       # security:
       #   - Bearer: []
   /tasks/{id}/terminate:
@@ -713,23 +732,56 @@ paths:
           required: true
           type: integer
       summary: Terminates task by id
+      description: |
+        Does not guarantee that process will respect termination signal.
+        Returns exit code of the operation, not process that has been killed.
+        Task's state will be synced automatically.
       operationId: tensorhive.controllers.task.terminate
       responses:
         200:
-          description: {{RESPONSES['general']['ok']}}
+          description: {{RESPONSES['task']['terminate']['success']}}
           schema:
             type: object
             properties:
               msg:
                 type: string
                 example: {{RESPONSES['task']['terminate']['success']}}
-              pid:
+              exit_code:
                 type: integer
-                example: 4321
+                example: 0
+        202:
+          description: {{RESPONSES['task']['terminate']['failure']['exit_code']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['task']['terminate']['failure']['exit_code']}}
+              exit_code:
+                type: integer
+                example: 1
         401:
           description: {{RESPONSES['general']['unauthorized']}}
+        404:
+          description: {{RESPONSES['task']['not_found']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['task']['not_found']}}
+        409:
+          description: {{RESPONSES['task']['terminate']['failure']['state']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['task']['terminate']['failure']['state']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       # security:
       #   - Bearer: []
 definitions:
