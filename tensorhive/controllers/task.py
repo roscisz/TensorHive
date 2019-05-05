@@ -167,8 +167,21 @@ def update(id: int, new_values: Dict[str, Any]):
 
 
 # DELETE /tasks/{id}
-def destroy():
-    raise NotImplementedError
+def destroy(id: int):
+    try:
+        Task.get(id).destroy()
+    except NoResultFound:
+        # FIXME
+        content = {'msg': 'TODO Not found'}
+        status = 123
+    except Exception as e:
+        # FIXME
+        content, status = {'msg': G['internal_error'] + str(e)}, 500
+    else:
+        # FIXME
+        content, status = {'msg': 'TODO Succ deleted'}, 200
+    finally:
+        return content, status
 
 
 # FIXME Unused: screen-specific endpoint
