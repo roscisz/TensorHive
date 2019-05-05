@@ -16,6 +16,7 @@ G = API.RESPONSES['general']
 # TODO print -> logging
 # TODO add new responses to yml
 # TODO proper content, status in every endpoint
+# TODO Add @jwt_required
 
 
 def synchronize(task_id: int) -> None:
@@ -46,6 +47,8 @@ def synchronize(task_id: int) -> None:
         else:
             if task.status is TaskStatus.running:
                 task.status = TaskStatus.terminated
+            if task.status is TaskStatus.unsynchronized:
+                task.status = TaskStatus.not_running
             task.pid = None
             task.save()
         print('Task {} current status is: {}'.format(task_id, task.status))
@@ -73,10 +76,9 @@ def synchronize_task_record(func: Callable[[int], Any]) -> Callable[[int], Any]:
     return sync_wrapper
 
 
-# FIXME Case
-#  GET /tasks?user_id=X?syncall=1
+# FIXME Maybe camelCased arguments? (API client standpoint)
+#  GET /tasks?user_id=X?sync_all=1
 def get_all(user_id: Optional[int], sync_all: Optional[bool]) -> List[Dict]:
-    """"""
     # FIXME Handle exceptions etc.
     if user_id:
         tasks = Task.query.filter(Task.user_id == user_id).all()
