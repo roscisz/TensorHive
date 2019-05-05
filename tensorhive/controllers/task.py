@@ -315,11 +315,14 @@ Any other key to clear console
             task = get(int(task_id))
             print(task)
         elif action == '4':
+            print('Press enter for all')
             task_id = input('User ID > ')
+            sync = True if input('Want synchronized records? (y/n) > ') == 'y' else False
+
             if task_id:
-                tasks = get_all(user_id=int(task_id))
+                tasks = get_all(user_id=int(task_id), sync_all=sync)
             else:
-                tasks = get_all(user_id=None)
+                tasks = get_all(user_id=None, sync_all=sync)
             print('[')
             print(*tasks, sep=',\n')
             print(']')
@@ -331,17 +334,28 @@ Any other key to clear console
             task_id = input('ID > ')
             content, status = update(int(task_id), new_values=dict(command='new_command', hostname='miczi.gda.pl'))
             print(content, status)
-            # pid = input('PID > ')
-            # exit_code = terminate(pid, host, user, gracefully=True)
-            # print('Interruption exit_code: ', exit_code)
-        # elif action == '4':
-        #     running_tasks = running(host, user)
-        #     if not running_tasks:
-        #         print('No running tasks')
-        #     for task in running_tasks:
-        #         print('Terminating: ', task)
-        #         exit_code = terminate(task, host, user)
-        #         print('Kill exit_code: ', exit_code)
+        elif action == '7':
+            task_id = input('ID > ')
+            content, status = destroy(int(task_id))
+            print(content, status)
+        elif action == '8':
+            import string
+            import random
+            rand_str = lambda: ''.join(random.choice(string.ascii_uppercase) for x in range(8))
+            random_username, random_email = rand_str(), rand_str() + '@test.com'
+            user = User(password='`123`123', email=random_email, username=random_username)
+            user.save()
+            for _ in range(3):
+                content, status = create(dict(userId=user.id, hostname=host, command=cmd))
+                print(content, status)
+            print(user)
+        elif action == '9':
+            user_id = input('User ID > ')
+            user = User.get(user_id)
+            print('[BEFORE] User has {} tasks.'.format(len(user.tasks)))
+            user.destroy()
+            tasks_after = Task.query.filter(Task.user_id == user_id).all()
+            print('[AFTER] User has now {} tasks.'.format(len(tasks_after)))
         else:
             os.system('clear')
             continue
