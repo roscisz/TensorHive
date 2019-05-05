@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Enum
 #from sqlalchemy.exc import SQLAlchemyError
 from tensorhive.database import Base
+from sqlalchemy.orm import relationship, backref
 from tensorhive.models.CRUDModel import CRUDModel
 import enum
 import logging
@@ -17,7 +18,9 @@ class TaskStatus(enum.Enum):
 class Task(CRUDModel, Base):
     __tablename__ = 'tasks'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
+    user = relationship(
+        'User', backref=backref('tasks', passive_deletes=True, cascade='all, delete, delete-orphan'), lazy='subquery')
     host = Column(String(40), nullable=False)
     pid = Column(Integer, nullable=True)
     status = Column(Enum(TaskStatus), default=TaskStatus.not_running, nullable=False)
