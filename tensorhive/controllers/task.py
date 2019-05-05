@@ -1,6 +1,7 @@
 from tensorhive.models.Task import Task, TaskStatus
 from tensorhive.models.User import User
 from tensorhive.core import task_nursery, ssh
+from tensorhive.core.task_nursery import SpawnError
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.orm.exc import NoResultFound
 # from tensorhive.database import flask_app
@@ -14,6 +15,7 @@ G = API.RESPONSES['general']
 
 # TODO print -> logging
 # TODO add new responses to yml
+# TODO proper content, status in every endpoint
 
 
 def synchronize(task_id: int) -> None:
@@ -49,9 +51,9 @@ def synchronize(task_id: int) -> None:
         print('Task {} current status is: {}'.format(task_id, task.status))
 
 
-def synchronize_task_record(func) -> Callable[[int], Any]:
-    """Decorated function MUST CONTAIN task id (int).
-    (function can take more arguments though)
+def synchronize_task_record(func: Callable[[int], Any]) -> Callable[[int], Any]:
+    """Decorated function MUST CONTAIN task id (int), function can take more arguments though.
+    If task id could not be obtained from wrapped function's arguments, synchronization will be aborted.
     """
 
     @wraps(func)
@@ -61,9 +63,11 @@ def synchronize_task_record(func) -> Callable[[int], Any]:
         except IndexError:
             task_id = kwargs.get('id') or kwargs.get('task_id') or kwargs.get('taskId')
 
-        print('AAAAAAAAAAAAA', task_id)
         if task_id:
             synchronize(task_id)
+        else:
+            print('Synchronization aborted!')
+            print('Task id not found in {}(), args: {}, kwargs: {}'.format(func.__name__, args, kwargs))
         return func(*args, **kwargs)
 
     return sync_wrapper
@@ -247,7 +251,7 @@ def spawn(id):
     except NoResultFound:
         # FIXME
         content, status = {'msg': 'Task with id={} does not exist'.format(id)}, 123
-    except AssertionError as e:
+    except (AssertionError, SpawnError) as e:
         # FIXME
         content, status = {'msg': 'Unable to spawn task, reason: {}'.format(e)}, 123
     except Exception as e:

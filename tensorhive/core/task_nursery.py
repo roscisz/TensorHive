@@ -15,10 +15,7 @@ class ScreenCommandBuilder:
     """Set of configurable commands built on top of **screen** program."""
 
     @staticmethod
-    def spawn(command: str,
-              session_name: str,
-              capture_output=True,
-              keep_alive=False) -> str:
+    def spawn(command: str, session_name: str, capture_output=True, keep_alive=False) -> str:
         """Command that runs inside daemonized screen session.
 
         Command is put into background manually (-D + & instead of simply usin -d) -> we want to know the PID
@@ -39,22 +36,17 @@ class ScreenCommandBuilder:
         """
         if capture_output:
             if keep_alive:
-                log.debug(
-                    'keep_alive is set to False - incompatible with capture_output=True'
-                )
+                log.debug('keep_alive is set to False - incompatible with capture_output=True')
                 keep_alive = False
             create_logfile_command = ScreenCommandBuilder.tmp_log_file()
-            capturing_command = '| tee --ignore-interrupts $({})'.format(
-                create_logfile_command)
+            capturing_command = '| tee --ignore-interrupts $({})'.format(create_logfile_command)
 
         return 'screen -Dm -S {sess_name} bash -c "{cmd}{keep_alive} {log}" {to_bg}'.format(
-            sess_name=
-            session_name,  # will help distinguishing between TensorHive and user's sessions
+            sess_name=session_name,  # will help distinguishing between TensorHive and user's sessions
             cmd=command,
-            log=capturing_command
-            if capture_output else '',  # see method description
-            keep_alive='; exec sh' if keep_alive else
-            '',  # prevents screen from terminating session when command finished executing
+            log=capturing_command if capture_output else '',  # see method description
+            keep_alive='; exec sh'
+            if keep_alive else '',  # prevents screen from terminating session when command finished executing
             to_bg='& echo $!'  # will print process pid
         )
 
@@ -85,8 +77,7 @@ class ScreenCommandBuilder:
     @staticmethod
     def get_active_sessions(grep_pattern: str) -> List[str]:
         """Fetches the full names of screen sessions matching given grep pattern."""
-        return 'screen -ls | cut -f 2 | sed -e "1d;$d" | grep -e "{}"'.format(
-            grep_pattern)
+        return 'screen -ls | cut -f 2 | sed -e "1d;$d" | grep -e "{}"'.format(grep_pattern)
 
 
 class Task:
@@ -105,16 +96,13 @@ class Task:
         Returns:
             pid of the process
         """
-        command = self._command_builder.spawn(
-            self.command, session_name='tensorhive_task', keep_alive=False)
+        command = self._command_builder.spawn(self.command, session_name='tensorhive_task', keep_alive=False)
         output = ssh.run_command(client, command)
         stdout = ssh.get_stdout(host=self.hostname, output=output)
 
         if not stdout:
             reason = output[self.hostname].exception
-            raise ValueError(
-                'Unable to acquire pid from empty stdout, reason: {}'.format(
-                    reason))
+            raise ValueError('Unable to acquire pid from empty stdout, reason: {}'.format(reason))
         # FIXME May want to decouple it somehow
         # FIXME pop() may theoretically fail (never stumbled upon this issue)
         pid = stdout.split().pop()
@@ -162,17 +150,13 @@ def spawn(command: str, host: Hostname, user: Username) -> int:
     try:
         pid = task.spawn(client)
     except ValueError as e:
-        raise SpawnError('Unable to spawn {} on {}@{}, reason: {}'.format(
-            command, user, host, e))
+        raise SpawnError('{} on {}@{} failed: {}'.format(command, user, host, e))
     else:
         log.debug('Command spawned, pid: {}'.format(pid))
         return pid
 
 
-def terminate(pid: int,
-              host: Hostname,
-              user: Username,
-              gracefully: bool = True) -> int:
+def terminate(pid: int, host: Hostname, user: Username, gracefully: bool = True) -> int:
     config = ssh.build_dedicated_config_for(host, user)
     client = ssh.get_client(config)
     task = Task(host, pid=pid)
