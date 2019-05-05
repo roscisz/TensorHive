@@ -602,25 +602,53 @@ paths:
               task:
                 $ref: '#/definitions/TaskToDisplay'
     
-  #   delete:
-  /tasks/running:
+    delete:
+      tags:
+        - tasks
+      summary: Delete task
+      operationId: tensorhive.controllers.task.destroy
+      parameters:
+        - description: Task ID
+          in: path
+          name: id
+          required: true
+          type: integer
+      responses:
+        200:
+          description: TODO {{RESPONSES['user']['delete']['success']}}
+          schema:
+            example:
+              msg: TODO {{RESPONSES['user']['delete']['success']}}
+        401:
+          description: TODO {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: TODO {{RESPONSES['general']['unpriviliged']}}
+        404:
+          description: TODO {{RESPONSES['user']['not_found']}}
+        422:
+          description: TODO {{RESPONSES['general']['auth_error']}}
+        500:
+          description: TODO {{RESPONSES['general']['internal_error']}}
+      security:
+        - Bearer: []
+  /screen-sessions:
     get:
       tags:
        - tasks
       summary: TODO
       parameters:
-        - description: User ID
+        - description: Username
           in: query
-          name: user_id # FIXME userId may be more consistent for web app
+          name: username
           required: true
-          type: integer
+          type: string
         - description: Hostname
           in: query
           name: hostname
           required: true
           type: string
-      summary: Returns pids of running tasks
-      operationId: tensorhive.controllers.task.running_tasks
+      summary: Returns pids of running screen sessions on username@hostname
+      operationId: tensorhive.controllers.task.screen_sessions
       responses:
         200:
           description: {{RESPONSES['general']['ok']}}
