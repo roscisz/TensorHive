@@ -809,11 +809,6 @@ definitions:
   TaskUpdateForm:
     type: object
     properties:
-      roles:
-        type: array
-        items: {
-          type: string
-        }
       command:
         type: string
         example: CUDA_VISIBLE_DEVICES=0 train.py --worker-id=2
