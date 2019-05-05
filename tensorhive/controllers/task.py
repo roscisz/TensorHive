@@ -15,10 +15,13 @@ T = API.RESPONSES['task']
 S = API.RESPONSES['screen-sessions']
 G = API.RESPONSES['general']
 
-# TODO print -> logging
+# TODO print -> logging everywhere
 # TODO add new responses to yml
 # TODO proper content, status in every endpoint
 # TODO Add @jwt_required
+# TODO Add security bearer to endpoints in API spec
+# TODO Check priviliges
+# TODO Add descriptions to boring CRUD functions
 Content = Dict[str, Any]
 HttpStatusCode = int
 TaskId = int
@@ -93,7 +96,9 @@ def synchronize_task_record(func: Callable[[int], Any]) -> Callable[[int], Any]:
 
 # FIXME Maybe camelCased arguments? (API client standpoint)
 #  GET /tasks?user_id=X?sync_all=1
+# FIXME Revert @jwt_required
 def get_all(user_id: Optional[int], sync_all: Optional[bool]) -> List[Dict]:
+    """TODO Add description"""
     # FIXME Handle exceptions etc.
     if user_id:
         tasks = Task.query.filter(Task.user_id == user_id).all()
@@ -111,7 +116,9 @@ def get_all(user_id: Optional[int], sync_all: Optional[bool]) -> List[Dict]:
 
 
 # POST /tasks
+# FIXME Revert @jwt_required
 def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
+    """TODO Add description"""
     try:
         new_task = Task(user_id=task['userId'], host=task['hostname'], command=task['command'])
         assert all(task.values()), 'fields cannot be blank or null'
@@ -138,8 +145,10 @@ def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
 
 
 # GET /tasks/{id}
+# FIXME Revert @jwt_required
 @synchronize_task_record
 def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
+    """TODO Add description"""
     try:
         task = Task.get(id)
     except NoResultFound:
@@ -158,7 +167,10 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 
 
 # PUT /tasks/{id}
+# FIXME Revert @jwt_required
+# FIXME Check if task belongs to user! (403, unpriviliged)
 def update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
+    """Updates certain fields of a Task db record, see `allowed_fields`."""
     allowed_fields = {'command', 'hostname'}
     try:
         assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
@@ -175,10 +187,6 @@ def update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusC
         task.save()
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
-    # FIXME Remove, won't occur
-    # except KeyError as e:
-    #     content = {'msg': 'TODO Mismatche' + str(e)}
-    #     status = 400
     except AssertionError as e:
         content = {'msg': 'TODO Update failure, reason: ' + str(e)}
         status = 422
@@ -265,7 +273,7 @@ def terminate(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError as e:
         content, status = {'msg': T['terminate']['failure']['state'].format(reason=e)}, 409
-    # TODO What if terminate could not connect?
+    # TODO What if terminate could not connect, ConnectionErrorException?
     except Exception as e:
         log.critical(e)
         content, status = {'msg': G['internal_error']}, 500
