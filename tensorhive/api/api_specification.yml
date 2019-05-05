@@ -601,7 +601,6 @@ paths:
                 example: TODO Update succ
               task:
                 $ref: '#/definitions/TaskToDisplay'
-    
     delete:
       tags:
         - tasks
@@ -615,22 +614,37 @@ paths:
           type: integer
       responses:
         200:
-          description: TODO {{RESPONSES['user']['delete']['success']}}
+          description: {{RESPONSES['general']['ok']}}
           schema:
-            example:
-              msg: TODO {{RESPONSES['user']['delete']['success']}}
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['task']['delete']['success']}}
         401:
-          description: TODO {{RESPONSES['general']['unauthorized']}}
+          description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: TODO {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unpriviliged']}}
         404:
-          description: TODO {{RESPONSES['user']['not_found']}}
+          description: {{RESPONSES['task']['not_found']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['task']['not_found']}}
         422:
-          description: TODO {{RESPONSES['general']['auth_error']}}
+          description: {{RESPONSES['general']['auth_error']}}
         500:
-          description: TODO {{RESPONSES['general']['internal_error']}}
-      security:
-        - Bearer: []
+          description: {{RESPONSES['general']['internal_error']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['internal_error']}}
+      # security:
+      #   - Bearer: []
   /screen-sessions:
     get:
       tags:

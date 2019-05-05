@@ -193,21 +193,23 @@ def update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusC
 
 
 # DELETE /tasks/{id}
+# FIXME Revert @jwt_required
+# FIXME Check if task belongs to user! (403, unpriviliged)
 def destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
+    """Deletes a Task db record."""
     try:
         Task.get(id).destroy()
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
-    except Exception as e:
-        # FIXME
-        content, status = {'msg': G['internal_error'] + str(e)}, 500
+    except Exception:
+        content, status = {'msg': G['internal_error']}, 500
     else:
-        # FIXME
-        content, status = {'msg': 'TODO Succ deleted'}, 200
+        content, status = {'msg': T['delete']['success']}, 200
     finally:
         return content, status
 
 
+# TODO Disable this endpoint later, return 403 Forbidden
 # GET /screen-sessions?username=foo&hostname=bar
 def screen_sessions(username: str, hostname: str) -> Tuple[Content, HttpStatusCode]:
     """Returns pids of running `screen` sessions.
