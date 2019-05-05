@@ -127,8 +127,39 @@ def get(id):
 
 
 # PUT /tasks/{id}:
-def update(id):
-    raise NotImplementedError
+def update(id: int, new_values: Dict[str, Any]):
+    allowed_fields = {'command', 'hostname'}
+    try:
+        assert set(new_values.keys()).issubset(allowed_fields), 'Invalid field is present'
+        task = Task.get(id)
+
+        for field_name, new_value in new_values.items():
+            if field_name == 'hostname':
+                # API client is allowed to use more verbose name here
+                field_name = 'host'
+            else:
+                # Check every other field matches
+                assert hasattr(task, field_name), 'Task has no {} field'.format(field_name)
+            setattr(task, field_name, new_value)
+        task.save()
+    except NoResultFound:
+        content = {'msg': 'TODO Not found'}
+        status = 123
+    # except KeyError as e:
+    # FIXME Remove, won't occur
+    #     content = {'msg': 'TODO Mismatche' + str(e)}
+    #     status = 400
+    except AssertionError as e:
+        content = {'msg': 'TODO Update failure, reason: ' + str(e)}
+        status = 422
+    except Exception:
+        content = {'msg': G['internal_error']}
+        status = 500
+    else:
+        content = {'msg': 'TODO Update success', 'task': task.as_dict}
+        status = 201
+    finally:
+        return content, status
 
 
 # DELETE /tasks/{id}
@@ -248,6 +279,7 @@ if __name__ == '__main__':
 3) Get one (id)
 4) Get all (user id)
 5) Terminate (id)
+6) Update task command and hostname (id)
 Any other key to clear console
         ''')
         action = input('> ')[0]
@@ -274,6 +306,10 @@ Any other key to clear console
         elif action == '5':
             task_id = input('ID > ')
             content, status = terminate(int(task_id))
+            print(content, status)
+        elif action == '6':
+            task_id = input('ID > ')
+            content, status = update(int(task_id), new_values=dict(command='new_command', hostname='miczi.gda.pl'))
             print(content, status)
             # pid = input('PID > ')
             # exit_code = terminate(pid, host, user, gracefully=True)

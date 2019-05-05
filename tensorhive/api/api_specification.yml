@@ -573,7 +573,35 @@ paths:
       responses:
         200:
           description: TODO
-  #   put:
+    put:
+      tags:
+      - tasks
+      summary: Update task
+      operationId: tensorhive.controllers.task.update
+      parameters:
+        - description: Task ID
+          in: path
+          name: id
+          required: true
+          type: integer
+      - description: Task object with fields to overwrite
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/TaskUpdateForm'
+      responses:
+        123:
+          description: TODO Update succ
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: TODO Update succ
+              task:
+                $ref: '#/definitions/TaskToDisplay'
+    
   #   delete:
   /tasks/running:
     get:
@@ -750,6 +778,20 @@ definitions:
         format: int64
         example: 1
         readOnly: true
+  TaskUpdateForm:
+    type: object
+    properties:
+      roles:
+        type: array
+        items: {
+          type: string
+        }
+      command:
+        type: string
+        example: CUDA_VISIBLE_DEVICES=0 train.py --worker-id=2
+      hostname:
+        type: string
+        example: localhost
   UserForm:
     type: object
     required:
