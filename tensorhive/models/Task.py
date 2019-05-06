@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum, DateTime
 #from sqlalchemy.exc import SQLAlchemyError
+import datetime
 from tensorhive.database import Base
 from sqlalchemy.orm import relationship, backref
 from tensorhive.models.CRUDModel import CRUDModel
@@ -25,6 +26,8 @@ class Task(CRUDModel, Base):
     pid = Column(Integer, nullable=True)
     status = Column(Enum(TaskStatus), default=TaskStatus.not_running, nullable=False)
     command = Column(String(400), nullable=False)
+    spawn_at = Column(DateTime, nullable=True)
+    terminate_at = Column(DateTime, nullable=True)
 
     def __repr__(self):
         return '<Task id={id}, user={user}, hostname={hostname}, command={command}\n' \
