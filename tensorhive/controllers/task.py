@@ -9,6 +9,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.config import API
 from functools import wraps
 from typing import List, Optional, Callable, Any, Dict, Tuple
+from datetime import datetime
 import logging
 log = logging.getLogger(__name__)
 T = API.RESPONSES['task']
@@ -120,7 +121,13 @@ def get_all(user_id: Optional[int], sync_all: Optional[bool]) -> List[Dict]:
 def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """TODO Add description"""
     try:
-        new_task = Task(user_id=task['userId'], host=task['hostname'], command=task['command'])
+        new_task = Task(
+            user_id=task['userId'],
+            host=task['hostname'],
+            command=task['command'],
+            # TODO Adjust API spec, optional fields
+            spawn_at=task.get('spawnAt'),
+            terminate_at=task.get('terminateAt'))
         assert all(task.values()), 'fields cannot be blank or null'
         new_task.save()
     except KeyError as e:
@@ -297,7 +304,7 @@ def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     """
     try:
         task = Task.get(id)
-        assert task.status is not TaskStatus.running, 'Task juz jest zespawnowany (może musisz wywołać sync)'
+        assert task.status is not TaskStatus.running, 'task is already running'
         assert task.command, 'command is empty'
         assert task.host, 'hostname is empty'
         assert task.user, 'user does not exist'
@@ -360,7 +367,11 @@ if __name__ == '__main__':
         '''))
         action = input('> ')[0]
         if action == '1':
-            content, status = create(dict(userId=1, hostname=host, command=cmd))
+            from datetime import datetime, timedelta
+            now = datetime.utcnow()
+            offset = timedelta(seconds=20)
+            content, status = create(
+                dict(userId=1, hostname=host, command=cmd, spawnAt=now - offset, terminateAt=now + offset))
             print(content, status)
         elif action == '2':
             task_id = input('ID > ')
@@ -402,6 +413,7 @@ if __name__ == '__main__':
             user = User(password='`123`123', email=random_email, username=random_username)
             user.save()
             for _ in range(3):
+                # TODO add spawnAt, terminateAt
                 content, status = create(dict(userId=user.id, hostname=host, command=cmd))
                 print(content, status)
             print(user)
