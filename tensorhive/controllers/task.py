@@ -57,18 +57,22 @@ def synchronize(task_id: TaskId) -> None:
     except (AssertionError, Exception) as e:
         # task_nursery.running pssh exceptions are also catched here
         print('Unable to synchronize Task {}, reason: {}'.format(task_id, e))
+        print('Task {} status was: {}'.format(task_id, task.status.name))
         task.status = TaskStatus.unsynchronized
         task.save()
-        print('Task {} current status is: {}'.format(task_id, task.status))
+        print('Task {} is now: {}'.format(task_id, task.status.name))
     else:
+        print('Task {} status was: {}'.format(task_id, task.status.name))
+        change_status_msg = 'Task {} is now: {}'.format(task_id, task.status.name)
         if task.pid not in active_sessions_pids:
             if task.status is TaskStatus.running:
                 task.status = TaskStatus.terminated
+                print(change_status_msg)
             if task.status is TaskStatus.unsynchronized:
                 task.status = TaskStatus.not_running
+                print(change_status_msg)
             task.pid = None
             task.save()
-        print('Task {} current status is: {}'.format(task_id, task.status))
 
 
 def synchronize_task_record(func: Callable[[int], Any]) -> Callable[[int], Any]:
@@ -285,6 +289,7 @@ def terminate(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': G['internal_error']}, 500
     else:
+        print('Task {} is now: {}'.format(task.id, task.status.name))
         if exit_code == 0:
             content, status = {'msg': T['terminate']['success'], 'exit_code': exit_code}, 200
         else:
@@ -323,6 +328,7 @@ def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': G['internal_error']}, 500
     else:
+        print('Task {} is now: {}'.format(task.id, task.status.name))
         content, status = {'msg': T['spawn']['success'], 'pid': pid}, 200
     finally:
         return content, status
