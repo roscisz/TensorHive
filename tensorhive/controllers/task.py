@@ -279,6 +279,12 @@ def terminate(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         # Allow to spawn that task again
         task.pid = None
         task.status = TaskStatus.terminated
+        # Task was scheduled to spawn automatically
+        # but user decided to terminate it manually
+        # scheduler should not spawn the task by itself then
+        if task.spawn_at:
+            # So this task should not be spawned automatically anymore
+            task.spawn_at = None
         task.save()
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
@@ -316,6 +322,10 @@ def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         pid = task_nursery.spawn(task.command, task.host, task.user.username)
         task.pid = pid
         task.status = TaskStatus.running
+
+        # If task was scheduled to terminate and user just
+        # spawned that task manually, scheduler should still
+        #  continue to watch and terminate the task automatically.
         task.save()
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
