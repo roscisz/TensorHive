@@ -28,6 +28,11 @@ HttpStatusCode = int
 TaskId = int
 
 
+class ExitCodeError(AssertionError):
+    pass
+
+
+# TODO Move somewhere else
 def synchronize(task_id: TaskId) -> None:
     """Updates state of a Task object stored in database.
 
@@ -283,6 +288,9 @@ def terminate(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 
         exit_code = task_nursery.terminate(task.pid, task.host, task.user.username, gracefully=True)
 
+        if exit_code != 0:
+            raise ExitCodeError('operation exit code is not 0')
+
         # Allow to spawn that task again
         task.pid = None
         task.status = TaskStatus.terminated
@@ -297,16 +305,15 @@ def terminate(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError as e:
         content, status = {'msg': T['terminate']['failure']['state'].format(reason=e)}, 409
+    except ExitCodeError:
+        content, status = {'msg': T['terminate']['failure']['exit_code'], 'exit_code': exit_code}, 202
     # TODO What if terminate could not connect, ConnectionErrorException?
     except Exception as e:
         log.critical(e)
         content, status = {'msg': G['internal_error']}, 500
     else:
         print('Task {} is now: {}'.format(task.id, task.status.name))
-        if exit_code == 0:
-            content, status = {'msg': T['terminate']['success'], 'exit_code': exit_code}, 200
-        else:
-            content, status = {'msg': T['terminate']['failure']['exit_code'], 'exit_code': exit_code}, 202
+        content, status = {'msg': T['terminate']['success'], 'exit_code': exit_code}, 200
     finally:
         return content, status
 
