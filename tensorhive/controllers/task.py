@@ -67,15 +67,15 @@ def synchronize(task_id: TaskId) -> None:
         task.save()
         print('Task {} is now: {}'.format(task_id, task.status.name))
     else:
-        print('Task {} status was: {}'.format(task_id, task.status.name))
-        change_status_msg = 'Task {} is now: {}'.format(task_id, task.status.name)
+        print('[BEFORE SYNC] Task {} status was: {}'.format(task_id, task.status.name))
+        change_status_msg = '[AFTER SYNC] Task {id} is now: {curr_status}'
         if task.pid not in active_sessions_pids:
             if task.status is TaskStatus.running:
                 task.status = TaskStatus.terminated
-                print(change_status_msg)
+                print(change_status_msg.format(id=task_id, curr_status=task.status.name))
             if task.status is TaskStatus.unsynchronized:
                 task.status = TaskStatus.not_running
-                print(change_status_msg)
+                print(change_status_msg.format(id=task_id, curr_status=task.status.name))
             task.pid = None
             task.save()
 
@@ -225,13 +225,19 @@ def update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusC
 
 # DELETE /tasks/{id}
 # FIXME Revert @jwt_required
-# FIXME Check if task belongs to user! (403, unpriviliged)
+# FIXME Check if task belongs to user (id from JWT)! (403, unpriviliged)
+# TODO Maybe wen don't need to synchronize? (but I think we need to terminate task first)
+@synchronize_task_record
 def destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
-    """Deletes a Task db record."""
+    """Deletes a Task db record. Requires terminating task manually in advance."""
     try:
-        Task.get(id).destroy()
+        task = Task.get(id)
+        assert task.status is not TaskStatus.running, 'must be terminated first'
+        task.destroy()
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
+    except AssertionError as e:
+        content, status = {'msg': T['delete']['failure']['assertions'].format(reason=e)}, 422
     except Exception:
         content, status = {'msg': G['internal_error']}, 500
     else:
