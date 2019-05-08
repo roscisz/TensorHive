@@ -37,7 +37,9 @@ class Task(CRUDModel, Base):
             hostname=self.host,
             command=self.command,
             pid=self.pid,
-            status=self.status.name)
+            status=self.status.name,
+            spawn_at=self.spawn_at,
+            terminate_at=self.terminate_at)
 
     def check_assertions(self):
         pass
@@ -50,5 +52,8 @@ class Task(CRUDModel, Base):
             'hostname': self.host,
             'pid': self.pid,
             'status': self.status.name,
-            'command': self.command
+            'command': self.command,
+            # FIXME Convert datetime to string (remember that it can be None)
+            'spawn_at': self.spawn_at,
+            'terminate_at': self.terminate_at
         }
