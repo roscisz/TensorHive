@@ -103,27 +103,34 @@ def synchronize_task_record(func: Callable[[int], Any]) -> Callable[[int], Any]:
 #  GET /tasks?user_id=X?sync_all=1
 # FIXME Revert @jwt_required
 def get_all(user_id: Optional[int], sync_all: Optional[bool]) -> List[Dict]:
-    """TODO Add description"""
-    # FIXME Handle exceptions etc.
+    """Fetches either all Task records or only those in relation with specific user.
+    Allows for synchronizing state of each Task out-of-the-box.
+
+    In typical scenario API client would want to get all records without sync and
+    then run sync each records individually.
+    """
+    # FIXME Exceptions should never occur, but need to experiment more
     if user_id:
+        # Returns [] if such User with such id does not exist (SQLAlchemy behavior)
         tasks = Task.query.filter(Task.user_id == user_id).all()
     else:
         tasks = Task.all()
 
-    # Wanted to decouple syncing from dict conversion with 2 oneliners (list comprehension),
+    # Wanted to decouple syncing from dict conversion with 2 oneliners (using list comprehension),
     # but this code is O(n) instead of O(2n)
     results = []
     for task in tasks:
         if sync_all:
             synchronize(task.id)
         results.append(task.as_dict)
-    return results, 200
+    return {'msg': T['all']['success'], 'tasks': results}, 200
 
 
 # POST /tasks
 # FIXME Revert @jwt_required
 def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """TODO Add description"""
+    #required_fields = {'userId', 'hostname', 'command'}
     try:
         new_task = Task(
             user_id=task['userId'],

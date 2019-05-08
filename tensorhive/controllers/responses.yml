@@ -47,6 +47,8 @@ screen-sessions:
   failure:
     assertions: Unable to fetch screen sessions, {reason}
 task:
+  all:
+    success: Tasks fetched successfully
   not_found: Task has not been found
   create:
     success: Task has been successfully created
@@ -54,6 +56,8 @@ task:
       invalid: Requirements not met - {reason}
   delete:
     success: Task has been successfully deleted
+    failure:
+      assertions: Unable to delete task, {reason}
   spawn:
     success: Task has been successfully spawned 
     failure:
@@ -63,8 +67,8 @@ task:
   terminate:
     success: Accepted, task has been successfully asked to terminate
     failure:
-      state: Cannot terminate, {reason}
-      exit_code: Accepted, but termination operation did not succeed (exit_code)
+      state: Unable to terminate, {reason}
+      exit_code: Accepted, but termination operation did not succeed (op. exit_code was not 0)
 token:
   revoke:
     success: '{token_type} has been revoked'

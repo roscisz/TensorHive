@@ -501,7 +501,7 @@ paths:
       tags: 
         - tasks
       operationId: tensorhive.controllers.task.get_all
-      description: TODO
+      description: Fetches either all or only those owned by the user.
       parameters:
         - description: User ID
           in: query
@@ -518,7 +518,23 @@ paths:
           default: false
       responses:
         200:
-          description: TODO
+          description: {{RESPONSES['task']['all']['success']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['task']['all']['success']}}
+              tasks:
+                type: array
+                items:
+                  $ref: '#/definitions/TaskToDisplay'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
       # security:
       #   - Bearer: []
     post:
@@ -856,6 +872,13 @@ definitions:
       userId:
         type: integer
         example: 1
+      # FIXME camelCase
+      spawn_at:
+        type: string
+        format: date-time
+      terminate_at:
+        type: string
+        format: date-time
   TaskToDisplay:
     type: object
     properties:
@@ -876,6 +899,17 @@ definitions:
       hostname:
         type: string
         format: 'localhost'
+      # FIXME camelCase
+      spawn_at:
+        type: string
+        format: date-time
+        x-nullable: true
+        example: 2019-05-08T12:00:00.066Z (or null!)
+      terminate_at:
+        type: string
+        format: date-time
+        x-nullable: true
+        example: 2019-05-08T13:00:00.066Z (or null!)
   UserUpdateForm:
     type: object
     required:
