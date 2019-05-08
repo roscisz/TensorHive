@@ -405,9 +405,12 @@ if __name__ == '__main__':
         if action == '1':
             from datetime import datetime, timedelta
             now = datetime.utcnow()
-            offset = timedelta(seconds=20)
-            content, status = create(
-                dict(userId=1, hostname=host, command=cmd, spawnAt=now - offset, terminateAt=now + offset))
+            if input('Want schedule spawn: now-20s, terminate: now+20s? (y/n) > ') == 'y':
+                offset = timedelta(seconds=20)
+                content, status = create(
+                    dict(userId=1, hostname=host, command=cmd, spawnAt=now - offset, terminateAt=now + offset))
+            else:
+                content, status = create(dict(userId=1, hostname=host, command=cmd))
             print(content, status)
         elif action == '2':
             task_id = input('ID > ')
