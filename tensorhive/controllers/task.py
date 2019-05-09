@@ -134,7 +134,9 @@ def get_all(user_id: Optional[int], sync_all: Optional[bool]) -> List[Dict]:
 # POST /tasks
 # FIXME Revert @jwt_required
 def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
-    """TODO Add description"""
+    """Creates new Task db record.
+    Fields which require to be of datetime type are explicitly converted here.
+    """
     try:
         new_task = Task(
             user_id=task['userId'],
@@ -152,17 +154,12 @@ def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         # At least one of required fields was not present
         content, status = {'msg': G['bad_request']}, 422
     except AssertionError as e:
-        # FIXME
-        content = {'msg': T['create']['failure']['invalid'].format(reason=e)}
-        status = 422
+        content, status = {'msg': T['create']['failure']['invalid'].format(reason=e)}, 422
     except Exception as e:
-        # FIXME
-        print(e)
-        content = {'msg': G['internal_error']}
-        status = 500
+        log.critical(e)
+        content, status = {'msg': G['internal_error']}, 500
     else:
-        content = {'msg': T['create']['success'], 'task': new_task.as_dict}
-        status = 201
+        content, status = {'msg': T['create']['success'], 'task': new_task.as_dict}, 201
     finally:
         print('=================')
         return content, status
@@ -172,21 +169,17 @@ def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
 # FIXME Revert @jwt_required
 @synchronize_task_record
 def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
-    """TODO Add description"""
+    """Fetches one Task db record"""
     try:
         task = Task.get(id)
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
-    except Exception:
-        # FIXME
-        content = {'msg': 'TODO Exception'}
-        status = 200
+    except Exception as e:
+        log.critical(e)
+        content, status = {'msg': G['internal_error']}, 500
     else:
-        # FIXME
-        content = {'msg': 'GIT TODO', 'task': task.as_dict}
-        status = 200
+        content, status = {'msg': T['task']['get']['success'], 'task': task.as_dict}, 200
     finally:
-        print('=================')
         return content, status
 
 
