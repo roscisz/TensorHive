@@ -501,16 +501,17 @@ paths:
       tags: 
         - tasks
       operationId: tensorhive.controllers.task.get_all
+      summary: Query tasks
       description: Fetches either all or only those owned by the user.
       parameters:
-        - description: User ID
+        - description: User ID (optional)
           in: query
           name: user_id # FIXME userId may be more consistent for web app
           type: integer
           required: false
           default: null
           x-nullable: true
-        - description: Synchronize all tasks
+        - description: Synchronize all tasks (optional)
           in: query
           name: sync_all # FIXME syncAll may be more consistent for web app
           type: boolean
@@ -582,7 +583,8 @@ paths:
       tags: 
         - tasks
       operationId: tensorhive.controllers.task.get
-      description: TODO
+      summary: Get task by ID
+      description: Fetches specific task by ID
       parameters:
         - description: Task ID
           in: path
@@ -591,7 +593,37 @@ paths:
           required: true
       responses:
         200:
-          description: TODO
+          description: {{RESPONSES['general']['ok']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['task']['get']['success']}}
+              task:
+                $ref: '#/definitions/TaskToDisplay'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+        404:
+          description: {{RESPONSES['task']['not_found']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['task']['not_found']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['internal_error']}}
     put:
       tags:
       - tasks

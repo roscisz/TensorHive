@@ -48,7 +48,9 @@ screen-sessions:
     assertions: Unable to fetch screen sessions, {reason}
 task:
   all:
-    success: Tasks fetched successfully
+    success: Tasks has been fetched successfully
+  get:
+    success: Task has been fetched successfully
   not_found: Task has not been found
   create:
     success: Task has been successfully created
