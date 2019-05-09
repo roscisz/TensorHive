@@ -543,7 +543,10 @@ paths:
       summary: Create new task
       operationId: tensorhive.controllers.task.create
       parameters:
-        - description: Task object
+        - description: |
+            Task object
+            * spawn field is nullable string
+            * terminate field is nullable string
           in: body
           name: task
           required: true
@@ -600,23 +603,48 @@ paths:
           name: id
           required: true
           type: integer
-        - description: Task object with fields to overwrite
+        - description: |
+            Task object with fields to overwrite.
+            * spawn field is nullable string
+            * terminate field is nullable string
           in: body
           name: new_values
           required: true
           schema:
             $ref: '#/definitions/TaskUpdateForm'
       responses:
-        123:
-          description: TODO Update succ
+        201:
+          description: {{RESPONSES['general']['ok']}}
           schema:
             type: object
             properties:
               msg:
                 type: string
-                example: TODO Update succ
+                example: {{RESPONSES['task']['update']['success']}}
               task:
                 $ref: '#/definitions/TaskToDisplay'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+        404:
+          description: {{RESPONSES['task']['not_found']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['task']['not_found']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['internal_error']}}
     delete:
       tags:
         - tasks
@@ -876,9 +904,11 @@ definitions:
       spawn_at:
         type: string
         format: date-time
+        x-nullable: true
       terminate_at:
         type: string
         format: date-time
+        x-nullable: true
   TaskToDisplay:
     type: object
     properties:
@@ -940,6 +970,16 @@ definitions:
       hostname:
         type: string
         example: localhost
+      spawn_at:
+        type: string
+        format: date-time
+        x-nullable: true
+        example: 2019-05-08T12:00:00.066Z (or null!)
+      terminate_at:
+        type: string
+        format: date-time
+        x-nullable: true
+        example: 2019-05-08T13:00:00.066Z (or null!)
   UserForm:
     type: object
     required:
