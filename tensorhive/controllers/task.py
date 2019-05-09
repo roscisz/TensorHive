@@ -178,7 +178,7 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': G['internal_error']}, 500
     else:
-        content, status = {'msg': T['task']['get']['success'], 'task': task.as_dict}, 200
+        content, status = {'msg': T['get']['success'], 'task': task.as_dict}, 200
     finally:
         return content, status
 
