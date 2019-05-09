@@ -58,6 +58,10 @@ task:
     success: Task has been successfully deleted
     failure:
       assertions: Unable to delete task, {reason}
+  update:
+    success: Task has been successfully updated
+    failure:
+      assertions: Unable to update task, {reason}
   spawn:
     success: Task has been successfully spawned 
     failure:

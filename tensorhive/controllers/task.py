@@ -1,4 +1,4 @@
-from tensorhive.models.Task import Task, TaskStatus
+from tensorhive.models.Task import Task, TaskStatus, try_parse_input_datetime
 from tensorhive.models.User import User
 from tensorhive.core import task_nursery, ssh
 from tensorhive.core.task_nursery import SpawnError
@@ -135,21 +135,22 @@ def get_all(user_id: Optional[int], sync_all: Optional[bool]) -> List[Dict]:
 # FIXME Revert @jwt_required
 def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """TODO Add description"""
-    #required_fields = {'userId', 'hostname', 'command'}
     try:
         new_task = Task(
             user_id=task['userId'],
             host=task['hostname'],
             command=task['command'],
             # TODO Adjust API spec, optional fields
-            spawn_at=task.get('spawnAt'),
-            terminate_at=task.get('terminateAt'))
-        assert all(task.values()), 'fields cannot be blank or null'
+            spawn_at=try_parse_input_datetime(task.get('spawn_at')),
+            terminate_at=try_parse_input_datetime(task.get('terminate_at')))
+        # assert all(task.values()), 'fields cannot be blank or null'
         new_task.save()
-    except KeyError as e:
-        # FIXME
-        content = {'msg': 'TODO Bad request' + str(e)}
-        status = 422
+    except ValueError:
+        # Invalid string format for datetime
+        content, status = {'msg': G['bad_request']}, 422
+    except KeyError:
+        # At least one of required fields was not present
+        content, status = {'msg': G['bad_request']}, 422
     except AssertionError as e:
         # FIXME
         content = {'msg': T['create']['failure']['invalid'].format(reason=e)}
@@ -192,9 +193,10 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 # PUT /tasks/{id}
 # FIXME Revert @jwt_required
 # FIXME Check if task belongs to user! (403, unpriviliged)
+# TODO What if task is already running: should we allow for updating command, hostname, etc. Currently it should affect only next usess
 def update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """Updates certain fields of a Task db record, see `allowed_fields`."""
-    allowed_fields = {'command', 'hostname'}
+    allowed_fields = {'command', 'hostname', 'spawn_at', 'terminate_at'}
     try:
         assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
         task = Task.get(id)
@@ -203,6 +205,8 @@ def update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusC
             if field_name == 'hostname':
                 # API client is allowed to use more verbose name here (hostname <=> host)
                 field_name = 'host'
+            if field_name in {'spawn_at', 'terminate_at'}:
+                new_value = try_parse_input_datetime(new_value)
             else:
                 # Check that every other field matches
                 assert hasattr(task, field_name), 'task object has no {} attribute'.format(field_name)
@@ -210,15 +214,16 @@ def update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusC
         task.save()
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
+    except ValueError:
+        # Invalid string format for datetime
+        content, status = {'msg': G['bad_request']}, 422
     except AssertionError as e:
-        content = {'msg': 'TODO Update failure, reason: ' + str(e)}
-        status = 422
-    except Exception:
-        content = {'msg': G['internal_error']}
-        status = 500
+        content, status = {'msg': T['update']['failure']['assertions'].format(reason=e)}, 422
+    except Exception as e:
+        log.critical(e)
+        content, status = {'msg': G['internal_error']}, 500
     else:
-        content = {'msg': 'TODO Update success', 'task': task.as_dict}
-        status = 201
+        content, status = {'msg': T['update']['success'], 'task': task.as_dict}, 201
     finally:
         return content, status
 
