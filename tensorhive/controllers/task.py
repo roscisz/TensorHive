@@ -342,7 +342,8 @@ def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         assert task.command, 'command is empty'
         assert task.host, 'hostname is empty'
         assert task.user, 'user does not exist'
-        pid = task_nursery.spawn(task.command, task.host, task.user.username)
+
+        pid = task_nursery.spawn(task.command, task.host, task.user.username, name_appendix=str(task.id))
         task.pid = pid
         task.status = TaskStatus.running
 

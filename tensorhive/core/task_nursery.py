@@ -3,8 +3,8 @@ from tensorhive.core.ssh import HostsConfig, ProxyConfig, Hostname, Username
 from pssh.clients.native import ParallelSSHClient
 from typing import List, Optional, Dict
 import time
-import logging
 from datetime import datetime
+import logging
 log = logging.getLogger(__name__)
 
 __author__ = '@micmarty'
@@ -15,7 +15,11 @@ class ScreenCommandBuilder:
     """Set of configurable commands built on top of **screen** program."""
 
     @staticmethod
-    def spawn(command: str, session_name: str, capture_output=True, keep_alive=False) -> str:
+    def spawn(command: str,
+              session_name: str,
+              capture_output: bool = True,
+              custom_log_name: Optional[str] = None,
+              keep_alive: bool = False) -> str:
         """Command that runs inside daemonized screen session.
 
         Command is put into background manually (-D + & instead of simply usin -d) -> we want to know the PID
@@ -33,12 +37,18 @@ class ScreenCommandBuilder:
             * keep_alive will prevent saving command's output to log file.
             It is advised to keep this turned off, unless you really want to keep session
             alive even when the command has finished execution - sometimes useful!
+
+        Note: `custom_log_name` argument will be ignored when `capture_output=False`
         """
         if capture_output:
             if keep_alive:
                 log.debug('keep_alive is set to False - incompatible with capture_output=True')
                 keep_alive = False
-            create_logfile_command = ScreenCommandBuilder.tmp_log_file()
+
+            if custom_log_name:
+                create_logfile_command = ScreenCommandBuilder.custom_log_file(custom_log_name)
+            else:
+                create_logfile_command = ScreenCommandBuilder.tmp_log_file()
             capturing_command = '| tee --ignore-interrupts $({})'.format(create_logfile_command)
 
         return 'screen -Dm -S {sess_name} bash -c "{cmd}{keep_alive} {log}" {to_bg}'.format(
@@ -51,19 +61,38 @@ class ScreenCommandBuilder:
         )
 
     @staticmethod
+    def mkdir(target_dir: str) -> str:
+        return 'mkdir --parents ' + target_dir
+
+    @staticmethod
     def tmp_log_file() -> str:
         """Command that creates tmp file for storing log content.
 
-        Target directory is created automatically.
+        When command is executed it will print path to newly created file.
+        Target directory will be created automatically when executing.
         Current implementation uses week number for easier differentiation.
         """
         target_dir = '~/TensorHiveLogs'
         week_no = datetime.today().strftime('%U')  # type: str
         name_template = 'week_' + week_no + '_XXXX'  # at least 3 'X' are required by mktemp
-        return 'mkdir --parents {target_dir} && mktemp {target_dir}/{name_template} --suffix .log'.format(
-            target_dir=target_dir, name_template=name_template)
 
-    # TODO Use me instead of terminate?
+        mkdir_cmd = ScreenCommandBuilder.mkdir(target_dir)
+        mktemp_cmd = 'mktemp {dir}/{templ} --suffix .log'.format(dir=target_dir, templ=name_template)
+        return mkdir_cmd + ' && ' + mktemp_cmd
+
+    @staticmethod
+    def custom_log_file(filename: str, target_dir: str = '~/TensorHiveLogs') -> str:
+        """Command that prints path to custom log file (`filename`)
+
+        Note: if log file already exists `tee` will overwrite it!
+        Target directory will be created automatically when executing, but
+        log file won't be created (`touch`ed), assuming that `tee` will create it when executing.
+        """
+        mkdir_cmd = ScreenCommandBuilder.mkdir(target_dir)
+        echopath_cmd = 'echo {dir}/{name}.log'.format(dir=target_dir, name=filename)
+        return mkdir_cmd + ' && ' + echopath_cmd
+
+    # TODO Use me instead of terminate? (see `ScreenCommandBuilder.spawn` description)
     @staticmethod
     def interrupt(pid: int) -> str:
         """Command that sends SIGINT to screen session. Should be used to gracefully terminate running command."""
@@ -91,12 +120,19 @@ class Task:
         self.pid = pid
         self._command_builder = ScreenCommandBuilder
 
-    def spawn(self, client: ParallelSSHClient) -> int:
+    def spawn(self, client: ParallelSSHClient, name_appendix: Optional[str] = None) -> int:
         """Spawns defined command via ssh client.
         Returns:
             pid of the process
         """
-        command = self._command_builder.spawn(self.command, session_name='tensorhive_task', keep_alive=False)
+        sess_name = 'tensorhive_task'
+        log_name = None
+        if name_appendix:
+            sess_name += '_' + name_appendix
+            log_name = 'task_' + name_appendix
+
+        command = self._command_builder.spawn(
+            self.command, session_name=sess_name, capture_output=True, custom_log_name=log_name, keep_alive=False)
         output = ssh.run_command(client, command)
         stdout = ssh.get_stdout(host=self.hostname, output=output)
 
@@ -143,12 +179,12 @@ class SpawnError(Exception):
     pass
 
 
-def spawn(command: str, host: Hostname, user: Username) -> int:
+def spawn(command: str, host: Hostname, user: Username, name_appendix: Optional[str] = None) -> int:
     config = ssh.build_dedicated_config_for(host, user)
     client = ssh.get_client(config)
     task = Task(host, command)
     try:
-        pid = task.spawn(client)
+        pid = task.spawn(client, name_appendix)
     except ValueError as e:
         raise SpawnError('{} on {}@{} failed: {}'.format(command, user, host, e))
     else:
@@ -171,7 +207,7 @@ def terminate(pid: int, host: Hostname, user: Username, gracefully: bool = True)
 def running(host: Hostname, user: Username) -> List[int]:
     config = ssh.build_dedicated_config_for(host, user)
     client = ssh.get_client(config)
-    pattern = '.*tensorhive_task'
+    pattern = '.*tensorhive_task.*'
     command = ScreenCommandBuilder.get_active_sessions(pattern)
     output = ssh.run_command(client, command)
     stdout = ssh.get_stdout(host, output)
