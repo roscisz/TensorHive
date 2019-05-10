@@ -1,14 +1,22 @@
 from tensorhive.core import ssh
 from tensorhive.core.ssh import HostsConfig, ProxyConfig, Hostname, Username
 from pssh.clients.native import ParallelSSHClient
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Iterator
 import time
 from datetime import datetime
 import logging
 log = logging.getLogger(__name__)
 
 __author__ = '@micmarty'
-__all__ = ['ScreenCommandBuilder', 'Task', 'spawn', 'terminate', 'running']
+__all__ = ['ScreenCommandBuilder', 'Task', 'spawn', 'terminate', 'running', 'fetch_log']
+
+
+class ExitCodeError(AssertionError):
+    pass
+
+
+class SpawnError(Exception):
+    pass
 
 
 class ScreenCommandBuilder:
@@ -175,10 +183,6 @@ class Task:
         return exit_code
 
 
-class SpawnError(Exception):
-    pass
-
-
 def spawn(command: str, host: Hostname, user: Username, name_appendix: Optional[str] = None) -> int:
     config = ssh.build_dedicated_config_for(host, user)
     client = ssh.get_client(config)
@@ -219,6 +223,23 @@ def running(host: Hostname, user: Username) -> List[int]:
     pids = [pid_from_session_name(line) for line in stdout.split('\n')]
     log.debug('Running pids: {}'.format(pids))
     return pids
+
+
+def fetch_log(host: Hostname, user: Username, task_id: int, tail: bool = False) -> Iterator[str]:
+    path = '~/TensorHiveLogs/task_{}.log'.format(task_id)
+    program = 'tail' if tail else 'cat'
+    command = '{} {}'.format(program, path)
+
+    config = ssh.build_dedicated_config_for(host, user)
+    client = ssh.get_client(config)
+    output = ssh.run_command(client, command)
+
+    if output[host].exception:
+        # Propagage ssh exception
+        raise output[host].exception
+    if output[host].exit_code != 0:
+        raise ExitCodeError(path)
+    return output[host].stdout
 
 
 if __name__ == '__main__':

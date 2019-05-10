@@ -1,8 +1,8 @@
 from tensorhive.models.Task import Task, TaskStatus, try_parse_input_datetime
 from tensorhive.models.User import User
 from tensorhive.core import task_nursery, ssh
-from tensorhive.core.task_nursery import SpawnError
-from pssh.exceptions import ConnectionErrorException
+from tensorhive.core.task_nursery import SpawnError, ExitCodeError
+from pssh.exceptions import ConnectionErrorException, AuthenticationException, UnknownHostException
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.orm.exc import NoResultFound
 # from tensorhive.database import flask_app
@@ -28,11 +28,6 @@ G = API.RESPONSES['general']
 Content = Dict[str, Any]
 HttpStatusCode = int
 TaskId = int
-
-
-# TODO May want to move it somewhere else
-class ExitCodeError(AssertionError):
-    pass
 
 
 # TODO May want to move it somewhere else
@@ -262,12 +257,8 @@ def screen_sessions(username: str, hostname: str) -> Tuple[Content, HttpStatusCo
         pids = task_nursery.running(host=hostname, user=username)
     except AssertionError as e:
         content, status = {'msg': S['failure']['assertions'].format(reason=e)}, 422
-    except ConnectionErrorException as e:
-        # Dev note:
-        # There are much more pssh.exceptions to handle, but treating them all as
-        # built-in Exception should be sufficient, API client does not require to have full knowledge.
-        log.error(e)
-        content, status = {'msg': API.RESPONSES['ssh']['failure']['connection']}, 404
+    except (ConnectionErrorException, AuthenticationException, UnknownHostException) as e:
+        content, status = {'msg': API.RESPONSES['ssh']['failure']['connection'].format(reason=e)}, 500
     except Exception as e:
         log.critical(e)
         content, status = {'msg': G['internal_error']}, 500
@@ -364,6 +355,30 @@ def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     else:
         print('Task {} is now: {}'.format(task.id, task.status.name))
         content, status = {'msg': T['spawn']['success'], 'pid': pid}, 200
+    finally:
+        return content, status
+
+
+# GET /tasks/{id}/log
+def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
+    try:
+        task = Task.get(id)
+        assert task.host, 'hostname is empty'
+        assert task.user, 'user does not exist'
+        stdout_gen = task_nursery.fetch_log(task.host, task.user.username, task.id, tail)
+    except NoResultFound:
+        content, status = {'msg': T['not_found']}, 404
+    except ExitCodeError as e:
+        content, status = {'msg': T['get_log']['failure']['not_found'].format(location=e)}, 404
+    except AssertionError as e:
+        content, status = {'msg': T['get_log']['failure']['assertions'].format(reason=e)}, 422
+    except (ConnectionErrorException, AuthenticationException, UnknownHostException) as e:
+        content, status = {'msg': API.RESPONSES['ssh']['failure']['connection'].format(reason=e)}, 500
+    except Exception as e:
+        log.critical(e)
+        content, status = {'msg': G['internal_error']}, 500
+    else:
+        content, status = {'msg': T['get_log']['success'], 'stdout_lines': list(stdout_gen)}, 200
     finally:
         return content, status
 

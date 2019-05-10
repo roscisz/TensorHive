@@ -721,6 +721,69 @@ paths:
                 example: {{RESPONSES['general']['internal_error']}}
       # security:
       #   - Bearer: []
+  /tasks/{id}/log:
+    get:
+      tags:
+        - tasks
+      operationId: tensorhive.controllers.task.get_log
+      parameters:
+        - description: Task ID
+          in: path
+          name: id
+          type: integer
+          required: true
+        - description: Only tail (10 lines)
+          in: query
+          name: tail
+          type: boolean
+          required: false
+          default: false
+      responses:
+        200:
+          description: {{RESPONSES['general']['ok']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['task']['get']['success']}}
+              stdout_lines:
+                type: array
+                items:
+                  type: string
+                example:
+                  - first line
+                  - second line
+                  - etc.
+
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+        404:
+          description: {{RESPONSES['task']['get_log']['failure']['not_found']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['task']['get_log']['failure']['not_found']}}
+        422:
+          description: {{RESPONSES['task']['get_log']['failure']['assertions']}} or {{RESPONSES['general']['auth_error']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['task']['get_log']['failure']['assertions']}}
+        500:
+          description: {{RESPONSES['ssh']['failure']['connection']}} or {{RESPONSES['general']['internal_error']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['ssh']['failure']['connection']}}
   /screen-sessions:
     get:
       tags:
@@ -761,14 +824,6 @@ paths:
                   type: integer
         401:
           description: {{RESPONSES['general']['unauthorized']}}
-        404:
-          description: {{RESPONSES['ssh']['failure']['connection']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['ssh']['failure']['connection']}}
         422:
           description: {{RESPONSES['screen-sessions']['failure']['assertions']}} or {{RESPONSES['general']['auth_error']}}
           schema:
@@ -778,7 +833,13 @@ paths:
                 type: string
                 example: {{RESPONSES['screen-sessions']['failure']['assertions']}}
         500:
-          description: {{RESPONSES['general']['internal_error']}}
+          description: {{RESPONSES['ssh']['failure']['connection']}} or {{RESPONSES['general']['internal_error']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['ssh']['failure']['connection']}}
       # security:
       #   - Bearer: []
   /tasks/{id}/spawn:
