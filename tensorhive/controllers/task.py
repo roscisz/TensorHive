@@ -430,7 +430,7 @@ if __name__ == '__main__':
             2) Spawn (id)
             3) Get one (id)
             4) Get multiple (all or by user id)
-            5) Terminate (id)
+            5) Interrupt/Terminate/Kill (id)
             6) Update task command and hostname (id)
             7) Destroy task (id)
             8) Create random user with 3 tasks
@@ -448,6 +448,8 @@ if __name__ == '__main__':
             else:
                 content, status = create(dict(userId=1, hostname=host, command=cmd))
             print(content, status)
+            print()
+            print('Created with ID: ', content.get('task').get('id'))
         elif action == '2':
             task_id = input('ID > ')
             content, status = spawn(int(task_id))
@@ -470,7 +472,14 @@ if __name__ == '__main__':
             print(']')
         elif action == '5':
             task_id = input('ID > ')
-            content, status = terminate(int(task_id))
+            mode = input('q to interrupt, w to terminate, Enter to kill > ')
+            if mode == 'q':
+                gracefully = True
+            elif mode == 'w':
+                gracefully = None
+            else:
+                gracefully = False
+            content, status = terminate(int(task_id), gracefully=gracefully)
             print(content, status)
         elif action == '6':
             task_id = input('ID > ')
@@ -501,11 +510,13 @@ if __name__ == '__main__':
             print('[AFTER] User has now {} tasks.'.format(len(tasks_after)))
         elif action == '10':
             task_id = input('ID > ')
-            if input('Request full content / Only last lines (y/Enter)') == 'y':
+            if input('Request full content / Only last lines (y/Enter) > ') == 'y':
                 content, status = get_log(int(task_id), tail=False)
             else:
                 content, status = get_log(int(task_id), tail=True)
             print(content, status)
+            print()
+            print('\n'.join(content.get('stdout_lines') or []))
         else:
             os.system('clear')
             continue
