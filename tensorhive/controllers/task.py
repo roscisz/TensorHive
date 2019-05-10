@@ -9,7 +9,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.config import API
 from functools import wraps
 from typing import List, Optional, Callable, Any, Dict, Tuple
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 log = logging.getLogger(__name__)
 T = API.RESPONSES['task']
@@ -23,16 +23,19 @@ G = API.RESPONSES['general']
 # TODO Add security bearer to endpoints in API spec
 # TODO Check priviliges
 # TODO Add descriptions to boring CRUD functions
+
+# Typing aliases
 Content = Dict[str, Any]
 HttpStatusCode = int
 TaskId = int
 
 
+# TODO May want to move it somewhere else
 class ExitCodeError(AssertionError):
     pass
 
 
-# TODO Move somewhere else
+# TODO May want to move it somewhere else
 def synchronize(task_id: TaskId) -> None:
     """Updates state of a Task object stored in database.
 
@@ -58,6 +61,8 @@ def synchronize(task_id: TaskId) -> None:
         active_sessions_pids = task_nursery.running(host=task.host, user=task.user.username)
     except NoResultFound:
         # This exception must be handled within try/except block when using Task.get()
+        # In other words, methods decorated with @synchronize_task_record must handle this case by themselves!
+        print('Task {} could not be found (also synchonized). Failing without taking any action...')
         pass
     except (AssertionError, Exception) as e:
         # task_nursery.running pssh exceptions are also catched here
@@ -401,12 +406,11 @@ if __name__ == '__main__':
         '''))
         action = input('> ')[0]
         if action == '1':
-            from datetime import datetime, timedelta
             now = datetime.utcnow()
             if input('Want schedule spawn: now-20s, terminate: now+20s? (y/n) > ') == 'y':
                 offset = timedelta(seconds=20)
                 content, status = create(
-                    dict(userId=1, hostname=host, command=cmd, spawnAt=now - offset, terminateAt=now + offset))
+                    dict(userId=1, hostname=host, command=cmd, spawn_at=now - offset, terminate_at=now + offset))
             else:
                 content, status = create(dict(userId=1, hostname=host, command=cmd))
             print(content, status)
