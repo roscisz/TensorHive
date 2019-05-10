@@ -112,6 +112,14 @@ class ScreenCommandBuilder:
         return 'screen -X -S {} quit'.format(pid)
 
     @staticmethod
+    def kill(pid: int) -> str:
+        """Command that kills screen session by pid.
+
+        It should also wipe dead sessions. Note that kill exit code is returned!
+        """
+        return 'kill -9 {}; KILL_EXIT=$?; screen -wipe; (exit $KILL_EXIT)'.format(pid)
+
+    @staticmethod
     def get_active_sessions(grep_pattern: str) -> List[str]:
         """Fetches the full names of screen sessions matching given grep pattern."""
         return 'screen -ls | cut -f 2 | sed -e "1d;$d" | grep -e "{}"'.format(grep_pattern)
@@ -182,6 +190,18 @@ class Task:
         exit_code = output[self.hostname].exit_code
         return exit_code
 
+    def kill(self, client: ParallelSSHClient) -> int:
+        """Kills the task using it's pid.
+
+        Returns:
+            exit code of the operation
+        """
+        assert self.pid, 'You must first spawn the task or provide pid manually.'
+        command = self._command_builder.kill(self.pid)
+        output = ssh.run_command(client, command)
+        exit_code = output[self.hostname].exit_code
+        return exit_code
+
 
 def spawn(command: str, host: Hostname, user: Username, name_appendix: Optional[str] = None) -> int:
     config = ssh.build_dedicated_config_for(host, user)
@@ -196,15 +216,17 @@ def spawn(command: str, host: Hostname, user: Username, name_appendix: Optional[
         return pid
 
 
-def terminate(pid: int, host: Hostname, user: Username, gracefully: bool = True) -> int:
+def terminate(pid: int, host: Hostname, user: Username, gracefully: Optional[bool] = True) -> int:
     config = ssh.build_dedicated_config_for(host, user)
     client = ssh.get_client(config)
     task = Task(host, pid=pid)
 
-    if gracefully:
-        exit_code = task.interrupt(client)
-    else:
+    if gracefully is None:
         exit_code = task.terminate(client)
+    elif gracefully is False:
+        exit_code = task.kill(client)
+    else:
+        exit_code = task.interrupt(client)
     return exit_code
 
 

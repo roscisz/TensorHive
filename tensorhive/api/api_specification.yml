@@ -755,7 +755,6 @@ paths:
                   - first line
                   - second line
                   - etc.
-
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
@@ -907,11 +906,23 @@ paths:
           name: id
           required: true
           type: integer
-      summary: Terminates task by id
+        - description: false to kill, null to terminate, true to interrupt
+          in: query
+          name: gracefully
+          type: boolean
+          required: false
+          x-nullable: true
+          default: null
+      summary: Interrupts/terminates/kills task by id
       description: |
-        Does not guarantee that process will respect termination signal.
-        Returns exit code of the operation, not process that has been killed.
-        Task's state will be synced automatically.
+        Kill - almost guaranteed termination
+
+        Terminate - sends SIGTERM, works in most cases
+        
+        Interrupt - sends SIGINT. Only this method allows for capturing logs when program is closing
+
+        Returns exit code of the operation, not task's command!
+        Task state will be synced automatically.
       operationId: tensorhive.controllers.task.terminate
       responses:
         200:

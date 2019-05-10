@@ -272,7 +272,7 @@ def screen_sessions(username: str, hostname: str) -> Tuple[Content, HttpStatusCo
 # GET /tasks/{id}/terminate
 # FIXME Revert @jwt_required
 @synchronize_task_record
-def terminate(id: TaskId) -> Tuple[Content, HttpStatusCode]:
+def terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[Content, HttpStatusCode]:
     """Sends SIGINT (default) or SIGKILL to process with pid that is stored in Task db record.
 
     In order to send SIGKILL, pass `gracefully=False` to `terminate` function.
@@ -286,14 +286,21 @@ def terminate(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         assert task.status is TaskStatus.running, 'only running tasks can be terminated'
         assert task.pid, 'task has no pid assigned'  # It means there's inconsistency
 
-        exit_code = task_nursery.terminate(task.pid, task.host, task.user.username, gracefully=True)
+        # gracefully:
+        # True -> interrupt (allows stdout to be flushed into log file)
+        # None -> terminate (works almost every time, but losing stdout that could be produced before closing)
+        # False -> kill (similar to above, but success is almost guaranteed)
+        exit_code = task_nursery.terminate(task.pid, task.host, task.user.username, gracefully=gracefully)
 
         if exit_code != 0:
             raise ExitCodeError('operation exit code is not 0')
 
-        # Allow to spawn that task again
-        task.pid = None
-        task.status = TaskStatus.terminated
+        # Note: Code below is unsafe, because interrupt and terminate does not guarantee success.
+        # It's better to let synchhronization update this (via comparison with screen sessions)
+        # (Unsafe section) Original comment: Allow to spawn that task again
+        # task.pid = None
+        # task.status = TaskStatus.terminated
+
         # Task was scheduled to spawn automatically
         # but user decided to terminate it manually
         # scheduler should not spawn the task by itself then
