@@ -361,6 +361,16 @@ def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 
 # GET /tasks/{id}/log
 def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
+    """Fetches log file created by spawned task (through stdout redirect).
+
+    It relies on reading files located on filesystem, via connection with `task.user.username@task.host`
+    If file does not exist there's no way to fetch it from database (currently).
+    File names must be named in one fashion (standard defined in `task_nursery.fetch_log`,
+    currently: `task_<id>.log`). Renaming them manually will lead to inconsistency or 'Not Found' errors.
+
+    `tail` argument allows for returning only the last few lines (10 is default for `tail` program).
+    For more details, see,: `task_nursery.fetch_log`.
+    """
     try:
         task = Task.get(id)
         assert task.host, 'hostname is empty'
@@ -418,9 +428,10 @@ if __name__ == '__main__':
             7) Destroy task (id)
             8) Create random user with 3 tasks
             9) Destroy user (user id) - cascade deletion test
+            10) Show log file (id)
             Any other key to clear console
         '''))
-        action = input('> ')[0]
+        action = input('> ')
         if action == '1':
             now = datetime.utcnow()
             if input('Want schedule spawn: now-20s, terminate: now+20s? (y/n) > ') == 'y':
@@ -481,6 +492,13 @@ if __name__ == '__main__':
             user.destroy()
             tasks_after = Task.query.filter(Task.user_id == user_id).all()
             print('[AFTER] User has now {} tasks.'.format(len(tasks_after)))
+        elif action == '10':
+            task_id = input('ID > ')
+            if input('Request full content / Only last lines (y/Enter)') == 'y':
+                content, status = get_log(int(task_id), tail=False)
+            else:
+                content, status = get_log(int(task_id), tail=True)
+            print(content, status)
         else:
             os.system('clear')
             continue
