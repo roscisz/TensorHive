@@ -48,9 +48,14 @@ screen-sessions:
     assertions: Unable to fetch screen sessions, {reason}
 task:
   all:
-    success: Tasks has been fetched successfully
+    success: Tasks has been successfully fetched
   get:
-    success: Task has been fetched successfully
+    success: Task has been successfully fetched 
+  get_log:
+    success: Log file has been found
+    failure:
+      assertions: Unable to fetch task, {reason}
+      not_found: Log file could not be found in {location}
   not_found: Task has not been found
   create:
     success: Task has been successfully created
@@ -93,4 +98,4 @@ nodes:
     not_found: Hostname has not been found
 ssh:
   failure:
-    connection: Unable to establish connection with host
+    connection: Unable to establish connection with host ({reason})
