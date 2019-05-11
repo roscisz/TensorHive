@@ -107,13 +107,14 @@ def synchronize_task_record(func: Callable[[int], Any]) -> Callable[[int], Any]:
 # FIXME Maybe camelCased arguments? (API client standpoint)
 #  GET /tasks?user_id=X?sync_all=1
 # FIXME Revert @jwt_required
-def get_all(user_id: Optional[int], sync_all: Optional[bool]) -> List[Dict]:
+def get_all(userId: Optional[int], syncAll: Optional[bool]) -> List[Dict]:
     """Fetches either all Task records or only those in relation with specific user.
     Allows for synchronizing state of each Task out-of-the-box.
 
     In typical scenario API client would want to get all records without sync and
     then run sync each records individually.
     """
+    user_id, sync_all = userId, syncAll
     # FIXME Exceptions should never occur, but need to experiment more
     if user_id:
         # Returns [] if such User with such id does not exist (SQLAlchemy behavior)
@@ -143,8 +144,8 @@ def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
             host=task['hostname'],
             command=task['command'],
             # TODO Adjust API spec, optional fields
-            spawn_at=try_parse_input_datetime(task.get('spawn_at')),
-            terminate_at=try_parse_input_datetime(task.get('terminate_at')))
+            spawn_at=try_parse_input_datetime(task.get('spawnAt')),
+            terminate_at=try_parse_input_datetime(task.get('terminateAt')))
         # assert all(task.values()), 'fields cannot be blank or null'
         new_task.save()
     except ValueError:
@@ -187,18 +188,19 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 # FIXME Revert @jwt_required
 # FIXME Check if task belongs to user! (403, unpriviliged)
 # TODO What if task is already running: should we allow for updating command, hostname, etc. Currently it should affect only next usess
-def update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
+def update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """Updates certain fields of a Task db record, see `allowed_fields`."""
-    allowed_fields = {'command', 'hostname', 'spawn_at', 'terminate_at'}
+    new_values = newValues
+    allowed_fields = {'command', 'hostname', 'spawnAt', 'terminateAt'}
     try:
         assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
         task = Task.get(id)
-
         for field_name, new_value in new_values.items():
             if field_name == 'hostname':
                 # API client is allowed to use more verbose name here (hostname <=> host)
                 field_name = 'host'
-            if field_name in {'spawn_at', 'terminate_at'}:
+            if field_name in {'spawnAt', 'terminateAt'}:
+                field_name = field_name.replace('At', '_at')
                 new_value = try_parse_input_datetime(new_value)
             else:
                 # Check that every other field matches
@@ -444,7 +446,7 @@ if __name__ == '__main__':
             if input('Want schedule spawn: now-20s, terminate: now+20s? (y/n) > ') == 'y':
                 offset = timedelta(seconds=20)
                 content, status = create(
-                    dict(userId=1, hostname=host, command=cmd, spawn_at=now - offset, terminate_at=now + offset))
+                    dict(userId=1, hostname=host, command=cmd, spawnAt=now - offset, terminateAt=now + offset))
             else:
                 content, status = create(dict(userId=1, hostname=host, command=cmd))
             print(content, status)
@@ -483,7 +485,10 @@ if __name__ == '__main__':
             print(content, status)
         elif action == '6':
             task_id = input('ID > ')
-            content, status = update(int(task_id), new_values=dict(command='new_command', hostname='miczi.gda.pl'))
+            timenow = datetime.utcnow()
+            content, status = update(
+                int(task_id),
+                newValues=dict(command='new_command', hostname='miczi.gda.pl', spawnAt=timenow, terminateAt=timenow))
             print(content, status)
         elif action == '7':
             task_id = input('ID > ')

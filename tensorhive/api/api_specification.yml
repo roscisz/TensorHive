@@ -506,14 +506,14 @@ paths:
       parameters:
         - description: User ID (optional)
           in: query
-          name: user_id # FIXME userId may be more consistent for web app
+          name: userId
           type: integer
           required: false
           default: null
           x-nullable: true
         - description: Synchronize all tasks (optional)
           in: query
-          name: sync_all # FIXME syncAll may be more consistent for web app
+          name: syncAll
           type: boolean
           required: false
           default: false
@@ -640,7 +640,7 @@ paths:
             * spawn field is nullable string
             * terminate field is nullable string
           in: body
-          name: new_values
+          name: newValues
           required: true
           schema:
             $ref: '#/definitions/TaskUpdateForm'
@@ -726,6 +726,8 @@ paths:
       tags:
         - tasks
       operationId: tensorhive.controllers.task.get_log
+      summary: Fetch log file content produced by task
+      description: Return lines of log file located on machine where task was running
       parameters:
         - description: Task ID
           in: path
@@ -1004,12 +1006,11 @@ definitions:
       userId:
         type: integer
         example: 1
-      # FIXME camelCase
-      spawn_at:
+      spawnAt:
         type: string
         format: date-time
         x-nullable: true
-      terminate_at:
+      terminateAt:
         type: string
         format: date-time
         x-nullable: true
@@ -1033,13 +1034,12 @@ definitions:
       hostname:
         type: string
         format: 'localhost'
-      # FIXME camelCase
-      spawn_at:
+      spawnAt:
         type: string
         format: date-time
         x-nullable: true
         example: 2019-05-08T12:00:00.066Z (or null!)
-      terminate_at:
+      terminateAt:
         type: string
         format: date-time
         x-nullable: true
@@ -1074,12 +1074,12 @@ definitions:
       hostname:
         type: string
         example: localhost
-      spawn_at:
+      spawnAt:
         type: string
         format: date-time
         x-nullable: true
         example: 2019-05-08T12:00:00.066Z (or null!)
-      terminate_at:
+      terminateAt:
         type: string
         format: date-time
         x-nullable: true
