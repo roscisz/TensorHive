@@ -60,7 +60,7 @@ class Task(CRUDModel, Base):
 
     def __repr__(self):
         return '<Task id={id}, user={user}, hostname={hostname}, command={command}\n' \
-            '\tpid={pid}, status={status}>'.format(
+            '\tpid={pid}, status={status}, spawn_at={spawn_at}, terminate_at={terminate_at}>'.format(
             id=self.id,
             user=self.user,
             hostname=self.host,
@@ -89,11 +89,11 @@ class Task(CRUDModel, Base):
     def as_dict(self):
         return {
             'id': self.id,
-            'user_id': self.user_id,
+            'userId': self.user_id,
             'hostname': self.host,
             'pid': self.pid,
             'status': self.status.name,
             'command': self.command,
-            'spawn_at': self.try_parse_output_datetime(self.spawn_at),
-            'terminate_at': self.try_parse_output_datetime(self.terminate_at)
+            'spawnAt': self.try_parse_output_datetime(self.spawn_at),
+            'terminateAt': self.try_parse_output_datetime(self.terminate_at)
         }
