@@ -14,6 +14,7 @@ from tensorhive.core.monitors.GPUMonitoringBehaviour import GPUMonitoringBehavio
 from tensorhive.core.services.MonitoringService import MonitoringService
 from tensorhive.core.services.ProtectionService import ProtectionService
 from tensorhive.core.services.UsageLoggingService import UsageLoggingService
+from tensorhive.core.services.TaskSchedulingService import TaskSchedulingService
 from tensorhive.core.violation_handlers.ProtectionHandler import ProtectionHandler
 from tensorhive.core.violation_handlers.MessageSendingBehaviour import MessageSendingBehaviour
 from tensorhive.core.violation_handlers.EmailSendingBehaviour import EmailSendingBehaviour
@@ -63,6 +64,7 @@ class TensorHiveManager(metaclass=Singleton):
         if USAGE_LOGGING_SERVICE.ENABLED:
             usage_logging_service = UsageLoggingService(interval=USAGE_LOGGING_SERVICE.UPDATE_INTERVAL)
             services.append(usage_logging_service)
+        services.append(TaskSchedulingService(interval=5))
         return services
 
     def configure_services_from_config(self):
