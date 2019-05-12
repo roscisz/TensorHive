@@ -134,7 +134,7 @@ axios.get('static/config.json').then(response => {
       store.commit('SET_ACCESS_TOKEN', window.localStorage.getItem('accessToken'))
       store.commit('SET_REFRESH_TOKEN', window.localStorage.getItem('refreshToken'))
       store.commit('SET_ROLE', window.localStorage.getItem('role'))
-      store.commit('SET_ID', window.localStorage.getItem('userId'))
+      store.commit('SET_ID', parseInt(window.localStorage.getItem('userId')))
     }
   }
 
