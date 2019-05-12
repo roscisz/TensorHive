@@ -138,19 +138,17 @@ export default {
       } else {
         id = this.taskId
       }
-      if (this.selected.length) {
-        api
-          .request('put', '/tasks/' + id, this.$store.state.accessToken, newTask)
-          .then(response => {
-            this.close()
-            this.getTask(id)
-          })
-          .catch(error => {
-            console.log(error)
-            this.close()
-            this.getTask(id)
-          })
-      }
+      api
+        .request('put', '/tasks/' + id, this.$store.state.accessToken, newTask)
+        .then(response => {
+          this.close()
+          this.getTask(id)
+        })
+        .catch(error => {
+          console.log(error)
+          this.close()
+          this.getTask(id)
+        })
     },
 
     getTask: function (id) {

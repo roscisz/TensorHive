@@ -152,6 +152,14 @@
             </v-tooltip>
             <v-tooltip top>
               <template v-slot:activator="{ on }">
+                <v-icon v-on="on" @click="spawnTasks(props.item.id)">
+                  play_arrow
+                </v-icon>
+              </template>
+              <span>Spawn task</span>
+            </v-tooltip>
+            <v-tooltip top>
+              <template v-slot:activator="{ on }">
                 <v-icon style="font-size:20px;" v-on="on" @click="getLog(props.item.id)">
                   description
                 </v-icon>
@@ -179,6 +187,14 @@
           </v-icon>
         </template>
         <span>Schedule selected tasks</span>
+      </v-tooltip>
+      <v-tooltip top>
+        <template v-slot:activator="{ on }">
+          <v-icon v-on="on" @click="spawnTasks(null)">
+            play_arrow
+          </v-icon>
+        </template>
+        <span>Spawn selected tasks</span>
       </v-tooltip>
     </div>
     <v-snackbar
@@ -367,6 +383,78 @@ export default {
         }
       }
       this.tableKey++
+    },
+
+    spawnTasks: function (id) {
+      this.actionType = 'spawn'
+      this.prepareActionLoop(id)
+    },
+
+    prepareActionLoop: function (id, actionType) {
+      if (id !== null) {
+        this.multipleFlag = false
+        this.taskId = id
+      } else {
+        this.multipleFlag = true
+      }
+      if (!this.actionFlag) {
+        this.actionFlag = true
+        this.snackbar = true
+        this.actionLoop()
+      }
+    },
+
+    actionLoop: function () {
+      var id
+      if (this.multipleFlag) {
+        id = this.selected[this.selectedIndex].id
+      } else {
+        id = this.taskId
+      }
+      var actionPath
+      switch (this.actionType) {
+        case 'spawn': actionPath = '/tasks/' + id + '/spawn'; break
+      }
+      api
+        .request('get', actionPath, this.$store.state.accessToken)
+        .then(response => {
+          this.getTaskLoop(id)
+        })
+        .catch(error => {
+          console.log(error)
+          this.getTaskLoop(id)
+        })
+    },
+
+    getTaskLoop: function (id, actionType) {
+      api
+        .request('get', '/tasks/' + id, this.$store.state.accessToken)
+        .then(response => {
+          this.updateTask(id, response.data.task)
+          this.resumeLoop()
+        })
+        .catch(error => {
+          console.log(error)
+          this.resumeLoop()
+        })
+    },
+
+    resumeLoop: function () {
+      if (this.multipleFlag) {
+        this.selectedIndex++
+        if (this.selectedIndex < this.selected.length) {
+          switch (this.actionType) {
+            case 'spawn': this.actionLoop(); break
+          }
+        } else {
+          this.selectedIndex = 0
+          this.snackbar = false
+          this.actionFlag = false
+        }
+      } else {
+        this.snackbar = false
+        this.actionFlag = false
+      }
     },
 
     scheduleTasks: function (task) {
