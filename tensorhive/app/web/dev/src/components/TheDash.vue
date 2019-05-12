@@ -40,11 +40,6 @@
           </v-chip>
 
           <v-card>
-            <v-avatar>
-              <v-icon>account_circle</v-icon>
-            </v-avatar>
-            {{displayName}}
-            <v-divider></v-divider>
             <v-card-actions>
               <v-btn flat @click="logout()">Logout</v-btn>
             </v-card-actions>
@@ -56,6 +51,24 @@
     <div class="content-wrapper">
       <router-view></router-view>
     </div>
+    <v-footer
+      height="auto"
+      color="#222d32"
+    >
+      <v-layout
+        justify-center
+        row
+        wrap
+      >
+        <v-flex
+          text-xs-center
+          white--text
+          xs12
+        >
+          Found a bug?  (<a href="https://github.com/roscisz/TensorHive/issues">Report issue</a>)
+        </v-flex>
+      </v-layout>
+    </v-footer>
   </div>
 </template>
 
