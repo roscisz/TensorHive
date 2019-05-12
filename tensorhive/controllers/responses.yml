@@ -37,6 +37,7 @@ reservation:
     success: Reservation has been successfully updated
     failure:
       invalid: Requirements not met - {reason}
+      assertions: Unable to update reservation - {reason}
   delete:
     success: Reservation has been successfully deleted
 users:

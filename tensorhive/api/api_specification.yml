@@ -324,18 +324,24 @@ paths:
           description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
+  /reservations/{id}:
     put:
       tags:
       - reservations
-      summary: Update existed reservation
+      summary: Update existing reservation
       operationId: tensorhive.controllers.reservation.update_reservation_controller.update
       parameters:
-      - description: Reservation object
-        in: body
-        name: reservation
-        required: true
-        schema:
-          $ref: '#/definitions/ReservationUpdateForm'
+        - description: Reservation ID
+          in: path
+          name: id
+          required: true
+          type: integer
+        - description: Reservation object with fields to overwrite.
+          in: body
+          name: newValues
+          required: true
+          schema:
+            $ref: '#/definitions/ReservationUpdateForm'
       responses:
         201:
           description: {{RESPONSES['reservation']['update']['success']}}
@@ -351,13 +357,14 @@ paths:
           description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
+        401:
+          description: {{RESPONSES['reservation']['not_found']}}
         422:
-          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['reservation']['create']['failure']['invalid']}}
+          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['reservation']['update']['failure']['assertions']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
-  /reservations/{id}:
     delete:
       tags: 
           - reservations
@@ -1186,14 +1193,10 @@ definitions:
         format: date-time
   ReservationUpdateForm:
     type: object
-    required:
-      - id
+    #required:
+    # - start
+    # - end
     properties:
-      id:
-        type: integer
-        format: int64
-        example: 1
-        readOnly: true
       title:
         type: string
         example: Example title
