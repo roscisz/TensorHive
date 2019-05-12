@@ -1,5 +1,13 @@
 <template>
   <section class="content">
+    <TaskCreate
+      :show-modal="showModalCreate"
+      @close="showModalCreate = false"
+      @getTasks="getTasks"
+      :hostnames="hostnames"
+      :hosts="hosts"
+      :actionFlag="actionFlag"
+    />
     <v-data-table
       v-model="selected"
       :headers="headers"
@@ -58,6 +66,9 @@
         </tr>
       </template>
     </v-data-table>
+    <div class="text-xs-center pt-2">
+      <v-btn color="primary" @click="showModalCreate=true">Create tasks</v-btn>
+    </div>
     <v-snackbar
       color="amber"
       v-model="snackbar"
@@ -78,7 +89,11 @@
 
 <script>
 import api from '../../api'
+import TaskCreate from './tasks_overview/TaskCreate.vue'
 export default {
+  components: {
+    TaskCreate
+  },
   data () {
     return {
       pagination: {
@@ -98,6 +113,7 @@ export default {
       tasks: [],
       hostnames: [],
       hosts: {},
+      showModalCreate: false,
       interval: null,
       time: 60000,
       initialSyncFlag: false,
