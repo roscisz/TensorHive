@@ -383,7 +383,7 @@ def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[C
         if task.spawn_at:
             # So this task should not be spawned automatically anymore
             task.spawn_at = None
-        task.save()
+            task.save()
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError as e:
@@ -437,7 +437,7 @@ def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 
         # If task was scheduled to terminate and user just
         # spawned that task manually, scheduler should still
-        #  continue to watch and terminate the task automatically.
+        # continue to watch and terminate the task automatically.
         task.save()
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
