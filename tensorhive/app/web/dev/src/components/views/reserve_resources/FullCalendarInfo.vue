@@ -203,12 +203,10 @@ export default {
 
     cancelReservation: function () {
       this.cancel(this.reservation)
-      this.close()
     },
 
     updateReservation: function () {
       this.update(this.reservation, this.newTime, this.newTitle, this.newDescription)
-      this.close()
     }
   }
 }

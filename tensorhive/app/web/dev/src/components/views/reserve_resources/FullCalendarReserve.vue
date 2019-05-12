@@ -147,7 +147,6 @@ export default {
             this.addReservation(tempReservation)
           }
         }
-        this.close()
       } else {
         this.showInfo = true
       }

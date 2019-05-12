@@ -168,14 +168,23 @@ export default {
       if (reservation.description !== newDescription && newDescription !== '') {
         toUpdate['description'] = newDescription
       }
-      api
-        .request('put', '/reservations/' + reservation.id, this.$store.state.accessToken, toUpdate)
-        .then(response => {
-          this.calendar.fullCalendar('refetchEvents')
-        })
-        .catch(error => {
-          this.handleError(error)
-        })
+      var empty = true
+      for (var key in toUpdate) {
+        if (toUpdate.hasOwnProperty(key)) {
+          empty = false
+        }
+      }
+      if (!empty) {
+        api
+          .request('put', '/reservations/' + reservation.id, this.$store.state.accessToken, toUpdate)
+          .then(response => {
+            this.calendar.fullCalendar('refetchEvents')
+            this.showModalInfo = false
+          })
+          .catch(error => {
+            this.handleError(error)
+          })
+      }
     },
 
     cancelReservation: function (reservation) {
@@ -183,6 +192,7 @@ export default {
         .request('delete', '/reservations/' + reservation.id.toString(), this.$store.state.accessToken)
         .then(response => {
           this.calendar.fullCalendar('refetchEvents')
+          this.showModalInfo = false
         })
         .catch(error => {
           this.handleError(error)
@@ -194,6 +204,7 @@ export default {
         .request('post', '/reservations', this.$store.state.accessToken, reservation)
         .then(response => {
           this.calendar.fullCalendar('refetchEvents')
+          this.showModalReserve = false
         })
         .catch(error => {
           this.handleError(error)
