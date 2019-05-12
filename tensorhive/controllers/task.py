@@ -3,12 +3,12 @@ from tensorhive.models.User import User
 from tensorhive.core import task_nursery, ssh
 from tensorhive.core.task_nursery import SpawnError, ExitCodeError
 from pssh.exceptions import ConnectionErrorException, AuthenticationException, UnknownHostException
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt_claims
 from sqlalchemy.orm.exc import NoResultFound
 # from tensorhive.database import flask_app
 from tensorhive.config import API
 from functools import wraps
-from typing import List, Optional, Callable, Any, Dict, Tuple
+from typing import List, Optional, Callable, Any, Dict, Tuple, Iterator
 from datetime import datetime, timedelta
 import logging
 log = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ def synchronize(task_id: TaskId) -> None:
     running             => terminated
     unsynchronized      => not_running
     """
-    print('Syncing Task {}...'.format(task_id))
+    log.debug('Syncing Task {}...'.format(task_id))
     try:
         task = Task.get(task_id)
         assert task.host, 'hostname is empty'
@@ -57,25 +57,25 @@ def synchronize(task_id: TaskId) -> None:
     except NoResultFound:
         # This exception must be handled within try/except block when using Task.get()
         # In other words, methods decorated with @synchronize_task_record must handle this case by themselves!
-        print('Task {} could not be found (also synchonized). Failing without taking any action...')
+        log.warning('Task {} could not be found (also synchonized). Failing without taking any action...')
         pass
     except (AssertionError, Exception) as e:
         # task_nursery.running pssh exceptions are also catched here
-        print('Unable to synchronize Task {}, reason: {}'.format(task_id, e))
-        print('Task {} status was: {}'.format(task_id, task.status.name))
+        log.error('Unable to synchronize Task {}, reason: {}'.format(task_id, e))
+        log.debug('Task {} status was: {}'.format(task_id, task.status.name))
         task.status = TaskStatus.unsynchronized
         task.save()
-        print('Task {} is now: {}'.format(task_id, task.status.name))
+        log.debug('Task {} is now: {}'.format(task_id, task.status.name))
     else:
-        print('[BEFORE SYNC] Task {} status was: {}'.format(task_id, task.status.name))
+        log.debug('[BEFORE SYNC] Task {} status was: {}'.format(task_id, task.status.name))
         change_status_msg = '[AFTER SYNC] Task {id} is now: {curr_status}'
         if task.pid not in active_sessions_pids:
             if task.status is TaskStatus.running:
                 task.status = TaskStatus.terminated
-                print(change_status_msg.format(id=task_id, curr_status=task.status.name))
+                log.debug(change_status_msg.format(id=task_id, curr_status=task.status.name))
             if task.status is TaskStatus.unsynchronized:
                 task.status = TaskStatus.not_running
-                print(change_status_msg.format(id=task_id, curr_status=task.status.name))
+                log.debug(change_status_msg.format(id=task_id, curr_status=task.status.name))
             task.pid = None
             task.save()
 
@@ -97,15 +97,15 @@ def synchronize_task_record(func: Callable[[int], Any]) -> Callable[[int], Any]:
         if task_id:
             synchronize(task_id)
         else:
-            print('Synchronization aborted!')
-            print('Task id not found in {}(), args: {}, kwargs: {}'.format(func.__name__, args, kwargs))
+            log.critical('Synchronization aborted!')
+            log.critical('Task id not found in {}(), args: {}, kwargs: {}'.format(func.__name__, args, kwargs))
         return func(*args, **kwargs)
 
     return sync_wrapper
 
 
 # FIXME Maybe camelCased arguments? (API client standpoint)
-#  GET /tasks?user_id=X?sync_all=1
+#  GET /tasks?userId=X?syncAll=1
 # FIXME Revert @jwt_required
 def get_all(userId: Optional[int], syncAll: Optional[bool]) -> List[Dict]:
     """Fetches either all Task records or only those in relation with specific user.
@@ -162,7 +162,6 @@ def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     else:
         content, status = {'msg': T['create']['success'], 'task': new_task.as_dict}, 201
     finally:
-        print('=================')
         return content, status
 
 
@@ -204,7 +203,7 @@ def update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCo
                 new_value = try_parse_input_datetime(new_value)
             else:
                 # Check that every other field matches
-                assert hasattr(task, field_name), 'task object has no {} attribute'.format(field_name)
+                assert hasattr(task, field_name), 'task has no {} column'.format(field_name)
             setattr(task, field_name, new_value)
         task.save()
     except NoResultFound:
@@ -321,23 +320,16 @@ def terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[Content, H
         log.critical(e)
         content, status = {'msg': G['internal_error']}, 500
     else:
-        print('Task {} is now: {}'.format(task.id, task.status.name))
         content, status = {'msg': T['terminate']['success'], 'exit_code': exit_code}, 200
     finally:
         return content, status
 
 
-# GET /tasks/{id}/spawn
-# FIXME Revert @jwt_required
 @synchronize_task_record
-def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
-    """Spawns command stored in Task db record (task.command).
-
-    It won't allow for spawning task which is currently running (sync + status check).
-    If spawn operation has succeeded then `running` status is set.
-    """
+def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
+
         assert task.status is not TaskStatus.running, 'task is already running'
         assert task.command, 'command is empty'
         assert task.host, 'hostname is empty'
@@ -362,24 +354,44 @@ def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': G['internal_error']}, 500
     else:
-        print('Task {} is now: {}'.format(task.id, task.status.name))
+        log.info('Task {} is now: {}'.format(task.id, task.status.name))
         content, status = {'msg': T['spawn']['success'], 'pid': pid}, 200
     finally:
         return content, status
 
 
-# GET /tasks/{id}/log
-def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
-    """Fetches log file created by spawned task (through stdout redirect).
+# GET /tasks/{id}/spawn
+@jwt_required
+def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
+    """Spawns command stored in Task db record (task.command).
 
-    It relies on reading files located on filesystem, via connection with `task.user.username@task.host`
-    If file does not exist there's no way to fetch it from database (currently).
-    File names must be named in one fashion (standard defined in `task_nursery.fetch_log`,
-    currently: `task_<id>.log`). Renaming them manually will lead to inconsistency or 'Not Found' errors.
-
-    `tail` argument allows for returning only the last few lines (10 is default for `tail` program).
-    For more details, see,: `task_nursery.fetch_log`.
+    It won't allow for spawning task which is currently running (sync + status check).
+    If spawn operation has succeeded then `running` status is set.
     """
+    try:
+        task = Task.get(id)
+        assert task.user_id == get_jwt_identity(), 'Not an owner'
+    except NoResultFound as e:
+        log.error(e)
+        content, status = {'msg': T['not_found']}, 404
+    except AssertionError:
+        content, status = {'msg': G['unpriviliged']}, 403
+    else:
+        content, status = business_spawn(id)
+    finally:
+        return content, status
+
+
+def is_priviliged(user_id: int, task_id: int) -> bool:
+    current_user_id = get_jwt_identity()
+    claims = get_jwt_claims()
+
+    is_owner = user_id == current_user_id
+    is_admin = 'admin' in claims['roles']
+    return is_owner or is_admin
+
+
+def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
         assert task.host, 'hostname is empty'
@@ -398,6 +410,32 @@ def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
         content, status = {'msg': G['internal_error']}, 500
     else:
         content, status = {'msg': T['get_log']['success'], 'stdout_lines': list(stdout_gen)}, 200
+    finally:
+        return content, status
+
+
+# GET /tasks/{id}/log
+@jwt_required
+def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
+    """Fetches log file created by spawned task (through stdout redirect).
+
+    It relies on reading files located on filesystem, via connection with `task.user.username@task.host`
+    If file does not exist there's no way to fetch it from database (currently).
+    File names must be named in one fashion (standard defined in `task_nursery.fetch_log`,
+    currently: `task_<id>.log`). Renaming them manually will lead to inconsistency or 'Not Found' errors.
+
+    `tail` argument allows for returning only the last few lines (10 is default for `tail` program).
+    For more details, see,: `task_nursery.fetch_log`.
+    """
+    try:
+        task = Task.get(id)
+        assert is_priviliged(task.user_id, task.id)
+    except NoResultFound:
+        content, status = {'msg': T['not_found']}, 404
+    except AssertionError:
+        content, status = G['unpriviliged'], 403
+    else:
+        content, status = business_get_log(id, tail)
     finally:
         return content, status
 
@@ -429,7 +467,7 @@ if __name__ == '__main__':
             ==> Manual task controller test suite: <==
 
             1) Create task record
-            2) Spawn (id)
+            2) Spawn one (id) or all
             3) Get one (id)
             4) Get multiple (all or by user id)
             5) Interrupt/Terminate/Kill (id)
@@ -453,9 +491,16 @@ if __name__ == '__main__':
             print()
             print('Created with ID: ', content.get('task').get('id'))
         elif action == '2':
-            task_id = input('ID > ')
-            content, status = spawn(int(task_id))
-            print(content, status)
+            task_id = input('ID or Enter for all> ')
+            if task_id == '':
+                content, status = get_all(userId=None, syncAll=False)
+                tasks = content['tasks']
+                for task in tasks:
+                    content, status = business_spawn(task['id'])
+                    print(content, status)
+            else:
+                content, status = business_spawn(int(task_id))
+                print(content, status)
         elif action == '3':
             task_id = input('ID > ')
             task = get(int(task_id))
@@ -466,9 +511,9 @@ if __name__ == '__main__':
             sync = True if input('Want synchronized records? (y/n) > ') == 'y' else False
 
             if task_id:
-                tasks = get_all(user_id=int(task_id), sync_all=sync)
+                tasks = get_all(userId=int(task_id), syncAll=sync)
             else:
-                tasks = get_all(user_id=None, sync_all=sync)
+                tasks = get_all(userId=None, syncAll=sync)
             print('[')
             print(*tasks, sep=',\n')
             print(']')
