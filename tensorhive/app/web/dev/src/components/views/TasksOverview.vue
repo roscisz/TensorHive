@@ -191,6 +191,14 @@
               </template>
               <span>Edit task</span>
             </v-tooltip>
+            <v-tooltip top>
+              <template v-slot:activator="{ on }">
+                <v-icon v-on="on" @click="removeTask(props.item.id)">
+                  delete
+                </v-icon>
+              </template>
+              <span>Remove task</span>
+            </v-tooltip>
           </td>
         </tr>
       </template>
@@ -397,30 +405,6 @@ export default {
       }
     },
 
-    getTask: function (id) {
-      api
-        .request('get', '/tasks/' + id, this.$store.state.accessToken)
-        .then(response => {
-          this.updateTask(id, response.data.task)
-          this.snackbar = false
-          this.actionFlag = false
-        })
-        .catch(error => {
-          console.log(error)
-          this.snackbar = false
-          this.actionFlag = false
-        })
-    },
-
-    updateTask: function (id, newData) {
-      for (var index in this.tasks) {
-        if (this.tasks[index].id === id) {
-          this.tasks[index] = newData
-        }
-      }
-      this.tableKey++
-    },
-
     spawnTasks: function (id) {
       this.actionType = 'spawn'
       this.prepareActionLoop(id)
@@ -518,6 +502,53 @@ export default {
       this.newHostname = task.hostname
       this.newCommand = task.command
       this.showModalEdit = true
+    },
+
+    getTask: function (id) {
+      api
+        .request('get', '/tasks/' + id, this.$store.state.accessToken)
+        .then(response => {
+          this.updateTask(id, response.data.task)
+          this.snackbar = false
+          this.actionFlag = false
+        })
+        .catch(error => {
+          console.log(error)
+          this.snackbar = false
+          this.actionFlag = false
+        })
+    },
+
+    updateTask: function (id, newData) {
+      for (var index in this.tasks) {
+        if (this.tasks[index].id === id) {
+          if (newData !== null) {
+            this.tasks[index] = newData
+          } else {
+            this.tasks.splice(index, 1)
+          }
+        }
+      }
+      this.tableKey++
+    },
+
+    removeTask: function (id) {
+      if (!this.actionFlag) {
+        this.snackbar = true
+        this.actionFlag = true
+        api
+          .request('delete', '/tasks/' + id, this.$store.state.accessToken)
+          .then(response => {
+            this.snackbar = false
+            this.actionFlag = false
+            this.updateTask(id, null)
+          })
+          .catch(error => {
+            console.log(error)
+            this.snackbar = false
+            this.actionFlag = false
+          })
+      }
     },
 
     getLog: function (id) {
