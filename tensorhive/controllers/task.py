@@ -563,10 +563,10 @@ if __name__ == '__main__':
         action = input('> ')
         if action == '1':
             now = datetime.utcnow()
-            if input('Want schedule spawn: now-20s, terminate: now+20s? (y/n) > ') == 'y':
+            if input('Want schedule spawn: now+20s, terminate: now+40s? (y/n) > ') == 'y':
                 offset = timedelta(seconds=20)
-                content, status = create(
-                    dict(userId=1, hostname=host, command=cmd, spawnAt=now - offset, terminateAt=now + offset))
+                content, status = business_create(
+                    dict(userId=1, hostname=host, command=cmd, spawnAt=now + offset, terminateAt=now + 2 * offset))
             else:
                 content, status = business_create(dict(userId=1, hostname=host, command=cmd))
             print(content, status)
