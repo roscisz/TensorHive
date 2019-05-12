@@ -137,7 +137,7 @@ def business_get_all(user_id: Optional[int], sync_all: Optional[bool]) -> List[D
 def get_all(userId: Optional[int], syncAll: Optional[bool]) -> List[Dict]:
     user_id, sync_all = userId, syncAll
     try:
-        if userId:
+        if user_id:
             # Owner or admin can fetch
             assert get_jwt_identity() == user_id or is_admin()
         else:
@@ -147,7 +147,7 @@ def get_all(userId: Optional[int], syncAll: Optional[bool]) -> List[Dict]:
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError:
-        content, status = G['unpriviliged'], 403
+        content, status = {'msg': G['unpriviliged']}, 403
     else:
         content, status = business_get_all(user_id, sync_all)
     finally:
@@ -194,7 +194,7 @@ def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError:
-        content, status = G['unpriviliged'], 403
+        content, status = {'msg': G['unpriviliged']}, 403
     else:
         content, status = business_create(task)
     finally:
@@ -226,7 +226,7 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError:
-        content, status = G['unpriviliged'], 403
+        content, status = {'msg': G['unpriviliged']}, 403
     else:
         content, status = business_get(id)
     finally:
@@ -277,7 +277,7 @@ def update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCo
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError:
-        content, status = G['unpriviliged'], 403
+        content, status = {'msg': G['unpriviliged']}, 403
     else:
         content, status = business_update(id, newValues)
     finally:
@@ -312,9 +312,9 @@ def destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError:
-        content, status = G['unpriviliged'], 403
+        content, status = {'msg': G['unpriviliged']}, 403
     else:
-        content, status = business_destroy(id, gracefully)
+        content, status = business_destroy(id)
     finally:
         return content, status
 
@@ -406,7 +406,7 @@ def terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[Content, H
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError:
-        content, status = G['unpriviliged'], 403
+        content, status = {'msg': G['unpriviliged']}, 403
     else:
         content, status = business_terminate(id, gracefully)
     finally:
@@ -512,7 +512,7 @@ def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError:
-        content, status = G['unpriviliged'], 403
+        content, status = {'msg': G['unpriviliged']}, 403
     else:
         content, status = business_get_log(id, tail)
     finally:

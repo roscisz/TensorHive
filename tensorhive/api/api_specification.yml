@@ -24,6 +24,12 @@ paths:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['unpriviliged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
       security:
@@ -49,6 +55,12 @@ paths:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['unpriviliged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
       security:
@@ -83,6 +95,12 @@ paths:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['unpriviliged']}}
         409:
           description: {{RESPONSES['user']['create']['failure']['duplicate']}}
         422:
@@ -121,6 +139,12 @@ paths:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['unpriviliged']}}
         409:
           description: {{RESPONSES['user']['create']['failure']['duplicate']}}
         422:
@@ -151,6 +175,12 @@ paths:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['unpriviliged']}}
         404:
           description: {{RESPONSES['user']['not_found']}}
         422:
@@ -541,6 +571,12 @@ paths:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['unpriviliged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
       security:
@@ -577,6 +613,12 @@ paths:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['unpriviliged']}}
         # 409:
         #   description: {{RESPONSES['task']['create']['failure']['duplicate']}}
         422:
@@ -613,6 +655,12 @@ paths:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['unpriviliged']}}
         404:
           description: {{RESPONSES['task']['not_found']}}
           schema:
@@ -668,6 +716,12 @@ paths:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['unpriviliged']}}
         404:
           description: {{RESPONSES['task']['not_found']}}
           schema:
@@ -712,6 +766,12 @@ paths:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['unpriviliged']}}
         404:
           description: {{RESPONSES['task']['not_found']}}
           schema:
@@ -772,6 +832,12 @@ paths:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['unpriviliged']}}
         404:
           description: {{RESPONSES['task']['get_log']['failure']['not_found']}}
           schema:
@@ -885,6 +951,12 @@ paths:
                 example: 4321
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['unpriviliged']}}
         404:
           description: {{RESPONSES['task']['not_found']}}
           schema:
@@ -968,6 +1040,12 @@ paths:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['unpriviliged']}}
         404:
           description: {{RESPONSES['task']['not_found']}}
           schema:
