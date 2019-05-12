@@ -39,6 +39,40 @@
       :lines="logs"
       :path="path"
     />
+    <v-dialog
+      v-model="showModalHowItWorks"
+      width="500"
+    >
+      <v-card>
+        <v-card-title
+          class="headline grey lighten-2"
+          primary-title
+        >
+          How it works
+        </v-card-title>
+        <v-card-text>
+          Your tasks are managed by `screen` program installed on each machine. You can attach
+          to/close them as they are running. Screen sessions created by TensorHive have custom
+          names so you won't be confused which is which.<br><br>
+          When your task command stops executing, screen session will disappear from `screen -ls`
+          but stdout produced your process will be redirected to a log file.
+          Logs are automatically gathered and stored on that machine under `~/TensorHiveLogs`
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="primary"
+            flat
+            @click="showModalHowItWorks = false"
+          >
+            Close
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-data-table
       v-model="selected"
       :headers="headers"
@@ -61,6 +95,19 @@
                 hide-details
                 @click.stop="toggleAll"
               ></v-checkbox>
+              <v-tooltip
+                right
+              >
+                <template v-slot:activator="{ on }">
+                  <v-icon
+                    v-on="on"
+                    @click="showModalHowItWorks = true"
+                  >
+                    info
+                  </v-icon>
+                </template>
+                <span>How it works</span>
+              </v-tooltip>
             </v-layout>
           </th>
           <th
@@ -187,6 +234,7 @@ export default {
       showModalCreate: false,
       showModalEdit: false,
       showModalSchedule: false,
+      showModalHowItWorks: false,
       showModalLog: false,
       taskId: -1,
       newHostname: '',
