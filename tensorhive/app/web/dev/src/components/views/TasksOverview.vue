@@ -8,6 +8,17 @@
       :hosts="hosts"
       :actionFlag="actionFlag"
     />
+    <TaskEdit
+      :show-modal="showModalEdit"
+      @close="showModalEdit = false"
+      @getTask="getTask(...arguments)"
+      @changeActionFlag="changeActionFlag(...arguments)"
+      @changeSnackbar="changeSnackbar(...arguments)"
+      :taskId="taskId"
+      :hostname="newHostname"
+      :command="newCommand"
+      :actionFlag="actionFlag"
+    />
     <v-data-table
       v-model="selected"
       :headers="headers"
@@ -17,6 +28,7 @@
       select-all
       item-key="id"
       class="elevation-1"
+      :key="tableKey"
     >
       <template v-slot:headers="props">
         <tr>
@@ -62,7 +74,16 @@
           <td>{{ props.item.status }}</td>
           <td>{{ props.item.spawnAt }}</td>
           <td>{{ props.item.terminateAt }}</td>
-          <td></td>
+          <td>
+            <v-tooltip top>
+              <template v-slot:activator="{ on }">
+                <v-icon v-on="on" @click="editTask(props.item)">
+                  edit
+                </v-icon>
+              </template>
+              <span>Edit task</span>
+            </v-tooltip>
+          </td>
         </tr>
       </template>
     </v-data-table>
@@ -90,9 +111,11 @@
 <script>
 import api from '../../api'
 import TaskCreate from './tasks_overview/TaskCreate.vue'
+import TaskEdit from './tasks_overview/TaskEdit.vue'
 export default {
   components: {
-    TaskCreate
+    TaskCreate,
+    TaskEdit
   },
   data () {
     return {
@@ -114,6 +137,11 @@ export default {
       hostnames: [],
       hosts: {},
       showModalCreate: false,
+      showModalEdit: false,
+      taskId: -1,
+      newHostname: '',
+      newCommand: '',
+      tableKey: 0,
       interval: null,
       time: 60000,
       initialSyncFlag: false,
@@ -144,8 +172,12 @@ export default {
   },
 
   methods: {
-    changeActionFlag (bool) {
+	changeActionFlag (bool) {
       this.actionFlag = bool
+    },
+
+    changeSnackbar (bool) {
+      this.snackbar = bool
     },
 
     toggleAll () {
@@ -190,30 +222,71 @@ export default {
 
     getTasks: function (sync) {
       if (!this.actionFlag) {
-        this.actionFlag = true
         this.snackbar = true
+        this.actionFlag = true
         api
           .request('get', '/tasks?userId=' + this.$store.state.id + '&syncAll=' + sync, this.$store.state.accessToken)
           .then(response => {
+            this.snackbar = false
             this.actionFlag = false
             this.tasks = response.data.tasks
-            this.snackbar = false
             if (!sync) {
               this.initialSyncFlag = !this.initialSyncFlag
             }
           })
           .catch(error => {
             console.log(error)
+            this.snackbar = false
             this.actionFlag = false
           })
       }
+    },
+
+    getTask: function (id) {
+      api
+        .request('get', '/tasks/' + id, this.$store.state.accessToken)
+        .then(response => {
+          this.updateTask(id, response.data.task)
+          this.snackbar = false
+          this.actionFlag = false
+        })
+        .catch(error => {
+          console.log(error)
+          this.snackbar = false
+          this.actionFlag = false
+        })
+    },
+
+    updateTask: function (id, newData) {
+      for (var index in this.tasks) {
+        if (this.tasks[index].id === id) {
+          this.tasks[index] = newData
+        }
+      }
+      this.tableKey++
+    },
+
+    editTask: function (task) {
+      this.taskId = task.id
+      this.newHostname = task.hostname
+      this.newCommand = task.command
+      this.showModalEdit = true
     }
   }
 }
 </script>
 <style>
+.parameter-name-input{
+  max-width: 150px;
+}
 .task-command{
   background-color: #f8f9fa;
   border: 1px solid #eaecf0;
+}
+.space{
+  width: 5px;
+}
+.task-select{
+  max-width:100px;
 }
 </style>
