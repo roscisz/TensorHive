@@ -19,6 +19,20 @@
       :command="newCommand"
       :actionFlag="actionFlag"
     />
+
+    <TaskSchedule
+      :show-modal="showModalSchedule"
+      @close="showModalSchedule = false"
+      @updateTask="updateTask(...arguments)"
+      @changeActionFlag="changeActionFlag(...arguments)"
+      @changeSnackbar="changeSnackbar(...arguments)"
+      :taskId="taskId"
+      :spawnTime="newSpawnTime"
+      :terminateTime="newTerminateTime"
+      :actionFlag="actionFlag"
+      :multipleFlag="multipleFlag"
+      :selected="selected"
+    />
     <v-data-table
       v-model="selected"
       :headers="headers"
@@ -77,6 +91,14 @@
           <td>
             <v-tooltip top>
               <template v-slot:activator="{ on }">
+                <v-icon v-on="on" @click="scheduleTasks(props.item)">
+                  timer
+                </v-icon>
+              </template>
+              <span>Schedule task</span>
+            </v-tooltip>
+            <v-tooltip top>
+              <template v-slot:activator="{ on }">
                 <v-icon v-on="on" @click="editTask(props.item)">
                   edit
                 </v-icon>
@@ -89,6 +111,14 @@
     </v-data-table>
     <div class="text-xs-center pt-2">
       <v-btn color="primary" @click="showModalCreate=true">Create tasks</v-btn>
+      <v-tooltip top>
+        <template v-slot:activator="{ on }">
+          <v-icon v-on="on" @click="scheduleTasks(null)">
+            timer
+          </v-icon>
+        </template>
+        <span>Schedule selected tasks</span>
+      </v-tooltip>
     </div>
     <v-snackbar
       color="amber"
@@ -112,10 +142,12 @@
 import api from '../../api'
 import TaskCreate from './tasks_overview/TaskCreate.vue'
 import TaskEdit from './tasks_overview/TaskEdit.vue'
+import TaskSchedule from './tasks_overview/TaskSchedule.vue'
 export default {
   components: {
     TaskCreate,
-    TaskEdit
+    TaskEdit,
+    TaskSchedule
   },
   data () {
     return {
@@ -138,15 +170,20 @@ export default {
       hosts: {},
       showModalCreate: false,
       showModalEdit: false,
+      showModalSchedule: false,
       taskId: -1,
       newHostname: '',
       newCommand: '',
+      newSpawnTime: '',
+      newTerminateTime: '',
       tableKey: 0,
       interval: null,
       time: 60000,
       initialSyncFlag: false,
       snackbar: false,
-      actionFlag: false
+      selectedIndex: 0,
+      actionFlag: false,
+      multipleFlag: false
     }
   },
 
@@ -172,7 +209,7 @@ export default {
   },
 
   methods: {
-	changeActionFlag (bool) {
+    changeActionFlag (bool) {
       this.actionFlag = bool
     },
 
@@ -256,7 +293,6 @@ export default {
           this.actionFlag = false
         })
     },
-
     updateTask: function (id, newData) {
       for (var index in this.tasks) {
         if (this.tasks[index].id === id) {
@@ -264,6 +300,18 @@ export default {
         }
       }
       this.tableKey++
+    },
+
+    scheduleTasks: function (task) {
+      if (task != null) {
+        this.multipleFlag = false
+        this.taskId = task.id
+        this.newSpawnTime = task.spawn_at
+        this.newTerminateTime = task.terminate_at
+      } else {
+        this.multipleFlag = true
+      }
+      this.showModalSchedule = true
     },
 
     editTask: function (task) {
