@@ -147,9 +147,7 @@ export default {
     },
 
     updateReservation: function (reservation, newTime, newTitle, newDescription) {
-      var toUpdate = {
-        id: reservation.id
-      }
+      var toUpdate = {}
       if (reservation.start.toISOString() !== newTime[0].toISOString()) {
         toUpdate['start'] = newTime[0].toISOString()
       }
@@ -163,7 +161,7 @@ export default {
         toUpdate['description'] = newDescription
       }
       api
-        .request('put', '/reservations', this.$store.state.accessToken, toUpdate)
+        .request('put', '/reservations/' + reservation.id, this.$store.state.accessToken, toUpdate)
         .then(response => {
           this.calendar.fullCalendar('refetchEvents')
         })
