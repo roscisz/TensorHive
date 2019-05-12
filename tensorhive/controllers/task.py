@@ -15,19 +15,23 @@ log = logging.getLogger(__name__)
 T = API.RESPONSES['task']
 S = API.RESPONSES['screen-sessions']
 G = API.RESPONSES['general']
+"""
+TODO Group business functions into one place
+TODO May want to have 1 function per endpoint. 
+My goal was to separate authorization from controllers' logic, so that
+manual and automatic testing don't require patching Flask context (@jwt_required breaks things)
 
-# TODO print -> logging everywhere
-# TODO add new responses to yml
-# TODO proper content, status in every endpoint
-# TODO Add @jwt_required
-# TODO Add security bearer to endpoints in API spec
-# TODO Check priviliges
-# TODO Add descriptions to boring CRUD functions
-
+"""
 # Typing aliases
 Content = Dict[str, Any]
 HttpStatusCode = int
 TaskId = int
+
+
+# TODO Move to utils
+def is_admin():
+    claims = get_jwt_claims()
+    return 'admin' in claims['roles']
 
 
 # TODO May want to move it somewhere else
@@ -104,18 +108,14 @@ def synchronize_task_record(func: Callable[[int], Any]) -> Callable[[int], Any]:
     return sync_wrapper
 
 
-# FIXME Maybe camelCased arguments? (API client standpoint)
-#  GET /tasks?userId=X?syncAll=1
-# FIXME Revert @jwt_required
-def get_all(userId: Optional[int], syncAll: Optional[bool]) -> List[Dict]:
+def business_get_all(user_id: Optional[int], sync_all: Optional[bool]) -> List[Dict]:
     """Fetches either all Task records or only those in relation with specific user.
     Allows for synchronizing state of each Task out-of-the-box.
 
     In typical scenario API client would want to get all records without sync and
     then run sync each records individually.
     """
-    user_id, sync_all = userId, syncAll
-    # FIXME Exceptions should never occur, but need to experiment more
+    # TODO Exceptions should never occur, but need to experiment more
     if user_id:
         # Returns [] if such User with such id does not exist (SQLAlchemy behavior)
         tasks = Task.query.filter(Task.user_id == user_id).all()
@@ -132,9 +132,29 @@ def get_all(userId: Optional[int], syncAll: Optional[bool]) -> List[Dict]:
     return {'msg': T['all']['success'], 'tasks': results}, 200
 
 
-# POST /tasks
-# FIXME Revert @jwt_required
-def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
+#  GET /tasks?userId=X?syncAll=1
+@jwt_required
+def get_all(userId: Optional[int], syncAll: Optional[bool]) -> List[Dict]:
+    user_id, sync_all = userId, syncAll
+    try:
+        if userId:
+            # Owner or admin can fetch
+            assert get_jwt_identity() == user_id or is_admin()
+        else:
+            # Only admin can fetch all
+            assert is_admin()
+
+    except NoResultFound:
+        content, status = {'msg': T['not_found']}, 404
+    except AssertionError:
+        content, status = G['unpriviliged'], 403
+    else:
+        content, status = business_get_all(user_id, sync_all)
+    finally:
+        return content, status
+
+
+def business_create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """Creates new Task db record.
     Fields which require to be of datetime type are explicitly converted here.
     """
@@ -165,10 +185,24 @@ def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-# GET /tasks/{id}
-# FIXME Revert @jwt_required
+# POST /tasks
+@jwt_required
+def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
+    try:
+        # User is not allowed to create task for someone else
+        assert task.get('userId') == get_jwt_identity()
+    except NoResultFound:
+        content, status = {'msg': T['not_found']}, 404
+    except AssertionError:
+        content, status = G['unpriviliged'], 403
+    else:
+        content, status = business_create(task)
+    finally:
+        return content, status
+
+
 @synchronize_task_record
-def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
+def business_get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     """Fetches one Task db record"""
     try:
         task = Task.get(id)
@@ -183,13 +217,25 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-# PUT /tasks/{id}
-# FIXME Revert @jwt_required
-# FIXME Check if task belongs to user! (403, unpriviliged)
+# GET /tasks/{id}
+@jwt_required
+def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
+    try:
+        task = Task.get(id)
+        assert get_jwt_identity() == task.user_id or is_admin()
+    except NoResultFound:
+        content, status = {'msg': T['not_found']}, 404
+    except AssertionError:
+        content, status = G['unpriviliged'], 403
+    else:
+        content, status = business_get(id)
+    finally:
+        return content, status
+
+
 # TODO What if task is already running: should we allow for updating command, hostname, etc. Currently it should affect only next usess
-def update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
+def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """Updates certain fields of a Task db record, see `allowed_fields`."""
-    new_values = newValues
     allowed_fields = {'command', 'hostname', 'spawnAt', 'terminateAt'}
     try:
         assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
@@ -222,12 +268,24 @@ def update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCo
         return content, status
 
 
-# DELETE /tasks/{id}
-# FIXME Revert @jwt_required
-# FIXME Check if task belongs to user (id from JWT)! (403, unpriviliged)
-# TODO Maybe wen don't need to synchronize? (but I think we need to terminate task first)
+# PUT /tasks/{id}
+@jwt_required
+def update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
+    try:
+        task = Task.get(id)
+        assert task.user_id == get_jwt_identity(), 'Not an owner'
+    except NoResultFound:
+        content, status = {'msg': T['not_found']}, 404
+    except AssertionError:
+        content, status = G['unpriviliged'], 403
+    else:
+        content, status = business_update(id, newValues)
+    finally:
+        return content, status
+
+
 @synchronize_task_record
-def destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
+def business_destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     """Deletes a Task db record. Requires terminating task manually in advance."""
     try:
         task = Task.get(id)
@@ -241,6 +299,22 @@ def destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         content, status = {'msg': G['internal_error']}, 500
     else:
         content, status = {'msg': T['delete']['success']}, 200
+    finally:
+        return content, status
+
+
+# DELETE /tasks/{id}
+@jwt_required
+def destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
+    try:
+        task = Task.get(id)
+        assert task.user_id == get_jwt_identity(), 'Not an owner'
+    except NoResultFound:
+        content, status = {'msg': T['not_found']}, 404
+    except AssertionError:
+        content, status = G['unpriviliged'], 403
+    else:
+        content, status = business_destroy(id, gracefully)
     finally:
         return content, status
 
@@ -270,10 +344,8 @@ def screen_sessions(username: str, hostname: str) -> Tuple[Content, HttpStatusCo
         return content, status
 
 
-# GET /tasks/{id}/terminate
-# FIXME Revert @jwt_required
 @synchronize_task_record
-def terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[Content, HttpStatusCode]:
+def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[Content, HttpStatusCode]:
     """Sends SIGINT (default) or SIGKILL to process with pid that is stored in Task db record.
 
     In order to send SIGKILL, pass `gracefully=False` to `terminate` function.
@@ -325,8 +397,29 @@ def terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[Content, H
         return content, status
 
 
+# GET /tasks/{id}/terminate
+@jwt_required
+def terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[Content, HttpStatusCode]:
+    try:
+        task = Task.get(id)
+        assert get_jwt_identity() == task.user_id or is_admin()
+    except NoResultFound:
+        content, status = {'msg': T['not_found']}, 404
+    except AssertionError:
+        content, status = G['unpriviliged'], 403
+    else:
+        content, status = business_terminate(id, gracefully)
+    finally:
+        return content, status
+
+
 @synchronize_task_record
 def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
+    """Spawns command stored in Task db record (task.command).
+
+    It won't allow for spawning task which is currently running (sync + status check).
+    If spawn operation has succeeded then `running` status is set.
+    """
     try:
         task = Task.get(id)
 
@@ -363,11 +456,6 @@ def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 # GET /tasks/{id}/spawn
 @jwt_required
 def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
-    """Spawns command stored in Task db record (task.command).
-
-    It won't allow for spawning task which is currently running (sync + status check).
-    If spawn operation has succeeded then `running` status is set.
-    """
     try:
         task = Task.get(id)
         assert task.user_id == get_jwt_identity(), 'Not an owner'
@@ -382,16 +470,17 @@ def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-def is_priviliged(user_id: int, task_id: int) -> bool:
-    current_user_id = get_jwt_identity()
-    claims = get_jwt_claims()
-
-    is_owner = user_id == current_user_id
-    is_admin = 'admin' in claims['roles']
-    return is_owner or is_admin
-
-
 def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
+    """Fetches log file created by spawned task (through stdout redirect).
+
+    It relies on reading files located on filesystem, via connection with `task.user.username@task.host`
+    If file does not exist there's no way to fetch it from database (currently).
+    File names must be named in one fashion (standard defined in `task_nursery.fetch_log`,
+    currently: `task_<id>.log`). Renaming them manually will lead to inconsistency or 'Not Found' errors.
+
+    `tail` argument allows for returning only the last few lines (10 is default for `tail` program).
+    For more details, see,: `task_nursery.fetch_log`.
+    """
     try:
         task = Task.get(id)
         assert task.host, 'hostname is empty'
@@ -417,19 +506,9 @@ def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
 # GET /tasks/{id}/log
 @jwt_required
 def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
-    """Fetches log file created by spawned task (through stdout redirect).
-
-    It relies on reading files located on filesystem, via connection with `task.user.username@task.host`
-    If file does not exist there's no way to fetch it from database (currently).
-    File names must be named in one fashion (standard defined in `task_nursery.fetch_log`,
-    currently: `task_<id>.log`). Renaming them manually will lead to inconsistency or 'Not Found' errors.
-
-    `tail` argument allows for returning only the last few lines (10 is default for `tail` program).
-    For more details, see,: `task_nursery.fetch_log`.
-    """
     try:
         task = Task.get(id)
-        assert is_priviliged(task.user_id, task.id)
+        assert get_jwt_identity() == task.user_id or is_admin()
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError:
@@ -486,7 +565,7 @@ if __name__ == '__main__':
                 content, status = create(
                     dict(userId=1, hostname=host, command=cmd, spawnAt=now - offset, terminateAt=now + offset))
             else:
-                content, status = create(dict(userId=1, hostname=host, command=cmd))
+                content, status = business_create(dict(userId=1, hostname=host, command=cmd))
             print(content, status)
             print()
             print('Created with ID: ', content.get('task').get('id'))
@@ -503,17 +582,17 @@ if __name__ == '__main__':
                 print(content, status)
         elif action == '3':
             task_id = input('ID > ')
-            task = get(int(task_id))
-            print(task)
+            content, status = business_get(int(task_id))
+            print(content, status)
         elif action == '4':
             print('Press enter for all')
             task_id = input('User ID > ')
             sync = True if input('Want synchronized records? (y/n) > ') == 'y' else False
 
             if task_id:
-                tasks = get_all(userId=int(task_id), syncAll=sync)
+                tasks = business_get_all(user_id=int(task_id), sync_all=sync)
             else:
-                tasks = get_all(userId=None, syncAll=sync)
+                tasks = business_get_all(user_id=None, sync_all=sync)
             print('[')
             print(*tasks, sep=',\n')
             print(']')
@@ -526,18 +605,18 @@ if __name__ == '__main__':
                 gracefully = None
             else:
                 gracefully = False
-            content, status = terminate(int(task_id), gracefully=gracefully)
+            content, status = business_terminate(int(task_id), gracefully=gracefully)
             print(content, status)
         elif action == '6':
             task_id = input('ID > ')
             timenow = datetime.utcnow()
-            content, status = update(
+            content, status = business_update(
                 int(task_id),
-                newValues=dict(command='new_command', hostname='miczi.gda.pl', spawnAt=timenow, terminateAt=timenow))
+                new_values=dict(command='new_command', hostname='miczi.gda.pl', spawnAt=timenow, terminateAt=timenow))
             print(content, status)
         elif action == '7':
             task_id = input('ID > ')
-            content, status = destroy(int(task_id))
+            content, status = business_destroy(int(task_id))
             print(content, status)
         elif action == '8':
             import string
@@ -548,7 +627,7 @@ if __name__ == '__main__':
             user.save()
             for _ in range(3):
                 # TODO add spawnAt, terminateAt
-                content, status = create(dict(userId=user.id, hostname=host, command=cmd))
+                content, status = business_create(dict(userId=user.id, hostname=host, command=cmd))
                 print(content, status)
             print(user)
         elif action == '9':
@@ -561,9 +640,9 @@ if __name__ == '__main__':
         elif action == '10':
             task_id = input('ID > ')
             if input('Request full content / Only last lines (y/Enter) > ') == 'y':
-                content, status = get_log(int(task_id), tail=False)
+                content, status = business_get_log(int(task_id), tail=False)
             else:
-                content, status = get_log(int(task_id), tail=True)
+                content, status = business_get_log(int(task_id), tail=True)
             print(content, status)
             print()
             print('\n'.join(content.get('stdout_lines') or []))
