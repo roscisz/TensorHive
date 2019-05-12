@@ -59,11 +59,11 @@ class Task(CRUDModel, Base):
     terminate_at = Column(DateTime, nullable=True)
 
     def __repr__(self):
-        return '<Task id={id}, user={user}, hostname={hostname}, command={command}\n' \
+        return '<Task id={id}, user={user}, name={host}, command={command}\n' \
             '\tpid={pid}, status={status}, spawn_at={spawn_at}, terminate_at={terminate_at}>'.format(
             id=self.id,
             user=self.user,
-            hostname=self.host,
+            host=self.host,
             command=self.command,
             pid=self.pid,
             status=self.status.name,
