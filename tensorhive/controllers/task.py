@@ -17,10 +17,13 @@ S = API.RESPONSES['screen-sessions']
 G = API.RESPONSES['general']
 """
 TODO Group business functions into one place
-TODO May want to have 1 function per endpoint. 
+
+TODO May want to have 1 function per endpoint.
 My goal was to separate authorization from controllers' logic, so that
 manual and automatic testing don't require patching Flask context (@jwt_required breaks things)
 
+In before: some controller MUST have camelCased arguments in order to keep up with API.
+They are aliased to snake_case immediately inside controller body
 """
 # Typing aliases
 Content = Dict[str, Any]
@@ -485,7 +488,7 @@ def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
         task = Task.get(id)
         assert task.host, 'hostname is empty'
         assert task.user, 'user does not exist'
-        stdout_gen = task_nursery.fetch_log(task.host, task.user.username, task.id, tail)
+        stdout_gen, log_path = task_nursery.fetch_log(task.host, task.user.username, task.id, tail)
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except ExitCodeError as e:
@@ -498,7 +501,7 @@ def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': G['internal_error']}, 500
     else:
-        content, status = {'msg': T['get_log']['success'], 'stdout_lines': list(stdout_gen)}, 200
+        content, status = {'msg': T['get_log']['success'], 'path': log_path, 'stdout_lines': list(stdout_gen)}, 200
     finally:
         return content, status
 

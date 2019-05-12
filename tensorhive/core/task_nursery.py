@@ -1,7 +1,7 @@
 from tensorhive.core import ssh
 from tensorhive.core.ssh import HostsConfig, ProxyConfig, Hostname, Username
 from pssh.clients.native import ParallelSSHClient
-from typing import List, Optional, Dict, Iterator
+from typing import List, Optional, Dict, Iterator, Tuple
 import time
 from datetime import datetime
 import logging
@@ -247,7 +247,7 @@ def running(host: Hostname, user: Username) -> List[int]:
     return pids
 
 
-def fetch_log(host: Hostname, user: Username, task_id: int, tail: bool = False) -> Iterator[str]:
+def fetch_log(host: Hostname, user: Username, task_id: int, tail: bool = False) -> Tuple[Iterator[str], str]:
     path = '~/TensorHiveLogs/task_{}.log'.format(task_id)
     program = 'tail' if tail else 'cat'
     command = '{} {}'.format(program, path)
@@ -261,7 +261,7 @@ def fetch_log(host: Hostname, user: Username, task_id: int, tail: bool = False) 
         raise output[host].exception
     if output[host].exit_code != 0:
         raise ExitCodeError(path)
-    return output[host].stdout
+    return output[host].stdout, path
 
 
 if __name__ == '__main__':

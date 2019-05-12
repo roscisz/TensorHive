@@ -820,6 +820,9 @@ paths:
               msg:
                 type: string
                 example: {{RESPONSES['task']['get']['success']}}
+              path:
+                type: string
+                example: ~/TensorHiveLogs/task_99.log
               stdout_lines:
                 type: array
                 items:
