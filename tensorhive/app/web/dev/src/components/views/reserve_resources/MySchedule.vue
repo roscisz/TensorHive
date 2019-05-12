@@ -207,7 +207,11 @@ export default {
           if (!error.hasOwnProperty('response')) {
             this.$emit('showSnackbar', error.message)
           } else {
-            this.$emit('showSnackbar', error.response.data.msg)
+            if (!error.response.data.hasOwnProperty('msg')) {
+              this.$emit('showSnackbar', error.response.data)
+            } else {
+              this.$emit('showSnackbar', error.response.data.msg)
+            }
           }
         })
     },

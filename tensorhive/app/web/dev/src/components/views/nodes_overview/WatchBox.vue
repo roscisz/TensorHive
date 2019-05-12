@@ -197,7 +197,15 @@ export default {
           this.processes = processes
         })
         .catch(error => {
-          this.errorMessage = error.response.data.msg
+          if (!error.hasOwnProperty('response')) {
+            this.errorMessage = error.message
+          } else {
+            if (!error.response.data.hasOwnProperty('msg')) {
+              this.errorMessage = error.response.data
+            } else {
+              this.errorMessage = error.response.data.msg
+            }
+          }
           this.alert = true
         })
     }

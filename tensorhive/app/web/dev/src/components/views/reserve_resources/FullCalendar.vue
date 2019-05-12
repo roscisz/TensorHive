@@ -65,6 +65,18 @@ export default {
   },
 
   methods: {
+    handleError: function (error) {
+      if (!error.hasOwnProperty('response')) {
+        this.$emit('showSnackbar', error.message)
+      } else {
+        if (!error.response.data.hasOwnProperty('msg')) {
+          this.$emit('showSnackbar', error.response.data)
+        } else {
+          this.$emit('showSnackbar', error.response.data.msg)
+        }
+      }
+    },
+
     getEvents: function (start, end, callback) {
       var resourcesString = ''
       if (this.selectedResources.length > 0) {
@@ -90,11 +102,7 @@ export default {
           callback(response.data)
         })
         .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            this.$emit('showSnackbar', error.message)
-          } else {
-            this.$emit('showSnackbar', error.response.data.msg)
-          }
+          this.handleError(error)
         })
       var obj
       this.resourcesCheckboxes = []
@@ -166,11 +174,7 @@ export default {
           this.calendar.fullCalendar('refetchEvents')
         })
         .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            this.$emit('showSnackbar', error.message)
-          } else {
-            this.$emit('showSnackbar', error.response.data.msg)
-          }
+          this.handleError(error)
         })
     },
 
@@ -181,11 +185,7 @@ export default {
           this.calendar.fullCalendar('refetchEvents')
         })
         .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            this.$emit('showSnackbar', error.message)
-          } else {
-            this.$emit('showSnackbar', error.response.data.msg)
-          }
+          this.handleError(error)
         })
     },
 
@@ -196,11 +196,7 @@ export default {
           this.calendar.fullCalendar('refetchEvents')
         })
         .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            this.$emit('showSnackbar', error.message)
-          } else {
-            this.$emit('showSnackbar', error.response.data.msg)
-          }
+          this.handleError(error)
         })
     }
   },
@@ -253,11 +249,7 @@ export default {
               element.find('.fc-title').prepend((response.data.username).bold().big().italics() + '<br/>')
             })
             .catch(error => {
-              if (!error.hasOwnProperty('response')) {
-                this.$emit('showSnackbar', error.message)
-              } else {
-                this.$emit('showSnackbar', error.response.data.msg)
-              }
+              this.handleError(error)
             })
         }
       },

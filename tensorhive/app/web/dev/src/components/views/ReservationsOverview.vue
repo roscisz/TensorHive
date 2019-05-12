@@ -62,7 +62,11 @@ export default {
           if (!error.hasOwnProperty('response')) {
             this.showSnackbar(error.message)
           } else {
-            this.showSnackbar(error.response.data.msg)
+            if (!error.response.data.hasOwnProperty('msg')) {
+              this.showSnackbar(error.response.data)
+            } else {
+              this.showSnackbar(error.response.data.msg)
+            }
           }
         })
     } else {

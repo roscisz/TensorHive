@@ -168,6 +168,18 @@ export default {
   },
 
   methods: {
+    handleError: function (error) {
+      if (!error.hasOwnProperty('response')) {
+        this.errorMessage = error.message
+      } else {
+        if (!error.response.data.hasOwnProperty('msg')) {
+          this.errorMessage = error.response.data
+        } else {
+          this.errorMessage = error.response.data.msg
+        }
+      }
+    },
+
     requestEntry () {
       api
         .request('get', '/user/authorized_keys_entry', this.$store.state.accessToken)
@@ -176,7 +188,7 @@ export default {
           this.showModal = true
         })
         .catch(error => {
-          this.errorMessage = error.response.data.msg
+          this.handleError(error)
           this.modalAlert = true
         })
     },
@@ -205,7 +217,7 @@ export default {
             this.created = true
           })
           .catch(error => {
-            this.errorMessage = error.response.data.msg
+            this.handleError(error)
             this.modalAlert = true
           })
       } else {
@@ -265,7 +277,7 @@ export default {
           }
         })
         .catch(error => {
-          this.errorMessage = error.response.data.msg
+          this.handleError(error)
           this.alert = true
         })
     },

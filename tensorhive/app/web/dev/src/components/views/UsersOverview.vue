@@ -280,6 +280,18 @@ export default {
   },
 
   methods: {
+    handleError: function (error) {
+      if (!error.hasOwnProperty('response')) {
+        this.errorMessage = error.message
+      } else {
+        if (!error.response.data.hasOwnProperty('msg')) {
+          this.errorMessage = error.response.data
+        } else {
+          this.errorMessage = error.response.data.msg
+        }
+      }
+    },
+
     createUser () {
       if (this.modalPassword === this.modalPassword2) {
         const { modalUsername, modalEmail, modalPassword } = this
@@ -291,7 +303,7 @@ export default {
             this.checkUsers()
           })
           .catch(error => {
-            this.errorMessage = error.response.data.msg
+            this.handleError(error)
             this.modalAlert = true
           })
       } else {
@@ -354,11 +366,7 @@ export default {
           })
           .catch(error => {
             this.pagination = {}
-            if (!error.hasOwnProperty('response')) {
-              this.errorMessage = error.message
-            } else {
-              this.errorMessage = error.response.data.msg
-            }
+            this.handleError(error)
             this.alert = true
           })
       } else {
@@ -389,11 +397,7 @@ export default {
         })
         .catch(error => {
           this.pagination = {}
-          if (!error.hasOwnProperty('response')) {
-            this.errorMessage = error.message
-          } else {
-            this.errorMessage = error.response.data.msg
-          }
+          this.handleError(error)
           this.alert = true
         })
     },
@@ -405,11 +409,7 @@ export default {
           this.checkUsers()
         })
         .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            this.errorMessage = error.message
-          } else {
-            this.errorMessage = error.response.data.msg
-          }
+          this.handleError(error)
           this.alert = true
         })
     }

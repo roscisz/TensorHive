@@ -113,11 +113,7 @@ axios.get('static/config.json').then(response => {
             return axios.request(error.config)
           })
           .catch(error => {
-            if (!error.hasOwnProperty('response')) {
-              console.log(error.message)
-            } else {
-              console.log(error.response.data.msg)
-            }
+            this.handleError(error)
             logout()
           })
       }
@@ -135,6 +131,17 @@ axios.get('static/config.json').then(response => {
       store.commit('SET_REFRESH_TOKEN', window.localStorage.getItem('refreshToken'))
       store.commit('SET_ROLE', window.localStorage.getItem('role'))
       store.commit('SET_ID', parseInt(window.localStorage.getItem('userId')))
+    }
+  }
+  function handleError (error) {
+    if (!error.hasOwnProperty('response')) {
+      console.log(error.message)
+    } else {
+      if (!error.response.data.hasOwnProperty('msg')) {
+        console.log(error.response.data)
+      } else {
+        console.log(error.response.data.msg)
+      }
     }
   }
 
@@ -157,20 +164,12 @@ axios.get('static/config.json').then(response => {
                 }
               })
               .catch(error => {
-                if (!error.hasOwnProperty('response')) {
-                  console.log(error.message)
-                } else {
-                  console.log(error.response.data.msg)
-                }
+                handleError(error)
               })
           }
         })
         .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            console.log(error.message)
-          } else {
-            console.log(error.response.data.msg)
-          }
+          this.handleError(error)
         })
     }
     store.commit('SET_USER', null)
