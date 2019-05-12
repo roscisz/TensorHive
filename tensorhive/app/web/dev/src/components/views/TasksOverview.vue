@@ -160,6 +160,23 @@
             </v-tooltip>
             <v-tooltip top>
               <template v-slot:activator="{ on }">
+                <v-icon v-on="on" @click="terminateTasks(props.item.id, null)">
+                  stop
+                </v-icon>
+              </template>
+              <span>Terminate task - does not guarantee that
+                    <br> task will stop (depends on command)</span>
+            </v-tooltip>
+            <v-tooltip top>
+              <template v-slot:activator="{ on }">
+                <v-icon style="font-size:20px;" v-on="on" @click="terminateTasks(props.item.id, false)">
+                  💀
+                </v-icon>
+              </template>
+              <span>Kill task - use when command is more stubborn</span>
+            </v-tooltip>
+            <v-tooltip top>
+              <template v-slot:activator="{ on }">
                 <v-icon style="font-size:20px;" v-on="on" @click="getLog(props.item.id)">
                   description
                 </v-icon>
@@ -195,6 +212,23 @@
           </v-icon>
         </template>
         <span>Spawn selected tasks</span>
+      </v-tooltip>
+      <v-tooltip top>
+        <template v-slot:activator="{ on }">
+          <v-icon v-on="on" @click="terminateTasks(null, null)">
+            stop
+          </v-icon>
+        </template>
+        <span>Terminate selected tasks - does not guarantee that
+          <br>task will stop (depends on command)</span>
+      </v-tooltip>
+      <v-tooltip top>
+        <template v-slot:activator="{ on }">
+          <v-icon style="font-size:20px;" v-on="on" @click="terminateTasks(null, false)">
+            💀
+          </v-icon>
+        </template>
+        <span>Kill selected tasks - use when command is more stubborn</span>
       </v-tooltip>
     </div>
     <v-snackbar
@@ -266,7 +300,9 @@ export default {
       actionFlag: false,
       multipleFlag: false,
       logs: [],
-      path: ''
+      path: '',
+      actionType: '',
+      gracefully: null
     }
   },
 
@@ -390,6 +426,12 @@ export default {
       this.prepareActionLoop(id)
     },
 
+    terminateTasks: function (id, gracefully) {
+      this.gracefully = gracefully
+      this.actionType = 'terminate'
+      this.prepareActionLoop(id)
+    },
+
     prepareActionLoop: function (id, actionType) {
       if (id !== null) {
         this.multipleFlag = false
@@ -414,6 +456,7 @@ export default {
       var actionPath
       switch (this.actionType) {
         case 'spawn': actionPath = '/tasks/' + id + '/spawn'; break
+        case 'terminate': actionPath = '/tasks/' + id + '/terminate?gracefully=' + this.gracefully; break
       }
       api
         .request('get', actionPath, this.$store.state.accessToken)
@@ -445,6 +488,7 @@ export default {
         if (this.selectedIndex < this.selected.length) {
           switch (this.actionType) {
             case 'spawn': this.actionLoop(); break
+            case 'terminate': this.actionLoop(); break
           }
         } else {
           this.selectedIndex = 0
