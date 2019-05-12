@@ -785,6 +785,8 @@ paths:
               msg:
                 type: string
                 example: {{RESPONSES['ssh']['failure']['connection']}}
+      security:
+        - Bearer: []
   /screen-sessions:
     get:
       tags:
@@ -870,6 +872,8 @@ paths:
               pid:
                 type: integer
                 example: 4321
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
         404:
           description: {{RESPONSES['task']['not_found']}}
           schema:
@@ -896,8 +900,8 @@ paths:
               msg:
                 type: string
                 example: {{RESPONSES['task']['not_found']}}
-      # security:
-      #   - Bearer: []
+      security:
+        - Bearer: []
   /tasks/{id}/terminate:
     get:
       tags: 
