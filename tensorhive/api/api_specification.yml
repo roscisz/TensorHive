@@ -543,8 +543,8 @@ paths:
           description: {{RESPONSES['general']['unpriviliged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
-      # security:
-      #   - Bearer: []
+      security:
+        - Bearer: []
     post:
       tags: 
         - tasks
@@ -583,8 +583,8 @@ paths:
           description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['task']['create']['failure']['invalid']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
-      # security:
-      #   - Bearer: []
+      security:
+        - Bearer: []
   /tasks/{id}:
     get:
       tags: 
@@ -631,9 +631,11 @@ paths:
               msg:
                 type: string
                 example: {{RESPONSES['general']['internal_error']}}
+      security:
+        - Bearer: []
     put:
       tags:
-      - tasks
+        - tasks
       summary: Update task
       operationId: tensorhive.controllers.task.update
       parameters:
@@ -684,6 +686,8 @@ paths:
               msg:
                 type: string
                 example: {{RESPONSES['general']['internal_error']}}
+      security:
+        - Bearer: []
     delete:
       tags:
         - tasks
@@ -726,8 +730,8 @@ paths:
               msg:
                 type: string
                 example: {{RESPONSES['general']['internal_error']}}
-      # security:
-      #   - Bearer: []
+      security:
+        - Bearer: []
   /tasks/{id}/log:
     get:
       tags:
@@ -962,6 +966,8 @@ paths:
                 example: 1
         401:
           description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
         404:
           description: {{RESPONSES['task']['not_found']}}
           schema:
@@ -982,8 +988,8 @@ paths:
           description: {{RESPONSES['general']['auth_error']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
-      # security:
-      #   - Bearer: []
+      security:
+        - Bearer: []
 definitions:
   UserToDisplay:
     type: object
