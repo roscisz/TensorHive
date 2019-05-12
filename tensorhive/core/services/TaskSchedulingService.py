@@ -48,7 +48,7 @@ class TaskSchedulingService(Service):
 
         log.debug('{} tasks should be terminated.'.format(len(tasks_to_terminate)))
         for task in tasks_to_terminate:
-            print('UTC now: {} | Killing task {} scheduled for {}'.format(
+            log.info('UTC now: {} | Killing task {} scheduled for {}'.format(
                 now.strftime("%H:%M:%S"), task.id, task.terminate_at.strftime("%H:%M:%S")))
             content, status = terminate(task.id, gracefully=False)
             if status == 201:
@@ -61,13 +61,7 @@ class TaskSchedulingService(Service):
         # Sleep here is important, API server must be running first (empirical observations)
         # It prevents SQLAlchemy from sqlite3.ProgrammingError caused by threading problems.
         gevent.sleep(self.interval)
-        # print()
-        # print('Waking up...')
         now = datetime.utcnow()
-        # print('=====================================')
         self.spawn_scheduled(now)
         gevent.sleep(self.interval)
-        # print('=====================================')
         self.terminate_scheduled(now)
-        # print('=====================================')
-        # print('Going to sleep...')

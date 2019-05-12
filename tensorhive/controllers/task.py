@@ -48,7 +48,7 @@ def synchronize(task_id: TaskId) -> None:
     running             => terminated
     unsynchronized      => not_running
     """
-    print('Syncing Task {}...'.format(task_id))
+    log.debug('Syncing Task {}...'.format(task_id))
     try:
         task = Task.get(task_id)
         assert task.host, 'hostname is empty'
@@ -57,25 +57,25 @@ def synchronize(task_id: TaskId) -> None:
     except NoResultFound:
         # This exception must be handled within try/except block when using Task.get()
         # In other words, methods decorated with @synchronize_task_record must handle this case by themselves!
-        print('Task {} could not be found (also synchonized). Failing without taking any action...')
+        log.warning('Task {} could not be found (also synchonized). Failing without taking any action...')
         pass
     except (AssertionError, Exception) as e:
         # task_nursery.running pssh exceptions are also catched here
-        print('Unable to synchronize Task {}, reason: {}'.format(task_id, e))
-        print('Task {} status was: {}'.format(task_id, task.status.name))
+        log.error('Unable to synchronize Task {}, reason: {}'.format(task_id, e))
+        log.debug('Task {} status was: {}'.format(task_id, task.status.name))
         task.status = TaskStatus.unsynchronized
         task.save()
-        print('Task {} is now: {}'.format(task_id, task.status.name))
+        log.debug('Task {} is now: {}'.format(task_id, task.status.name))
     else:
-        print('[BEFORE SYNC] Task {} status was: {}'.format(task_id, task.status.name))
+        log.debug('[BEFORE SYNC] Task {} status was: {}'.format(task_id, task.status.name))
         change_status_msg = '[AFTER SYNC] Task {id} is now: {curr_status}'
         if task.pid not in active_sessions_pids:
             if task.status is TaskStatus.running:
                 task.status = TaskStatus.terminated
-                print(change_status_msg.format(id=task_id, curr_status=task.status.name))
+                log.debug(change_status_msg.format(id=task_id, curr_status=task.status.name))
             if task.status is TaskStatus.unsynchronized:
                 task.status = TaskStatus.not_running
-                print(change_status_msg.format(id=task_id, curr_status=task.status.name))
+                log.debug(change_status_msg.format(id=task_id, curr_status=task.status.name))
             task.pid = None
             task.save()
 
@@ -97,15 +97,15 @@ def synchronize_task_record(func: Callable[[int], Any]) -> Callable[[int], Any]:
         if task_id:
             synchronize(task_id)
         else:
-            print('Synchronization aborted!')
-            print('Task id not found in {}(), args: {}, kwargs: {}'.format(func.__name__, args, kwargs))
+            log.critical('Synchronization aborted!')
+            log.critical('Task id not found in {}(), args: {}, kwargs: {}'.format(func.__name__, args, kwargs))
         return func(*args, **kwargs)
 
     return sync_wrapper
 
 
 # FIXME Maybe camelCased arguments? (API client standpoint)
-#  GET /tasks?user_id=X?sync_all=1
+#  GET /tasks?userId=X?syncAll=1
 # FIXME Revert @jwt_required
 def get_all(userId: Optional[int], syncAll: Optional[bool]) -> List[Dict]:
     """Fetches either all Task records or only those in relation with specific user.
@@ -162,7 +162,6 @@ def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     else:
         content, status = {'msg': T['create']['success'], 'task': new_task.as_dict}, 201
     finally:
-        print('=================')
         return content, status
 
 
@@ -204,7 +203,7 @@ def update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCo
                 new_value = try_parse_input_datetime(new_value)
             else:
                 # Check that every other field matches
-                assert hasattr(task, field_name), 'task object has no {} attribute'.format(field_name)
+                assert hasattr(task, field_name), 'task has no {} column'.format(field_name)
             setattr(task, field_name, new_value)
         task.save()
     except NoResultFound:
@@ -355,7 +354,7 @@ def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': G['internal_error']}, 500
     else:
-        print('Task {} is now: {}'.format(task.id, task.status.name))
+        log.info('Task {} is now: {}'.format(task.id, task.status.name))
         content, status = {'msg': T['spawn']['success'], 'pid': pid}, 200
     finally:
         return content, status
@@ -512,9 +511,9 @@ if __name__ == '__main__':
             sync = True if input('Want synchronized records? (y/n) > ') == 'y' else False
 
             if task_id:
-                tasks = get_all(user_id=int(task_id), sync_all=sync)
+                tasks = get_all(userId=int(task_id), syncAll=sync)
             else:
-                tasks = get_all(user_id=None, sync_all=sync)
+                tasks = get_all(userId=None, syncAll=sync)
             print('[')
             print(*tasks, sep=',\n')
             print(']')
