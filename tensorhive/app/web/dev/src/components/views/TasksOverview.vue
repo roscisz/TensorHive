@@ -33,6 +33,12 @@
       :multipleFlag="multipleFlag"
       :selected="selected"
     />
+    <TaskLog
+      :show-modal="showModalLog"
+      @close="showModalLog = false"
+      :lines="logs"
+      :path="path"
+    />
     <v-data-table
       v-model="selected"
       :headers="headers"
@@ -99,6 +105,14 @@
             </v-tooltip>
             <v-tooltip top>
               <template v-slot:activator="{ on }">
+                <v-icon style="font-size:20px;" v-on="on" @click="getLog(props.item.id)">
+                  description
+                </v-icon>
+              </template>
+              <span>Show log</span>
+            </v-tooltip>
+            <v-tooltip top>
+              <template v-slot:activator="{ on }">
                 <v-icon v-on="on" @click="editTask(props.item)">
                   edit
                 </v-icon>
@@ -143,11 +157,13 @@ import api from '../../api'
 import TaskCreate from './tasks_overview/TaskCreate.vue'
 import TaskEdit from './tasks_overview/TaskEdit.vue'
 import TaskSchedule from './tasks_overview/TaskSchedule.vue'
+import TaskLog from './tasks_overview/TaskLog.vue'
 export default {
   components: {
     TaskCreate,
     TaskEdit,
-    TaskSchedule
+    TaskSchedule,
+    TaskLog
   },
   data () {
     return {
@@ -171,6 +187,7 @@ export default {
       showModalCreate: false,
       showModalEdit: false,
       showModalSchedule: false,
+      showModalLog: false,
       taskId: -1,
       newHostname: '',
       newCommand: '',
@@ -183,7 +200,9 @@ export default {
       snackbar: false,
       selectedIndex: 0,
       actionFlag: false,
-      multipleFlag: false
+      multipleFlag: false,
+      logs: [],
+      path: ''
     }
   },
 
@@ -212,7 +231,6 @@ export default {
     changeActionFlag (bool) {
       this.actionFlag = bool
     },
-
     changeSnackbar (bool) {
       this.snackbar = bool
     },
@@ -293,6 +311,7 @@ export default {
           this.actionFlag = false
         })
     },
+
     updateTask: function (id, newData) {
       for (var index in this.tasks) {
         if (this.tasks[index].id === id) {
@@ -319,6 +338,27 @@ export default {
       this.newHostname = task.hostname
       this.newCommand = task.command
       this.showModalEdit = true
+    },
+
+    getLog: function (id) {
+      if (!this.actionFlag) {
+        this.snackbar = true
+        this.actionFlag = true
+        api
+          .request('get', '/tasks/' + id + '/log', this.$store.state.accessToken)
+          .then(response => {
+            this.logs = response.data.stdout_lines
+            this.path = response.data.path
+            this.showModalLog = true
+            this.snackbar = false
+            this.actionFlag = false
+          })
+          .catch(error => {
+            console.log(error)
+            this.snackbar = false
+            this.actionFlag = false
+          })
+      }
     }
   }
 }
