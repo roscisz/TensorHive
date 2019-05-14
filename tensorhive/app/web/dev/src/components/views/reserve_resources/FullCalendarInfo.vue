@@ -42,7 +42,7 @@
           <b>Average GPU memory utilization:</b> {{memUtilAvg}}
         </v-card-text>
         <v-card-text>
-          <b>Start:</b> {{reservation.start.toString()}} <b>End:</b> {{reservation.end.toString()}}
+          <b>Start:</b> {{ prettyDate(reservation.start) }} <b>End:</b> {{ prettyDate(reservation.end)}}
         </v-card-text>
         <div v-if="updateCard">
           <date-picker
@@ -121,6 +121,7 @@
 </template>
 
 <script>
+import moment from 'moment'
 import DatePicker from 'vue2-datepicker'
 export default {
   name: 'FullCalendarInfo',
@@ -197,6 +198,14 @@ export default {
   },
 
   methods: {
+    prettyDate (date) {
+      if (date !== null) {
+        return moment(date).format('dddd, MMMM Do, HH:mm')
+      } else {
+        return null
+      }
+    },
+
     close: function () {
       this.$emit('close')
     },

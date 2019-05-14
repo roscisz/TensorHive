@@ -197,7 +197,7 @@
             <td>{{ props.item.id }}</td>
             <td>{{ props.item.username }}</td>
             <td>{{ props.item.email }}</td>
-            <td>{{ props.item.createdAt }}</td>
+            <td>{{ prettyDate(props.item.createdAt) }}</td>
             <td>{{ props.item.role }}</td>
             <td>
               <v-icon
@@ -225,6 +225,7 @@
 
 <script>
 import api from '../../api'
+import moment from 'moment'
 export default {
   data () {
     return {
@@ -280,6 +281,14 @@ export default {
   },
 
   methods: {
+    prettyDate (date) {
+      if (date !== null) {
+        return moment(date).format('dddd, MMMM Do, HH:mm')
+      } else {
+        return null
+      }
+    },
+
     handleError: function (error) {
       if (!error.hasOwnProperty('response')) {
         this.errorMessage = error.message

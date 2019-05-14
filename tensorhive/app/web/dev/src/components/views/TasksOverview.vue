@@ -139,8 +139,8 @@
           <td class="task-command">{{ props.item.command }}</td>
           <td>{{ props.item.pid }}</td>
           <td>{{ props.item.status }}</td>
-          <td>{{ props.item.spawnAt }}</td>
-          <td>{{ props.item.terminateAt }}</td>
+          <td>{{ prettyDate(props.item.spawnAt) }}</td>
+          <td>{{ prettyDate(props.item.terminateAt) }}</td>
           <td>
             <v-tooltip top>
               <template v-slot:activator="{ on }">
@@ -259,6 +259,7 @@
 
 <script>
 import api from '../../api'
+import moment from 'moment'
 import TaskCreate from './tasks_overview/TaskCreate.vue'
 import TaskEdit from './tasks_overview/TaskEdit.vue'
 import TaskSchedule from './tasks_overview/TaskSchedule.vue'
@@ -336,6 +337,14 @@ export default {
   },
 
   methods: {
+    prettyDate (date) {
+      if (date !== null) {
+        return moment(date).format('dddd, MMMM Do, HH:mm')
+      } else {
+        return null
+      }
+    },
+
     changeActionFlag (bool) {
       this.actionFlag = bool
     },
