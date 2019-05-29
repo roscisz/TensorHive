@@ -65,17 +65,6 @@ export default {
   },
 
   methods: {
-    handleError: function (error) {
-      if (!error.hasOwnProperty('response')) {
-        this.$emit('showSnackbar', error.message)
-      } else {
-        if (!error.response.data.hasOwnProperty('msg')) {
-          this.$emit('showSnackbar', error.response.data)
-        } else {
-          this.$emit('showSnackbar', error.response.data.msg)
-        }
-      }
-    },
 
     getEvents: function (start, end, callback) {
       var resourcesString = ''
@@ -102,7 +91,7 @@ export default {
           callback(response.data)
         })
         .catch(error => {
-          this.handleError(error)
+          this.$emit('handleError', error)
         })
       var obj
       this.resourcesCheckboxes = []
@@ -182,7 +171,7 @@ export default {
             this.showModalInfo = false
           })
           .catch(error => {
-            this.handleError(error)
+            this.$emit('handleError', error)
           })
       }
     },
@@ -195,7 +184,7 @@ export default {
           this.showModalInfo = false
         })
         .catch(error => {
-          this.handleError(error)
+          this.$emit('handleError', error)
         })
     },
 
@@ -207,7 +196,7 @@ export default {
           this.showModalReserve = false
         })
         .catch(error => {
-          this.handleError(error)
+          this.$emit('handleError', error)
         })
     }
   },
@@ -260,7 +249,7 @@ export default {
               element.find('.fc-title').prepend((response.data.username).bold().big().italics() + '<br/>')
             })
             .catch(error => {
-              this.handleError(error)
+              this.$emit('handleError', error)
             })
         }
       },

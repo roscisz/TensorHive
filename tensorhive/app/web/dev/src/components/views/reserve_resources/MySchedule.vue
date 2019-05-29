@@ -204,15 +204,7 @@ export default {
           this.parseData(response.data)
         })
         .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            this.$emit('showSnackbar', error.message)
-          } else {
-            if (!error.response.data.hasOwnProperty('msg')) {
-              this.$emit('showSnackbar', error.response.data)
-            } else {
-              this.$emit('showSnackbar', error.response.data.msg)
-            }
-          }
+          this.$emit('handleError', error)
         })
     },
 

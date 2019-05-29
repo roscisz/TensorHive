@@ -145,7 +145,7 @@ export default {
           this.getTask(id)
         })
         .catch(error => {
-          console.log(error)
+          this.$emit('handleError', error)
           this.close()
           this.getTask(id)
         })
@@ -171,7 +171,7 @@ export default {
           }
         })
         .catch(error => {
-          console.log(error)
+          this.$emit('handleError', error)
           if (this.multipleFlag) {
             this.selectedIndex++
             if (this.selectedIndex < this.selected.length) {

@@ -26,6 +26,7 @@
       @updateTask="updateTask(...arguments)"
       @changeActionFlag="changeActionFlag(...arguments)"
       @changeSnackbar="changeSnackbar(...arguments)"
+      @handleError="handleError(...arguments)"
       :taskId="taskId"
       :spawnTime="newSpawnTime"
       :terminateTime="newTerminateTime"
@@ -145,7 +146,7 @@
             <v-tooltip top>
               <template v-slot:activator="{ on }">
                 <v-icon v-on="on" @click="scheduleTasks(props.item)">
-                  timer
+                  schedule
                 </v-icon>
               </template>
               <span>Schedule task</span>
@@ -207,8 +208,16 @@
       <v-btn color="primary" @click="showModalCreate=true">Create tasks</v-btn>
       <v-tooltip top>
         <template v-slot:activator="{ on }">
+          <v-icon v-on="on" @click="getTasks(true)">
+            refresh
+          </v-icon>
+        </template>
+        <span>Refresh</span>
+      </v-tooltip>
+      <v-tooltip top>
+        <template v-slot:activator="{ on }">
           <v-icon v-on="on" @click="scheduleTasks(null)">
-            timer
+            schedule
           </v-icon>
         </template>
         <span>Schedule selected tasks</span>
@@ -250,6 +259,21 @@
         color="black"
         flat
         @click="snackbar = false"
+      >
+        Close
+      </v-btn>
+    </v-snackbar>
+    <v-snackbar
+      color="red"
+      v-model="snackbarError"
+      bottom
+      multi-line
+    >
+      {{ errorMessage }}
+      <v-btn
+        color="black"
+        flat
+        @click="snackbarError = false"
       >
         Close
       </v-btn>
@@ -305,6 +329,8 @@ export default {
       time: 60000,
       initialSyncFlag: false,
       snackbar: false,
+      snackbarError: false,
+      errorMessage: '',
       selectedIndex: 0,
       actionFlag: false,
       multipleFlag: false,
@@ -337,6 +363,23 @@ export default {
   },
 
   methods: {
+    handleError: function (error) {
+      if (!error.hasOwnProperty('response')) {
+        this.showError(error.message)
+      } else {
+        if (!error.response.data.hasOwnProperty('msg')) {
+          this.showError(error.response.data)
+        } else {
+          this.showError(error.response.data.msg)
+        }
+      }
+    },
+
+    showError (message) {
+      this.errorMessage = message
+      this.snackbarError = true
+    },
+
     prettyDate (date) {
       if (date !== null) {
         return moment(date).format('dddd, MMMM Do, HH:mm')
@@ -407,7 +450,7 @@ export default {
             }
           })
           .catch(error => {
-            console.log(error)
+            this.handleError(error)
             this.snackbar = false
             this.actionFlag = false
           })
@@ -433,9 +476,15 @@ export default {
         this.multipleFlag = true
       }
       if (!this.actionFlag) {
-        this.actionFlag = true
-        this.snackbar = true
-        this.actionLoop()
+        if (!this.multipleFlag) {
+          this.actionFlag = true
+          this.snackbar = true
+          this.actionLoop()
+        } else if (this.selected.length) {
+          this.actionFlag = true
+          this.snackbar = true
+          this.actionLoop()
+        }
       }
     },
 
@@ -457,7 +506,7 @@ export default {
           this.getTaskLoop(id)
         })
         .catch(error => {
-          console.log(error)
+          this.handleError(error)
           this.getTaskLoop(id)
         })
     },
@@ -470,7 +519,7 @@ export default {
           this.resumeLoop()
         })
         .catch(error => {
-          console.log(error)
+          this.handleError(error)
           this.resumeLoop()
         })
     },
@@ -498,12 +547,16 @@ export default {
       if (task != null) {
         this.multipleFlag = false
         this.taskId = task.id
-        this.newSpawnTime = task.spawn_at
-        this.newTerminateTime = task.terminate_at
+        this.newSpawnTime = task.spawnAt
+        this.newTerminateTime = task.terminateAt
       } else {
         this.multipleFlag = true
       }
-      this.showModalSchedule = true
+      if (!this.multipleFlag) {
+        this.showModalSchedule = true
+      } else if (this.selected.length) {
+        this.showModalSchedule = true
+      }
     },
 
     editTask: function (task) {
@@ -522,7 +575,7 @@ export default {
           this.actionFlag = false
         })
         .catch(error => {
-          console.log(error)
+          this.handleError(error)
           this.snackbar = false
           this.actionFlag = false
         })
@@ -553,7 +606,7 @@ export default {
             this.updateTask(id, null)
           })
           .catch(error => {
-            console.log(error)
+            this.handleError(error)
             this.snackbar = false
             this.actionFlag = false
           })
@@ -574,7 +627,7 @@ export default {
             this.actionFlag = false
           })
           .catch(error => {
-            console.log(error)
+            this.handleError(error)
             this.snackbar = false
             this.actionFlag = false
           })
