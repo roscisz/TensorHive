@@ -11,14 +11,14 @@
       <v-card-text>
         <v-layout align-center justify-start>
           <v-text-field
-            class="task-input"
+            class="host-input"
             label="Hostname"
             small
             v-model="newHost"
           ></v-text-field>
           <span class="space"/>
           <v-text-field
-            class="task-input"
+            class="command-input"
             label="Command"
             small
             v-model="newCommand"
@@ -101,4 +101,12 @@ export default {
 </script>
 
 <style scoped>
+.host-input{
+  min-width: 10vw !important;
+  max-width: 10vw !important;
+}
+.command-input{
+  min-width: 65vw !important;
+  max-width: 65vw !important;
+}
 </style>
