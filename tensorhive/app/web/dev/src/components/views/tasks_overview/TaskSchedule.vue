@@ -15,16 +15,58 @@
             v-model="spawn"
           >
           </v-checkbox>
-          <date-picker
-            id="spawnTime"
-            v-model="newSpawnTime"
-            type="datetime"
-            lang="en"
-            format="YYYY-MM-DD HH:mm"
-            :time-picker-options="timePickerOptions"
-            confirm
-            append-to-body
-          ></date-picker>
+          <v-menu
+            v-model="spawnDateMenu"
+            :close-on-content-click="false"
+            :nudge-right="40"
+            lazy
+            transition="none"
+            offset-y
+            full-width
+            min-width="290px"
+          >
+            <template v-slot:activator="{ on }">
+              <v-text-field
+                v-model="newSpawnDate"
+                label="Spawn date"
+                prepend-icon="event"
+                v-on="on"
+              ></v-text-field>
+            </template>
+            <v-date-picker
+              v-model="newSpawnDate"
+              @input="spawnDateMenu = false"
+            ></v-date-picker>
+          </v-menu>
+          <v-menu
+            ref="spawnMenu"
+            v-model="spawnTimeMenu"
+            :close-on-content-click="false"
+            :nudge-right="40"
+            :return-value.sync="newSpawnTime"
+            lazy
+            transition="none"
+            offset-y
+            full-width
+            max-width="290px"
+            min-width="290px"
+          >
+            <template v-slot:activator="{ on }">
+              <v-text-field
+                v-model="newSpawnTime"
+                label="Spawn time"
+                prepend-icon="access_time"
+                v-on="on"
+              ></v-text-field>
+            </template>
+            <v-time-picker
+              v-if="spawnTimeMenu"
+              v-model="newSpawnTime"
+              full-width
+              format="24hr"
+              @click:minute="$refs.spawnMenu.save(newSpawnTime)"
+            ></v-time-picker>
+          </v-menu>
         </v-layout>
         <v-layout align-center justify-start>
           <v-checkbox
@@ -32,16 +74,55 @@
             v-model="terminate"
           >
           </v-checkbox>
-          <date-picker
-            id="terminateTime"
-            v-model="newTerminateTime"
-            type="datetime"
-            lang="en"
-            format="YYYY-MM-DD HH:mm"
-            :time-picker-options="timePickerOptions"
-            confirm
-            append-to-body
-          ></date-picker>
+          <v-menu
+            v-model="terminateDateMenu"
+            :close-on-content-click="false"
+            :nudge-right="40"
+            lazy
+            transition="none"
+            offset-y
+            full-width
+            min-width="290px"
+          >
+            <template v-slot:activator="{ on }">
+              <v-text-field
+                v-model="newTerminateDate"
+                label="Terminate date"
+                prepend-icon="event"
+                v-on="on"
+              ></v-text-field>
+            </template>
+            <v-date-picker v-model="newTerminateDate" @input="terminateDateMenu = false"></v-date-picker>
+          </v-menu>
+          <v-menu
+            ref="terminateMenu"
+            v-model="terminateTimeMenu"
+            :close-on-content-click="false"
+            :nudge-right="40"
+            :return-value.sync="newTerminateTime"
+            lazy
+            transition="none"
+            offset-y
+            full-width
+            max-width="290px"
+            min-width="290px"
+          >
+            <template v-slot:activator="{ on }">
+              <v-text-field
+                v-model="newTerminateTime"
+                label="Terminate time"
+                prepend-icon="access_time"
+                v-on="on"
+              ></v-text-field>
+            </template>
+            <v-time-picker
+              v-if="terminateTimeMenu"
+              v-model="newTerminateTime"
+              full-width
+              format="24hr"
+              @click:minute="$refs.terminateMenu.save(newTerminateTime)"
+            ></v-time-picker>
+          </v-menu>
         </v-layout>
       </v-card-text>
       <v-card-text>
@@ -69,12 +150,8 @@
 
 <script>
 import api from '../../../api'
-import DatePicker from 'vue2-datepicker'
+import moment from 'moment'
 export default {
-  components: {
-    DatePicker
-  },
-
   props: {
     showModal: Boolean,
     taskId: Number,
@@ -87,29 +164,46 @@ export default {
 
   data () {
     return {
+      spawnTimeMenu: false,
+      spawnDateMenu: false,
+      terminateTimeMenu: false,
+      terminateDateMenu: false,
       spawn: false,
       terminate: false,
+      newSpawnDate: '',
       newSpawnTime: '',
+      newTerminateDate: '',
       newTerminateTime: '',
-      timePickerOptions: {
-        start: '00:00',
-        step: '00:30',
-        end: '23:30'
-      },
       selectedIndex: 0
     }
   },
 
   watch: {
     spawnTime () {
-      this.newSpawnTime = this.spawnTime
+      if (this.spawnTime !== null) {
+        this.newSpawnDate = moment(this.spawnTime).format('YYYY-MM-DD')
+        this.newSpawnTime = moment(this.spawnTime).format('HH:mm')
+      } else {
+        this.newSpawnDate = ''
+        this.newSpawnTime = ''
+      }
     },
     terminateTime () {
-      this.newTerminateTime = this.terminateTime
+      if (this.terminateTime !== null) {
+        this.newTerminateDate = moment(this.terminateTime).format('YYYY-MM-DD')
+        this.newTerminateTime = moment(this.terminateTime).format('HH:mm')
+      } else {
+        this.newTerminateDate = ''
+        this.newTerminateTime = ''
+      }
     }
   },
 
   methods: {
+    actionSave: function () {
+      this.$refs.menu.save(this.newSpawnTime)
+    },
+
     checkActionFlag: function () {
       if (this.actionFlag === false) {
         this.$emit('changeActionFlag', true)
@@ -121,10 +215,10 @@ export default {
     scheduleTasks: function () {
       var newTask = {}
       if (this.newSpawnTime !== '' && this.newSpawnTime !== null && this.newSpawnTime !== undefined) {
-        newTask['spawnAt'] = this.newSpawnTime.toISOString()
+        newTask['spawnAt'] = moment(this.newSpawnDate + 'T' + this.newSpawnTime).toISOString()
       }
       if (this.newTerminateTime !== '' && this.newTerminateTime !== null && this.newTerminateTime !== undefined) {
-        newTask['terminateAt'] = this.newTerminateTime.toISOString()
+        newTask['terminateAt'] = moment(this.newTerminateDate + 'T' + this.newTerminateTime).toISOString()
       }
       if (!this.spawn) {
         newTask['spawnAt'] = null
@@ -187,6 +281,7 @@ export default {
           }
         })
     },
+
     close: function () {
       this.$emit('close')
     }

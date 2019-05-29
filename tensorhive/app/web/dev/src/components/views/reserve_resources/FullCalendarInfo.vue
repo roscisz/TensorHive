@@ -42,19 +42,125 @@
           <b>Average GPU memory utilization:</b> {{memUtilAvg}}
         </v-card-text>
         <v-card-text>
-          <b>Start:</b> {{ prettyDate(reservation.start) }} <b>End:</b> {{ prettyDate(reservation.end)}}
+          <b>Start:</b> {{ prettyDate(reservation.start) }}
         </v-card-text>
-        <div v-if="updateCard">
-          <date-picker
-            id="reservationTime"
-            v-model="newTime"
-            range type="datetime"
-            lang="en"
-            format="YYYY-MM-DD HH:mm"
-            :time-picker-options="timePickerOptions"
-            confirm
-          ></date-picker>
-        </div>
+        <v-card-text v-if="updateCard">
+          <v-layout align-center justify-start>
+            <v-menu
+              v-model="startDateMenu"
+              :close-on-content-click="false"
+              :nudge-right="40"
+              lazy
+              transition="none"
+              offset-y
+              full-width
+              min-width="290px"
+            >
+              <template v-slot:activator="{ on }">
+                <v-text-field
+                  v-model="newStartDate"
+                  label="Start date"
+                  prepend-icon="event"
+                  v-on="on"
+                ></v-text-field>
+              </template>
+              <v-date-picker
+                v-model="newStartDate"
+                @input="startDateMenu = false"
+              ></v-date-picker>
+            </v-menu>
+            <v-menu
+              ref="startMenu"
+              v-model="startTimeMenu"
+              :close-on-content-click="false"
+              :nudge-right="40"
+              :return-value.sync="newStartTime"
+              lazy
+              transition="none"
+              offset-y
+              full-width
+              max-width="290px"
+              min-width="290px"
+            >
+              <template v-slot:activator="{ on }">
+                <v-text-field
+                  v-model="newStartTime"
+                  label="Start time"
+                  prepend-icon="access_time"
+                  v-on="on"
+                ></v-text-field>
+              </template>
+              <v-time-picker
+                v-if="startTimeMenu"
+                v-model="newStartTime"
+                full-width
+                :allowed-minutes="m => m % 30 === 0"
+                format="24hr"
+                @click:minute="$refs.startMenu.save(newStartTime)"
+              ></v-time-picker>
+            </v-menu>
+          </v-layout>
+        </v-card-text>
+        <v-card-text>
+           <b>End:</b> {{ prettyDate(reservation.end) }}
+        </v-card-text>
+        <v-card-text v-if="updateCard">
+          <v-layout align-center justify-start>
+            <v-menu
+              v-model="endDateMenu"
+              :close-on-content-click="false"
+              :nudge-right="40"
+              lazy
+              transition="none"
+              offset-y
+              full-width
+              min-width="290px"
+            >
+              <template v-slot:activator="{ on }">
+                <v-text-field
+                  v-model="newEndDate"
+                  label="End date"
+                  prepend-icon="event"
+                  v-on="on"
+                ></v-text-field>
+              </template>
+              <v-date-picker
+                v-model="newEndDate"
+                @input="endDateMenu = false"
+              ></v-date-picker>
+            </v-menu>
+            <v-menu
+              ref="endMenu"
+              v-model="endTimeMenu"
+              :close-on-content-click="false"
+              :nudge-right="40"
+              :return-value.sync="newEndTime"
+              lazy
+              transition="none"
+              offset-y
+              full-width
+              max-width="290px"
+              min-width="290px"
+            >
+              <template v-slot:activator="{ on }">
+                <v-text-field
+                  v-model="newEndTime"
+                  label="End time"
+                  prepend-icon="access_time"
+                  v-on="on"
+                ></v-text-field>
+              </template>
+              <v-time-picker
+                v-if="endTimeMenu"
+                v-model="newEndTime"
+                full-width
+                :allowed-minutes="m => m % 30 === 0"
+                format="24hr"
+                @click:minute="$refs.endMenu.save(newEndTime)"
+              ></v-time-picker>
+            </v-menu>
+          </v-layout>
+        </v-card-text>
         <v-card-text>
           <b>GPU UUID:</b> {{reservation.resourceId}}
         </v-card-text>
@@ -122,7 +228,6 @@
 
 <script>
 import moment from 'moment'
-import DatePicker from 'vue2-datepicker'
 export default {
   name: 'FullCalendarInfo',
 
@@ -160,11 +265,15 @@ export default {
       return this.reservation.description
     },
 
-    selectedTimeChanged () {
-      if (this.reservation.start instanceof Date) return [this.reservation.start, this.reservation.end]
-      else return [new Date(this.reservation.start), new Date(this.reservation.end)]
+    reservationStart () {
+      return this.reservation.start
+    },
+
+    reservationEnd () {
+      return this.reservation.end
     }
   },
+
   watch: {
     reservationTitle () {
       this.newTitle = this.reservationTitle
@@ -174,27 +283,42 @@ export default {
       this.newDescription = this.reservationDescription
     },
 
-    selectedTimeChanged () {
-      this.newTime = this.selectedTimeChanged
+    reservationStart () {
+      if (this.reservationStart !== null) {
+        this.newStartDate = moment(this.reservationStart).format('YYYY-MM-DD')
+        this.newStartTime = moment(this.reservationStart).format('HH:mm')
+      } else {
+        this.newStartDate = ''
+        this.newStartTime = ''
+      }
+    },
+
+    reservationEnd () {
+      if (this.reservationEnd !== null) {
+        this.newEndDate = moment(this.reservationEnd).format('YYYY-MM-DD')
+        this.newEndTime = moment(this.reservationEnd).format('HH:mm')
+      } else {
+        this.newEndDate = ''
+        this.newEndTime = ''
+      }
     }
   },
+
   data () {
     return {
       cancelCard: false,
       updateCard: false,
       newTitle: '',
       newDescription: '',
-      newTime: null,
-      timePickerOptions: {
-        start: '00:00',
-        step: '00:30',
-        end: '23:30'
-      }
+      startTimeMenu: false,
+      startDateMenu: false,
+      endTimeMenu: false,
+      endDateMenu: false,
+      newStartDate: '',
+      newStartTime: '',
+      newEndDate: '',
+      newEndTime: ''
     }
-  },
-
-  components: {
-    DatePicker
   },
 
   methods: {
@@ -215,7 +339,8 @@ export default {
     },
 
     updateReservation: function () {
-      this.update(this.reservation, this.newTime, this.newTitle, this.newDescription)
+      var newTime = [moment(this.newStartDate + 'T' + this.newStartTime), moment(this.newEndDate + 'T' + this.newEndTime)]
+      this.update(this.reservation, newTime, this.newTitle, this.newDescription)
     }
   }
 }

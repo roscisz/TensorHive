@@ -22,18 +22,116 @@
             >
             </v-checkbox>
           </div>
-          <label class="form-label">
-            Start and end time
-            <date-picker
-              id="reservationTime"
-              v-model="reservationTime"
-              range type="datetime"
-              lang="en"
-              format="YYYY-MM-DD HH:mm"
-              :time-picker-options="timePickerOptions"
-              confirm
-            ></date-picker>
-          </label>
+          <v-layout align-center justify-start>
+            <v-menu
+              v-model="startDateMenu"
+              :close-on-content-click="false"
+              :nudge-right="40"
+              lazy
+              transition="none"
+              offset-y
+              full-width
+              min-width="290px"
+            >
+              <template v-slot:activator="{ on }">
+                <v-text-field
+                  v-model="newStartDate"
+                  label="Start date"
+                  prepend-icon="event"
+                  v-on="on"
+                ></v-text-field>
+              </template>
+              <v-date-picker
+                v-model="newStartDate"
+                @input="startDateMenu = false"
+              ></v-date-picker>
+            </v-menu>
+            <v-menu
+              ref="startMenu"
+              v-model="startTimeMenu"
+              :close-on-content-click="false"
+              :nudge-right="40"
+              :return-value.sync="newStartTime"
+              lazy
+              transition="none"
+              offset-y
+              full-width
+              max-width="290px"
+              min-width="290px"
+            >
+              <template v-slot:activator="{ on }">
+                <v-text-field
+                  v-model="newStartTime"
+                  label="Start time"
+                  prepend-icon="access_time"
+                  v-on="on"
+                ></v-text-field>
+              </template>
+              <v-time-picker
+                v-if="startTimeMenu"
+                v-model="newStartTime"
+                full-width
+                :allowed-minutes="m => m % 30 === 0"
+                format="24hr"
+                @click:minute="$refs.startMenu.save(newStartTime)"
+              ></v-time-picker>
+            </v-menu>
+          </v-layout>
+          <v-layout align-center justify-start>
+            <v-menu
+              v-model="endDateMenu"
+              :close-on-content-click="false"
+              :nudge-right="40"
+              lazy
+              transition="none"
+              offset-y
+              full-width
+              min-width="290px"
+            >
+              <template v-slot:activator="{ on }">
+                <v-text-field
+                  v-model="newEndDate"
+                  label="End date"
+                  prepend-icon="event"
+                  v-on="on"
+                ></v-text-field>
+              </template>
+              <v-date-picker
+                v-model="newEndDate"
+                @input="endDateMenu = false"
+              ></v-date-picker>
+            </v-menu>
+            <v-menu
+              ref="endMenu"
+              v-model="endTimeMenu"
+              :close-on-content-click="false"
+              :nudge-right="40"
+              :return-value.sync="newEndTime"
+              lazy
+              transition="none"
+              offset-y
+              full-width
+              max-width="290px"
+              min-width="290px"
+            >
+              <template v-slot:activator="{ on }">
+                <v-text-field
+                  v-model="newEndTime"
+                  label="End time"
+                  prepend-icon="access_time"
+                  v-on="on"
+                ></v-text-field>
+              </template>
+              <v-time-picker
+                v-if="endTimeMenu"
+                v-model="newEndTime"
+                full-width
+                :allowed-minutes="m => m % 30 === 0"
+                format="24hr"
+                @click:minute="$refs.endMenu.save(newEndTime)"
+              ></v-time-picker>
+            </v-menu>
+          </v-layout>
           <v-textarea
             outline
             label="Title"
@@ -70,7 +168,7 @@
 </template>
 
 <script>
-import DatePicker from 'vue2-datepicker'
+import moment from 'moment'
 export default {
   name: 'FullCalendarReserve',
 
@@ -84,30 +182,38 @@ export default {
 
   },
 
-  computed: {
-    selectedTimeChanged () {
-      return [this.startDate, this.endDate]
-    }
-  },
-
   watch: {
-    selectedTimeChanged () {
-      this.reservationTime = this.selectedTimeChanged
-    }
-  },
+    startDate () {
+      if (this.startTime !== null) {
+        this.newStartDate = moment(this.startDate).format('YYYY-MM-DD')
+        this.newStartTime = moment(this.startDate).format('HH:mm')
+      } else {
+        this.newStartDate = ''
+        this.newStartTime = ''
+      }
+    },
 
-  components: {
-    DatePicker
+    endDate () {
+      if (this.endTime !== null) {
+        this.newEndDate = moment(this.endDate).format('YYYY-MM-DD')
+        this.newEndTime = moment(this.endDate).format('HH:mm')
+      } else {
+        this.newEndDate = ''
+        this.newEndTime = ''
+      }
+    }
   },
 
   data () {
     return {
-      reservationTime: '',
-      timePickerOptions: {
-        start: '00:00',
-        step: '00:30',
-        end: '23:30'
-      },
+      startTimeMenu: false,
+      startDateMenu: false,
+      endTimeMenu: false,
+      endDateMenu: false,
+      newStartDate: '',
+      newStartTime: '',
+      newEndDate: '',
+      newEndTime: '',
       showInfo: false,
       reservationTitle: '',
       reservationDescription: ''
@@ -139,8 +245,8 @@ export default {
             tempReservation = {
               title: this.reservationTitle,
               description: this.reservationDescription,
-              start: this.reservationTime[0].toISOString(),
-              end: this.reservationTime[1].toISOString(),
+              start: moment(this.newStartDate + 'T' + this.newStartTime).toISOString(),
+              end: moment(this.newEndDate + 'T' + this.newEndTime).toISOString(),
               resourceId: this.resourcesCheckboxes[i].uuid,
               userId: parseInt(this.$store.state.id)
             }
