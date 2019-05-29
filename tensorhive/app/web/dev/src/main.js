@@ -30,13 +30,21 @@ axios.get('static/config.json').then(response => {
     var apiVersion = JSON.parse(window.localStorage.getItem('apiVersion'))
     var version = JSON.parse(window.localStorage.getItem('version'))
     if (apiVersion === null) {
-      window.localStorage.setItem('apiVersion', JSON.stringify(config.apiVersion))
+      if (config.apiVersion !== undefined) {
+        window.localStorage.setItem('apiVersion', JSON.stringify(config.apiVersion))
+      } else {
+        window.localStorage.setItem('apiVersion', JSON.stringify('no data in config file'))
+      }
     } else if (apiVersion !== config.apiVersion) {
       window.localStorage.clear()
       location.reload(true)
     }
     if (version === null) {
-      window.localStorage.setItem('version', JSON.stringify(config.version))
+      if (config.version !== undefined) {
+        window.localStorage.setItem('version', JSON.stringify(config.apiVersion))
+      } else {
+        window.localStorage.setItem('version', JSON.stringify('no data in config file'))
+      }
     } else if (version !== config.version) {
       window.localStorage.clear()
       location.reload(true)
@@ -101,7 +109,7 @@ axios.get('static/config.json').then(response => {
       store.commit('SET_REFRESH_TOKEN', null)
       router.push('/login')
     } else {
-      if (error.config && error.response && error.response.status === 401) {
+      if (error.config && error.response && error.response.status === 401 && error.config.url !== config.serverURI + '/user/login') {
         axios.defaults.headers.common['Authorization'] = store.state.refreshToken
         return axios({ method: 'get', url: config.serverURI + '/user/refresh', data: null })
           .then(response => {
@@ -113,7 +121,7 @@ axios.get('static/config.json').then(response => {
             return axios.request(error.config)
           })
           .catch(error => {
-            this.handleError(error)
+            handleError(error)
             logout()
           })
       }
@@ -178,7 +186,6 @@ axios.get('static/config.json').then(response => {
     if (window.localStorage) {
       window.localStorage.setItem('user', null)
       window.localStorage.setItem('role', null)
-      window.localStorage.setItem('visibleResources', null)
       window.localStorage.setItem('watches', null)
       window.localStorage.setItem('watchIds', null)
     }
