@@ -74,6 +74,39 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog
+      v-model="showModalRemove"
+      width="400"
+    >
+      <v-card>
+        <v-card-title
+          class="headline grey lighten-2"
+          primary-title
+        >
+          Do you want to remove this task?
+        </v-card-title>
+        <v-card-actions>
+          <v-layout align-center justify-end>
+            <v-btn
+              color="error"
+              small
+              outline
+              round
+              @click="showModalRemove= false"
+            >
+              No
+            </v-btn>
+            <v-btn
+              color="success"
+              round
+              @click="removeTask()"
+            >
+              Yes
+            </v-btn>
+          </v-layout>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-data-table
       v-model="selected"
       :headers="headers"
@@ -194,7 +227,7 @@
             </v-tooltip>
             <v-tooltip top>
               <template v-slot:activator="{ on }">
-                <v-icon v-on="on" @click="removeTask(props.item.id)">
+                <v-icon v-on="on" @click="showConfirmationDialog(props.item.id)">
                   delete
                 </v-icon>
               </template>
@@ -318,6 +351,7 @@ export default {
       showModalEdit: false,
       showModalSchedule: false,
       showModalHowItWorks: false,
+      showModalRemove: false,
       showModalLog: false,
       taskId: -1,
       newHostname: '',
@@ -594,13 +628,20 @@ export default {
       this.tableKey++
     },
 
-    removeTask: function (id) {
+    showConfirmationDialog (id) {
+      this.taskId = id
+      this.showModalRemove = true
+    },
+
+    removeTask: function () {
+      var id = this.taskId
       if (!this.actionFlag) {
         this.snackbar = true
         this.actionFlag = true
         api
           .request('delete', '/tasks/' + id, this.$store.state.accessToken)
           .then(response => {
+            this.showModalRemove = false
             this.snackbar = false
             this.actionFlag = false
             this.updateTask(id, null)

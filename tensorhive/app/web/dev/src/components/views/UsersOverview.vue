@@ -97,6 +97,39 @@
         </v-card>
       </v-dialog>
     </v-layout>
+    <v-dialog
+      v-model="showModalRemove"
+      width="400"
+    >
+      <v-card>
+        <v-card-title
+          class="headline grey lighten-2"
+          primary-title
+        >
+          Do you want to remove this user?
+        </v-card-title>
+        <v-card-actions>
+          <v-layout align-center justify-end>
+            <v-btn
+              color="error"
+              small
+              outline
+              round
+              @click="showModalRemove= false"
+            >
+              No
+            </v-btn>
+            <v-btn
+              color="success"
+              round
+              @click="removeUser()"
+            >
+              Yes
+            </v-btn>
+          </v-layout>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <div>
       <div class="text-xs-center pt-2">
         <v-btn color="primary" @click="showModal=true">Create user</v-btn>
@@ -208,7 +241,7 @@
               </v-icon>
               <v-icon
                 small
-                @click="deleteUser(props.item.id)"
+                @click="showConfirmationDialog(props.item.id)"
               >
                 delete
               </v-icon>
@@ -261,6 +294,8 @@ export default {
       modalPassword: '',
       modalPassword2: '',
       modalAlert: false,
+      showModalRemove: false,
+      userId: -1,
       created: false,
       showModal: false
     }
@@ -411,10 +446,17 @@ export default {
         })
     },
 
-    deleteUser: function (userId) {
+    showConfirmationDialog (id) {
+      this.userId = id
+      this.showModalRemove = true
+    },
+
+    removeUser: function () {
+      var userId = this.userId
       api
         .request('delete', '/user/delete/' + userId, this.$store.state.accessToken)
         .then(response => {
+          this.showModalRemove = false
           this.checkUsers()
         })
         .catch(error => {
