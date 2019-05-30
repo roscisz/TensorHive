@@ -8,9 +8,34 @@ import logging
 log = logging.getLogger(__name__)
 
 __author__ = '@micmarty'
-__all__ = ['ScreenCommandBuilder', 'Task', 'spawn', 'terminate', 'running', 'fetch_log']
+__all__ = ['ExitCodeError', 'SpawnError', 'spawn', 'terminate', 'running', 'fetch_log']
+"""
+This module provides functionality for spawning commands on host machines via ssh.
+It's divided into 3 parts:
+    1) command builder(s):
+        Classes that hold a set of commands (as strings) which can be launched by task executor
+        in order to achieve some result, e.g. `spawn` and `terminate`
+        You can implement your own command builder that uses different backend, currently it's `screen` program.
+
+    2) task executor:
+        Launches commands provided by command builder. 
+        It contains core logic for e.g. spawning, terminating processes on remote hosts via ssh. 
+
+    3) stateless API functions:
+        Provides high-level interface for operations on remote host, like:
+        * spawning, terminating processes
+        * getting info about running processes
+        * log fetching
 
 
+Author's note:
+    1) The ONLY recommended way to use this module from outside is by using
+    exposed API functions (see __all__)
+    # TODO Write tests
+"""
+
+
+# Custom exception names
 class ExitCodeError(AssertionError):
     pass
 
@@ -20,7 +45,7 @@ class SpawnError(Exception):
 
 
 class ScreenCommandBuilder:
-    """Set of configurable commands built on top of **screen** program."""
+    """Set of configurable commands built on top of `screen` program."""
 
     @staticmethod
     def spawn(command: str,
@@ -35,11 +60,11 @@ class ScreenCommandBuilder:
             * standard way: keep session alive, user resumes and inspects it by himself.
                 May need to use some workarounds if we want to know when command stops.
             * alternative way: screen should run ``script some_output.log -c "sleep 20; echo TensorHive"`
-            * tee way (implemented here): redirect command's output from within screen with tee
+            * tee way (implemented here): redirect command's output from within `screen` with `tee`
                 When used with -i, --ignore-interrupts options it won't accept SIGINT so that
-                the main command will catch it instead of tee. Use case for this is when your command
+                the main command will catch it instead of `tee`. Use case for this is when your command
                 prints something important after SIGINT and you want to see it + put that into log file.
-            * the screen way: use `screen -L -Logfile name.log`, unfortunately not all versions supports that feature...
+            * the screen way: use `screen -L -Logfile name.log`, unfortunately not all `screen` versions supports that feature.
 
         Side effects (incompatible with capture_output=True):
             * keep_alive will prevent saving command's output to log file.
@@ -47,6 +72,7 @@ class ScreenCommandBuilder:
             alive even when the command has finished execution - sometimes useful!
 
         Note: `custom_log_name` argument will be ignored when `capture_output=False`
+        # TODO Capture stderr (currently only stdout is captured)
         """
         if capture_output:
             if keep_alive:
@@ -62,14 +88,14 @@ class ScreenCommandBuilder:
         return 'screen -Dm -S {sess_name} bash -c "{cmd}{keep_alive} {log}" {to_bg}'.format(
             sess_name=session_name,  # will help distinguishing between TensorHive and user's sessions
             cmd=command,
-            log=capturing_command if capture_output else '',  # see method description
-            keep_alive='; exec sh'
-            if keep_alive else '',  # prevents screen from terminating session when command finished executing
-            to_bg='& echo $!'  # will print process pid
+            log=capturing_command if capture_output else '',  # see docstring
+            keep_alive='; exec sh' if keep_alive else '',  # see docstring
+            to_bg='& echo $!'  # force printing process pid
         )
 
     @staticmethod
     def mkdir(target_dir: str) -> str:
+        """Command that creates any inexisting directory given in path"""
         return 'mkdir --parents ' + target_dir
 
     @staticmethod
@@ -100,7 +126,6 @@ class ScreenCommandBuilder:
         echopath_cmd = 'echo {dir}/{name}.log'.format(dir=target_dir, name=filename)
         return mkdir_cmd + ' && ' + echopath_cmd
 
-    # TODO Use me instead of terminate? (see `ScreenCommandBuilder.spawn` description)
     @staticmethod
     def interrupt(pid: int) -> str:
         """Command that sends SIGINT to screen session. Should be used to gracefully terminate running command."""
@@ -115,7 +140,7 @@ class ScreenCommandBuilder:
     def kill(pid: int) -> str:
         """Command that kills screen session by pid.
 
-        It should also wipe dead sessions. Note that kill exit code is returned!
+        It should also wipe dead sessions. Note that `kill` exit code is returned!
         """
         return 'kill -9 {}; KILL_EXIT=$?; screen -wipe; (exit $KILL_EXIT)'.format(pid)
 
@@ -134,10 +159,11 @@ class Task:
         self.hostname = hostname
         self.command = command
         self.pid = pid
+        # Here you can replace with your own backend/command builder
         self._command_builder = ScreenCommandBuilder
 
     def spawn(self, client: ParallelSSHClient, name_appendix: Optional[str] = None) -> int:
-        """Spawns defined command via ssh client.
+        """Spawns command via ssh client.
         Returns:
             pid of the process
         """
@@ -161,16 +187,15 @@ class Task:
         self.pid = int(pid)
         return self.pid
 
-    '''
-    Note: These two methods are nearly identical, but I wanted
-    to keep them separate because of logging and adding specialized logic later
-    '''
+    """
+    Author's note: These three methods below are nearly identical, but I wanted
+    to keep them separate in order to easily extend their logic in the future.
+    """
 
     def terminate(self, client: ParallelSSHClient) -> int:
         """Terminates the task using it's pid.
 
-        Returns:
-            exit code of the operation
+        Returns exit code of the operation
         """
         assert self.pid, 'You must first spawn the task or provide pid manually.'
         command = self._command_builder.terminate(self.pid)
@@ -181,8 +206,7 @@ class Task:
     def interrupt(self, client: ParallelSSHClient) -> int:
         """Interrupts the task gracefully by sending SIGINT signal
 
-        Returns:
-            exit code of the operation
+        Returns exit code of the operation
         """
         assert self.pid, 'You must first spawn the task or provide pid manually.'
         command = self._command_builder.interrupt(self.pid)
@@ -193,8 +217,7 @@ class Task:
     def kill(self, client: ParallelSSHClient) -> int:
         """Kills the task using it's pid.
 
-        Returns:
-            exit code of the operation
+        Returns exit code of the operation
         """
         assert self.pid, 'You must first spawn the task or provide pid manually.'
         command = self._command_builder.kill(self.pid)
@@ -204,6 +227,12 @@ class Task:
 
 
 def spawn(command: str, host: Hostname, user: Username, name_appendix: Optional[str] = None) -> int:
+    """Stateless, high-level interface for spawning process on remote host.
+
+    name_appendix: string that will be attached to session name and log file name
+        Example: appendix='99' will produce session='tensorhive_task_99', log='task_99.log'
+    Returns pid of new process
+    """
     config = ssh.build_dedicated_config_for(host, user)
     client = ssh.get_client(config)
     task = Task(host, command)
@@ -217,6 +246,14 @@ def spawn(command: str, host: Hostname, user: Username, name_appendix: Optional[
 
 
 def terminate(pid: int, host: Hostname, user: Username, gracefully: Optional[bool] = True) -> int:
+    """Stateless, high-level interface for terminating process on remote host.
+
+    gracefully: determines how task will be stopped
+        False:  SIGKILL - almost guaranteed termination, aggressive
+        None:   SIGTERM - works in most cases, but rather aggresive
+        True:   SIGINT - often does not work, but only this method allows for capturing logs when program is closing
+    Returns exit code of termination operation, not running process
+    """
     config = ssh.build_dedicated_config_for(host, user)
     client = ssh.get_client(config)
     task = Task(host, pid=pid)
@@ -231,6 +268,11 @@ def terminate(pid: int, host: Hostname, user: Username, gracefully: Optional[boo
 
 
 def running(host: Hostname, user: Username) -> List[int]:
+    """Stateless, high-level interface for getting a list of running processes on remote host.
+
+    Ignores sessions with names other than `pattern`
+    Returns a list of pids
+    """
     config = ssh.build_dedicated_config_for(host, user)
     client = ssh.get_client(config)
     pattern = '.*tensorhive_task.*'
@@ -248,6 +290,13 @@ def running(host: Hostname, user: Username) -> List[int]:
 
 
 def fetch_log(host: Hostname, user: Username, task_id: int, tail: bool = False) -> Tuple[Iterator[str], str]:
+    """Stateless, high-level interface for fetching log files from remote host.
+
+    Seeks and reads files located under specific folder on remote host.
+    Re-raises pssh exceptions.
+    tail: whether to include full content or only last 10 lines
+    """
+    # TODO Path should be configurable from config files (see config.py)
     path = '~/TensorHiveLogs/task_{}.log'.format(task_id)
     program = 'tail' if tail else 'cat'
     command = '{} {}'.format(program, path)
