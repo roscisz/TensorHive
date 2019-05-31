@@ -4,6 +4,7 @@ from flask_cors import CORS
 from tensorhive.config import APP_SERVER, API_SERVER, API
 from tensorhive.core.utils.colors import green
 import json
+import tensorhive
 from pathlib import PosixPath
 import logging
 log = logging.getLogger(__name__)
@@ -52,7 +53,9 @@ def _inject_api_endpoint_to_app():
             'apiPath': 'http://{}:{}/{}'.format(
                 API_SERVER.HOST,
                 API_SERVER.PORT,
-                API.URL_PREFIX)
+                API.URL_PREFIX),
+            'version': tensorhive.__version__,
+            'apiVersion': API.VERSION
         }
         # Overwrite current file content/create file if it does not exist
         with open(str(web_app_json_config_path), 'w') as json_file:

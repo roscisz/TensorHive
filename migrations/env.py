@@ -17,6 +17,7 @@ from tensorhive.models.User import User
 from tensorhive.models.Reservation import Reservation
 from tensorhive.models.RevokedToken import RevokedToken
 from tensorhive.models.Role import Role
+from tensorhive.models.Task import Task
 target_metadata = Base.metadata
 
 # Configuration
@@ -37,8 +38,7 @@ def run_migrations_offline():
 
     """
     url = config.get_main_option("sqlalchemy.url")
-    context.configure(
-        url=url, target_metadata=target_metadata, literal_binds=True)
+    context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
 
     with context.begin_transaction():
         context.run_migrations()
@@ -52,18 +52,14 @@ def run_migrations_online():
 
     """
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
-        prefix='sqlalchemy.',
-        poolclass=pool.NullPool)
+        config.get_section(config.config_ini_section), prefix='sqlalchemy.', poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

@@ -6,7 +6,6 @@ log = logging.getLogger(__name__)
 
 
 class CRUDModel:
-
     def check_assertions(self):
         '''
         Purpose of this method is to run all necessary validation
@@ -32,7 +31,7 @@ class CRUDModel:
             log.critical(type(e))
             raise
         else:
-            log.debug('Created {}'.format(self))
+            log.debug('Saved {}'.format(self))
             return self
 
     def destroy(self):

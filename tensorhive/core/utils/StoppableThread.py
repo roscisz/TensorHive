@@ -1,6 +1,6 @@
 from threading import Thread
 from abc import abstractmethod
-from tensorhive.core.utils.decorators.override import override
+from tensorhive.core.utils.decorators import override
 import logging
 log = logging.getLogger(__name__)
 
