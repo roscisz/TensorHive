@@ -5,7 +5,6 @@ from tensorhive.core.task_nursery import SpawnError, ExitCodeError
 from pssh.exceptions import ConnectionErrorException, AuthenticationException, UnknownHostException
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt_claims
 from sqlalchemy.orm.exc import NoResultFound
-# from tensorhive.database import flask_app
 from tensorhive.config import API
 from functools import wraps
 from typing import List, Optional, Callable, Any, Dict, Tuple, Iterator
@@ -16,30 +15,33 @@ T = API.RESPONSES['task']
 S = API.RESPONSES['screen-sessions']
 G = API.RESPONSES['general']
 """
-TODO Group business functions into one place
+This module contains two kinds of controllers:
+- production-ready with authorization and authentication
+- unprotected core business logic that can be used anywhere
 
-TODO May want to have 1 function per endpoint.
 My goal was to separate authorization from controllers' logic, so that
-manual and automatic testing don't require patching Flask context (@jwt_required breaks things)
+manual and automatic testing doesn't require patching Flask context 
+(@jwt_required breaks a lot of things)
 
 In before: some controller MUST have camelCased arguments in order to keep up with API.
-They are aliased to snake_case immediately inside controller body
+They are aliased to snake_case immediately inside controller body.
+Connexion has this feature under the hood but it does not alsways work as it should (only in simple cases)
 """
+
 # Typing aliases
 Content = Dict[str, Any]
 HttpStatusCode = int
 TaskId = int
 
 
-# TODO Move to utils
+# TODO May want to move to utils
 def is_admin():
     claims = get_jwt_claims()
     return 'admin' in claims['roles']
 
 
-# TODO May want to move it somewhere else
 def synchronize(task_id: TaskId) -> None:
-    """Updates state of a Task object stored in database.
+    """Updates the state of a Task object stored in database.
 
     It compares current db record with list of active screen session (their pids in general)
     on node defined by that record (task.user.username@task.host).
@@ -64,7 +66,8 @@ def synchronize(task_id: TaskId) -> None:
     except NoResultFound:
         # This exception must be handled within try/except block when using Task.get()
         # In other words, methods decorated with @synchronize_task_record must handle this case by themselves!
-        log.warning('Task {} could not be found (also synchonized). Failing without taking any action...')
+        log.warning(
+            'Task {} could not be found (also synchronized). Failing without taking any action...'.format(task_id))
         pass
     except (AssertionError, Exception) as e:
         # task_nursery.running pssh exceptions are also catched here
@@ -111,28 +114,37 @@ def synchronize_task_record(func: Callable[[int], Any]) -> Callable[[int], Any]:
     return sync_wrapper
 
 
-def business_get_all(user_id: Optional[int], sync_all: Optional[bool]) -> List[Dict]:
-    """Fetches either all Task records or only those in relation with specific user.
-    Allows for synchronizing state of each Task out-of-the-box.
-
-    In typical scenario API client would want to get all records without sync and
-    then run sync each records individually.
-    """
-    # TODO Exceptions should never occur, but need to experiment more
-    if user_id:
-        # Returns [] if such User with such id does not exist (SQLAlchemy behavior)
-        tasks = Task.query.filter(Task.user_id == user_id).all()
+# Controllers
+# POST /tasks
+@jwt_required
+def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
+    try:
+        # User is not allowed to create task for someone else
+        assert task.get('userId') == get_jwt_identity()
+    except NoResultFound:
+        content, status = {'msg': T['not_found']}, 404
+    except AssertionError:
+        content, status = {'msg': G['unpriviliged']}, 403
     else:
-        tasks = Task.all()
+        content, status = business_create(task)
+    finally:
+        return content, status
 
-    # Wanted to decouple syncing from dict conversion with 2 oneliners (using list comprehension),
-    # but this code is O(n) instead of O(2n)
-    results = []
-    for task in tasks:
-        if sync_all:
-            synchronize(task.id)
-        results.append(task.as_dict)
-    return {'msg': T['all']['success'], 'tasks': results}, 200
+
+# GET /tasks/{id}
+@jwt_required
+def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
+    try:
+        task = Task.get(id)
+        assert get_jwt_identity() == task.user_id or is_admin()
+    except NoResultFound:
+        content, status = {'msg': T['not_found']}, 404
+    except AssertionError:
+        content, status = {'msg': G['unpriviliged']}, 403
+    else:
+        content, status = business_get(id)
+    finally:
+        return content, status
 
 
 #  GET /tasks?userId=X?syncAll=1
@@ -155,6 +167,114 @@ def get_all(userId: Optional[int], syncAll: Optional[bool]) -> List[Dict]:
         content, status = business_get_all(user_id, sync_all)
     finally:
         return content, status
+
+
+# PUT /tasks/{id}
+@jwt_required
+def update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
+    try:
+        task = Task.get(id)
+        assert task.user_id == get_jwt_identity(), 'Not an owner'
+    except NoResultFound:
+        content, status = {'msg': T['not_found']}, 404
+    except AssertionError:
+        content, status = {'msg': G['unpriviliged']}, 403
+    else:
+        content, status = business_update(id, newValues)
+    finally:
+        return content, status
+
+
+# DELETE /tasks/{id}
+@jwt_required
+def destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
+    try:
+        task = Task.get(id)
+        assert task.user_id == get_jwt_identity(), 'Not an owner'
+    except NoResultFound:
+        content, status = {'msg': T['not_found']}, 404
+    except AssertionError:
+        content, status = {'msg': G['unpriviliged']}, 403
+    else:
+        content, status = business_destroy(id)
+    finally:
+        return content, status
+
+
+# GET /tasks/{id}/spawn
+@jwt_required
+def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
+    try:
+        task = Task.get(id)
+        assert task.user_id == get_jwt_identity(), 'Not an owner'
+    except NoResultFound as e:
+        log.error(e)
+        content, status = {'msg': T['not_found']}, 404
+    except AssertionError:
+        content, status = {'msg': G['unpriviliged']}, 403
+    else:
+        content, status = business_spawn(id)
+    finally:
+        return content, status
+
+
+# GET /tasks/{id}/terminate
+@jwt_required
+def terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[Content, HttpStatusCode]:
+    try:
+        task = Task.get(id)
+        assert get_jwt_identity() == task.user_id or is_admin()
+    except NoResultFound:
+        content, status = {'msg': T['not_found']}, 404
+    except AssertionError:
+        content, status = {'msg': G['unpriviliged']}, 403
+    else:
+        content, status = business_terminate(id, gracefully)
+    finally:
+        return content, status
+
+
+# GET /tasks/{id}/log
+@jwt_required
+def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
+    try:
+        task = Task.get(id)
+        assert get_jwt_identity() == task.user_id or is_admin()
+    except NoResultFound:
+        content, status = {'msg': T['not_found']}, 404
+    except AssertionError:
+        content, status = {'msg': G['unpriviliged']}, 403
+    else:
+        content, status = business_get_log(id, tail)
+    finally:
+        return content, status
+
+
+# Business logic
+
+
+def business_get_all(user_id: Optional[int], sync_all: Optional[bool]) -> List[Dict]:
+    """Fetches either all Task records or only those in relation with specific user.
+    Allows for synchronizing state of each Task out-of-the-box.
+
+    In typical scenario API client would want to get all records without sync and
+    then run sync each records individually.
+    """
+    # TODO Exceptions should never occur, but need to experiment more
+    if user_id:
+        # Returns [] if such User with such id does not exist (SQLAlchemy behavior)
+        tasks = Task.query.filter(Task.user_id == user_id).all()
+    else:
+        tasks = Task.all()
+
+    # Wanted to decouple syncing from dict conversion with 2 oneliners (using list comprehension),
+    # but this code is O(n) instead of O(2n)
+    results = []
+    for task in tasks:
+        if sync_all:
+            synchronize(task.id)
+        results.append(task.as_dict)
+    return {'msg': T['all']['success'], 'tasks': results}, 200
 
 
 def business_create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
@@ -188,22 +308,6 @@ def business_create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-# POST /tasks
-@jwt_required
-def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
-    try:
-        # User is not allowed to create task for someone else
-        assert task.get('userId') == get_jwt_identity()
-    except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
-    except AssertionError:
-        content, status = {'msg': G['unpriviliged']}, 403
-    else:
-        content, status = business_create(task)
-    finally:
-        return content, status
-
-
 @synchronize_task_record
 def business_get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     """Fetches one Task db record"""
@@ -216,22 +320,6 @@ def business_get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         content, status = {'msg': G['internal_error']}, 500
     else:
         content, status = {'msg': T['get']['success'], 'task': task.as_dict}, 200
-    finally:
-        return content, status
-
-
-# GET /tasks/{id}
-@jwt_required
-def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
-    try:
-        task = Task.get(id)
-        assert get_jwt_identity() == task.user_id or is_admin()
-    except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
-    except AssertionError:
-        content, status = {'msg': G['unpriviliged']}, 403
-    else:
-        content, status = business_get(id)
     finally:
         return content, status
 
@@ -271,22 +359,6 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
         return content, status
 
 
-# PUT /tasks/{id}
-@jwt_required
-def update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
-    try:
-        task = Task.get(id)
-        assert task.user_id == get_jwt_identity(), 'Not an owner'
-    except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
-    except AssertionError:
-        content, status = {'msg': G['unpriviliged']}, 403
-    else:
-        content, status = business_update(id, newValues)
-    finally:
-        return content, status
-
-
 @synchronize_task_record
 def business_destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     """Deletes a Task db record. Requires terminating task manually in advance."""
@@ -302,22 +374,6 @@ def business_destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         content, status = {'msg': G['internal_error']}, 500
     else:
         content, status = {'msg': T['delete']['success']}, 200
-    finally:
-        return content, status
-
-
-# DELETE /tasks/{id}
-@jwt_required
-def destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
-    try:
-        task = Task.get(id)
-        assert task.user_id == get_jwt_identity(), 'Not an owner'
-    except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
-    except AssertionError:
-        content, status = {'msg': G['unpriviliged']}, 403
-    else:
-        content, status = business_destroy(id)
     finally:
         return content, status
 
@@ -343,6 +399,46 @@ def screen_sessions(username: str, hostname: str) -> Tuple[Content, HttpStatusCo
     else:
         # FIXME
         content, status = {'msg': S['success'], 'pids': pids}, 200
+    finally:
+        return content, status
+
+
+@synchronize_task_record
+def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
+    """Spawns command stored in Task db record (task.command).
+
+    It won't allow for spawning task which is currently running (sync + status check).
+    If spawn operation has succeeded then `running` status is set.
+    """
+    try:
+        task = Task.get(id)
+
+        assert task.status is not TaskStatus.running, 'task is already running'
+        assert task.command, 'command is empty'
+        assert task.host, 'hostname is empty'
+        assert task.user, 'user does not exist'
+
+        pid = task_nursery.spawn(task.command, task.host, task.user.username, name_appendix=str(task.id))
+        task.pid = pid
+        task.status = TaskStatus.running
+
+        # If task was scheduled to terminate and user just
+        # spawned that task manually, scheduler should still
+        # continue to watch and terminate the task automatically.
+        task.save()
+    except NoResultFound:
+        content, status = {'msg': T['not_found']}, 404
+    except AssertionError as e:
+        content, status = {'msg': T['spawn']['failure']['assertions'].format(reason=e)}, 422
+    except SpawnError as e:
+        log.warning(e)
+        content, status = {'msg': T['spawn']['failure']['backend'].format(reason=e)}, 500
+    except Exception as e:
+        log.critical(e)
+        content, status = {'msg': G['internal_error']}, 500
+    else:
+        log.info('Task {} is now: {}'.format(task.id, task.status.name))
+        content, status = {'msg': T['spawn']['success'], 'pid': pid}, 200
     finally:
         return content, status
 
@@ -400,79 +496,6 @@ def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[C
         return content, status
 
 
-# GET /tasks/{id}/terminate
-@jwt_required
-def terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[Content, HttpStatusCode]:
-    try:
-        task = Task.get(id)
-        assert get_jwt_identity() == task.user_id or is_admin()
-    except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
-    except AssertionError:
-        content, status = {'msg': G['unpriviliged']}, 403
-    else:
-        content, status = business_terminate(id, gracefully)
-    finally:
-        return content, status
-
-
-@synchronize_task_record
-def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
-    """Spawns command stored in Task db record (task.command).
-
-    It won't allow for spawning task which is currently running (sync + status check).
-    If spawn operation has succeeded then `running` status is set.
-    """
-    try:
-        task = Task.get(id)
-
-        assert task.status is not TaskStatus.running, 'task is already running'
-        assert task.command, 'command is empty'
-        assert task.host, 'hostname is empty'
-        assert task.user, 'user does not exist'
-
-        pid = task_nursery.spawn(task.command, task.host, task.user.username, name_appendix=str(task.id))
-        task.pid = pid
-        task.status = TaskStatus.running
-
-        # If task was scheduled to terminate and user just
-        # spawned that task manually, scheduler should still
-        # continue to watch and terminate the task automatically.
-        task.save()
-    except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
-    except AssertionError as e:
-        content, status = {'msg': T['spawn']['failure']['assertions'].format(reason=e)}, 422
-    except SpawnError as e:
-        log.warning(e)
-        content, status = {'msg': T['spawn']['failure']['backend'].format(reason=e)}, 500
-    except Exception as e:
-        log.critical(e)
-        content, status = {'msg': G['internal_error']}, 500
-    else:
-        log.info('Task {} is now: {}'.format(task.id, task.status.name))
-        content, status = {'msg': T['spawn']['success'], 'pid': pid}, 200
-    finally:
-        return content, status
-
-
-# GET /tasks/{id}/spawn
-@jwt_required
-def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
-    try:
-        task = Task.get(id)
-        assert task.user_id == get_jwt_identity(), 'Not an owner'
-    except NoResultFound as e:
-        log.error(e)
-        content, status = {'msg': T['not_found']}, 404
-    except AssertionError:
-        content, status = {'msg': G['unpriviliged']}, 403
-    else:
-        content, status = business_spawn(id)
-    finally:
-        return content, status
-
-
 def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
     """Fetches log file created by spawned task (through stdout redirect).
 
@@ -506,23 +529,11 @@ def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-# GET /tasks/{id}/log
-@jwt_required
-def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
-    try:
-        task = Task.get(id)
-        assert get_jwt_identity() == task.user_id or is_admin()
-    except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
-    except AssertionError:
-        content, status = {'msg': G['unpriviliged']}, 403
-    else:
-        content, status = business_get_log(id, tail)
-    finally:
-        return content, status
-
-
 if __name__ == '__main__':
+    """Manual testing suite for all controllers
+    ONLY FOR DEVELOPMENT purposes, code is ugly and it won't be maintained for that reason
+    It shows though that making CLI app for users (via real API) makes a lot of sense.
+    """
     import os
     from tensorhive.database import init_db
     from inspect import cleandoc
@@ -615,7 +626,7 @@ if __name__ == '__main__':
             timenow = datetime.utcnow()
             content, status = business_update(
                 int(task_id),
-                new_values=dict(command='new_command', hostname='miczi.gda.pl', spawnAt=timenow, terminateAt=timenow))
+                new_values=dict(command='new_command', hostname='foobar', spawnAt=timenow, terminateAt=timenow))
             print(content, status)
         elif action == '7':
             task_id = input('ID > ')

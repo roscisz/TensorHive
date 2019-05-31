@@ -13,6 +13,10 @@ log = logging.getLogger(__name__)
 
 # FIXME Move to utils
 def parsed_input_datetime(value: str) -> datetime:
+    """Tries to parse string into datetime.
+
+    Re-raises ValueError on failure
+    """
     client_datetime_format = '%Y-%m-%dT%H:%M:%S.%fZ'
     try:
         result = datetime.strptime(value, client_datetime_format)
@@ -26,9 +30,9 @@ def parsed_input_datetime(value: str) -> datetime:
 # FIXME Move to utils
 def try_parse_input_datetime(value: Union[str, datetime, None]) -> Optional[datetime]:
     """Allows for string to datetime conversion given in API request.
-    If new value is of `datetime` type then just returns its value as it is.
+    If new value is of `datetime` type then it just returns original value as it is.
 
-    :raises ValueError
+    Re-rasies ValueError
     """
     if isinstance(value, str):
         return parsed_input_datetime(value)
@@ -73,7 +77,7 @@ class Task(CRUDModel, Base):
     def check_assertions(self):
         pass
 
-    # FIXME Code copied from Reservation and adapted to Optional[datetime] use case (may want to refactor in both places)
+    # FIXME Code copied from `Reservation.py` and adapted to Optional[datetime] use case (may want to refactor in both places)
     @classmethod
     def try_parse_output_datetime(cls, value: Optional[datetime]) -> Optional[str]:
         """Parses datetime object taking timezone postfix into consideration.
