@@ -18,8 +18,8 @@ It's divided into 3 parts:
         You can implement your own command builder that uses different backend, currently it's `screen` program.
 
     2) task executor:
-        Launches commands provided by command builder. 
-        It contains core logic for e.g. spawning, terminating processes on remote hosts via ssh. 
+        Launches commands provided by command builder.
+        It contains core logic for e.g. spawning, terminating processes on remote hosts via ssh.
 
     3) stateless API functions:
         Provides high-level interface for operations on remote host, like:
@@ -64,7 +64,8 @@ class ScreenCommandBuilder:
                 When used with -i, --ignore-interrupts options it won't accept SIGINT so that
                 the main command will catch it instead of `tee`. Use case for this is when your command
                 prints something important after SIGINT and you want to see it + put that into log file.
-            * the screen way: use `screen -L -Logfile name.log`, unfortunately not all `screen` versions supports that feature.
+            * the screen way: use `screen -L -Logfile name.log`, unfortunately
+                              not all `screen` versions supports that feature.
 
         Side effects (incompatible with capture_output=True):
             * keep_alive will prevent saving command's output to log file.

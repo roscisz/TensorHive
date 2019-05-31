@@ -19,11 +19,11 @@ def timeit(method):
         result = method(*args, **kw)
         print('\t[@timeit] ', method.__name__, time_func() - start_time)
         return result
+
     return timed
 
 
 def memoize(func):
-    # FIXME Move to tensorhive.utils
     '''Decorator which enables caching function's return values when called with the exact same arguments.
 
     When decorated function is called with arguments that are already in cache (key exists) it won't be executed
@@ -39,6 +39,7 @@ def memoize(func):
         foo(True) and foo('True') will be treated separately (different key in dict)
     '''
     cache = func.cache = {}
+
     @functools.wraps(func)
     def memoized_func(*args, **kwargs):
         basic_key = str(args) + str(kwargs)
@@ -49,4 +50,5 @@ def memoize(func):
         if key not in cache:
             cache[key] = func(*args, **kwargs)
         return cache[key]
+
     return memoized_func

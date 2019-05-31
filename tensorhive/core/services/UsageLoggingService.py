@@ -1,7 +1,6 @@
 from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.utils.decorators import override
-from tensorhive.core.utils.enums import LogFileCleanupAction
 from tensorhive.core.services.Service import Service
 from tensorhive.models.Reservation import Reservation
 from typing import Dict, List, Optional, Union
@@ -166,8 +165,7 @@ class UsageLoggingService(Service):
             log_file_path = self.log_dir / filename
             try:
                 gpu_data = self.extract_specific_gpu_data(
-                    uuid=reservation.protected_resource_id,
-                    infrastructure=infrastructure)
+                    uuid=reservation.protected_resource_id, infrastructure=infrastructure)
                 Log(data=gpu_data).save(out_path=log_file_path)
             except Exception as e:
                 log.error(e)

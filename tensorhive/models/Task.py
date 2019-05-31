@@ -1,5 +1,4 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Enum, DateTime
-#from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from tensorhive.database import Base
 from sqlalchemy.orm import relationship, backref
@@ -65,19 +64,19 @@ class Task(CRUDModel, Base):
     def __repr__(self):
         return '<Task id={id}, user={user}, name={host}, command={command}\n' \
             '\tpid={pid}, status={status}, spawn_at={spawn_at}, terminate_at={terminate_at}>'.format(
-            id=self.id,
-            user=self.user,
-            host=self.host,
-            command=self.command,
-            pid=self.pid,
-            status=self.status.name,
-            spawn_at=self.spawn_at,
-            terminate_at=self.terminate_at)
+                id=self.id,
+                user=self.user,
+                host=self.host,
+                command=self.command,
+                pid=self.pid,
+                status=self.status.name,
+                spawn_at=self.spawn_at,
+                terminate_at=self.terminate_at)
 
     def check_assertions(self):
         pass
 
-    # FIXME Code copied from `Reservation.py` and adapted to Optional[datetime] use case (may want to refactor in both places)
+    # FIXME Code copied from `Reservation.py` and adapted to Optional[datetime] use case (refactor in both places)
     @classmethod
     def try_parse_output_datetime(cls, value: Optional[datetime]) -> Optional[str]:
         """Parses datetime object taking timezone postfix into consideration.

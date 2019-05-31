@@ -20,7 +20,7 @@ This module contains two kinds of controllers:
 - unprotected core business logic that can be used anywhere
 
 My goal was to separate authorization from controllers' logic, so that
-manual and automatic testing doesn't require patching Flask context 
+manual and automatic testing doesn't require patching Flask context
 (@jwt_required breaks a lot of things)
 
 In before: some controller MUST have camelCased arguments in order to keep up with API.
@@ -324,7 +324,7 @@ def business_get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-# TODO What if task is already running: should we allow for updating command, hostname, etc. Currently it should affect only next usess
+# TODO What if task is already running: allow for updating command, hostname, etc.?
 def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """Updates certain fields of a Task db record, see `allowed_fields`."""
     allowed_fields = {'command', 'hostname', 'spawnAt', 'terminateAt'}

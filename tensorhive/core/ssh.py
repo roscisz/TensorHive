@@ -91,7 +91,7 @@ def get_stdout(host: Hostname, output: pssh.output.HostOutput) -> Optional[str]:
 
     Re-raises exceptions that occured during command execution.
     Returns a single, usually multi-line string or None
-    # TODO Handle more exceptions 
+    # TODO Handle more exceptions
     """
     try:
         host_result = output[host]
