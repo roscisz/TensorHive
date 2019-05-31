@@ -130,7 +130,7 @@ class ScreenCommandBuilder:
     @staticmethod
     def interrupt(pid: int) -> str:
         """Command that sends SIGINT to screen session. Should be used to gracefully terminate running command."""
-        return 'screen -S {} -X stuff $\'\cc\''.format(pid)
+        return 'screen -S {} -X stuff "^C"'.format(pid)
 
     @staticmethod
     def terminate(pid: int) -> str:
