@@ -35,7 +35,7 @@ dev-deps:
 docs:
 	@echo "Generating pdoc documentation for TensorHive Core..."
 	pdoc --html tensorhive.core --only-pypath --overwrite --html-dir docs/ && mv docs/tensorhive/core/* docs/
-	$(call green, "Done.\n")
+	$(call green, "Done. You can now browse the docs via: firefox docs/index.html\n")
 
 
 clean:
@@ -65,21 +65,21 @@ codestyle:
 	python -m flake8 tensorhive tests
 
 define red
-      @tput setaf 1
-      @echo $1
-	  @tput sgr0
+	@tput setaf 1
+	@echo $1
+	@tput sgr0
 endef
 
 define green
-      @tput setaf 2
-      @echo $1
-	  @tput sgr0
+	@tput setaf 2
+	@echo $1
+	@tput sgr0
 endef
 
 define yellow
-      @tput setaf 3
-      @echo $1
-	  @tput sgr0
+	@tput setaf 3
+	@echo $1
+	@tput sgr0
 endef
 
 .PHONY: all
