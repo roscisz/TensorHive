@@ -27,7 +27,7 @@ class TaskSchedulingService(Service):
     def inject(self, injected_object: Any):
         pass
 
-    def _log_msg(now: datetime, action: str, id: TaskId, scheduled: datetime) -> str:
+    def _log_msg(self, now: datetime, action: str, id: TaskId, scheduled: datetime) -> str:
         return 'UTC now: {now} | {action} task {task_id} scheduled for {scheduled}'.format(
             now=now.strftime("%H:%M:%S"), action=action, task_id=id, scheduled=scheduled.strftime("%H:%M:%S"))
 
