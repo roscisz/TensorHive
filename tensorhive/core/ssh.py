@@ -1,6 +1,7 @@
 from tensorhive.core.utils.decorators import memoize, timeit
+from tensorhive.config import SSH
 from pssh.clients.native import ParallelSSHClient
-from typing import Optional, Dict
+from typing import Optional, Dict, Tuple
 import functools
 import pssh
 import logging
@@ -26,19 +27,22 @@ Username = str
 CommandResult = Dict[Hostname, pssh.output.HostOutput]
 
 
-def build_dedicated_config_for(host: Hostname, user: Username) -> HostsConfig:
+def build_dedicated_config_for(host: Hostname, user: Username) -> Tuple[HostsConfig, Optional[ProxyConfig]]:
     """Takes off the responsibility for building correct HostsConfig manually.
 
     This function is supposed to provide high-level interface for providing
-    valid `config` parameter to `get_client()` function.
+    valid `config` and `pconfig` parameter to `get_client()` function.
     """
     assert host and user, 'Arguments must not be None!'
-    return {
+    hosts_config = {
         host: {
             'user': user,
             'pkey': '~/.ssh/id_rsa'  # TODO Read path from config files (see config.py)
         }
     }
+    # Read config extracted from hosts_config.ini (proxy is common for all hosts)
+    pconfig = SSH.PROXY
+    return hosts_config, pconfig
 
 
 @memoize

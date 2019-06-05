@@ -234,8 +234,8 @@ def spawn(command: str, host: Hostname, user: Username, name_appendix: Optional[
         Example: appendix='99' will produce session='tensorhive_task_99', log='task_99.log'
     Returns pid of new process
     """
-    config = ssh.build_dedicated_config_for(host, user)
-    client = ssh.get_client(config)
+    config, pconfig = ssh.build_dedicated_config_for(host, user)
+    client = ssh.get_client(config, pconfig)
     task = Task(host, command)
     try:
         pid = task.spawn(client, name_appendix)
@@ -255,8 +255,8 @@ def terminate(pid: int, host: Hostname, user: Username, gracefully: Optional[boo
         True:   SIGINT - often does not work, but only this method allows for capturing logs when program is closing
     Returns exit code of termination operation, not running process
     """
-    config = ssh.build_dedicated_config_for(host, user)
-    client = ssh.get_client(config)
+    config, pconfig = ssh.build_dedicated_config_for(host, user)
+    client = ssh.get_client(config, pconfig)
     task = Task(host, pid=pid)
 
     if gracefully is None:
@@ -274,8 +274,8 @@ def running(host: Hostname, user: Username) -> List[int]:
     Ignores sessions with names other than `pattern`
     Returns a list of pids
     """
-    config = ssh.build_dedicated_config_for(host, user)
-    client = ssh.get_client(config)
+    config, pconfig = ssh.build_dedicated_config_for(host, user)
+    client = ssh.get_client(config, pconfig)
     pattern = '.*tensorhive_task.*'
     command = ScreenCommandBuilder.get_active_sessions(pattern)
     output = ssh.run_command(client, command)
@@ -302,8 +302,8 @@ def fetch_log(host: Hostname, user: Username, task_id: int, tail: bool = False) 
     program = 'tail' if tail else 'cat'
     command = '{} {}'.format(program, path)
 
-    config = ssh.build_dedicated_config_for(host, user)
-    client = ssh.get_client(config)
+    config, pconfig = ssh.build_dedicated_config_for(host, user)
+    client = ssh.get_client(config, pconfig)
     output = ssh.run_command(client, command)
 
     if output[host].exception:

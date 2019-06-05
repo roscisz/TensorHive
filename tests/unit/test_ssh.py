@@ -5,7 +5,7 @@ from tensorhive.core import ssh
 
 
 def test_config_builder_with_good_arguments():
-    config = ssh.build_dedicated_config_for('hostname', 'username')
+    config, _ = ssh.build_dedicated_config_for('hostname', 'username')
     assert config == {
         'hostname': {
             'user': 'username',
