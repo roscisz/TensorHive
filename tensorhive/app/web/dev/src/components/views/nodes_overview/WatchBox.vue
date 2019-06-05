@@ -171,7 +171,17 @@ export default {
       }
       this.metrics.push('processes')
       if (this.defaultMetric === '') {
-        this.selectedMetric = this.metrics[0]
+        var metric = this.metrics[0]
+        for (metricIndex in this.metrics) {
+          var metricName = this.metrics[metricIndex]
+          if (metricName === 'gpu_util') {
+            metric = metricName
+            break
+          } else if (metricName === 'mem_used') {
+            metric = metricName
+          }
+        }
+        this.selectedMetric = metric
       } else {
         this.selectedMetric = this.defaultMetric
       }
