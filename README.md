@@ -1,5 +1,3 @@
-
-
 TensorHive
 ===
 
@@ -93,27 +91,45 @@ TODO Write new usage instructions
 Features
 ----------------------
 #### Core
-- [x] :mag_right: Monitor GPU parameters on each host
+- [x] :mag_right: Monitor metrics on each host
+    - [x] :tm: Nvidia GPUs
+    - [ ] :pager: CPU, RAM, HDD
 - [x] :customs: Protection of reserved resources
     - [x] :warning:	Send warning messages to terminal of users who violate the rules
     - [x] :mailbox_with_no_mail: Send e-mail warnings
-    - [ ] :bomb: Kill unwated processes
-- [X] :rocket: Automatic execution of user's predefined command
-- [x] :watch: Track wasted reservation time (idle)
-    - [ ] Remind user when his reservation starts and ends
-    - [ ] Send e-mail if idle for too long
-#### Dashboard
+    - [ ] :bomb: Kill unwanted processes
+- [X] :rocket: Task nursery and scheduling
+    - [x] :old_key: Execute any command in the name of a user
+    - [x] :alarm_clock: Schedule spawn and termination time
+    - [x] :repeat: Synchronize process status
+    - [x] :factory: Use `screen` command as backend - user can easily attach to running task
+    - [x] :skull: Remote process interruption, termination or kill
+    - [x] :floppy_disk: Save stdout to disk
+    - [ ] :page_facing_up: Capture stderr
+- [x] :watch: Track wasted (idle) time during reservation
+    - [x] :hocho: Gather and calculate average gpu and mem utilization
+    - [ ] :loudspeaker: Remind user when his reservation starts and ends
+    - [ ] :incoming_envelope: Send e-mail if idle for too long
+#### Web
 - [x] :chart_with_downwards_trend: Configurable charts view
-    - [x] GPU metrics and active processes
-    - [ ] CPU, RAM, HDD metrics
+    - [x] Metrics and active processes
+    - [ ] Detailed host specification
 - [x] :calendar: Calendar view
     - [x] Allow making reservations for selected GPUs
     - [x] Edit reservations
     - [x] Cancel reservations
+    - [ ] Attach jobs to reservation
+- [x] :baby_symbol: Task nursery
+    - [x] Create parametrized tasks and assign to hosts, automatically set `CUDA_VISIBLE_DEVICES`
+    - [x] Buttons for task spawning/scheduling/termination/killing actions
+    - [x] Fetch log produced by running task
+    - [x] Group actions (spawn, schedule, terminate, kill selected)
 - [ ] :scroll: Detailed hardware specification view
 - [ ] :penguin: Admin panel
     - [ ] User banning
     - [ ] Accept/reject reservation requests
+    - [ ] Modify rules on-the-fly (without restarting)
+    - [ ] Show popups to users (something like message of the day - `motd`)
 
 #### API
 - [x] OpenAPI 2.0 specification with Swagger UI
