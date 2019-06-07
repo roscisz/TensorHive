@@ -8,8 +8,6 @@ TensorHive
 ![](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=popout-square)
 
-TODO Issue template to file in repo
-
 <img src="https://github.com/roscisz/TensorHive/raw/master/images/logo_small.png" height="130" align="left">
 
 TensorHive is an open source system for monitoring and managing computing resources across multiple hosts.
@@ -35,7 +33,8 @@ Our goal is to provide solutions for painful problems that ML engineers often ha
 - :dizzy_face: Managing a list of training commands for all your distributed training experiments drives you nuts (because you didn't wrap them into bash scripts)
 - :zzz: Remembering to manually launch the training before going sleep is no fun anymore
 
-#### What TensorHive has to offer*
+What TensorHive has to offer
+-----------------------------
 :zero: Dead-simple one-machine installation and configuration, no `sudo` requirements
 
 :one: Users can make GPU reservations for specific time range in advance via **reservation mechanism**
@@ -50,7 +49,7 @@ Our goal is to provide solutions for painful problems that ML engineers often ha
 
 &nbsp;&nbsp;&nbsp;&nbsp; :arrow_right: no more manually logging in to each individual machine in order to check if GPU is currently taken or not
 
-**\*** For more details, check out the full list of [features](#features)
+For more details, check out the [full list of features](#features)
 
 Getting started
 ---------------
