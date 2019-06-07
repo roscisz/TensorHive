@@ -12,25 +12,28 @@ TensorHive
 <img src="https://github.com/roscisz/TensorHive/raw/master/images/logo_small.png" height="130" align="left">
 
 TensorHive is an open source system for monitoring and managing computing resources across multiple hosts.
-It solves the most common problems and nightmares about accessing and sharing your AI-focused infrastructure across multiple, often competing users.
+It solves the most common problems and nightmares about accessing and sharing your AI-oriented infrastructure across multiple, often competing users.
 
-It's designed with __flexibility, lightness and configuration-friendliness__ in mind.
+It's designed with __simplicty, flexibility and configuration-friendliness__ in mind.
 
 <br>
 
-Common use cases
+Top features
 ----------------------
-TODO Product overview, use cases
-Generally speaking TensorHive will improve the experience of using 
 
-Currently TensorHive is being used on production in these 4 environments:
+:one: Users can make GPU reservations for specific time range in advance via **reservation mechanism***
 
-| Where  | Hardware | No. users |
-| ------ | -------- | --------- |
-| [Gdansk University of Technology](https://eti.pg.edu.pl/en) | NVIDIA DGX Station (4x Tesla V100 16GB | TODO |
-| [Lab at GUT](https://eti.pg.edu.pl/katedra-architektury-systemow-komputerowych/main) | 18x machines with GTX 1060 6GB | TODO |
-| [Gradient PG](http://gradient.eti.pg.gda.pl/en/) | TITAN X 12GB | TODO |
-| [VoiceLab - Conversational Intelligence](voicelab.ai) | TODO | TODO
+&nbsp;&nbsp;&nbsp;&nbsp; :arrow_right: no more frustration caused by rules: **"first come, first served"** or **"the law of the jungle"**.
+
+:two: Users can prepare and schedule custom tasks (commands) to be run on selected GPUs and hosts
+
+&nbsp;&nbsp;&nbsp;&nbsp; :arrow_right: automate and simplify **distributed trainings** - **"one button to rule them all"***
+
+:three: Gather all useful GPU metrics, from all configured hosts **in one dashboard**
+
+&nbsp;&nbsp;&nbsp;&nbsp; :arrow_right: no more manually logging in to each individual machine in order to check if GPU is currently taken or not
+
+**\*** For more details, check out the full list of [features](#features)
 
 Getting started
 ---------------
@@ -51,7 +54,7 @@ conda install tensorhive
 ```
 
 #### From source
-(optional) We encourage separation from your others python packages with Miniconda environment (TODO) 
+(optional) For development purposes we encourage separation from your current python packages using e.g. Miniconda (TODO) 
 
 ```shell
 conda create --name th_env python=3.5 pip
@@ -62,7 +65,7 @@ activate th_env
 git clone https://github.com/roscisz/TensorHive.git && cd TensorHive
 make dev
 ```
-TensorHive is shipped with built web app distribution, but you can build it separately with `make app`, for more useful commands see `Makefile`.
+TensorHive is already shipped with newest web app build, but in case you modify the source, you can can build it with `make app`. For more useful commands see our [Makefile](https://github.com/roscisz/TensorHive/blob/master/TensorHive/Makefile).
 
 Basic usage
 -----
@@ -136,7 +139,16 @@ Features
 
 Deployment in production (for admins)
 -----
-TensorHive is being used with 
+TODO Instructions
+
+Currently TensorHive is being used on production in these 4 environments:
+
+| Where  | Hardware | No. users |
+| ------ | -------- | --------- |
+| [Gdansk University of Technology](https://eti.pg.edu.pl/en) | NVIDIA DGX Station (4x Tesla V100 16GB | TODO |
+| [Lab at GUT](https://eti.pg.edu.pl/katedra-architektury-systemow-komputerowych/main) | 18x machines with GTX 1060 6GB | TODO |
+| [Gradient PG](http://gradient.eti.pg.gda.pl/en/) | TITAN X 12GB | TODO |
+| [VoiceLab - Conversational Intelligence](voicelab.ai) | TODO | TODO
 
 Application examples and benchmarks
 --------
