@@ -77,7 +77,7 @@ conda install tensorhive
 git clone https://github.com/roscisz/TensorHive.git && cd TensorHive
 make dev
 ```
-TensorHive is already shipped with newest web app build, but in case you modify the source, you can can build it with `make app`. For more useful commands see our [Makefile](https://github.com/roscisz/TensorHive/blob/master/TensorHive/Makefile).
+TensorHive is already shipped with newest web app build, but in case you modify the source, you can can build it with `make app`. For more useful commands see our [Makefile](https://github.com/roscisz/TensorHive/blob/master/tensorhive/Makefile).
 
 Basic usage
 -----
@@ -162,7 +162,7 @@ Deployment in production (for admins)
 -----
 #### Advanced configuration
 You can fully customize TensorHive behaviour from `~/.config/TensorHive/main_config.ini`
-[(see example)](https://github.com/roscisz/TensorHive/blob/master/TensorHive/main_config.ini)
+[(see example)](https://github.com/roscisz/TensorHive/blob/master/tensorhive/main_config.ini)
 
 #### Database migration
 TODO
