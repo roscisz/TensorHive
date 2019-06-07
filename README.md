@@ -22,27 +22,29 @@ About project
 Our goal is to provide solutions for painful problems that ML engineers often have to struggle with when working with remote machines in order to run neural network trainings.
 
 #### You should really consider using TensorHive if anything described in profiles below matches you:
-1. You're and **admin**, who is responsible for managing a cluster (or multiple servers) with powerful GPUs installed. 
+1. You're an **admin**, who is responsible for managing a cluster (or multiple servers) with powerful GPUs installed. 
 - :angry: There are more users than resources, so they have to compete for it, but you don't know how to deal with that chaos
 - :ocean: Other popular tools are simply an overkill, have different purpose or require a lot of time to spend on reading documentation, installation and configuration (Graphana, Kubernetes, Slurm)
 - :penguin: People that are using your infrastructure expect only one interface for all the things related to training models (besides terminal): monitoring, reservation calendar and scheduling distributed jobs 
 - :collision: Can't risk messing up sensitive configuration by installing software on each individual machine, prefering centralized solution which can be managed from one place.
 
-2. Standalone user who has access to beefy GPUs scatterd across multiple machines
-- :part_alternation_mark: You want to be able to determine if batch size is too small or if there's a bottleneck when moving data from memory to GPU - `gpu_util`, `mem_util`, `mem_used` metrics are great for this purpose
+2. You're a **standalone user** who has access to beefy GPUs scatterd across multiple machines
+- :part_alternation_mark: You want to be able to determine if batch size is too small or if there's a bottleneck when moving data from memory to GPU - charts with `gpu_util`, `mem_util`, `mem_used` metrics are great for this purpose
 - :date: Visualizing names of training experiments using calendar helps you track how you're progressing on the project
-- Launching distributed trainings is essential for you, no matter what the framework is
-- :dizzy_face: Managing a list of training commands for all your distributed training experiments drives you nuts (because you wrap them into bash scripts)
+- :snake: Launching distributed trainings is essential for you, no matter what the framework is
+- :dizzy_face: Managing a list of training commands for all your distributed training experiments drives you nuts (because you didn't wrap them into bash scripts)
 - :zzz: Remembering to manually launch the training before going sleep is no fun anymore
 
+#### What TensorHive has to offer*
+:zero: Dead-simple one-machine installation and configuration, no `sudo` requirements
 
-:one: Users can make GPU reservations for specific time range in advance via **reservation mechanism***
+:one: Users can make GPU reservations for specific time range in advance via **reservation mechanism**
 
 &nbsp;&nbsp;&nbsp;&nbsp; :arrow_right: no more frustration caused by rules: **"first come, first served"** or **"the law of the jungle"**.
 
 :two: Users can prepare and schedule custom tasks (commands) to be run on selected GPUs and hosts
 
-&nbsp;&nbsp;&nbsp;&nbsp; :arrow_right: automate and simplify **distributed trainings** - **"one button to rule them all"***
+&nbsp;&nbsp;&nbsp;&nbsp; :arrow_right: automate and simplify **distributed trainings** - **"one button to rule them all"**
 
 :three: Gather all useful GPU metrics, from all configured hosts **in one dashboard**
 
@@ -117,10 +119,10 @@ Features
     - [ ] :bomb: Kill unwanted processes
 - [X] :rocket: Task nursery and scheduling
     - [x] :old_key: Execute any command in the name of a user
-    - [x] :alarm_clock: Schedule spawn and termination time
+    - [x] :alarm_clock: Schedule spawn and termination
     - [x] :repeat: Synchronize process status
     - [x] :factory: Use `screen` command as backend - user can easily attach to running task
-    - [x] :skull: Remote process interruption, termination or kill
+    - [x] :skull: Remote process interruption, termination and kill
     - [x] :floppy_disk: Save stdout to disk
     - [ ] :page_facing_up: Capture stderr
 - [x] :watch: Track wasted (idle) time during reservation
@@ -131,7 +133,7 @@ Features
 #### Web
 - [x] :chart_with_downwards_trend: Configurable charts view
     - [x] Metrics and active processes
-    - [ ] Detailed host specification
+    - [ ] Detailed harware specification (CPU clock speed, RAM, etc.)
 - [x] :calendar: Calendar view
     - [x] Allow making reservations for selected GPUs
     - [x] Edit reservations
@@ -182,14 +184,15 @@ Currently TensorHive is being used on production in these 4 environments:
 
 Application examples and benchmarks
 --------
-Along with TensorHive, we are developing a set of [**sample deep neural network training applications**](https://github.com/roscisz/TensorHive/tree/master/examples) in Distributed TensorFlow which will be used as test applications for the system. They can also serve as benchmarks for various GPU, distributed multiGPU and distributed multinode architectures. For each example, a full set of instructions to reproduce is given.
+Along with TensorHive, we are developing a set of [**sample deep neural network training applications**](https://github.com/roscisz/TensorHive/tree/master/examples) in Distributed TensorFlow which will be used as test applications for the system. They can also serve as benchmarks for single GPU, distributed multi-GPU and distributed multi-node architectures. For each example, a full set of instructions to reproduce is provided.
 
 <hr/>
 
 Contibution and feedback
 ------------------------
-We'd :heart: to collect your observations, issues and pull requests.
+We'd :heart: to collect your observations, issues and pull requests!
 
+TODO Add issue template to repo. Put link to Issues here
 You can do this by making use of our [**issue template**](https://gist.github.com/micmarty/396c649bf693688245731f35854bf971).
 
 Credits
