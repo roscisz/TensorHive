@@ -54,7 +54,7 @@ For more details, check out the [full list of features](#features)
 Getting started
 ---------------
 ### Prerequisites
-* All hosts must be accessible via SSH, without password, using SSH Key-Based Authentication ([TODO OUR OWN LINK set up SSH keys](https://www.ssh.com/ssh/keygen/))
+* All hosts must be accessible via SSH, without password, using SSH Key-Based Authentication ([How to set up SSH keys](https://www.shellhacks.com/ssh-login-without-password/)
 * Only NVIDIA GPUs are supported (relying on ```nvidia-smi``` command)
 
 ### Installation
@@ -70,7 +70,7 @@ conda install tensorhive
 ```
 
 #### From source
-(optional) For development purposes we encourage separation from your current python packages using e.g. Miniconda (TODO) 
+(optional) For development purposes we encourage separation from your current python packages using e.g. [Miniconda](https://docs.conda.io/en/latest/miniconda.html) 
 `conda create --name th_env python=3.5 pip; activate th_env`
 
 ```shell
@@ -98,13 +98,28 @@ Web application and API Documentation can be accessed via URLs highlighted in gr
 
 Accessible infrastructure can be monitored in the Nodes overview tab. Sample screenshot:
 
-Here you can add new watches, configure displayed metrics, monitor running GPU processes and its' owners
-TODO Update screenshot
+Here you can add new watches, configure displayed metrics, monitor running GPU processes and its' owners.
+
+
+TODO Updated screenshot
 
 #### GPU Reservation calendar
 
-TODO Update screenshot
-TODO Write new usage instructions
+Each column represents all reservation events for a GPU on a given day.
+In order to make a new reservation simply click and drag with your mouse, select GPU(s), add some meaningful title, optionally adjust time range.
+
+If there are many hosts and GPUs in our infrastructure, you can use our simplified, horizontal calendar to quickly identify empty time slots and filter out already reserved GPUs.
+
+
+TODO Updated screenshot
+
+From now on, **only your processes are eligible to run on reserved GPU(s)**. TensorHive periodically checks if some other user has violated it. He will be spammed with warnings on all his PTYs, emailed every once in a while, additionally admin will also be notified (it all depends on the configuration).
+
+#### Task nursery
+
+Here you can prepare commands 
+Simple but powerful command templating mechanism allows for **TODO**
+Feel free to experiment **TODO**
 
 Features
 ----------------------
@@ -192,6 +207,7 @@ Contibution and feedback
 We'd :heart: to collect your observations, issues and pull requests!
 
 TODO Add issue template to repo. Put link to Issues here
+
 You can do this by making use of our [**issue template**](https://gist.github.com/micmarty/396c649bf693688245731f35854bf971).
 
 Credits
