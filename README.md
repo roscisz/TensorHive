@@ -1,57 +1,82 @@
-<img src="https://github.com/roscisz/TensorHive/raw/master/images/logo_small.png" height="200">
+
 
 TensorHive
 ===
 
-
-![](https://img.shields.io/badge/release-v0.2.4-brightgreen.svg?style=popout-square)
-![](https://img.shields.io/badge/pypi-v0.2.4-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/release-v0.3-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/pypi-v0.3-brightgreen.svg?style=popout-square)
 ![](https://img.shields.io/badge/platform-Linux-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=popout-square)
 
-TensorHive is an open source system for managing and monitoring your computing resources across multiple hosts.
+<img src="https://github.com/roscisz/TensorHive/raw/master/images/logo_small.png" height="130" align="left">
+
+TensorHive is an open source system for monitoring and managing computing resources across multiple hosts.
 It solves the most common problems and nightmares about accessing and sharing your AI-focused infrastructure across multiple, often competing users.
 
-It's designed with __flexibility, lightness and configuration-friendliness__ in mind. 
+It's designed with __flexibility, lightness and configuration-friendliness__ in mind.
+
+<br>
+
+Common use cases
+----------------------
+TODO Product overview, use cases
+Generally speaking TensorHive will improve the experience of using 
+
+Currently TensorHive is being used on production in these 4 environments:
+
+| Where  | Hardware | No. users |
+| ------ | -------- | --------- |
+| [Gdansk University of Technology](https://eti.pg.edu.pl/en) | NVIDIA DGX Station (4x Tesla V100 16GB | TODO |
+| [Lab at GUT](https://eti.pg.edu.pl/katedra-architektury-systemow-komputerowych/main) | 18x machines with GTX 1060 6GB | TODO |
+| [Gradient PG](http://gradient.eti.pg.gda.pl/en/) | TITAN X 12GB | TODO |
+| [VoiceLab - Conversational Intelligence](voicelab.ai) | TODO | TODO
 
 Getting started
 ---------------
 ### Prerequisites
-* Nodes should be accessible via SSH without password ([HOWTO set up SSH keys](https://www.ssh.com/ssh/keygen/))
-* Only NVIDIA GPUs are supported (```nvidia-smi``` is required)
+* All hosts must be accessible via SSH, without password, using SSH Key-Based Authentication ([TODO OUR OWN LINK set up SSH keys](https://www.ssh.com/ssh/keygen/))
+* Only NVIDIA GPUs are supported (relying on ```nvidia-smi``` command)
 
 ### Installation
 
 #### Via pip
 ```shell
-pip3 install tensorhive
+pip install tensorhive
+```
+
+#### Via conda
+```shell
+conda install tensorhive
 ```
 
 #### From source
-```
-git clone https://github.com/roscisz/TensorHive.git
-cd TensorHive
-pip install .
-```
+(optional) We encourage separation from your others python packages with Miniconda environment (TODO) 
 
-If you want to also build the web app manually:
 ```shell
-(cd tensorhive/app/web/dev && npm install && npm run build)
+conda create --name th_env python=3.5 pip
+activate th_env
 ```
 
-Usage
+```shell
+git clone https://github.com/roscisz/TensorHive.git && cd TensorHive
+make dev
+```
+TensorHive is shipped with built web app distribution, but you can build it separately with `make app`, for more useful commands see `Makefile`.
+
+Basic usage
 -----
 #### Required configuration
 At first, you must tell TensorHive how it can establish SSH connections to hosts you want to work with.
 
-You can do this by editing `~/.config/TensorHive/hosts_config.ini` [(see example)](https://github.com/roscisz/TensorHive/blob/master/hosts_config.ini)
+You can do this by editing `~/.config/TensorHive/hosts_config.ini` after first `tensorhive` launch [(see example)](https://github.com/roscisz/TensorHive/blob/master/TensorHive/hosts_config.ini). To add more hosts, just create new section.
+
 
 #### Run TensorHive
 ```shell
 tensorhive
 ```
-Sample output:
+Sample output TODO Update:
 <img src="https://raw.githubusercontent.com/roscisz/TensorHive/master/images/console_screenshot.png">
 
 The Web application and API Documentation can be accessed through te given URLs.
@@ -80,16 +105,15 @@ The select boxes at the bottom of the page (easily accessible by the Adjust Filt
 You can fully customize TensorHive behaviour from `~/.config/TensorHive/main_config.ini`
 [(see example)](https://github.com/roscisz/TensorHive/blob/master/main_config.ini)
 
-
 Features
---------
+----------------------
 #### Core
 - [x] :mag_right: Monitor GPU parameters on each host
 - [x] :customs: Protection of reserved resources
     - [x] :warning:	Send warning messages to terminal of users who violate the rules
     - [x] :mailbox_with_no_mail: Send e-mail warnings
     - [ ] :bomb: Kill unwated processes
-- [ ] :rocket: Automatic execution of user's predefined command
+- [X] :rocket: Automatic execution of user's predefined command
 - [x] :watch: Track wasted reservation time (idle)
     - [ ] Remind user when his reservation starts and ends
     - [ ] Send e-mail if idle for too long
@@ -110,6 +134,9 @@ Features
 - [x] OpenAPI 2.0 specification with Swagger UI
 - [x] User authentication via JWT
 
+Deployment in production (for admins)
+-----
+TensorHive is being used with 
 
 Application examples and benchmarks
 --------
