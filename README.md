@@ -3,9 +3,12 @@ TensorHive
 
 ![](https://img.shields.io/badge/release-v0.3-brightgreen.svg?style=popout-square)
 ![](https://img.shields.io/badge/pypi-v0.3-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/Issues%20and%20PRs-welcome-yellow.svg?style=popout-square)
 ![](https://img.shields.io/badge/platform-Linux-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=popout-square)
+
+TODO Issue template to file in repo
 
 <img src="https://github.com/roscisz/TensorHive/raw/master/images/logo_small.png" height="130" align="left">
 
@@ -14,10 +17,24 @@ It solves the most common problems and nightmares about accessing and sharing yo
 
 It's designed with __simplicty, flexibility and configuration-friendliness__ in mind.
 
-<br>
-
-Top features
+About project
 ----------------------
+Our goal is to provide solutions for painful problems that ML engineers often have to struggle with when working with remote machines in order to run neural network trainings.
+
+#### You should really consider using TensorHive if anything described in profiles below matches you:
+1. You're and **admin**, who is responsible for managing a cluster (or multiple servers) with powerful GPUs installed. 
+- :angry: There are more users than resources, so they have to compete for it, but you don't know how to deal with that chaos
+- :ocean: Other popular tools are simply an overkill, have different purpose or require a lot of time to spend on reading documentation, installation and configuration (Graphana, Kubernetes, Slurm)
+- :penguin: People that are using your infrastructure expect only one interface for all the things related to training models (besides terminal): monitoring, reservation calendar and scheduling distributed jobs 
+- :collision: Can't risk messing up sensitive configuration by installing software on each individual machine, prefering centralized solution which can be managed from one place.
+
+2. Standalone user who has access to beefy GPUs scatterd across multiple machines
+- :part_alternation_mark: You want to be able to determine if batch size is too small or if there's a bottleneck when moving data from memory to GPU - `gpu_util`, `mem_util`, `mem_used` metrics are great for this purpose
+- :date: Visualizing names of training experiments using calendar helps you track how you're progressing on the project
+- Launching distributed trainings is essential for you, no matter what the framework is
+- :dizzy_face: Managing a list of training commands for all your distributed training experiments drives you nuts (because you wrap them into bash scripts)
+- :zzz: Remembering to manually launch the training before going sleep is no fun anymore
+
 
 :one: Users can make GPU reservations for specific time range in advance via **reservation mechanism***
 
@@ -110,6 +127,7 @@ Features
     - [x] :hocho: Gather and calculate average gpu and mem utilization
     - [ ] :loudspeaker: Remind user when his reservation starts and ends
     - [ ] :incoming_envelope: Send e-mail if idle for too long
+    
 #### Web
 - [x] :chart_with_downwards_trend: Configurable charts view
     - [x] Metrics and active processes
@@ -130,6 +148,10 @@ Features
     - [ ] Accept/reject reservation requests
     - [ ] Modify rules on-the-fly (without restarting)
     - [ ] Show popups to users (something like message of the day - `motd`)
+    
+#### CLI
+- [ ] Implement command-line app that communicates with core via API
+- [ ] Migrate all features from web app that don't require GUI (so no charts)
 
 #### API
 - [x] OpenAPI 2.0 specification with Swagger UI
