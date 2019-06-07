@@ -43,23 +43,19 @@ Getting started
 
 ### Installation
 
-#### Via pip
+#### via pip
 ```shell
 pip install tensorhive
 ```
 
-#### Via conda
+#### via conda
 ```shell
 conda install tensorhive
 ```
 
 #### From source
 (optional) For development purposes we encourage separation from your current python packages using e.g. Miniconda (TODO) 
-
-```shell
-conda create --name th_env python=3.5 pip
-activate th_env
-```
+`conda create --name th_env python=3.5 pip; activate th_env`
 
 ```shell
 git clone https://github.com/roscisz/TensorHive.git && cd TensorHive
@@ -69,44 +65,30 @@ TensorHive is already shipped with newest web app build, but in case you modify 
 
 Basic usage
 -----
-#### Required configuration
-At first, you must tell TensorHive how it can establish SSH connections to hosts you want to work with.
-
-You can do this by editing `~/.config/TensorHive/hosts_config.ini` after first `tensorhive` launch [(see example)](https://github.com/roscisz/TensorHive/blob/master/TensorHive/hosts_config.ini). To add more hosts, just create new section.
-
-
 #### Run TensorHive
 ```shell
 tensorhive
 ```
-Sample output TODO Update:
-<img src="https://raw.githubusercontent.com/roscisz/TensorHive/master/images/console_screenshot.png">
 
-The Web application and API Documentation can be accessed through te given URLs.
+#### Required configuration
+As you see, you must configure TensorHive so it knows how to establish SSH connections to hosts you want to work with.
 
-If you need the Web application to be accessible from remote machines, set the `host` and `port` fields in the
-`[web_app.server]` section in `~/.config/TensorHive/main_config.ini`. The host field should be set to a hostname
-or IP that resolves to an external network interface.
+You can do this by editing `~/.config/TensorHive/hosts_config.ini` after first `tensorhive` launch [(see example)](https://github.com/roscisz/TensorHive/blob/master/TensorHive/hosts_config.ini). To configure more hosts, just add a new section for each.
 
-#### Monitor infrastructure
 
-The available infrastructure can be monitored in the Nodes overview tab. Sample screenshot:
+Web application and API Documentation can be accessed via URLs highlighted in green (Ctrl + click to open in browser)
 
-<img src="https://raw.githubusercontent.com/roscisz/TensorHive/master/images/nodes_overview_screenshot.png" height="600">
+#### Infrastructure monitoring dashboard
 
-The "Add watch" button allows to add a new chart which can be configured to show chosen metrics of the selected devices. Currently, the metrics include GPU metrics from nvidia-smi and a process overview with corresponding usernames.
+Accessible infrastructure can be monitored in the Nodes overview tab. Sample screenshot:
 
-#### Reserve resources
+Here you can add new watches, configure displayed metrics, monitor running GPU processes and its' owners
+TODO Update screenshot
 
-The computing resource reservations can be viewed and managed in the Reservations overview tab. Sample screenshot:
+#### GPU Reservation calendar
 
-<img src="https://raw.githubusercontent.com/roscisz/TensorHive/master/images/reservations_overview_screenshot.png" height="600">
-
-The select boxes at the bottom of the page (easily accessible by the Adjust Filters button) allow to specify which nodes or devices should be visible in the view. Adding reservations is possible through selecting a time interval and filling the reservation details in a form. Cancelling reservations is possible for the reservation owner and admin user by clicking on a given reservation and confirming the cancellation.
-
-#### Optional configuration
-You can fully customize TensorHive behaviour from `~/.config/TensorHive/main_config.ini`
-[(see example)](https://github.com/roscisz/TensorHive/blob/master/main_config.ini)
+TODO Update screenshot
+TODO Write new usage instructions
 
 Features
 ----------------------
@@ -139,7 +121,17 @@ Features
 
 Deployment in production (for admins)
 -----
-TODO Instructions
+#### Advanced configuration
+You can fully customize TensorHive behaviour from `~/.config/TensorHive/main_config.ini`
+[(see example)](https://github.com/roscisz/TensorHive/blob/master/TensorHive/main_config.ini)
+
+#### Database migration
+TODO
+
+#### Web
+The last step is to launch TensorHive to the public so it can be accessed by users.
+In order to do this you must open `~/.config/TensorHive/main_config.ini` and fill in `host` and `port` under `[web_app.server]` section (`host` field can be either a hostname or IP)
+
 
 Currently TensorHive is being used on production in these 4 environments:
 
