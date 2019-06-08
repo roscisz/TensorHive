@@ -193,7 +193,7 @@ TODO
 
 Currently TensorHive is being used on production in these 4 environments:
 
-| Where  | Hardware | No. users |
+| Organization  | Hardware | No. users |
 | ------ | -------- | --------- |
 | ![](https://cdn.pg.edu.pl/ekontakt-updated-theme/images/favicon/favicon-16x16.png?v=jw6lLb8YQ4) [Gdansk University of Technology](https://eti.pg.edu.pl/en) | NVIDIA DGX Station (4x Tesla V100 16GB | TODO |
 | ![](https://cdn.pg.edu.pl/ekontakt-updated-theme/images/favicon/favicon-16x16.png?v=jw6lLb8YQ4) [Lab at GUT](https://eti.pg.edu.pl/katedra-architektury-systemow-komputerowych/main) | 18x machines with GTX 1060 6GB | TODO |
