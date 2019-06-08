@@ -89,7 +89,7 @@ tensorhive
 #### Required configuration
 As you see, you must configure TensorHive so it knows how to establish SSH connections to hosts you want to work with.
 
-You can do this by editing `~/.config/TensorHive/hosts_config.ini` after first `tensorhive` launch [(see example)](https://github.com/roscisz/TensorHive/blob/master/TensorHive/hosts_config.ini). To configure more hosts, just add a new section for each.
+You can do this by editing `~/.config/TensorHive/hosts_config.ini` after first `tensorhive` launch [(see example)](https://github.com/roscisz/TensorHive/blob/master/TensorHive/hosts_config.ini). In order to configure more hosts, just add a new section for each.
 
 
 Web application and API Documentation can be accessed via URLs highlighted in green (Ctrl + click to open in browser)
@@ -179,7 +179,7 @@ Deployment in production (for admins)
 You can fully customize TensorHive behaviour from `~/.config/TensorHive/main_config.ini`
 [(see example)](https://github.com/roscisz/TensorHive/blob/master/tensorhive/main_config.ini)
 
-#### Database migration
+#### Mailbot
 TODO
 
 #### Web
@@ -187,14 +187,18 @@ The last step is to launch TensorHive to the public so it can be accessed by use
 In order to do this you must open `~/.config/TensorHive/main_config.ini` and fill in `host` and `port` under `[web_app.server]` section (`host` field can be either a hostname or IP)
 
 
+#### Database migrations
+TODO
+
+
 Currently TensorHive is being used on production in these 4 environments:
 
 | Where  | Hardware | No. users |
 | ------ | -------- | --------- |
-| [Gdansk University of Technology](https://eti.pg.edu.pl/en) | NVIDIA DGX Station (4x Tesla V100 16GB | TODO |
-| [Lab at GUT](https://eti.pg.edu.pl/katedra-architektury-systemow-komputerowych/main) | 18x machines with GTX 1060 6GB | TODO |
-| [Gradient PG](http://gradient.eti.pg.gda.pl/en/) | TITAN X 12GB | TODO |
-| [VoiceLab - Conversational Intelligence](voicelab.ai) | TODO | TODO
+| ![](https://cdn.pg.edu.pl/ekontakt-updated-theme/images/favicon/favicon-16x16.png?v=jw6lLb8YQ4) [Gdansk University of Technology](https://eti.pg.edu.pl/en) | NVIDIA DGX Station (4x Tesla V100 16GB | TODO |
+| ![](https://cdn.pg.edu.pl/ekontakt-updated-theme/images/favicon/favicon-16x16.png?v=jw6lLb8YQ4) [Lab at GUT](https://eti.pg.edu.pl/katedra-architektury-systemow-komputerowych/main) | 18x machines with GTX 1060 6GB | TODO |
+| ![](http://martyniak.tech/images/gradient_logo_small-628ed211.png)[Gradient PG](http://gradient.eti.pg.gda.pl/en/) | TITAN X 12GB | TODO |
+| ![](https://res-4.cloudinary.com/crunchbase-production/image/upload/c_lpad,h_20,w_20,f_auto,q_auto:eco/v1444894092/jeuh0l6opc159e1ltzky.png) [VoiceLab - Conversational Intelligence](voicelab.ai) | TODO | TODO
 
 Application examples and benchmarks
 --------
