@@ -147,7 +147,7 @@ Features
 #### Web
 - [x] :chart_with_downwards_trend: Configurable charts view
     - [x] Metrics and active processes
-    - [ ] Detailed harware specification (CPU clock speed, RAM, etc.)
+    - [ ] Detailed harware specification 
 - [x] :calendar: Calendar view
     - [x] Allow making reservations for selected GPUs
     - [x] Edit reservations
@@ -158,7 +158,7 @@ Features
     - [x] Buttons for task spawning/scheduling/termination/killing actions
     - [x] Fetch log produced by running task
     - [x] Group actions (spawn, schedule, terminate, kill selected)
-- [ ] :scroll: Detailed hardware specification view
+- [ ] :straight_ruler: Detailed hardware specification panel (CPU clock speed, RAM, etc.)
 - [ ] :penguin: Admin panel
     - [ ] User banning
     - [ ] Accept/reject reservation requests
@@ -216,8 +216,12 @@ Project created and maintained by:
 - Paweł Rościszewski [(@roscisz)](https://github.com/roscisz)
 - ![](https://avatars2.githubusercontent.com/u/12485656?s=22&v=4) [Michał Martyniak (@micmarty)](http://martyniak.me)
 - Filip Schodowski [(@filschod)](https://github.com/filschod)
+
+ Top contributions:
 - Tomasz Menet [(@tomenet)](https://github.com/tomenet)
+- Dariusz Piotrowski [(@PiotrowskiD)](https://github.com/PiotrowskiD)
 - Karol Draszawka [(@szarakawka)](https://github.com/szarakawka)
+
 
 License
 -------
