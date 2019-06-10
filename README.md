@@ -224,6 +224,11 @@ You can do this by making use of our [**issue template**](https://gist.github.co
 
 Credits
 -------
+
+TensorHive has been created within a joint project between [**VoiceLab.ai**](https://voicelab.ai) and
+[**Gdańsk University of Technology**](https://pg.edu.pl/) titled: "Exploration and selection of methods
+for parallelization of neural network training using multiple GPUs".
+
 Project created and maintained by:
 - Paweł Rościszewski [(@roscisz)](https://github.com/roscisz)
 - ![](https://avatars2.githubusercontent.com/u/12485656?s=22&v=4) [Michał Martyniak (@micmarty)](http://martyniak.me)
