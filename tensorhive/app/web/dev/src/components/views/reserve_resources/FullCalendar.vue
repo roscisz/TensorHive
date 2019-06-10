@@ -12,9 +12,12 @@
   <full-calendar-info
     :show-modal="showModalInfo"
     @close="showModalInfo = false"
+    @handleError="handleError"
     :reservation="reservation"
     :cancel="cancelReservation"
     :update="updateReservation"
+    :refreshTasks="refreshTasks"
+    :nodes="nodes"
   ></full-calendar-info>
 </div>
 </template>
@@ -35,6 +38,7 @@ export default {
   },
 
   props: {
+    nodes: Object,
     selectedResources: Array,
     updateCalendar: Boolean
   },
@@ -60,11 +64,15 @@ export default {
       reservationId: -1,
       startDate: null,
       endDate: null,
-      resourcesCheckboxes: []
+      resourcesCheckboxes: [],
+      refreshTasks: false
     }
   },
 
   methods: {
+    handleError: function (error) {
+      this.$emit('handleError', error)
+    },
 
     getEvents: function (start, end, callback) {
       var resourcesString = ''
@@ -314,6 +322,7 @@ export default {
         if ((calEvent.userId === self.$store.state.id || self.$store.state.role === 'admin') && !calEvent.allDay) {
           self.reservationId = calEvent.id
           self.calendar.fullCalendar('refetchEvents')
+          self.refreshTasks = !self.refreshTasks
           self.showModalInfo = true
         }
       },

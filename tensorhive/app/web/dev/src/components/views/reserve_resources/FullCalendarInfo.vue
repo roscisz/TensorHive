@@ -20,21 +20,23 @@
         <v-card-text>
           <b>Title:</b> {{reservation.title}}
         </v-card-text>
-        <v-textarea
-          v-if="updateCard"
-          outline
-          label="Title"
-          v-model="newTitle"
-        ></v-textarea>
+        <v-card-text v-if="updateCard">
+          <v-textarea
+            outline
+            label="Title"
+            v-model="newTitle"
+          ></v-textarea>
+        </v-card-text>
         <v-card-text>
           <b>Description:</b> {{reservation.description}}
         </v-card-text>
-        <v-textarea
-          v-if="updateCard"
-          outline
-          label="Description"
-          v-model="newDescription"
-        ></v-textarea>
+        <v-card-text v-if="updateCard">
+          <v-textarea
+            outline
+            label="Description"
+            v-model="newDescription"
+          ></v-textarea>
+        </v-card-text>
         <v-card-text>
           <b>Average GPU utilization:</b> {{gpuUtilAvg}}
         </v-card-text>
@@ -164,13 +166,95 @@
         <v-card-text>
           <b>GPU UUID:</b> {{reservation.resourceId}}
         </v-card-text>
+        <v-card-text v-if="tasksCard">
+          <v-alert
+            v-model="showAlert"
+            dismissible
+            type="warning"
+          >
+            Synchronization in progress. Task assign is disabled now.
+          </v-alert>
+        </v-card-text>
+        <v-data-table
+          v-if="tasksCard"
+          v-model="selected"
+          :headers="headers"
+          :items="tasks"
+          :pagination.sync="pagination"
+          :loading="actionFlag"
+          select-all
+          item-key="id"
+          class="elevation-1"
+          :key="tableKey"
+        >
+          <template v-slot:headers="props">
+            <tr>
+              <th>
+                <v-checkbox
+                  :input-value="props.all"
+                  :indeterminate="props.indeterminate"
+                  primary
+                  hide-details
+                  @click.stop="toggleAll"
+                ></v-checkbox>
+              </th>
+              <th
+                v-for="header in props.headers"
+                :key="header.text"
+                :class="['column sortable', pagination.descending ? 'desc' : 'asc', header.value === pagination.sortBy ? 'active' : '']"
+                @click="changeSort(header.value)"
+              >
+                <v-icon small>arrow_upward</v-icon>
+                {{ header.text }}
+              </th>
+            </tr>
+          </template>
+          <v-progress-linear
+            v-slot:progress
+            :indeterminate="true"
+          ></v-progress-linear>
+          <template v-slot:items="props">
+            <tr :active="props.selected" @click="props.selected = !props.selected">
+              <td>
+                <v-checkbox
+                  :input-value="props.selected"
+                  primary
+                  hide-details
+                ></v-checkbox>
+              </td>
+              <td>{{ props.item.id }}</td>
+              <td class="task-command">{{ props.item.command }}</td>
+              <td>{{ prettyDate(props.item.spawnAt) }}</td>
+              <td>{{ prettyDate(props.item.terminateAt) }}</td>
+            </tr>
+          </template>
+        </v-data-table>
+        <v-btn
+          v-if="tasksCard"
+          class="float-right-button"
+          color="info"
+          small
+          round
+          @click="checkActionFlag()"
+        >
+          Assign selected
+        </v-btn>
         <v-card-text class="container">
+          <v-btn
+            class="float-right-button"
+            color="yellow"
+            small
+            round
+            @click="tasksCard=!tasksCard; cancelCard=false; updateCard=false"
+          >
+            Schedule task(s) for this reservation
+          </v-btn>
           <v-btn
             class="float-right-button"
             color="error"
             small
             round
-            @click="cancelCard=!cancelCard; updateCard=false"
+            @click="cancelCard=!cancelCard; tasksCard=false; updateCard=false"
           >
             Cancel reservation
           </v-btn>
@@ -179,7 +263,7 @@
             color="info"
             small
             round
-            @click="updateCard=!updateCard; cancelCard=false"
+            @click="updateCard=!updateCard; tasksCard=false, cancelCard=false"
           >
             Edit reservation
           </v-btn>
@@ -227,6 +311,7 @@
 </template>
 
 <script>
+import api from '../../../api'
 import moment from 'moment'
 export default {
   name: 'FullCalendarInfo',
@@ -235,8 +320,11 @@ export default {
     showModal: Boolean,
     reservation: Object,
     cancel: Function,
-    update: Function
+    update: Function,
+    refreshTasks: Boolean,
+    nodes: Object
   },
+
   computed: {
     gpuUtilAvg () {
       if (this.reservation.gpuUtilAvg === null) {
@@ -275,6 +363,9 @@ export default {
   },
 
   watch: {
+    refreshTasks () {
+      this.getTasks()
+    },
     reservationTitle () {
       this.newTitle = this.reservationTitle
     },
@@ -306,6 +397,7 @@ export default {
 
   data () {
     return {
+      tasksCard: false,
       cancelCard: false,
       updateCard: false,
       newTitle: '',
@@ -317,7 +409,22 @@ export default {
       newStartDate: '',
       newStartTime: '',
       newEndDate: '',
-      newEndTime: ''
+      newEndTime: '',
+      pagination: {
+        sortBy: 'name'
+      },
+      tasks: [],
+      selected: [],
+      selectedIndex: 0,
+      headers: [
+        { text: 'ID', value: 'id' },
+        { text: 'Command', value: 'command' },
+        { text: 'Spawn at', value: 'spawnAt' },
+        { text: 'Terminate at', value: 'terminateAt' }
+      ],
+      tableKey: 0,
+      actionFlag: false,
+      showAlert: false
     }
   },
 
@@ -327,6 +434,117 @@ export default {
         return moment(date).format('dddd, MMMM Do, HH:mm')
       } else {
         return null
+      }
+    },
+
+    getTasks: function () {
+      api
+        .request('get', '/tasks?userId=' + this.$store.state.id + '&syncAll=false', this.$store.state.accessToken)
+        .then(response => {
+          this.tasks = response.data.tasks
+        })
+        .catch(error => {
+          this.$emit('handleError', error)
+        })
+    },
+
+    checkActionFlag: function () {
+      if (this.actionFlag === false) {
+        this.actionFlag = true
+        this.showAlert = true
+        this.scheduleTasks()
+      }
+    },
+
+    scheduleTasks: function () {
+      var id
+      id = this.selected[this.selectedIndex].id
+      var newTask = this.adjustHostAndCommand()
+      newTask['spawnAt'] = this.reservation.start
+      newTask['terminateAt'] = this.reservation.end
+      api
+        .request('put', '/tasks/' + id, this.$store.state.accessToken, newTask)
+        .then(response => {
+          this.getTask(id)
+        })
+        .catch(error => {
+          this.$emit('handleError', error)
+          this.getTask(id)
+        })
+    },
+
+    adjustHostAndCommand: function () {
+      for (var nodeName in this.nodes) {
+        for (var gpuUUID in this.nodes[nodeName].GPU) {
+          if (gpuUUID === this.reservation.resourceId) {
+            return {
+              hostname: nodeName,
+              command: this.setCommand(this.nodes[nodeName].GPU[gpuUUID].index)
+            }
+          }
+        }
+      }
+      return {}
+    },
+
+    setCommand: function (index) {
+      var command = this.selected[this.selectedIndex].command
+      var splitCommand = command.split(' ')
+      splitCommand[0] = 'CUDA_VISIBLE_DEVICES=' + index
+      return splitCommand.join(' ')
+    },
+
+    getTask: function (id) {
+      api
+        .request('get', '/tasks/' + id, this.$store.state.accessToken)
+        .then(response => {
+          this.updateTask(id, response.data.task)
+          this.selectedIndex++
+          if (this.selectedIndex < this.selected.length) {
+            this.scheduleTasks()
+          } else {
+            this.selectedIndex = 0
+            this.actionFlag = false
+            this.showAlert = false
+          }
+        })
+        .catch(error => {
+          this.$emit('handleError', error)
+          this.selectedIndex++
+          if (this.selectedIndex < this.selected.length) {
+            this.scheduleTasks()
+          } else {
+            this.selectedIndex = 0
+            this.actionFlag = false
+            this.showAlert = false
+          }
+        })
+    },
+
+    updateTask: function (id, newData) {
+      for (var index in this.tasks) {
+        if (this.tasks[index].id === id) {
+          if (newData !== null) {
+            this.tasks[index] = newData
+          } else {
+            this.tasks.splice(index, 1)
+          }
+        }
+      }
+      this.tableKey++
+    },
+
+    toggleAll () {
+      if (this.selected.length) this.selected = []
+      else this.selected = this.tasks.slice()
+    },
+
+    changeSort (column) {
+      if (this.pagination.sortBy === column) {
+        this.pagination.descending = !this.pagination.descending
+      } else {
+        this.pagination.sortBy = column
+        this.pagination.descending = false
       }
     },
 
