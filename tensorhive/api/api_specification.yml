@@ -153,6 +153,44 @@ paths:
           description: {{RESPONSES['general']['internal_error']}}
       security:
       - Bearer: []
+  /user/ssh_signup:
+    post:
+      tags:
+        - users
+      summary: Create new user account based on SSH authentication
+      operationId: tensorhive.controllers.user.create_user_controller.ssh_signup
+      parameters:
+        - description: User object
+          in: body
+          name: user
+          required: true
+          schema:
+            $ref: '#/definitions/UserForm'
+      responses:
+        201:
+          description: {{RESPONSES['user']['create']['success']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['user']['create']['success']}}
+              user:
+                type: array
+                items:
+                  $ref: '#/definitions/UserToDisplay'
+        400:
+          description: {{RESPONSES['general']['bad_request']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+        409:
+          description: {{RESPONSES['user']['create']['failure']['duplicate']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['user']['create']['failure']['invalid']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
+      security:
+        - Bearer: []
   /user/delete/{id}:
     delete:
       tags:
@@ -277,6 +315,19 @@ paths:
           description: {{RESPONSES['user']['not_found']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
+  /user/authorized_keys_entry:
+    get:
+      tags:
+        - authentication
+      summary: Get TensorHive public SSH key record for authorized_keys
+      operationId: 'tensorhive.controllers.user.create_user_controller.authorized_keys_entry'
+      responses:
+        200:
+          description: {{RESPONSES['user']['authorized_keys_entry']['success']}}
+          schema:
+            example: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCWuvmEw9RWI0WMv9aseFadgDXZbHW7KjQt6H7keoQ13y/XQX0+vosmEq70DQ9HCxmwvrSruR63DLe8eW5k80OBeAcHZ+e6f6g/017tCKfYTibCEboB7v7TgGO74kWcihZK5jPHg/jxwKktxDdbCfqvl6hrR5hwE2sJ5gVAx6UPJNVoZYRD2rAPhjKJ1NlENhCWrxrt72c/a6Qe9aRSvJ/Yxn+PWr5BbxyFFKEcmos9bUwh7NgdmsZphVrKeGnx9Nl1q46/PLBW2V4FbBpsv6OD6FksIdZF0irFNmfq1LGHDLlRwVrEXrTdQST2FqyNZJSXRxblEchzYijLA1J03xir tensorhive@ai'
         500:
           description: {{RESPONSES['general']['internal_error']}}
   /reservations:

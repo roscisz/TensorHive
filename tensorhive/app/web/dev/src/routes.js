@@ -4,6 +4,7 @@ import NotFoundView from './components/404.vue'
 // Import Views - Dash
 import CalendarView from './components/views/ReservationsOverview.vue'
 import WatchView from './components/views/NodesOverview.vue'
+import TasksView from './components/views/TasksOverview.vue'
 import UsersView from './components/views/UsersOverview.vue'
 // Routes
 const routes = [
@@ -29,6 +30,17 @@ const routes = [
         name: 'Nodes overview',
         meta: {
           description: 'Informations about nodes',
+          requiresAuth: true,
+          role: 'user'
+        }
+      },
+      {
+        path: 'tasks_overview',
+        alias: '',
+        component: TasksView,
+        name: 'Tasks overview',
+        meta: {
+          description: 'Tasks overview',
           requiresAuth: true,
           role: 'user'
         }

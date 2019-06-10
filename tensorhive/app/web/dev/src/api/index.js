@@ -17,7 +17,6 @@ export default {
     if (token !== null) {
       axios.defaults.headers.common['Authorization'] = token
     }
-
     return axios({ method: method, url: url, data: data })
   }
 }

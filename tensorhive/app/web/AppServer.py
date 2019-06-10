@@ -1,6 +1,7 @@
 from gunicorn.app.base import BaseApplication
 from flask import Flask, render_template
 from flask_cors import CORS
+import tensorhive
 from tensorhive.config import APP_SERVER, API_SERVER, API
 from tensorhive.core.utils.colors import green
 import json

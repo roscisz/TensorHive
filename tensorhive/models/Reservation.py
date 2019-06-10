@@ -9,7 +9,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class Reservation(CRUDModel, Base):
+class Reservation(CRUDModel, Base):  # type: ignore
     __tablename__ = 'reservations'
     __table_args__ = {'sqlite_autoincrement': True}
 
@@ -75,7 +75,7 @@ class Reservation(CRUDModel, Base):
     def starts_at(self):
         return self._starts_at
 
-    @starts_at.setter
+    @starts_at.setter  # type: ignore
     def starts_at(self, value):
         if isinstance(value, str):
             self._starts_at = self.parsed_input_datetime(value)
@@ -89,7 +89,7 @@ class Reservation(CRUDModel, Base):
     def ends_at(self):
         return self._ends_at
 
-    @ends_at.setter
+    @ends_at.setter  # type: ignore
     def ends_at(self, value):
         if isinstance(value, str):
             try:

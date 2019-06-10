@@ -17,9 +17,9 @@ class Message:
     def __init__(self, author: str, to: Union[str, List[str]], subject: str, body: str):
         msg = MIMEMultipart()
         msg['From'] = author
-        msg['To'] = ', '.join(to)
+        msg['To'] = ', '.join(to) if isinstance(to, list) else to
         msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'html'))
+        msg.attach(MIMEText(body or '', 'html'))
         self.msg = msg
 
     @property
@@ -52,41 +52,35 @@ class MessageBodyTemplater:
         self.template = template
 
     def fill_in(self, data: Dict[str, Any]) -> str:
-        try:
-            body = self.template.format(
-                hostname=data['HOSTNAME'],
-                gpu_name=data['GPU_NAME'],
-                gpu_uuid=data['UUID'],
-                intruder_username=data['INTRUDER_USERNAME'],
-                intruder_email=data['INTRUDER_EMAIL'],
-                owner_username=data['RESERVATION_OWNER_USERNAME'],
-                owner_email=data['RESERVATION_OWNER_EMAIL'],
-                reservation_end=data['RESERVATION_END'],
-            )
-        except (KeyError, Exception) as e:
-            log.error(e)
-            # Put raw, unformatted body
-            body = self.template
-        finally:
-            return body
+        return self.template.format(
+            hostname=data['HOSTNAME'],
+            gpu_name=data['GPU_NAME'],
+            gpu_uuid=data['UUID'],
+            intruder_username=data['INTRUDER_USERNAME'],
+            intruder_email=data['INTRUDER_EMAIL'],
+            owner_username=data['RESERVATION_OWNER_USERNAME'],
+            owner_email=data['RESERVATION_OWNER_EMAIL'],
+            reservation_end=data['RESERVATION_END'],
+        )
 
 
 class Mailer:
-    def __init__(self, server: str, port: int):
+    def __init__(self, server: str, port: int) -> None:
         self.smtp_server = server
         self.smtp_port = port
+        self.server = None  # type: smtplib.SMTP
 
-    def send(self, message: Message):
+    def send(self, message: Message) -> None:
+        assert self.server, 'Must call connect() first!'
+        assert message.author and message.recipients and message.body, 'Incomplete email body: {}'.format(message)
         self.server.sendmail(message.author, message.recipients, message.body)
 
-    def connect(self, login: str, password: str):
-        '''Establishes connection to SMTP server'''
-        try:
-            self.server = smtplib.SMTP(self.smtp_server, self.smtp_port)
-            self.server.starttls()
-            self.server.login(login, password)
-        except Exception as e:
-            log.error(e)
+    def connect(self, login: str, password: str) -> None:
+        # assert login and password, 'Login and password must not be None!'
+        # assert self.smtp_server and self.smtp_port, 'SMTP server and port must not be None!'
+        self.server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+        self.server.starttls()
+        self.server.login(login, password)
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         self.server.close()

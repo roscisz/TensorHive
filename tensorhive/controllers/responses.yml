@@ -27,6 +27,8 @@ user:
     success: User has been successfully updated
     failure:
       invalid: Requirements not met - {reason}
+  authorized_keys_entry:
+    success: Fetched successfully
 reservation:
   not_found: Reservation has not been found
   create:

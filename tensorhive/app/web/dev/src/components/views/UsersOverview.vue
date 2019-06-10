@@ -97,6 +97,39 @@
         </v-card>
       </v-dialog>
     </v-layout>
+    <v-dialog
+      v-model="showModalRemove"
+      width="400"
+    >
+      <v-card>
+        <v-card-title
+          class="headline grey lighten-2"
+          primary-title
+        >
+          Do you want to remove this user?
+        </v-card-title>
+        <v-card-actions>
+          <v-layout align-center justify-end>
+            <v-btn
+              color="error"
+              small
+              outline
+              round
+              @click="showModalRemove= false"
+            >
+              No
+            </v-btn>
+            <v-btn
+              color="success"
+              round
+              @click="removeUser()"
+            >
+              Yes
+            </v-btn>
+          </v-layout>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <div>
       <div class="text-xs-center pt-2">
         <v-btn color="primary" @click="showModal=true">Create user</v-btn>
@@ -197,7 +230,7 @@
             <td>{{ props.item.id }}</td>
             <td>{{ props.item.username }}</td>
             <td>{{ props.item.email }}</td>
-            <td>{{ props.item.createdAt }}</td>
+            <td>{{ prettyDate(props.item.createdAt) }}</td>
             <td>{{ props.item.role }}</td>
             <td>
               <v-icon
@@ -208,7 +241,7 @@
               </v-icon>
               <v-icon
                 small
-                @click="deleteUser(props.item.id)"
+                @click="showConfirmationDialog(props.item.id)"
               >
                 delete
               </v-icon>
@@ -225,6 +258,7 @@
 
 <script>
 import api from '../../api'
+import moment from 'moment'
 export default {
   data () {
     return {
@@ -260,6 +294,8 @@ export default {
       modalPassword: '',
       modalPassword2: '',
       modalAlert: false,
+      showModalRemove: false,
+      userId: -1,
       created: false,
       showModal: false
     }
@@ -280,6 +316,26 @@ export default {
   },
 
   methods: {
+    prettyDate (date) {
+      if (date !== null) {
+        return moment(date).format('dddd, MMMM Do, HH:mm')
+      } else {
+        return null
+      }
+    },
+
+    handleError: function (error) {
+      if (!error.hasOwnProperty('response')) {
+        this.errorMessage = error.message
+      } else {
+        if (!error.response.data.hasOwnProperty('msg')) {
+          this.errorMessage = error.response.data
+        } else {
+          this.errorMessage = error.response.data.msg
+        }
+      }
+    },
+
     createUser () {
       if (this.modalPassword === this.modalPassword2) {
         const { modalUsername, modalEmail, modalPassword } = this
@@ -291,7 +347,7 @@ export default {
             this.checkUsers()
           })
           .catch(error => {
-            this.errorMessage = error.response.data.msg
+            this.handleError(error)
             this.modalAlert = true
           })
       } else {
@@ -303,6 +359,8 @@ export default {
     editUser: function (currentUser) {
       this.dialog = true
       this.user.id = currentUser.id
+      this.user.username = currentUser.username
+      this.user.email = currentUser.email
       var admin = false
       for (var role in currentUser.roles) {
         if (currentUser.roles[role] === 'admin') {
@@ -322,16 +380,16 @@ export default {
         var updatedUser = {
           id: this.user.id
         }
-        if (this.user.username !== '') {
+        if (this.user.username !== this.currentUser.username && this.user.username !== '') {
           updatedUser['username'] = this.user.username
         }
-        if (this.user.email !== '') {
+        if (this.user.email !== this.currentUser.email && this.user.email !== '') {
           updatedUser['email'] = this.user.email
         }
         if (this.user.password !== '') {
           updatedUser['password'] = this.user.password
         }
-        if (this.user.roles.length > 0) {
+        if (this.user.roles.length !== this.currentUser.roles.length) {
           updatedUser['roles'] = this.user.roles
         }
         api
@@ -352,11 +410,7 @@ export default {
           })
           .catch(error => {
             this.pagination = {}
-            if (!error.hasOwnProperty('response')) {
-              this.errorMessage = error.message
-            } else {
-              this.errorMessage = error.response.data.msg
-            }
+            this.handleError(error)
             this.alert = true
           })
       } else {
@@ -387,27 +441,26 @@ export default {
         })
         .catch(error => {
           this.pagination = {}
-          if (!error.hasOwnProperty('response')) {
-            this.errorMessage = error.message
-          } else {
-            this.errorMessage = error.response.data.msg
-          }
+          this.handleError(error)
           this.alert = true
         })
     },
 
-    deleteUser: function (userId) {
+    showConfirmationDialog (id) {
+      this.userId = id
+      this.showModalRemove = true
+    },
+
+    removeUser: function () {
+      var userId = this.userId
       api
         .request('delete', '/user/delete/' + userId, this.$store.state.accessToken)
         .then(response => {
+          this.showModalRemove = false
           this.checkUsers()
         })
         .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            this.errorMessage = error.message
-          } else {
-            this.errorMessage = error.response.data.msg
-          }
+          this.handleError(error)
           this.alert = true
         })
     }

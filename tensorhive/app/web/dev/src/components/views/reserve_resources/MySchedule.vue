@@ -54,7 +54,6 @@
                   v-if="!resource.selected"
                   fab
                   dark
-                  small
                   color="blue"
                   @click="toggle(resource)"
                 >
@@ -65,7 +64,6 @@
                   v-if="resource.selected"
                   fab
                   dark
-                  small
                   color="blue"
                   @click="toggle(resource)"
                 >
@@ -206,11 +204,7 @@ export default {
           this.parseData(response.data)
         })
         .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            this.$emit('showSnackbar', error.message)
-          } else {
-            this.$emit('showSnackbar', error.response.data.msg)
-          }
+          this.$emit('handleError', error)
         })
     },
 
@@ -303,8 +297,8 @@ export default {
   background-color: #42b983;
 }
 .small-button {
-  height: 25px;
-  width: 25px;
+  height: 25px !important;
+  width: 25px !important;
 }
 .left-table {
   min-width: 205px;

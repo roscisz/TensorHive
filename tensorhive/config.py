@@ -112,8 +112,9 @@ class SSH:
     TEST_ON_STARTUP = config.getboolean(section, 'test_on_startup', fallback=True)
     TIMEOUT = config.getfloat(section, 'timeout', fallback=10.0)
     NUM_RETRIES = config.getint(section, 'number_of_retries', fallback=1)
+    KEY_FILE = config.get(section, 'key_file', fallback='~/.config/TensorHive/ssh_key')
 
-    def hosts_config_to_dict(path: str) -> Dict:
+    def hosts_config_to_dict(path: str) -> Dict:  # type: ignore
         '''Parses sections containing hostnames'''
         hosts_config = ConfigLoader.load(path, displayed_title='hosts')
         result = {}
@@ -129,7 +130,7 @@ class SSH:
             }
         return result
 
-    def proxy_config_to_dict(path: str) -> Optional[Dict]:
+    def proxy_config_to_dict(path: str) -> Optional[Dict]:  # type: ignore
         '''Parses [proxy_tunneling] section'''
         config = ConfigLoader.load(path, displayed_title='proxy')
         section = 'proxy_tunneling'
@@ -152,7 +153,7 @@ class DB:
     section = 'database'
     default_path = '~/.config/TensorHive/database.sqlite'
 
-    def uri_for_path(path: str) -> str:
+    def uri_for_path(path: str) -> str:  # type: ignore
         return 'sqlite:///{}'.format(PosixPath(path).expanduser())
 
     SQLALCHEMY_DATABASE_URI = uri_for_path(config.get(section, 'path', fallback=default_path))
@@ -213,24 +214,12 @@ class MAILBOT:
     NOTIFY_ADMIN = mailbot_config.getboolean(section, 'notify_admin', fallback=False)
     ADMIN_EMAIL = mailbot_config.get(section, 'admin_email', fallback=None)
 
-    # FIXME Not sure if this should be required
     section = 'smtp'
     SMTP_LOGIN = mailbot_config.get(section, 'email', fallback=None)
     SMTP_PASSWORD = mailbot_config.get(section, 'password', fallback=None)
     SMTP_SERVER = mailbot_config.get(section, 'smtp_server', fallback=None)
     SMTP_PORT = mailbot_config.getint(section, 'smtp_port', fallback=587)
 
-    # Simple checks between 'general' and 'smtp' section
-    if PROTECTION_SERVICE.NOTIFY_VIA_EMAIL and (NOTIFY_INTRUDER or NOTIFY_ADMIN):
-        try:
-            assert SMTP_LOGIN and SMTP_PASSWORD and SMTP_SERVER
-        except AssertionError:
-            log.warning('[MAILBOT] Incomplete SMTP configuration, check your config')
-
-        if NOTIFY_ADMIN and not ADMIN_EMAIL:
-            log.warning('[MAILBOT] Invalid admin email address, check your config.')
-
-    # FIXME Not sure if this should be required
     section = 'template/intruder'
     INTRUDER_SUBJECT = mailbot_config.get(section, 'subject')
     INTRUDER_BODY_TEMPLATE = mailbot_config.get(section, 'html_body')
@@ -244,7 +233,7 @@ class USAGE_LOGGING_SERVICE:
     section = 'usage_logging_service'
     default_path = '~/.config/TensorHive/logs/'
 
-    def full_path(path: str) -> str:
+    def full_path(path: str) -> str:  # type: ignore
         return str(PosixPath(path).expanduser())
 
     ENABLED = config.getboolean(section, 'enabled', fallback=True)
@@ -264,7 +253,7 @@ class AUTH:
     from datetime import timedelta
     section = 'auth'
 
-    def config_get_parsed(option: str, fallback: Any) -> List[str]:
+    def config_get_parsed(option: str, fallback: Any) -> List[str]:  # type: ignore
         '''
         Parses value for option from string to a valid python list.
         Fallback value is returned when anything goes wrong (e.g. option or value not present)
