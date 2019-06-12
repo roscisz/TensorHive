@@ -146,7 +146,7 @@ class ScreenCommandBuilder:
         return 'kill -9 {}; KILL_EXIT=$?; screen -wipe; (exit $KILL_EXIT)'.format(pid)
 
     @staticmethod
-    def get_active_sessions(grep_pattern: str) -> List[str]:
+    def get_active_sessions(grep_pattern: str) -> str:
         """Fetches the full names of screen sessions matching given grep pattern."""
         return 'screen -ls | cut -f 2 | sed -e "1d;$d" | grep -e "{}"'.format(grep_pattern)
 
