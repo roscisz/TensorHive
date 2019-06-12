@@ -90,7 +90,7 @@ def synchronize(task_id: TaskId) -> None:
             task.save()
 
 
-def synchronize_task_record(func: Callable[[int], Any]) -> Callable[[int], Any]:
+def synchronize_task_record(func: Callable) -> Callable:
     """Decorated function MUST CONTAIN task id (int), function can take more arguments though.
 
     In case when task.id could not be obtained from wrapped function's arguments,
@@ -149,7 +149,7 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 
 #  GET /tasks?userId=X?syncAll=1
 @jwt_required
-def get_all(userId: Optional[int], syncAll: Optional[bool]) -> List[Dict]:
+def get_all(userId: Optional[int], syncAll: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
     user_id, sync_all = userId, syncAll
     try:
         if user_id:
@@ -253,7 +253,7 @@ def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
 # Business logic
 
 
-def business_get_all(user_id: Optional[int], sync_all: Optional[bool]) -> List[Dict]:
+def business_get_all(user_id: Optional[int], sync_all: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
     """Fetches either all Task records or only those in relation with specific user.
     Allows for synchronizing state of each Task out-of-the-box.
 
@@ -539,7 +539,6 @@ if __name__ == '__main__':
     from inspect import cleandoc
     init_db()
 
-    user = '155136mm'
     host = 'galileo.eti.pg.gda.pl'
     cmd = './long.sh'
     """

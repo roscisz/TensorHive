@@ -20,7 +20,8 @@ without breaking compatibility everywhere.
 """
 
 # Typing aliases
-HostsConfig = Dict[str, str]
+HostConfig = Dict[str, str]
+HostsConfig = Dict[str, HostConfig]
 ProxyConfig = Dict[str, str]
 Hostname = str
 Username = str
@@ -104,6 +105,7 @@ def get_stdout(host: Hostname, output: pssh.output.HostOutput) -> Optional[str]:
         return '\n'.join(list(host_result.stdout))
     except KeyError:
         log.error('Could not unwrap HostOutput object for'.format(host))
+        raise
     except (TypeError, ):
         log.warning('Could not extract stdout for {}: {}'.format(host, output))
         return None

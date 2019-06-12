@@ -48,7 +48,7 @@ class TaskStatus(enum.Enum):
     unsynchronized = 4
 
 
-class Task(CRUDModel, Base):
+class Task(CRUDModel, Base):  # type: ignore
     __tablename__ = 'tasks'
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))

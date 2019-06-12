@@ -22,7 +22,3 @@ def test_config_builder_with_good_arguments():
 def test_config_builder_failure_with_invalid_arguments(host, user):
     with pytest.raises(AssertionError):
         ssh.build_dedicated_config_for(host, user)
-
-
-# def test_stdout_for_inexisting_host():
-#     pass

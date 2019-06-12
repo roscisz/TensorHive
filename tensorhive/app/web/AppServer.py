@@ -5,7 +5,6 @@ import tensorhive
 from tensorhive.config import APP_SERVER, API_SERVER, API
 from tensorhive.core.utils.colors import green
 import json
-import tensorhive
 from pathlib import PosixPath
 import logging
 log = logging.getLogger(__name__)

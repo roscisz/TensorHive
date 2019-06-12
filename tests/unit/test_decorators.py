@@ -2,6 +2,7 @@ from tensorhive.core.utils.decorators import memoize
 from unittest.mock import patch
 import time
 
+
 def test_memoize_for_correct_func_call_count():
     @memoize
     def add(x, y):
@@ -22,6 +23,3 @@ def test_memoize_for_correct_func_call_count():
         foo({'a': 1}, {'b': 2}, True)
         foo({'a': 1}, {'b': 2}, 'True')
         assert mocked_sleep.call_count == 2
-    
-
-    
