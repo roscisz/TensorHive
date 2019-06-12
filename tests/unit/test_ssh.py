@@ -1,8 +1,6 @@
 import pytest
 from tensorhive.core import ssh
 
-# def test_config_builder_exceptions_with_incorrect_arguments():
-
 
 def test_config_builder_with_good_arguments():
     config, _ = ssh.build_dedicated_config_for('hostname', 'username')
