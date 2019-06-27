@@ -2,6 +2,7 @@ import pytest
 import os
 import stat
 import tensorhive.core.ssh as sut
+from tensorhive.config import SSH
 from paramiko.rsakey import RSAKey
 
 
@@ -10,7 +11,7 @@ def test_config_builder_with_good_arguments():
     assert config == {
         'hostname': {
             'user': 'username',
-            'pkey': '~/.ssh/id_rsa'
+            'pkey': SSH.KEY_FILE
         }
     }
 

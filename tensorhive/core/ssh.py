@@ -39,7 +39,7 @@ def build_dedicated_config_for(host: Hostname, user: Username) -> Tuple[HostsCon
     hosts_config = {
         host: {
             'user': user,
-            'pkey': '~/.ssh/id_rsa'  # TODO Read path from config files (see config.py)
+            'pkey': SSH.KEY_FILE
         }
     }
     # Read config extracted from hosts_config.ini (proxy is common for all hosts)
