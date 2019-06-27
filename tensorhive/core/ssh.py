@@ -2,6 +2,7 @@ from tensorhive.core.utils.decorators import memoize, timeit
 from tensorhive.config import SSH
 from pssh.clients.native import ParallelSSHClient
 from typing import Optional, Dict, Tuple
+from paramiko.rsakey import RSAKey
 import functools
 import pssh
 import logging
@@ -119,3 +120,10 @@ def get_stdout(host: Hostname, output: pssh.output.HostOutput) -> Optional[str]:
 def succeeded(host: Hostname, output: pssh.output.HostOutput) -> bool:
     """Checks whether command's output was executed without any exception and exit code was 0."""
     return (output.exception is None) and (output.exit_code == 0)
+
+
+def generate_cert(path, replace=False):
+    path.touch(mode=0o600, exist_ok=replace)
+    key = RSAKey.generate(2048)
+    key.write_private_key_file(str(path))
+    return key

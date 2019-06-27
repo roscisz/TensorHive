@@ -3,7 +3,7 @@ from tensorhive.config import SSH
 from pssh.clients.native import ParallelSSHClient
 from paramiko.rsakey import RSAKey
 from typing import Dict
-from tensorhive.core.utils import ssh
+from tensorhive.core import ssh
 from pathlib import PosixPath
 import logging
 log = logging.getLogger(__name__)
