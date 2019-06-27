@@ -4,6 +4,7 @@ from pssh.clients.native import ParallelSSHClient
 from typing import Optional, Dict, Tuple
 from paramiko.rsakey import RSAKey
 import functools
+from pathlib import PosixPath
 import pssh
 import logging
 log = logging.getLogger(__name__)
@@ -59,6 +60,7 @@ def get_client(config: HostsConfig, pconfig: Optional[ProxyConfig] = None, **kwa
     return ParallelSSHClient(
         hosts=config.keys(),
         host_config=config,
+        pkey=SSH.KEY_FILE,
         proxy_host=pconfig.get('proxy_host'),
         proxy_user=pconfig.get('proxy_user'),
         proxy_port=pconfig.get('proxy_port'),
@@ -126,4 +128,14 @@ def generate_cert(path, replace=False):
     path.touch(mode=0o600, exist_ok=replace)
     key = RSAKey.generate(2048)
     key.write_private_key_file(str(path))
+    return key
+
+
+def init_ssh_key(path: PosixPath):
+    if path.exists():
+        key = RSAKey.from_private_key_file(str(path))
+        log.info('[⚙] Using existing SSH key in {}'.format(path))
+    else:
+        key = generate_cert(path)
+        log.info('[⚙] Generated SSH key in {}'.format(path))
     return key

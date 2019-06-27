@@ -69,5 +69,5 @@ def ssh_signup(user):
 
 
 def authorized_keys_entry():
-    key = TensorHiveManager().connection_manager.ssh_key.get_base64()
+    key = TensorHiveManager().dedicated_ssh_key.get_base64()
     return 'ssh-rsa {} tensorhive@{}'.format(key, APP_SERVER.HOST)

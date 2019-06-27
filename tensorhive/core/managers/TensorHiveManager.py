@@ -20,6 +20,8 @@ from tensorhive.core.services.TaskSchedulingService import TaskSchedulingService
 from tensorhive.core.violation_handlers.ProtectionHandler import ProtectionHandler
 from tensorhive.core.violation_handlers.MessageSendingBehaviour import MessageSendingBehaviour
 from tensorhive.core.violation_handlers.EmailSendingBehaviour import EmailSendingBehaviour
+from tensorhive.core import ssh
+from pathlib import PosixPath
 import logging
 log = logging.getLogger(__name__)
 
@@ -31,13 +33,23 @@ class TensorHiveManager(metaclass=Singleton):
         super().__init__()
         self.infrastructure_manager = InfrastructureManager()
 
+        self.dedicated_ssh_key = ssh.init_ssh_key(PosixPath(SSH.KEY_FILE).expanduser())
+
         if not SSH.AVAILABLE_NODES:
             log.error('[!] Empty ssh configuration. Please check {}'.format(SSH.HOSTS_CONFIG_FILE))
             raise ConfigurationException
 
+        manager_ssh_key_path = SSH.KEY_FILE
         if SSH.TEST_ON_STARTUP:
-            SSHConnectionManager.test_all_connections(config=SSH.AVAILABLE_NODES)
-        self.connection_manager = SSHConnectionManager(config=SSH.AVAILABLE_NODES)
+            failed_dedicated = SSHConnectionManager.test_all_connections(config=SSH.AVAILABLE_NODES,
+                                                                         key_path=SSH.KEY_FILE)
+            if failed_dedicated > 0:
+                failed_system = SSHConnectionManager.test_all_connections(config=SSH.AVAILABLE_NODES)
+                if failed_system < failed_dedicated:
+                    log.info('[⚙] Using default system keys for monitoring SSH connections')
+                    manager_ssh_key_path = None
+
+        self.connection_manager = SSHConnectionManager(config=SSH.AVAILABLE_NODES, ssh_key_path=manager_ssh_key_path)
         self.service_manager = None
 
     @staticmethod
