@@ -25,7 +25,7 @@ def update(id: ReservationId, newValues: Dict[str, Any]) -> Tuple[Content, HttpS
         for field_name, new_value in new_values.items():
             # Mapping API field name to column used by Reservation model
             if field_name in ['start', 'end']:
-                # start -> start_at, end -> ends_at
+                # start -> starts_at, end -> ends_at
                 field_name += 's_at'
             if field_name == 'resourceId':
                 field_name = 'protected_resource_id'
