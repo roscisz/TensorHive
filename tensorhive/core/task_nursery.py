@@ -55,7 +55,7 @@ class ScreenCommandBuilder:
               keep_alive: bool = False) -> str:
         """Command that runs inside daemonized screen session.
 
-        Command is put into background manually (-D + & instead of simply usin -d) -> we want to know the PID
+        Command is put into background manually (-D + & instead of simply using -d) -> we want to know the PID
         Ways to capture output:
             * standard way: keep session alive, user resumes and inspects it by himself.
                 May need to use some workarounds if we want to know when command stops.
@@ -77,7 +77,7 @@ class ScreenCommandBuilder:
         """
         if capture_output:
             if keep_alive:
-                log.debug('keep_alive is set to False - incompatible with capture_output=True')
+                log.debug('Forcing keep_alive=False - incompatible with capture_output=True')
                 keep_alive = False
 
             if custom_log_name:

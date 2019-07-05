@@ -28,8 +28,6 @@ class User(CRUDModel, Base):  # type: ignore
     username = Column(String(40), unique=True, nullable=False)
     email = Column(String(64), unique=False, nullable=False, server_default='<email_missing>')
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    # reservations = relationship('Reservation', cascade='all,delete', backref='user', passive_deletes=True)
-    # tasks = relationship('Task', cascade='all,delete', backref='user', lazy='subquery', passive_deletes=True)
 
     # Managed via property getters and setters
     _hashed_password = Column(String(120), nullable=False)

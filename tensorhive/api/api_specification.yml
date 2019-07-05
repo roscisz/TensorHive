@@ -577,13 +577,6 @@ paths:
           description: {{RESPONSES['general']['auth_error']}}
       security:
         - Bearer: []
-  # /task-templates:
-  #   get:
-  #   post:
-  # /task-templates/{id}:
-  #   get:
-  #   put:
-  #   delete:
   /tasks:
     get:
       tags: 
