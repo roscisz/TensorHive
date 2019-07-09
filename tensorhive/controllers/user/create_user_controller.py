@@ -52,7 +52,7 @@ def ssh_signup(user):
     # TODO: configure nodes used for authentication
     auth_node = next(iter(SSH.AVAILABLE_NODES))
 
-    ssh_key = TensorHiveManager().connection_manager.ssh_key
+    ssh_key = TensorHiveManager().dedicated_ssh_key
     test_client = SSHClient()
     test_client.load_system_host_keys()
     test_client.set_missing_host_key_policy(WarningPolicy())
@@ -70,5 +70,5 @@ def ssh_signup(user):
 
 
 def authorized_keys_entry():
-    key = TensorHiveManager().connection_manager.ssh_key.get_base64()
+    key = TensorHiveManager().dedicated_ssh_key.get_base64()
     return 'ssh-rsa {} tensorhive@{}'.format(key, APP_SERVER.HOST)

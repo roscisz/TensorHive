@@ -16,4 +16,4 @@ class InfrastructureManager():
 
     def update_infrastructure(self, new_value: Dict):
         self._infrastructure = new_value
-        log.debug('\n{}\n'.format(json.dumps(self._infrastructure, indent=4)))
+        # log.debug('\n{}\n'.format(json.dumps(self._infrastructure, indent=4)))

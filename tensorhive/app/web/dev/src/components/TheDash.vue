@@ -40,11 +40,6 @@
           </v-chip>
 
           <v-card>
-            <v-avatar>
-              <v-icon>account_circle</v-icon>
-            </v-avatar>
-            {{displayName}}
-            <v-divider></v-divider>
             <v-card-actions>
               <v-btn flat @click="logout()">Logout</v-btn>
             </v-card-actions>
@@ -56,6 +51,24 @@
     <div class="content-wrapper">
       <router-view></router-view>
     </div>
+    <v-footer
+      height="auto"
+      color="#222d32"
+    >
+      <v-layout
+        justify-center
+        row
+        wrap
+      >
+        <v-flex
+          text-xs-center
+          white--text
+          xs12
+        >
+          Found a bug?  (<a href="https://github.com/roscisz/TensorHive/issues">Report issue</a>)
+        </v-flex>
+      </v-layout>
+    </v-footer>
   </div>
 </template>
 
@@ -97,6 +110,19 @@ export default {
   },
 
   methods: {
+    handleError: function (error) {
+      if (!error.hasOwnProperty('response')) {
+        this.errorMessage = error.message
+      } else {
+        if (!error.response.data.hasOwnProperty('msg')) {
+          this.errorMessage = error.response.data
+        } else {
+          this.errorMessage = error.response.data.msg
+        }
+      }
+      this.alert = true
+    },
+
     changeloading () {
       this.$store.commit('TOGGLE_SEARCHING')
     },
@@ -121,22 +147,12 @@ export default {
                   }
                 })
                 .catch(error => {
-                  if (!error.hasOwnProperty('response')) {
-                    this.errorMessage = error.message
-                  } else {
-                    this.errorMessage = error.response.data.msg
-                  }
-                  this.alert = true
+                  this.handleError(error)
                 })
             }
           })
           .catch(error => {
-            if (!error.hasOwnProperty('response')) {
-              this.errorMessage = error.message
-            } else {
-              this.errorMessage = error.response.data.msg
-            }
-            this.alert = true
+            this.handleError(error)
           })
       }
       this.$store.commit('SET_USER', null)
@@ -145,7 +161,6 @@ export default {
       if (window.localStorage) {
         window.localStorage.setItem('user', null)
         window.localStorage.setItem('role', null)
-        window.localStorage.setItem('visibleResources', null)
         window.localStorage.setItem('watches', null)
         window.localStorage.setItem('watchIds', null)
       }

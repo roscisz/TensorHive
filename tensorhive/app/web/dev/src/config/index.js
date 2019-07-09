@@ -1,5 +1,7 @@
 export default {
-  serverURI: 'http://0.0.0.0:1111/api/0.2',
+  serverURI: '',
+  apiVersion: '',
+  version: '',
   fixedLayout: false,
   hideLogoOnMobile: false
 }

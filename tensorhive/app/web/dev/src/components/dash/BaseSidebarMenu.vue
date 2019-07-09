@@ -22,6 +22,17 @@
         <span class="page">Nodes Overview</span>
       </a>
     </router-link>
+    <li class="header">TASKS</li>
+    <router-link
+      tag="li"
+      class="pageLink"
+      to="/tasks_overview"
+    >
+      <a>
+        <i class="fa fa-tasks"></i>
+        <span class="page">Tasks Overview</span>
+      </a>
+    </router-link>
     <li
       class="header"
       v-if="$store.state.role === 'admin'"

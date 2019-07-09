@@ -28,7 +28,6 @@ class User(CRUDModel, Base):  # type: ignore
     username = Column(String(40), unique=True, nullable=False)
     email = Column(String(64), unique=False, nullable=False, server_default='<email_missing>')
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    reservations = relationship('Reservation', cascade='all,delete', backref=backref('user'))
 
     # Managed via property getters and setters
     _hashed_password = Column(String(120), nullable=False)
@@ -42,9 +41,7 @@ class User(CRUDModel, Base):  # type: ignore
 
     def __repr__(self):
         return '<User id={id}, username={username} email={email}>'.format(
-            id=self.id,
-            username=self.username,
-            email=self.email)
+            id=self.id, username=self.username, email=self.email)
 
     @hybrid_property
     def roles(self):

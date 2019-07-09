@@ -171,7 +171,17 @@ export default {
       }
       this.metrics.push('processes')
       if (this.defaultMetric === '') {
-        this.selectedMetric = this.metrics[0]
+        var metric = this.metrics[0]
+        for (metricIndex in this.metrics) {
+          var metricName = this.metrics[metricIndex]
+          if (metricName === 'gpu_util') {
+            metric = metricName
+            break
+          } else if (metricName === 'mem_used') {
+            metric = metricName
+          }
+        }
+        this.selectedMetric = metric
       } else {
         this.selectedMetric = this.defaultMetric
       }
@@ -197,7 +207,15 @@ export default {
           this.processes = processes
         })
         .catch(error => {
-          this.errorMessage = error.response.data.msg
+          if (!error.hasOwnProperty('response')) {
+            this.errorMessage = error.message
+          } else {
+            if (!error.response.data.hasOwnProperty('msg')) {
+              this.errorMessage = error.response.data
+            } else {
+              this.errorMessage = error.response.data.msg
+            }
+          }
           this.alert = true
         })
     }
