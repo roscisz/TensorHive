@@ -1,4 +1,4 @@
-from tensorhive.core.utils.decorators.override import override
+from tensorhive.core.utils.decorators import override
 from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.models.User import User
 from typing import Generator, Dict, List, Any, Optional

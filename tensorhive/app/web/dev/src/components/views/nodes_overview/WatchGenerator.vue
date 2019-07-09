@@ -74,6 +74,19 @@ export default {
   },
 
   methods: {
+    handleError: function (error) {
+      if (!error.hasOwnProperty('response')) {
+        this.errorMessage = error.message
+      } else {
+        if (!error.response.data.hasOwnProperty('msg')) {
+          this.errorMessage = error.response.data
+        } else {
+          this.errorMessage = error.response.data.msg
+        }
+      }
+      this.alert = true
+    },
+
     saveWatches: function () {
       window.localStorage.setItem('watches', JSON.stringify(this.watches))
       window.localStorage.setItem('watchIds', JSON.stringify(this.watchIds))
@@ -159,8 +172,7 @@ export default {
           this.parseData(response.data)
         })
         .catch(error => {
-          this.errorMessage = error.response.data.msg
-          this.alert = true
+          this.handleError(error)
         })
     },
 
@@ -379,8 +391,7 @@ export default {
           }
         })
         .catch(error => {
-          this.errorMessage = error.response.data.msg
-          this.alert = true
+          this.handleError(error)
         })
     },
 

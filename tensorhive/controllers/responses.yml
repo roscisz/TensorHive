@@ -39,11 +39,50 @@ reservation:
     success: Reservation has been successfully updated
     failure:
       invalid: Requirements not met - {reason}
+      assertions: Unable to update reservation - {reason}
   delete:
     success: Reservation has been successfully deleted
 users:
   get:
     success: Fetched successfully
+screen-sessions:
+  success: PIDs of active screen sessions acquired successfully
+  failure:
+    assertions: Unable to fetch screen sessions, {reason}
+task:
+  all:
+    success: Tasks has been successfully fetched
+  get:
+    success: Task has been successfully fetched 
+  get_log:
+    success: Log file has been found
+    failure:
+      assertions: Unable to fetch task, {reason}
+      not_found: Log file could not be found in {location}
+  not_found: Task has not been found
+  create:
+    success: Task has been successfully created
+    failure:
+      invalid: Requirements not met - {reason}
+  delete:
+    success: Task has been successfully deleted
+    failure:
+      assertions: Unable to delete task, {reason}
+  update:
+    success: Task has been successfully updated
+    failure:
+      assertions: Unable to update task, {reason}
+  spawn:
+    success: Task has been successfully spawned 
+    failure:
+      already_spawned: Task is already spawned (assigned pid)
+      assertions: Unable to spawn task, {reason}
+      backend: Unable to spawn task, {reason}
+  terminate:
+    success: Accepted, task has been successfully asked to terminate
+    failure:
+      state: Unable to terminate, {reason}
+      exit_code: Accepted, but termination operation did not succeed (op. exit_code was not 0)
 token:
   revoke:
     success: '{token_type} has been revoked'
@@ -60,3 +99,6 @@ token:
 nodes:
   hostname:
     not_found: Hostname has not been found
+ssh:
+  failure:
+    connection: Unable to establish connection with host ({reason})

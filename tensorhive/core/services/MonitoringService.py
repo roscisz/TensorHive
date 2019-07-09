@@ -5,7 +5,7 @@ from tensorhive.core.services.Service import Service
 from typing import List, Dict, Any
 import time
 import gevent
-from tensorhive.core.utils.decorators.override import override
+from tensorhive.core.utils.decorators import override
 import logging
 log = logging.getLogger(__name__)
 

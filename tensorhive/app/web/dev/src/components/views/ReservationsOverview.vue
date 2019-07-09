@@ -16,10 +16,10 @@
       </v-btn>
     </v-snackbar>
     <section id="schedule_section">
-      <MySchedule @showSnackbar="showSnackbar(...arguments)" @loadResources="loadResources(...arguments)" :parsed-nodes="parsedNodes"/>
+      <MySchedule @handleError="handleError(...arguments)" @loadResources="loadResources(...arguments)" :parsed-nodes="parsedNodes"/>
     </section>
     <section id="calendar_section">
-      <FullCalendar @showSnackbar="showSnackbar(...arguments)" :update-calendar="updateCalendar" :selected-resources="selectedResources"/>
+      <FullCalendar @handleError="handleError(...arguments)" :update-calendar="updateCalendar" :selected-resources="selectedResources" :nodes="nodes"/>
     </section>
   </section>
 </template>
@@ -51,27 +51,35 @@ export default {
   },
 
   mounted () {
-    if (JSON.parse(window.localStorage.getItem('visibleResources')) === null) {
-      api
-        .request('get', '/nodes/metrics', this.$store.state.accessToken)
-        .then(response => {
-          this.nodes = response.data
-          this.parseData()
-        })
-        .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            this.showSnackbar(error.message)
-          } else {
-            this.showSnackbar(error.response.data.msg)
-          }
-        })
-    } else {
-      this.parsedNodes = JSON.parse(window.localStorage.getItem('visibleResources'))
-      this.loadCalendar()
-    }
+    api
+      .request('get', '/nodes/metrics', this.$store.state.accessToken)
+      .then(response => {
+        this.nodes = response.data
+        this.parseData()
+      })
+      .catch(error => {
+        this.handleError(error)
+      })
   },
 
   methods: {
+    handleError: function (error) {
+      if (!error.hasOwnProperty('response')) {
+        this.showSnackbar(error.message)
+      } else {
+        if (!error.response.data.hasOwnProperty('msg')) {
+          this.showSnackbar(error.response.data)
+        } else {
+          this.showSnackbar(error.response.data.msg)
+        }
+      }
+    },
+
+    showSnackbar (message) {
+      this.errorMessage = message
+      this.snackbar = true
+    },
+
     loadResources: function (resources) {
       this.selectedResources = []
       for (var id in resources) {
@@ -153,12 +161,6 @@ export default {
         }
       }
       this.updateCalendar = !this.updateCalendar
-      window.localStorage.setItem('visibleResources', JSON.stringify(this.parsedNodes))
-    },
-
-    showSnackbar (message) {
-      this.errorMessage = message
-      this.snackbar = true
     }
   }
 }

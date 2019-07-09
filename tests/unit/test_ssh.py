@@ -1,8 +1,29 @@
 import pytest
 import os
 import stat
-import tensorhive.core.utils.ssh as sut
+import tensorhive.core.ssh as sut
+from tensorhive.config import SSH
 from paramiko.rsakey import RSAKey
+
+
+def test_config_builder_with_good_arguments():
+    config, _ = sut.build_dedicated_config_for('hostname', 'username')
+    assert config == {
+        'hostname': {
+            'user': 'username',
+            'pkey': SSH.KEY_FILE
+        }
+    }
+
+
+@pytest.mark.parametrize('host,user', [
+    (None, None),
+    ('foo', None),
+    (None, 'bar'),
+])
+def test_config_builder_failure_with_invalid_arguments(host, user):
+    with pytest.raises(AssertionError):
+        sut.build_dedicated_config_for(host, user)
 
 
 @pytest.fixture
