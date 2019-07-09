@@ -6,7 +6,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class Role(CRUDModel, Base):
+class Role(CRUDModel, Base):  # type: ignore
     __tablename__ = 'roles'
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(40), nullable=False)

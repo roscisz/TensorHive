@@ -12,9 +12,12 @@
   <full-calendar-info
     :show-modal="showModalInfo"
     @close="showModalInfo = false"
+    @handleError="handleError"
     :reservation="reservation"
     :cancel="cancelReservation"
     :update="updateReservation"
+    :refreshTasks="refreshTasks"
+    :nodes="nodes"
   ></full-calendar-info>
 </div>
 </template>
@@ -24,6 +27,7 @@ import FullCalendarReserve from './FullCalendarReserve.vue'
 import FullCalendarInfo from './FullCalendarInfo.vue'
 import api from '../../../api'
 import $ from 'jquery'
+import moment from 'moment'
 import _ from 'lodash'
 require('../../../../static/fullcalendar/fullcalendar.js')
 
@@ -34,6 +38,7 @@ export default {
   },
 
   props: {
+    nodes: Object,
     selectedResources: Array,
     updateCalendar: Boolean
   },
@@ -59,11 +64,16 @@ export default {
       reservationId: -1,
       startDate: null,
       endDate: null,
-      resourcesCheckboxes: []
+      resourcesCheckboxes: [],
+      refreshTasks: false
     }
   },
 
   methods: {
+    handleError: function (error) {
+      this.$emit('handleError', error)
+    },
+
     getEvents: function (start, end, callback) {
       var resourcesString = ''
       if (this.selectedResources.length > 0) {
@@ -80,6 +90,8 @@ export default {
             for (var reservation in response.data) {
               if (response.data[reservation].id === self.reservationId) {
                 self.reservation = response.data[reservation]
+                self.reservation.start = moment(self.reservation.start)
+                self.reservation.end = moment(self.reservation.end)
               }
             }
             self.reservationId = -1
@@ -87,11 +99,7 @@ export default {
           callback(response.data)
         })
         .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            this.$emit('showSnackbar', error.message)
-          } else {
-            this.$emit('showSnackbar', error.response.data.msg)
-          }
+          this.$emit('handleError', error)
         })
       var obj
       this.resourcesCheckboxes = []
@@ -144,9 +152,7 @@ export default {
     },
 
     updateReservation: function (reservation, newTime, newTitle, newDescription) {
-      var toUpdate = {
-        id: reservation.id
-      }
+      var toUpdate = {}
       if (reservation.start.toISOString() !== newTime[0].toISOString()) {
         toUpdate['start'] = newTime[0].toISOString()
       }
@@ -159,32 +165,34 @@ export default {
       if (reservation.description !== newDescription && newDescription !== '') {
         toUpdate['description'] = newDescription
       }
-      api
-        .request('put', '/reservations', this.$store.state.accessToken, toUpdate)
-        .then(response => {
-          this.calendar.fullCalendar('refetchEvents')
-        })
-        .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            this.$emit('showSnackbar', error.message)
-          } else {
-            this.$emit('showSnackbar', error.response.data.msg)
-          }
-        })
+      var empty = true
+      for (var key in toUpdate) {
+        if (toUpdate.hasOwnProperty(key)) {
+          empty = false
+        }
+      }
+      if (!empty) {
+        api
+          .request('put', '/reservations/' + reservation.id, this.$store.state.accessToken, toUpdate)
+          .then(response => {
+            this.calendar.fullCalendar('refetchEvents')
+            this.showModalInfo = false
+          })
+          .catch(error => {
+            this.$emit('handleError', error)
+          })
+      }
     },
 
     cancelReservation: function (reservation) {
       api
         .request('delete', '/reservations/' + reservation.id.toString(), this.$store.state.accessToken)
         .then(response => {
-          this.calendar.fullCalendar('removeEvents', reservation._id)
+          this.calendar.fullCalendar('refetchEvents')
+          this.showModalInfo = false
         })
         .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            this.$emit('showSnackbar', error.message)
-          } else {
-            this.$emit('showSnackbar', error.response.data.msg)
-          }
+          this.$emit('handleError', error)
         })
     },
 
@@ -193,13 +201,10 @@ export default {
         .request('post', '/reservations', this.$store.state.accessToken, reservation)
         .then(response => {
           this.calendar.fullCalendar('refetchEvents')
+          this.showModalReserve = false
         })
         .catch(error => {
-          if (!error.hasOwnProperty('response')) {
-            this.$emit('showSnackbar', error.message)
-          } else {
-            this.$emit('showSnackbar', error.response.data.msg)
-          }
+          this.$emit('handleError', error)
         })
     }
   },
@@ -252,11 +257,7 @@ export default {
               element.find('.fc-title').prepend((response.data.username).bold().big().italics() + '<br/>')
             })
             .catch(error => {
-              if (!error.hasOwnProperty('response')) {
-                this.$emit('showSnackbar', error.message)
-              } else {
-                this.$emit('showSnackbar', error.response.data.msg)
-              }
+              this.$emit('handleError', error)
             })
         }
       },
@@ -321,6 +322,7 @@ export default {
         if ((calEvent.userId === self.$store.state.id || self.$store.state.role === 'admin') && !calEvent.allDay) {
           self.reservationId = calEvent.id
           self.calendar.fullCalendar('refetchEvents')
+          self.refreshTasks = !self.refreshTasks
           self.showModalInfo = true
         }
       },

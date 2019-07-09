@@ -22,13 +22,12 @@ class PASS_COMPLEXITY:
     STRONG = 3
 
 
-class User(CRUDModel, Base):
+class User(CRUDModel, Base):  # type: ignore
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
     email = Column(String(64), unique=False, nullable=False, server_default='<email_missing>')
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    reservations = relationship('Reservation', cascade='all,delete', backref=backref('user'))
 
     # Managed via property getters and setters
     _hashed_password = Column(String(120), nullable=False)
@@ -42,15 +41,13 @@ class User(CRUDModel, Base):
 
     def __repr__(self):
         return '<User id={id}, username={username} email={email}>'.format(
-            id=self.id,
-            username=self.username,
-            email=self.email)
+            id=self.id, username=self.username, email=self.email)
 
     @hybrid_property
     def roles(self):
         return self._roles
 
-    @roles.setter
+    @roles.setter  # type: ignore
     def roles(self, new_roles):
         self._roles = new_roles
 
@@ -65,7 +62,7 @@ class User(CRUDModel, Base):
     def password(self):
         return self._hashed_password
 
-    @password.setter
+    @password.setter  # type: ignore
     def password(self, raw: str):
         result = safe.check(raw, length=self.min_password_length, freq=0, min_types=1, level=PASS_COMPLEXITY.TERRIBLE)
         assert result, 'Incorrect password, reason: {}'.format(result.message)

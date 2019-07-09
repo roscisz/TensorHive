@@ -1,6 +1,7 @@
 from gunicorn.app.base import BaseApplication
 from flask import Flask, render_template
 from flask_cors import CORS
+import tensorhive
 from tensorhive.config import APP_SERVER, API_SERVER, API
 from tensorhive.core.utils.colors import green
 import json
@@ -52,7 +53,9 @@ def _inject_api_endpoint_to_app():
             'apiPath': 'http://{}:{}/{}'.format(
                 API_SERVER.HOST,
                 API_SERVER.PORT,
-                API.URL_PREFIX)
+                API.URL_PREFIX),
+            'version': tensorhive.__version__,
+            'apiVersion': API.VERSION
         }
         # Overwrite current file content/create file if it does not exist
         with open(str(web_app_json_config_path), 'w') as json_file:

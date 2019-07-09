@@ -1,5 +1,6 @@
 import click
 from tensorhive.core.utils.colors import orange, green
+from tensorhive.core.utils.exceptions import ConfigurationException
 import tensorhive
 import logging
 import sys
@@ -103,6 +104,10 @@ def main(ctx, log_level):
 
         manager.configure_services_from_config()
         manager.init()
+    except ConfigurationException:
+        sys.exit()
+
+    try:
         webapp_server.start()       # Separate process
         api_server.run_forever()    # Will block (runs on main thread)
     except KeyboardInterrupt:

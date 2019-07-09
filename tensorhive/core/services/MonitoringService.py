@@ -5,7 +5,7 @@ from tensorhive.core.services.Service import Service
 from typing import List, Dict, Any
 import time
 import gevent
-from tensorhive.core.utils.decorators.override import override
+from tensorhive.core.utils.decorators import override
 import logging
 log = logging.getLogger(__name__)
 
@@ -15,8 +15,8 @@ class MonitoringService(Service):
     Periodically updates infrastructure
     Can be configured to use multiple monitors against nodes with available connection
     '''
-    monitors = []
-    connections = []
+    monitors = []  # type: List
+    connections = []  # type: List
     infrastructure_manager = None
 
     def __init__(self, monitors, interval=0.0):

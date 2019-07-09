@@ -1,7 +1,9 @@
 
 from tensorhive.config import SSH
 from pssh.clients.native import ParallelSSHClient
+from paramiko.rsakey import RSAKey
 from typing import Dict
+from tensorhive.core import ssh
 import logging
 log = logging.getLogger(__name__)
 
@@ -9,18 +11,20 @@ log = logging.getLogger(__name__)
 class SSHConnectionManager():
     '''Responsible for configuring, establishing and holding shell sessions'''
     _connection_group = None
-    _connection_container = {}
+    _connection_container = {}  # type: Dict
 
-    def __init__(self, config: Dict):
-        self._connection_group = self.new_parallel_ssh_client(config)
+    def __init__(self, config: Dict, ssh_key_path: str):
+        self.ssh_key_path = ssh_key_path
+        self._connection_group = self.new_parallel_ssh_client(config, key_path=ssh_key_path)
 
     @classmethod
-    def new_parallel_ssh_client(cls, config) -> ParallelSSHClient:
+    def new_parallel_ssh_client(cls, config, key_path=None) -> ParallelSSHClient:
         hostnames = config.keys()
         if SSH.PROXY:
             return ParallelSSHClient(
                 hosts=hostnames,
                 host_config=config,
+                pkey=key_path,
                 proxy_host=SSH.PROXY['proxy_host'],
                 proxy_user=SSH.PROXY['proxy_user'],
                 proxy_port=SSH.PROXY['proxy_port']
@@ -31,6 +35,7 @@ class SSHConnectionManager():
             hosts=hostnames,
             host_config=config,
             timeout=SSH.TIMEOUT,
+            pkey=key_path,
             num_retries=SSH.NUM_RETRIES)
 
     def add_host(self, host_config: Dict):
@@ -51,7 +56,7 @@ class SSHConnectionManager():
 
         if not self._connection_container.get(hostname):
             # Create and store in cache
-            self._connection_container[hostname] = self.new_parallel_ssh_client(config)
+            self._connection_container[hostname] = self.new_parallel_ssh_client(config, self.ssh_key_path)
 
         # Return cached object
         return self._connection_container[hostname]
@@ -61,18 +66,17 @@ class SSHConnectionManager():
         return self._connection_group
 
     @staticmethod
-    def test_all_connections(config):
+    def test_all_connections(config, key_path=None):
         '''
         It checks if all of the defined hosts are accessible via SSH.
         Typically runs on each TensorHive startup.
         You can turn it off (INI config -> [ssh] -> test_on_startup = off
         '''
-        log.info('[⚙] Testing SSH configuration...')
-        if not config:
-            log.warning('[!] Empty ssh configuration. Please check {}'.format(SSH.HOSTS_CONFIG_FILE))
+        key_descr = 'default system keys' if key_path is None else 'key in {}'.format(key_path)
+        log.info('[⚙] Testing SSH connections using {}'.format(key_descr))
 
         # 1. Establish connection
-        connections = SSHConnectionManager.new_parallel_ssh_client(config)
+        connections = SSHConnectionManager.new_parallel_ssh_client(config, key_path=key_path)
 
         # 2. Execute and gather output
         command = 'uname'
@@ -103,3 +107,5 @@ class SSHConnectionManager():
             log.critical('Summary: {failed}/{all} failed to connect.'.format(
                 failed=num_failed,
                 all=len(output)))
+
+        return num_failed

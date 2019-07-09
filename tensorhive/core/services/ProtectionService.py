@@ -2,7 +2,7 @@ from tensorhive.core.services.Service import Service
 from tensorhive.models.Reservation import Reservation
 from tensorhive.models.User import User
 from tensorhive.database import db_session
-from tensorhive.core.utils.decorators.override import override
+from tensorhive.core.utils.decorators import override
 from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.managers.SSHConnectionManager import SSHConnectionManager
 from pssh.clients.native import ParallelSSHClient
@@ -36,7 +36,7 @@ class ProtectionService(Service):
         elif isinstance(injected_object, SSHConnectionManager):
             self.connection_manager = injected_object
 
-    def node_tty_sessions(self, connection) -> Dict[str, str]:
+    def node_tty_sessions(self, connection) -> List[Dict]:
         '''Executes shell command in order to fetch all active terminal sessions'''
         command = 'who'
         output = connection.run_command(command)
@@ -82,7 +82,7 @@ class ProtectionService(Service):
             node_processes[uuid] = single_gpu_processes
         return node_processes
 
-    def _parse_output(self, stdout: Generator) -> Dict[str, str]:
+    def _parse_output(self, stdout: Generator) -> List[Dict]:
         '''
         Transforms command output into a dictionary
         Assumes command was: 'who | grep <username>'
@@ -115,6 +115,7 @@ class ProtectionService(Service):
     @property
     def ignored_processes(self):
         return [
+            'Xorg',
             '/usr/lib/xorg/Xorg',
             '/usr/bin/X',
             'X',

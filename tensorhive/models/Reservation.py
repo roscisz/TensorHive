@@ -2,18 +2,24 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, and_, not_
 from tensorhive.database import db_session, Base
 from tensorhive.models.CRUDModel import CRUDModel
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import relationship, backref
 from typing import Optional, List
 import datetime
 import logging
 log = logging.getLogger(__name__)
 
 
-class Reservation(CRUDModel, Base):
+class Reservation(CRUDModel, Base):  # type: ignore
     __tablename__ = 'reservations'
     __table_args__ = {'sqlite_autoincrement': True}
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    # TODO 'owner' would be much better name (needs refactoring)
+    user = relationship(
+        'User',
+        backref=backref('reservations', passive_deletes=True, cascade='all, delete, delete-orphan'),
+        lazy='subquery')
     title = Column(String(60), unique=False, nullable=False)
     description = Column(String(200), nullable=True)
     protected_resource_id = Column(String(60), nullable=False)
@@ -69,7 +75,7 @@ class Reservation(CRUDModel, Base):
     def starts_at(self):
         return self._starts_at
 
-    @starts_at.setter
+    @starts_at.setter  # type: ignore
     def starts_at(self, value):
         if isinstance(value, str):
             self._starts_at = self.parsed_input_datetime(value)
@@ -83,7 +89,7 @@ class Reservation(CRUDModel, Base):
     def ends_at(self):
         return self._ends_at
 
-    @ends_at.setter
+    @ends_at.setter  # type: ignore
     def ends_at(self, value):
         if isinstance(value, str):
             try:
@@ -107,8 +113,7 @@ class Reservation(CRUDModel, Base):
                 # Events that has already started
                 cls.starts_at <= current_time,
                 # Events before their end
-                current_time <= cls.ends_at)
-        ).all()
+                current_time <= cls.ends_at)).all()
 
     def would_interfere(self):
         return Reservation.query.filter(
@@ -151,16 +156,8 @@ class Reservation(CRUDModel, Base):
 
     starts_at={7}
     ends_at={8}
-    created_at={9}'''.format(
-            self.id, self.user_id,
-            self.title,
-            self.description,
-            self.protected_resource_id,
-            self.gpu_util_avg,
-            self.mem_util_avg,
-            self.starts_at,
-            self.ends_at,
-            self.created_at)
+    created_at={9}'''.format(self.id, self.user_id, self.title, self.description, self.protected_resource_id,
+                             self.gpu_util_avg, self.mem_util_avg, self.starts_at, self.ends_at, self.created_at)
 
     @property
     def as_dict(self):

@@ -33,10 +33,7 @@ def update(user):
             content = {'msg': G['internal_error']}
             status = 500
         else:
-            content = {
-                'msg': R['update']['success'],
-                'reservation': found_user.as_dict
-            }
+            content = {'msg': R['update']['success'], 'reservation': found_user.as_dict}
             status = 201
     else:
         content = {'msg': G['bad_request']}

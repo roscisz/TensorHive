@@ -1,5 +1,5 @@
 from tensorhive.core.violation_handlers.ProtectionHandler import ProtectionHandler
-from tensorhive.core.utils.decorators.override import override
+from tensorhive.core.utils.decorators import override
 from typing import Generator, Dict, List, Any
 from inspect import cleandoc
 import logging
@@ -20,7 +20,7 @@ class MessageSendingBehaviour():
             gpu_uuid=data['UUID'])
         return message
 
-    def _build_single_command(self, recipient: str, tty: str, msg: str) -> str:
+    def _build_single_command(self, recipient: str, tty, msg: str) -> str:
         '''Example: 'echo "Example message" | write example_username pts/1' '''
         command = 'echo "{msg}" | write {intruder_name} {tty}'.format(
             msg=msg,
