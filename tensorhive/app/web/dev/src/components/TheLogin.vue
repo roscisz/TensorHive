@@ -129,7 +129,7 @@
           dismissible
           type="info"
         >
-          Account successfully created
+          Identity verification succeeded, account has been successfully created. You can now log in.
         </v-alert>
         <v-btn color="info" @click="requestEntry">Register</v-btn>
         <v-btn
