@@ -38,23 +38,25 @@ docs:
 	$(call green, "Done. You can now browse the docs via: firefox docs/index.html\n")
 
 
-clean:
-	$(call yellow, "1. Cleaning existing configuration files...")
+clean-config:
+	$(call yellow, "Cleaning existing configuration files...")
 ifneq ($(wildcard $(CONFIG_DIR)),)
 	- cd $(CONFIG_DIR) && rm *.ini
 	$(call green, "Done.\n")
 else
 	@echo "$(CONFIG_DIR) does not exist, continuing...\n"
 endif
-	$(call red, "2. Removing web app build artifacts...")
+
+clean:
+	$(call red, "1. Removing web app build artifacts...")
 	rm --recursive --force $(DIST_DIR)
 	$(call green, "Done.\n")
 
-	$(call red, "3. Uninstalling TensorHive...")
+	$(call red, "2. Uninstalling TensorHive...")
 	pip uninstall --yes tensorhive
 	$(call green, "Done.\n")
 
-	$(call red, "4. Removing docs...")
+	$(call red, "3. Removing docs...")
 	rm --recursive --force docs
 	$(call green, "Done.\n")
 
