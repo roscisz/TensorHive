@@ -3,6 +3,7 @@ from tensorhive.models.Reservation import Reservation
 from tensorhive.models.User import User
 from tensorhive.database import db_session
 from tensorhive.core.utils.decorators import override
+from tensorhive.core.utils.time import utc2local
 from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.managers.SSHConnectionManager import SSHConnectionManager
 from pssh.clients.native import ParallelSSHClient
@@ -187,7 +188,7 @@ class ProtectionService(Service):
                     'INTRUDER_USERNAME': intruder,
                     'RESERVATION_OWNER_USERNAME': username,
                     'RESERVATION_OWNER_EMAIL': user.email,
-                    'RESERVATION_END': Reservation.parsed_output_datetime(reservation.ends_at),
+                    'RESERVATION_END': utc2local(reservation.ends_at),
                     'UUID': uuid,
                     'GPU_NAME': self.gpu_attr(hostname, uuid, attribute='name'),
                     'GPU_ID': self.gpu_attr(hostname, uuid, attribute='index'),
