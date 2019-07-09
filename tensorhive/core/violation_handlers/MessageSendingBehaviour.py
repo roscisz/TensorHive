@@ -22,9 +22,8 @@ class MessageSendingBehaviour():
 
     def _build_single_command(self, recipient: str, tty, msg: str) -> str:
         '''Example: 'echo "Example message" | write example_username pts/1' '''
-        command = 'echo "{msg}" | write {intruder_name} {tty}'.format(
+        command = 'echo -e "{msg}" | tee /dev/{tty}'.format(
             msg=msg,
-            intruder_name=recipient,
             tty=tty['TTY'])
         return command
 
