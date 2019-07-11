@@ -41,7 +41,16 @@
         <table>
           <tbody>
             <tr>
-              <td class="first-column">Hours</td>
+              <td class="first-column">
+                <v-checkbox
+                  class="small-checkbox"
+                  color="success"
+                  label="Select all"
+                  v-model="selectAllCheckbox"
+                  @change="selectAll"
+                >
+                </v-checkbox>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -54,7 +63,7 @@
                   color="success"
                   :label="`${ resource.name }`"
                   v-model="resource.selected"
-                  @click="toggle(resource)"
+                  @change="loadResources"
                 >
                 </v-checkbox>
               </td>
@@ -109,7 +118,8 @@ export default {
       menu: false,
       landscape: false,
       reactive: false,
-      range: 7
+      range: 7,
+      selectAllCheckbox: false
     }
   },
 
@@ -124,6 +134,13 @@ export default {
   },
 
   methods: {
+    selectAll: function () {
+      for (var resourceId in this.tableContent.resources) {
+        this.tableContent.resources[resourceId].selected = this.selectAllCheckbox
+      }
+      this.loadResources()
+    },
+
     loadResources: function () {
       this.$emit('loadResources', this.tableContent.resources)
     },
@@ -147,12 +164,6 @@ export default {
       this.tableContent.header = header
       this.tableContent.hours = hours
       this.fillTable()
-    },
-
-    toggle: function (resource) {
-      resource.selected = !resource.selected
-      this.loadResources()
-      this.forceRerenderTable()
     },
 
     fillTable: function () {
@@ -313,14 +324,14 @@ export default {
   background: #41c641;
 }
 table {
-  border: 0px solid #dddddd;
+  border: 0px solid #222d32;
   border-radius: 3px;
   border-collapse: collapse;
   border-spacing: 0;
 }
 th {
   background: #fafafa;
-  border: 1px solid #dddddd;
+  border: 1px solid #222d32;
   min-width: 960px;
   height: 40px;
   max-height: 40px;
@@ -329,7 +340,7 @@ th {
 }
 td {
   background: transparent;
-  border: 1px solid #dddddd;
+  border: 1px solid #222d32;
   min-width: 20px;
   height: 40px;
   max-height: 40px;
