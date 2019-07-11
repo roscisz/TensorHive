@@ -49,27 +49,14 @@
           <tbody>
             <tr v-for="resource in tableContent.resources" :key="resource.id">
               <td class="first-column" :class="{selected: resource.selected}">
-                <v-btn
-                  class="small-button"
-                  v-if="!resource.selected"
-                  fab
-                  dark
-                  color="blue"
+                <v-checkbox
+                  class="small-checkbox"
+                  color="success"
+                  :label="`${ resource.name }`"
+                  v-model="resource.selected"
                   @click="toggle(resource)"
                 >
-                  <v-icon dark>add</v-icon>
-                </v-btn>
-                <v-btn
-                  class="small-button"
-                  v-if="resource.selected"
-                  fab
-                  dark
-                  color="blue"
-                  @click="toggle(resource)"
-                >
-                  <v-icon dark>remove</v-icon>
-                </v-btn>
-                {{resource.name}}
+                </v-checkbox>
               </td>
             </tr>
           </tbody>
@@ -296,9 +283,11 @@ export default {
 .selected {
   background-color: #42b983;
 }
-.small-button {
-  height: 25px !important;
-  width: 25px !important;
+.small-checkbox {
+  margin-top: -15px !important;
+  margin-left: 10px !important;
+  height: 15px !important;
+  width: 15px !important;
 }
 .left-table {
   min-width: 205px;
