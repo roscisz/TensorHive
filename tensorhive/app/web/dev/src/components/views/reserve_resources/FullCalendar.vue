@@ -65,7 +65,8 @@ export default {
       startDate: null,
       endDate: null,
       resourcesCheckboxes: [],
-      refreshTasks: false
+      refreshTasks: false,
+      parsedNodeNames: []
     }
   },
 
@@ -135,19 +136,28 @@ export default {
       }
     },
 
-    setColor: function (resourceIndex) {
-      var color = '#123456'
-      var step = resourceIndex * 123456
-      var colorToInt = parseInt(color.substr(1), 16)
-      var nstep = parseInt(step)
-      if (!isNaN(colorToInt) && !isNaN(nstep)) {
-        colorToInt += nstep
-        var ncolor = colorToInt.toString(16)
-        ncolor = '#' + (new Array(7 - ncolor.length).join(0)) + ncolor
-        if (/^#[0-9a-f]{6}$/i.test(ncolor)) {
-          return ncolor
+    parseNodeNames: function () {
+      for (var nodeName in this.nodes) {
+        this.parsedNodeNames.push(nodeName)
+      }
+    },
+
+    setColor: function (resourceIndex, resourceNodeName) {
+      var colors = [
+        ['#00AA00', '#00AA55', '#28A228', '#26A65B'], // green
+        ['#1E90FF', '#00A4A6', '#1F3A93', '#008080'], // blue
+        ['#545454', '#708090', '#696969', '#6C7A89'] // gray
+      ]
+      if (this.parsedNodeNames.length === 0) {
+        this.parseNodeNames()
+      }
+      var colorIndex
+      for (var index in this.parsedNodeNames) {
+        if (this.parsedNodeNames[index] === resourceNodeName) {
+          colorIndex = index % colors.length
         }
       }
+      var color = colors[colorIndex][(resourceIndex) % colors[colorIndex].length]
       return color
     },
 
@@ -262,30 +272,40 @@ export default {
         }
       },
       eventAfterRender: function (event, element, view) {
+        var columnIndex
         var resourceIndex
+        var resourceNodeName
         for (var i = 0; i < self.selectedResources.length; i++) {
           if (self.selectedResources[i].uuid === event.resourceId) {
-            resourceIndex = i + 1
+            columnIndex = i
+            resourceIndex = self.selectedResources[i].index
+            resourceNodeName = self.selectedResources[i].nodeName
           }
         }
-        var hoursWidth = 44
+        var hoursWidth = 42
         var scrollWidth = 16
         var width = view.el[0].clientWidth
         var dayWidth = (width - scrollWidth - hoursWidth) / 7
-        var eventSlotWidth = dayWidth / self.selectedResources.length - 1
-        var eventWidth = (Math.floor(eventSlotWidth - 3)).toString() + 'px'
+        var eventSlotWidth = dayWidth / self.selectedResources.length
+        var eventWidth = (Math.round(eventSlotWidth - 1)).toString() + 'px'
         $(element).css('width', eventWidth)
-        if (resourceIndex !== 1) {
-          var margin = (Math.floor((resourceIndex - 1) * eventSlotWidth) + 1).toString() + 'px'
+        if (columnIndex !== 0) {
+          var margin = (Math.round(columnIndex * (eventSlotWidth)) - 2).toString() + 'px'
           $(element).css('margin-left', margin)
+        } else {
+          if (event.allDay) {
+            $(element).css('margin-left', '1px')
+          } else {
+            $(element).css('margin-left', '-2px')
+          }
         }
         if (event.allDay) {
-          if (resourceIndex - 1) {
+          if (columnIndex) {
             $(element).css('margin-top', '-36px')
           }
           $(element).css('height', 17 * 2)
         }
-        var c = self.setColor(resourceIndex)
+        var c = self.setColor(resourceIndex, resourceNodeName)
         if (event.color !== c) {
           event.color = c
           self.calendar.fullCalendar('updateEvent', event)
@@ -321,7 +341,7 @@ export default {
       },
 
       eventClick: function (calEvent, jsEvent, view) {
-        if ((calEvent.userId === self.$store.state.id || self.$store.state.role === 'admin') && !calEvent.allDay) {
+        if (!calEvent.allDay) {
           self.reservationId = calEvent.id
           self.calendar.fullCalendar('refetchEvents')
           self.refreshTasks = !self.refreshTasks
@@ -337,6 +357,9 @@ export default {
 </script>
 <style>
   @import '../../../../static/fullcalendar/fullcalendar.css';
+  .fc th, .fc td {
+    border-color: #222d32 !important;
+  }
   .fc-event{
     display: flex;
     flex-wrap: wrap;

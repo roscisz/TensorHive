@@ -6,6 +6,7 @@
     >
       <v-card>
         <v-card-text>
+          <span class="headline">{{reservation.hostname}}: GPU{{reservation.resourceIndex}}, {{reservation.resourceName}}</span>
           <v-btn
             class="float-right-button"
             flat
@@ -238,7 +239,7 @@
         >
           Assign selected
         </v-btn>
-        <v-card-text class="container">
+        <v-card-text v-if="actionsAbility" class="container">
           <v-btn
             class="float-right-button"
             color="yellow"
@@ -325,6 +326,10 @@ export default {
   },
 
   computed: {
+    actionsAbility () {
+      return this.reservation.userId === this.$store.state.id || this.$store.state.role === 'admin'
+    },
+
     gpuUtilAvg () {
       if (this.reservation.gpuUtilAvg === null) {
         return 'Reservation is not completed yet, no data'
@@ -362,6 +367,19 @@ export default {
   },
 
   watch: {
+    reservation () {
+      for (var nodeName in this.nodes) {
+        for (var gpuUUID in this.nodes[nodeName].GPU) {
+          if (gpuUUID === this.reservation.resourceId) {
+            var resource = this.nodes[nodeName].GPU[gpuUUID]
+            this.reservation['hostname'] = nodeName
+            this.reservation['resourceIndex'] = resource.index
+            this.reservation['resourceName'] = resource.name
+          }
+        }
+      }
+    },
+
     showModal () {
       this.show = this.showModal
     },
