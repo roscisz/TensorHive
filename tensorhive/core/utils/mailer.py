@@ -54,6 +54,7 @@ class MessageBodyTemplater:
     def fill_in(self, data: Dict[str, Any]) -> str:
         return self.template.format(
             hostname=data['HOSTNAME'],
+            gpu_id=data['GPU_ID'],
             gpu_name=data['GPU_NAME'],
             gpu_uuid=data['UUID'],
             intruder_username=data['INTRUDER_USERNAME'],
