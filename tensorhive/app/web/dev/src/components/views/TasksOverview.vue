@@ -65,8 +65,8 @@
           to/close them as they are running. Screen sessions created by TensorHive have custom
           names so you won't be confused which is which.<br><br>
           When your task command stops executing, screen session will disappear from `screen -ls`
-          but stdout produced your process will be redirected to a log file.
-          Logs are automatically gathered and stored on that machine under `~/TensorHiveLogs`
+          but stdout produced by your process will be redirected to a log file.
+          Logs are automatically gathered and stored on that machine under `~/TensorHiveLogs`.
         </v-card-text>
       </v-card>
     </v-dialog>

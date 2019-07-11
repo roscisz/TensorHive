@@ -60,7 +60,7 @@
                   v-model="modalPassword2"
                 >
               </div>
-              Please copy the key below and paste it into <b>~/.ssh/authorized_keys</b>.<br>It will allow TensorHive to confirm you identity and access machines with provided UNIX username.
+              Please copy the key below and paste it into <b>~/.ssh/authorized_keys</b>.<br>It will allow TensorHive to confirm your identity and access machines with provided UNIX username.
               <v-textarea
                 solo
                 name="entry"
