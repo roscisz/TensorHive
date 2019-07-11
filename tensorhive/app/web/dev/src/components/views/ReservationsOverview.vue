@@ -15,7 +15,24 @@
         Close
       </v-btn>
     </v-snackbar>
-    <section id="schedule_section">
+    <v-btn
+      v-if="!showSchedule"
+      color="info"
+      small
+      round
+      @click="showSchedule=true;"
+    >
+      Select visible GPUs
+    </v-btn>
+    <section v-show="showSchedule" id="schedule_section">
+      <v-btn
+        color="info"
+        small
+        round
+        @click="showSchedule=false"
+      >
+        Hide schedule
+      </v-btn>
       <MySchedule @handleError="handleError(...arguments)" @loadResources="loadResources(...arguments)" :parsed-nodes="parsedNodes"/>
     </section>
     <section id="calendar_section">
@@ -46,7 +63,8 @@ export default {
       selectedResources: [],
       nodeCheckbox: false,
       resourceTypeCheckbox: false,
-      resourceCheckbox: false
+      resourceCheckbox: false,
+      showSchedule: false
     }
   },
 

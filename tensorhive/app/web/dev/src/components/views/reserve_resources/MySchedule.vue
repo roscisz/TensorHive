@@ -48,7 +48,7 @@
         <table>
           <tbody>
             <tr v-for="resource in tableContent.resources" :key="resource.id">
-              <td class="first-column" :class="{selected: resource.selected}">
+              <td class="first-column">
                 <v-checkbox
                   class="small-checkbox"
                   color="success"
@@ -265,6 +265,8 @@ export default {
 .container {
   width: 100%;
   max-width: 100%;
+  max-height: 30vh;
+  overflow-y: scroll;
   margin-left: 0;
   white-space: nowrap;
   display: inline-block;
@@ -280,9 +282,6 @@ export default {
 .range-input {
   max-width: 150px;
 }
-.selected {
-  background-color: #42b983;
-}
 .small-checkbox {
   margin-top: -15px !important;
   margin-left: 10px !important;
@@ -292,6 +291,7 @@ export default {
 .left-table {
   min-width: 205px;
   overflow-x: scroll;
+  overflow-y: hidden;
   display: inline-block;
 }
 .right-table {
