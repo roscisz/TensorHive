@@ -102,7 +102,12 @@ axios.get('static/config.json').then(response => {
 
   axios.interceptors.response.use(null, (error) => {
     if (error.config.url === config.serverURI + '/user/refresh') {
-      window.localStorage.clear()
+      if (window.localStorage) {
+        window.localStorage.setItem('user', null)
+        window.localStorage.setItem('role', null)
+        window.localStorage.setItem('accessToken', null)
+        window.localStorage.setItem('refreshToken', null)
+      }
       store.commit('SET_USER', null)
       store.commit('SET_ROLE', null)
       store.commit('SET_ACCESS_TOKEN', null)
