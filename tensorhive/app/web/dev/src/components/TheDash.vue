@@ -161,8 +161,6 @@ export default {
       if (window.localStorage) {
         window.localStorage.setItem('user', null)
         window.localStorage.setItem('role', null)
-        window.localStorage.setItem('watches', null)
-        window.localStorage.setItem('watchIds', null)
       }
       this.$router.push('/login')
     }

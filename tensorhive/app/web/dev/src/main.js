@@ -186,8 +186,6 @@ axios.get('static/config.json').then(response => {
     if (window.localStorage) {
       window.localStorage.setItem('user', null)
       window.localStorage.setItem('role', null)
-      window.localStorage.setItem('watches', null)
-      window.localStorage.setItem('watchIds', null)
     }
     router.push('/login')
   }
