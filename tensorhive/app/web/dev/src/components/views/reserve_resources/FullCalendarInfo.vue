@@ -2,8 +2,7 @@
   <v-layout row justify-center>
     <v-dialog
       width="50vw"
-      persistent
-      v-model="showModal"
+      v-model="show"
     >
       <v-card>
         <v-card-text>
@@ -363,9 +362,17 @@ export default {
   },
 
   watch: {
+    showModal () {
+      this.show = this.showModal
+    },
+    show () {
+      if (this.show === false) this.close()
+    },
+
     refreshTasks () {
       this.getTasks()
     },
+
     reservationTitle () {
       this.newTitle = this.reservationTitle
     },
@@ -424,7 +431,8 @@ export default {
       ],
       tableKey: 0,
       actionFlag: false,
-      showAlert: false
+      showAlert: false,
+      show: false
     }
   },
 

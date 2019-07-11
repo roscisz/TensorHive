@@ -268,12 +268,12 @@ export default {
             resourceIndex = i + 1
           }
         }
-        var hoursWidth = 42
+        var hoursWidth = 44
         var scrollWidth = 16
         var width = view.el[0].clientWidth
         var dayWidth = (width - scrollWidth - hoursWidth) / 7
         var eventSlotWidth = dayWidth / self.selectedResources.length - 1
-        var eventWidth = (Math.floor(eventSlotWidth - 1)).toString() + 'px'
+        var eventWidth = (Math.floor(eventSlotWidth - 3)).toString() + 'px'
         $(element).css('width', eventWidth)
         if (resourceIndex !== 1) {
           var margin = (Math.floor((resourceIndex - 1) * eventSlotWidth) + 1).toString() + 'px'
@@ -314,7 +314,9 @@ export default {
           }
           self.startDate = startDate.toDate()
           self.endDate = endDate.toDate()
-          self.showModalReserve = true
+          setTimeout(function () {
+            self.showModalReserve = true
+          }, 100)
         }
       },
 

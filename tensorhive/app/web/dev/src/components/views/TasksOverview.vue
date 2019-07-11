@@ -45,12 +45,21 @@
       width="500"
     >
       <v-card>
-        <v-card-title
+        <v-card-text
           class="headline grey lighten-2"
           primary-title
         >
+          <v-btn
+            class="float-right-button"
+            flat
+            icon
+            color="black"
+            @click="showModalHowItWorks = false"
+          >
+            <v-icon>close</v-icon>
+          </v-btn>
           How it works
-        </v-card-title>
+        </v-card-text>
         <v-card-text>
           Your tasks are managed by `screen` program installed on each machine. You can attach
           to/close them as they are running. Screen sessions created by TensorHive have custom
@@ -59,19 +68,6 @@
           but stdout produced your process will be redirected to a log file.
           Logs are automatically gathered and stored on that machine under `~/TensorHiveLogs`
         </v-card-text>
-
-        <v-divider></v-divider>
-
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="primary"
-            flat
-            @click="showModalHowItWorks = false"
-          >
-            Close
-          </v-btn>
-        </v-card-actions>
       </v-card>
     </v-dialog>
     <v-dialog
@@ -79,23 +75,23 @@
       width="400"
     >
       <v-card>
-        <v-card-title
+        <v-card-text
           class="headline grey lighten-2"
           primary-title
         >
+          <v-btn
+            class="float-right-button"
+            flat
+            icon
+            color="black"
+            @click="showModalRemove= false"
+          >
+            <v-icon>close</v-icon>
+          </v-btn>
           Do you want to remove this task?
-        </v-card-title>
+        </v-card-text>
         <v-card-actions>
           <v-layout align-center justify-end>
-            <v-btn
-              color="error"
-              small
-              outline
-              round
-              @click="showModalRemove= false"
-            >
-              No
-            </v-btn>
             <v-btn
               color="success"
               round
@@ -678,6 +674,9 @@ export default {
 }
 </script>
 <style>
+.float-right-button {
+  float: right;
+}
 .parameter-name-input{
   max-width: 150px;
 }

@@ -2,14 +2,22 @@
   <div id="login">
     <v-layout row justify-center>
       <v-dialog
-        persistent
         width="50vw"
         v-model="showModal"
       >
         <v-card>
-          <v-card-title>
+          <v-card-text>
+            <v-btn
+              class="float-right-button"
+              flat
+              icon
+              color="black"
+              @click="showModal=false"
+            >
+              <v-icon>close</v-icon>
+            </v-btn>
             <span class="headline">Register new account</span>
-          </v-card-title>
+          </v-card-text>
           <v-card-text>
             <form @submit.prevent="createUser">
               <div class="input-group">
@@ -72,15 +80,6 @@
               >
                 {{ errorMessage }}
               </v-alert>
-              <v-btn
-                color="info"
-                small
-                outline
-                round
-                @click="showModal=false"
-              >
-                Go back
-              </v-btn>
               <v-btn
                 color="success"
                 type="submit"
@@ -294,6 +293,10 @@ export default {
 </script>
 
 <style scoped>
+.float-right-button {
+  float: right;
+}
+
 #login {
   padding: 10em;
 }
@@ -315,11 +318,6 @@ export default {
   }
 }
 @media (min-width: 1242px) {
-  form {
-    padding-left: 20em;
-    padding-right: 20em;
-  }
-
   .input-group input {
     height: 6em;
   }

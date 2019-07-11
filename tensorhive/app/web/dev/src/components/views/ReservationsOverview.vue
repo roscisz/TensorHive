@@ -54,7 +54,7 @@ export default {
 
   data () {
     return {
-      nodes: [],
+      nodes: {},
       parsedNodes: [],
       alert: false,
       snackbar: false,
