@@ -269,6 +269,7 @@ export default {
       header: header,
       hours: hours
     }
+    this.fillTable()
   }
 }
 </script>

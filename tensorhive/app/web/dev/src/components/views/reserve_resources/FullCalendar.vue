@@ -260,6 +260,9 @@ export default {
       },
       eventRender: function (event, element) {
         element.find('.fc-title').append('<br/>' + event.description)
+        if (self.selectedResources.length > 6) {
+          $(element).css('color', 'rgba(0, 0, 0, 0)')
+        }
         if (!event.allDay) {
           api
             .request('get', '/users/' + event.userId, self.$store.state.accessToken)

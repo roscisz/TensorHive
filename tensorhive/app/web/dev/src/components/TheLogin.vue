@@ -93,7 +93,7 @@
     </v-layout>
     <div class="text-center col-sm-12">
       <!-- login form -->
-      <form @submit.prevent="checkCreds">
+      <form class="login-form" @submit.prevent="checkCreds">
         Login to your account
         <div class="input-group">
           <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
@@ -318,6 +318,10 @@ export default {
   }
 }
 @media (min-width: 1242px) {
+  .login-form {
+    padding-left: 20em;
+    padding-right: 20em;
+  }
   .input-group input {
     height: 6em;
   }
