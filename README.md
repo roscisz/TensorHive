@@ -5,6 +5,7 @@ TensorHive
 ![](https://img.shields.io/badge/pypi-v0.3-brightgreen.svg?style=popout-square)
 ![](https://img.shields.io/badge/Issues%20and%20PRs-welcome-yellow.svg?style=popout-square)
 ![](https://img.shields.io/badge/platform-Linux-blue.svg?style=popout-square)
+![](https://img.shields.io/badge/hardware-Nvidia-green.svg?style=popout-square)
 ![](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=popout-square)
 
