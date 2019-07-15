@@ -122,6 +122,32 @@ def create():
     pass
 
 
+@main.command()
+def pub_key():
+    """Shows public key used for SSH connections with nodes."""
+    from tensorhive.config import SSH
+    from tensorhive.core.ssh import init_ssh_key
+    from pathlib import Path
+    import os
+    import platform
+
+    key_path = Path(SSH.KEY_FILE).expanduser()
+    private_key = init_ssh_key(key_path)
+    public_key = private_key.get_base64()
+
+    info_msg = '''
+        This is a public key which will be used by TensorHive to reach configured nodes via SSH.
+        Copy and paste the line below to ~/.ssh/authorized_keys on each node you want to manage.
+    '''
+    authorized_keys_entry = 'ssh-rsa {pub_key} {username}@{hostname}'.format(
+        pub_key=public_key,
+        username=os.environ['USER'],
+        hostname=platform.node()
+    )
+    click.echo(info_msg)
+    click.echo(authorized_keys_entry)
+
+
 @create.command()
 @click.option('-m', '--multiple', is_flag=True, help='Create more users in one go.')
 def user(multiple):
