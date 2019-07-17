@@ -127,8 +127,10 @@ def test():
 
     logging.basicConfig(level=logging.INFO, format='%(message)-79s')
     # logging.getLogger('pssh').setLevel(logging.CRITICAL)
-    SSHConnectionManager.test_all_connections(config=SSH.AVAILABLE_NODES,
-                                              key_path=SSH.KEY_FILE)
+    if not SSH.AVAILABLE_NODES:
+        click.echo('[!] Empty ssh configuration. Please check {}'.format(SSH.HOSTS_CONFIG_FILE))
+    else:
+        SSHConnectionManager.test_all_connections(config=SSH.AVAILABLE_NODES, key_path=SSH.KEY_FILE)
 
 
 @main.command()
