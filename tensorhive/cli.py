@@ -135,36 +135,40 @@ def test():
 def init():
     """Entry point for semi-automatic configuration process."""
     from tensorhive.config import CONFIG_FILES
+    from tensorhive.config import config as main_config
     from tensorhive.core.utils.AccountCreator import AccountCreator
     from inspect import cleandoc
     from tensorhive.database import init_db
     from tensorhive.models.User import User
     logging.basicConfig(level=logging.INFO, format='%(message)-79s')
 
+    
     # Exposed host
     if click.confirm('[1/3] Do you want TensorHive to be accessible to other users in your network?'):
         host = click.prompt(
             '[1/3] What is the public hostname/address of this node (which is visible by all end users)?')
     else:
         host = '0.0.0.0'
-    click.echo('[⚙] TensorHive will be accessible via: {}'.format(host))
-    # TODO Assign
+    main_config.set('api', 'url_hostname', host)
+    with open(CONFIG_FILES.MAIN_CONFIG_PATH, 'w') as main_config_file:
+        main_config.write(main_config_file)
+    click.echo(green('[⚙] TensorHive will be accessible via: {}'.format(host)))
 
     # First user account
     init_db()
     if User.query.count() == 0:
-        if click.confirm('[2/3] Database has no users. Would you like to create an account now?', default=True):
+        if click.confirm('[2/3] ' + orange('Database has no users.') + ' Would you like to create an account now?', default=True):
             AccountCreator().run_prompt()
     else:
         click.echo('[•] There are some users in the database already, skipping...')
 
     # Edit configs
-    click.echo('[3/3] Done ✔! Now you just need to adjust these config to your needs:\n')
+    click.echo('[3/3] ' + green('Done ✔!') +' Now you just need to adjust these config to your needs:\n')
     click.echo(cleandoc('''        
         (required) {hosts}
         (optional) {main}
         (optional) {mailbot}
-    ''').format(hosts=CONFIG_FILES.HOSTS_CONFIG_PATH, main=CONFIG_FILES.MAIN_CONFIG_PATH, mailbot=CONFIG_FILES.MAILBOT_CONFIG_PATH))
+    ''').format(hosts=orange(CONFIG_FILES.HOSTS_CONFIG_PATH), main=CONFIG_FILES.MAIN_CONFIG_PATH, mailbot=CONFIG_FILES.MAILBOT_CONFIG_PATH))
 
 
 @main.command()
