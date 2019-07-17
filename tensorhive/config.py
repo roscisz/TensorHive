@@ -37,6 +37,7 @@ class ConfigInitilizer:
         if not all_exist:
             log.warning('[•] Detected missing default config file(s), recreating...')
             self.recreate_default_configuration_files()
+        log.info('[•] All configs already exist, skipping...')
 
     def recreate_default_configuration_files(self) -> None:
         try:

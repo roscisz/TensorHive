@@ -95,8 +95,6 @@ def main(ctx, log_level):
 
     try:
         init_db()
-        if User.query.count() == 0:
-            prompt_to_create_first_account()
 
         manager = TensorHiveManager()
         api_server = APIServer()
@@ -123,8 +121,55 @@ def create():
 
 
 @main.command()
-def pub_key():
-    """Shows public key used for SSH connections with nodes."""
+def test():
+    from tensorhive.config import SSH
+    from tensorhive.core.managers.SSHConnectionManager import SSHConnectionManager
+
+    logging.basicConfig(level=logging.INFO, format='%(message)-79s')
+    # logging.getLogger('pssh').setLevel(logging.CRITICAL)
+    SSHConnectionManager.test_all_connections(config=SSH.AVAILABLE_NODES,
+                                              key_path=SSH.KEY_FILE)
+
+
+@main.command()
+def init():
+    """Entry point for semi-automatic configuration process."""
+    from tensorhive.config import CONFIG_FILES
+    from tensorhive.core.utils.AccountCreator import AccountCreator
+    from inspect import cleandoc
+    from tensorhive.database import init_db
+    from tensorhive.models.User import User
+    logging.basicConfig(level=logging.INFO, format='%(message)-79s')
+
+    # Exposed host
+    if click.confirm('[1/3] Do you want TensorHive to be accessible to other users in your network?'):
+        host = click.prompt(
+            '[1/3] What is the public hostname/address of this node (which is visible by all end users)?')
+    else:
+        host = '0.0.0.0'
+    click.echo('[⚙] TensorHive will be accessible via: {}'.format(host))
+    # TODO Assign
+
+    # First user account
+    init_db()
+    if User.query.count() == 0:
+        if click.confirm('[2/3] Database has no users. Would you like to create an account now?', default=True):
+            AccountCreator().run_prompt()
+    else:
+        click.echo('[•] There are some users in the database already, skipping...')
+
+    # Edit configs
+    click.echo('[3/3] Done ✔! Now you just need to adjust these config to your needs:\n')
+    click.echo(cleandoc('''        
+        (required) {hosts}
+        (optional) {main}
+        (optional) {mailbot}
+    ''').format(hosts=CONFIG_FILES.HOSTS_CONFIG_PATH, main=CONFIG_FILES.MAIN_CONFIG_PATH, mailbot=CONFIG_FILES.MAILBOT_CONFIG_PATH))
+
+
+@main.command()
+def key():
+    """Shows public key used for SSH authorization with nodes."""
     from tensorhive.config import SSH
     from tensorhive.core.ssh import init_ssh_key
     from pathlib import Path
@@ -136,8 +181,9 @@ def pub_key():
     public_key = private_key.get_base64()
 
     info_msg = '''
-        This is a public key which will be used by TensorHive to reach configured nodes via SSH.
-        Copy and paste the line below to ~/.ssh/authorized_keys on each node you want to manage.
+        This is the public key which will be used by TensorHive to reach configured nodes via SSH.
+        Copy and paste it into ~/.ssh/authorized_keys
+        Make sure that all nodes you've defined in hosts_config.ini are configured this way.
     '''
     authorized_keys_entry = 'ssh-rsa {pub_key} {username}@{hostname}'.format(
         pub_key=public_key,
