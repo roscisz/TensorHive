@@ -50,7 +50,13 @@ paths:
         200:
           description: {{RESPONSES['users']['get']['success']}}
           schema:
-            $ref: '#/definitions/UserToDisplay'
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['user']['get']['success']}}
+              user:
+                $ref: '#/definitions/UserToDisplay'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
@@ -61,8 +67,18 @@ paths:
               msg:
                 type: string
                 example: {{RESPONSES['general']['unpriviliged']}}
+        404:
+          description: {{RESPONSES['user']['not_found']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['user']['not_found']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
   /user/create:

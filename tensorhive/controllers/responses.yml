@@ -23,6 +23,8 @@ user:
     failure:
       duplicate: Such user exists
       invalid: Requirements not met - {reason}
+  get:
+    success: User has been successfully fetched 
   update:
     success: User has been successfully updated
     failure:
