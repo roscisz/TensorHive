@@ -60,38 +60,41 @@ Getting started
 
 ### Installation
 
-#### via pip
+#### via pip (not updated yet)
 ```shell
 pip install tensorhive
 ```
 
-#### via conda
+#### via conda (not updated yet)
 ```shell
 conda install tensorhive
 ```
 
-#### From source
+#### From source (recommended)
 (optional) For development purposes we encourage separation from your current python packages using e.g. [Miniconda](https://docs.conda.io/en/latest/miniconda.html) 
 `conda create --name th_env python=3.5 pip; activate th_env`
 
 ```shell
 git clone https://github.com/roscisz/TensorHive.git && cd TensorHive
-make dev
+git checkout fixes/voicelab
+pip install --editable .
 ```
 TensorHive is already shipped with newest web app build, but in case you modify the source, you can can build it with `make app`. For more useful commands see our [Makefile](https://github.com/roscisz/TensorHive/blob/master/tensorhive/Makefile).
 
 Basic usage
 -----
-#### Run TensorHive
-```shell
-tensorhive
+#### Quickstart
+Each command will guide you through basic configuration process:
+```
+tensorhive init
+tensorhive key
+tensorhive test
 ```
 
-#### Required configuration
-As you see, you must configure TensorHive so it knows how to establish SSH connections to hosts you want to work with.
-
-You can do this by editing `~/.config/TensorHive/hosts_config.ini` after first `tensorhive` launch [(see example)](https://github.com/roscisz/TensorHive/blob/master/TensorHive/hosts_config.ini). In order to configure more hosts, just add a new section for each.
-
+Now you should be ready to finally launch a TensorHive instance
+```
+tensorhive
+```
 
 Web application and API Documentation can be accessed via URLs highlighted in green (Ctrl + click to open in browser)
 
