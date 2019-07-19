@@ -243,7 +243,7 @@ Project created and maintained by:
 - ![](https://avatars2.githubusercontent.com/u/12485656?s=22&v=4) [Michał Martyniak (@micmarty)](http://martyniak.me)
 - Filip Schodowski [(@filschod)](https://github.com/filschod)
 
- Top contributions:
+ Recent contributions:
 - Tomasz Menet [(@tomenet)](https://github.com/tomenet)
 - Dariusz Piotrowski [(@PiotrowskiD)](https://github.com/PiotrowskiD)
 - Karol Draszawka [(@szarakawka)](https://github.com/szarakawka)
