@@ -144,7 +144,6 @@ def init():
     from tensorhive.models.User import User
     logging.basicConfig(level=logging.INFO, format='%(message)-79s')
 
-    
     # Exposed host
     if click.confirm('[1/3] Do you want TensorHive to be accessible to other users in your network?'):
         host = click.prompt(
@@ -165,7 +164,7 @@ def init():
         click.echo('[•] There are some users in the database already, skipping...')
 
     # Edit configs
-    click.echo('[3/3] ' + green('Done ✔!') +' Now you just need to adjust these config to your needs:\n')
+    click.echo('[3/3] ' + green('Done ✔!') + ' Now you just need to adjust these config to your needs:\n')
     click.echo(cleandoc('''        
         (required) {hosts}
         (optional) {main}
@@ -189,7 +188,7 @@ def key():
     info_msg = '''
         This is the public key which will be used by TensorHive to reach configured nodes via SSH.
         Copy and paste it into ~/.ssh/authorized_keys
-        Make sure that all nodes you've defined in hosts_config.ini are configured this way.
+        Make sure that all nodes you've defined in hosts_config.ini know that key.
     '''
     authorized_keys_entry = 'ssh-rsa {pub_key} {username}@{hostname}'.format(
         pub_key=public_key,
