@@ -112,7 +112,7 @@ You can fully customize TensorHive behaviours via INI configuration (which will 
 Accessible infrastructure can be monitored in the Nodes overview tab. Sample screenshot:
 Here you can add new watches, select metrics and monitor ongoing GPU processes and its' owners.
 
-![image](https://user-images.githubusercontent.com/12485656/61517685-188f1000-aa08-11e9-9f7c-2a4b10ce0dd3.png)
+![image](https://user-images.githubusercontent.com/12485656/61520152-d963bd80-aa0d-11e9-9caa-1f7203cc6b42.png)
 
 #### GPU Reservation calendar
 
@@ -126,15 +126,22 @@ If there are many hosts and GPUs in our infrastructure, you can use our simplifi
 
 From now on, **only your processes are eligible to run on reserved GPU(s)**. TensorHive periodically checks if some other user has violated it. He will be spammed with warnings on all his PTYs, emailed every once in a while, additionally admin will also be notified (it all depends on the configuration).
 
+Terminal warning             |  Email warning
+:-------------------------:|:-------------------------:
+![image](https://user-images.githubusercontent.com/12485656/61520488-99e9a100-aa0e-11e9-8f35-b02c2e7de9ce.png)  |  ![image](https://user-images.githubusercontent.com/12485656/61520956-85f26f00-aa0f-11e9-8342-09023c93275b.png)
+ 
+#### What admin sees:
+
+![image](https://user-images.githubusercontent.com/12485656/61520807-4a57a500-aa0f-11e9-8a52-cb87208d6c71.png)
+
 #### Task nursery
 
 Here you can define commands for tasks you want to run on any configured nodes. You can manage them manually or set spawn/terminate date.
 Commands are run within `screen` session, so attaching to it while they are running is a piece of cake.
-It provides quite simple but flexible command templating mechanism that allows for **TODO**
-Feel free to experiment **TODO**
-(In order for this to work, individual users must copy public TensorHive key into `~/.ssh/authorized_keys` 
-
 ![image](https://user-images.githubusercontent.com/12485656/61518173-4163d500-aa09-11e9-9916-59c907c1590c.png)
+
+It provides quite simple, but flexible (**framework-agnostic**) command templating mechanism that will help you automate multi-node trainings.
+TensorHive requires that users who want to use this feature must append TensorHive's public key to their `~/.ssh/authorized_keys` on all nodes they want to connect to.
 ![image](https://user-images.githubusercontent.com/12485656/61518418-bcc58680-aa09-11e9-8943-88bddc964417.png)
 
 Features
