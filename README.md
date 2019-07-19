@@ -224,11 +224,12 @@ This diagram will help you grasp the rough concept of the system.
 
 Contibution and feedback
 ------------------------
+**Project is still in early beta version**, so there will be some inconveniences, just be patient and keep an eye on upcoming updates.
+
 We'd :heart: to collect your observations, issues and pull requests!
 
-TODO Add issue template to repo. Put link to Issues here
-
-You can do this by making use of our [**issue template**](https://gist.github.com/micmarty/396c649bf693688245731f35854bf971).
+Feel free to **report any configuration problems, we will help you**.
+We plan to redesign the UI/UX side as well as improve reliability of the system until September 2019 :shipit:, so stay tuned!
 
 Credits
 -------
