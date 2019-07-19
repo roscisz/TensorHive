@@ -1,6 +1,5 @@
 TensorHive
 ===
-
 ![](https://img.shields.io/badge/release-v0.3-brightgreen.svg?style=popout-square)
 ![](https://img.shields.io/badge/pypi-v0.3-brightgreen.svg?style=popout-square)
 ![](https://img.shields.io/badge/Issues%20and%20PRs-welcome-yellow.svg?style=popout-square)
@@ -52,14 +51,12 @@ What TensorHive has to offer
 
 For more details, check out the [full list of features](#features)
 
-
-
-
 Getting started
 ---------------
 ### Prerequisites
-* All hosts must be accessible via SSH, without password, using SSH Key-Based Authentication ([How to set up SSH keys](https://www.shellhacks.com/ssh-login-without-password/)
+* All nodes must be accessible via SSH, without password, using SSH Key-Based Authentication ([How to set up SSH keys](https://www.shellhacks.com/ssh-login-without-password/) - explained in [Quickstart section](#basic-usage)
 * Only NVIDIA GPUs are supported (relying on ```nvidia-smi``` command)
+* Currently TensorHive assumes that all users who want to register into the system must have identical UNIX usernames on all nodes configured by TensorHive administrator (not relevant to standalone developers)
 
 ### Installation
 
@@ -113,8 +110,7 @@ You can fully customize TensorHive behaviours via INI configuration (which will 
 
 #### Infrastructure monitoring dashboard
 Accessible infrastructure can be monitored in the Nodes overview tab. Sample screenshot:
-
-Here you can add new watches, configure displayed metrics, monitor running GPU processes and its' owners.
+Here you can add new watches, select metrics and monitor ongoing GPU processes and its' owners.
 
 ![image](https://user-images.githubusercontent.com/12485656/61517685-188f1000-aa08-11e9-9f7c-2a4b10ce0dd3.png)
 
@@ -132,9 +128,11 @@ From now on, **only your processes are eligible to run on reserved GPU(s)**. Ten
 
 #### Task nursery
 
-Here you can prepare commands 
-Simple but powerful command templating mechanism allows for **TODO**
+Here you can define commands for tasks you want to run on any configured nodes. You can manage them manually or set spawn/terminate date.
+Commands are run within `screen` session, so attaching to it while they are running is a piece of cake.
+It provides quite simple but flexible command templating mechanism that allows for **TODO**
 Feel free to experiment **TODO**
+(In order for this to work, individual users must copy public TensorHive key into `~/.ssh/authorized_keys` 
 
 ![image](https://user-images.githubusercontent.com/12485656/61518173-4163d500-aa09-11e9-9916-59c907c1590c.png)
 ![image](https://user-images.githubusercontent.com/12485656/61518418-bcc58680-aa09-11e9-8943-88bddc964417.png)
