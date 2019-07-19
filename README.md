@@ -206,7 +206,7 @@ TensorHive is currently being used on production in the following environments:
 | ![](https://cdn.pg.edu.pl/ekontakt-updated-theme/images/favicon/favicon-16x16.png?v=jw6lLb8YQ4) [Gdansk University of Technology](https://eti.pg.edu.pl/en) | NVIDIA DGX Station (4x Tesla V100 16GB | 30+ |
 | ![](https://cdn.pg.edu.pl/ekontakt-updated-theme/images/favicon/favicon-16x16.png?v=jw6lLb8YQ4) [Lab at GUT](https://eti.pg.edu.pl/katedra-architektury-systemow-komputerowych/main) | 18x machines with GTX 1060 6GB | 20+ |
 | ![](http://martyniak.tech/images/gradient_logo_small-628ed211.png)[Gradient PG](http://gradient.eti.pg.gda.pl/en/) | TITAN X 12GB | 10+ |
-| ![](https://res-4.cloudinary.com/crunchbase-production/image/upload/c_lpad,h_20,w_20,f_auto,q_auto:eco/v1444894092/jeuh0l6opc159e1ltzky.png) [VoiceLab - Conversational Intelligence](voicelab.ai) | 30+ GTX and RTX cards | 10+
+| ![](https://res-4.cloudinary.com/crunchbase-production/image/upload/c_lpad,h_20,w_20,f_auto,q_auto:eco/v1444894092/jeuh0l6opc159e1ltzky.png) [VoiceLab - Conversational Intelligence](https://www.voicelab.ai) | 30+ GTX and RTX cards | 10+
 
 Application examples and benchmarks
 --------
