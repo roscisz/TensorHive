@@ -52,6 +52,9 @@ What TensorHive has to offer
 
 For more details, check out the [full list of features](#features)
 
+
+
+
 Getting started
 ---------------
 ### Prerequisites
@@ -79,7 +82,8 @@ git clone https://github.com/roscisz/TensorHive.git && cd TensorHive
 git checkout fixes/voicelab
 pip install --editable .
 ```
-TensorHive is already shipped with newest web app build, but in case you modify the source, you can can build it with `make app`. For more useful commands see our [Makefile](https://github.com/roscisz/TensorHive/blob/master/tensorhive/Makefile).
+
+TensorHive is already shipped with newest web app build, but in case you modify the source, you can can build it with `make app` (currently on `master` branch). For more useful commands see our [Makefile](https://github.com/roscisz/TensorHive/blob/master/tensorhive/Makefile).
 
 Basic usage
 -----
@@ -98,14 +102,21 @@ tensorhive
 
 Web application and API Documentation can be accessed via URLs highlighted in green (Ctrl + click to open in browser)
 
-#### Infrastructure monitoring dashboard
+#### Advanced configuration
+You can fully customize TensorHive behaviours via INI configuration (which will be created automatically after `tensorhive init`
+```
+~/.config/TensorHive/main_config.ini
+~/.config/TensorHive/mailbot_config.ini
+~/.config/TensorHive/hosts_config.ini
+```
+[(see example)](https://github.com/roscisz/TensorHive/blob/master/tensorhive/main_config.ini)
 
+#### Infrastructure monitoring dashboard
 Accessible infrastructure can be monitored in the Nodes overview tab. Sample screenshot:
 
 Here you can add new watches, configure displayed metrics, monitor running GPU processes and its' owners.
 
-
-TODO Updated screenshot
+![image](https://user-images.githubusercontent.com/12485656/61517685-188f1000-aa08-11e9-9f7c-2a4b10ce0dd3.png)
 
 #### GPU Reservation calendar
 
@@ -114,8 +125,8 @@ In order to make a new reservation simply click and drag with your mouse, select
 
 If there are many hosts and GPUs in our infrastructure, you can use our simplified, horizontal calendar to quickly identify empty time slots and filter out already reserved GPUs.
 
-
-TODO Updated screenshot
+(UI prototype: redesign is coming)
+![image](https://user-images.githubusercontent.com/12485656/61517527-bb935a00-aa07-11e9-8ea3-9db4a1529e24.png)
 
 From now on, **only your processes are eligible to run on reserved GPU(s)**. TensorHive periodically checks if some other user has violated it. He will be spammed with warnings on all his PTYs, emailed every once in a while, additionally admin will also be notified (it all depends on the configuration).
 
@@ -124,6 +135,9 @@ From now on, **only your processes are eligible to run on reserved GPU(s)**. Ten
 Here you can prepare commands 
 Simple but powerful command templating mechanism allows for **TODO**
 Feel free to experiment **TODO**
+
+![image](https://user-images.githubusercontent.com/12485656/61518173-4163d500-aa09-11e9-9916-59c907c1590c.png)
+![image](https://user-images.githubusercontent.com/12485656/61518418-bcc58680-aa09-11e9-8943-88bddc964417.png)
 
 Features
 ----------------------
@@ -177,32 +191,16 @@ Features
 - [x] OpenAPI 2.0 specification with Swagger UI
 - [x] User authentication via JWT
 
-Deployment in production (for admins)
+
+TensorHive is currently being used on production in the following environments:
 -----
-#### Advanced configuration
-You can fully customize TensorHive behaviour from `~/.config/TensorHive/main_config.ini`
-[(see example)](https://github.com/roscisz/TensorHive/blob/master/tensorhive/main_config.ini)
-
-#### Mailbot
-TODO
-
-#### Web
-The last step is to launch TensorHive to the public so it can be accessed by users.
-In order to do this you must open `~/.config/TensorHive/main_config.ini` and fill in `host` and `port` under `[web_app.server]` section (`host` field can be either a hostname or IP)
-
-
-#### Database migrations
-TODO
-
-
-Currently TensorHive is being used on production in these 4 environments:
 
 | Organization  | Hardware | No. users |
 | ------ | -------- | --------- |
-| ![](https://cdn.pg.edu.pl/ekontakt-updated-theme/images/favicon/favicon-16x16.png?v=jw6lLb8YQ4) [Gdansk University of Technology](https://eti.pg.edu.pl/en) | NVIDIA DGX Station (4x Tesla V100 16GB | TODO |
-| ![](https://cdn.pg.edu.pl/ekontakt-updated-theme/images/favicon/favicon-16x16.png?v=jw6lLb8YQ4) [Lab at GUT](https://eti.pg.edu.pl/katedra-architektury-systemow-komputerowych/main) | 18x machines with GTX 1060 6GB | TODO |
-| ![](http://martyniak.tech/images/gradient_logo_small-628ed211.png)[Gradient PG](http://gradient.eti.pg.gda.pl/en/) | TITAN X 12GB | TODO |
-| ![](https://res-4.cloudinary.com/crunchbase-production/image/upload/c_lpad,h_20,w_20,f_auto,q_auto:eco/v1444894092/jeuh0l6opc159e1ltzky.png) [VoiceLab - Conversational Intelligence](voicelab.ai) | TODO | TODO
+| ![](https://cdn.pg.edu.pl/ekontakt-updated-theme/images/favicon/favicon-16x16.png?v=jw6lLb8YQ4) [Gdansk University of Technology](https://eti.pg.edu.pl/en) | NVIDIA DGX Station (4x Tesla V100 16GB | 30+ |
+| ![](https://cdn.pg.edu.pl/ekontakt-updated-theme/images/favicon/favicon-16x16.png?v=jw6lLb8YQ4) [Lab at GUT](https://eti.pg.edu.pl/katedra-architektury-systemow-komputerowych/main) | 18x machines with GTX 1060 6GB | 20+ |
+| ![](http://martyniak.tech/images/gradient_logo_small-628ed211.png)[Gradient PG](http://gradient.eti.pg.gda.pl/en/) | TITAN X 12GB | 10+ |
+| ![](https://res-4.cloudinary.com/crunchbase-production/image/upload/c_lpad,h_20,w_20,f_auto,q_auto:eco/v1444894092/jeuh0l6opc159e1ltzky.png) [VoiceLab - Conversational Intelligence](voicelab.ai) | 30+ GTX and RTX cards | 10+
 
 Application examples and benchmarks
 --------
