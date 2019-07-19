@@ -81,6 +81,7 @@ pip install .
 ```
 
 TensorHive is already shipped with newest web app build, but in case you modify the source, you can can build it with `make app` (currently on `master` branch). For more useful commands see our [Makefile](https://github.com/roscisz/TensorHive/blob/master/tensorhive/Makefile).
+Build tested with `Node v11.14.0` and `npm 6.7.0`
 
 Basic usage
 -----
