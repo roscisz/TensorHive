@@ -51,7 +51,7 @@ def _inject_api_endpoint_to_app():
         web_app_json_config_path = PosixPath(__file__).parent / 'dist/static/config.json'
         data = {
             'apiPath': 'http://{}:{}/{}'.format(
-                API_SERVER.HOST,
+                API.URL_HOSTNAME,
                 API_SERVER.PORT,
                 API.URL_PREFIX),
             'version': tensorhive.__version__,
