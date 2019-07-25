@@ -47,7 +47,7 @@ What TensorHive has to offer
 
 :three: Gather all useful GPU metrics, from all configured hosts **in one dashboard**
 
-&nbsp;&nbsp;&nbsp;&nbsp; :arrow_right: no more manually logging in to each individual machine in order to check if GPU is currently taken or not
+&nbsp;&nbsp;&nbsp;&nbsp; :arrow_right: no more manually logging in to each individual machine in order to check if GPU is currently in use or not
 
 For more details, check out the [full list of features](#features)
 
