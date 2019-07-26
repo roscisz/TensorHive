@@ -198,7 +198,7 @@ Features
 - [x] User authentication via JWT
 
 
-TensorHive is currently being used on production in the following environments:
+TensorHive is currently being used in production in the following environments:
 -----
 
 | Organization  | Hardware | No. users |
