@@ -176,7 +176,7 @@ Features
     - [x] Allow making reservations for selected GPUs
     - [x] Edit reservations
     - [x] Cancel reservations
-    - [ ] Attach jobs to reservation
+    - [x] Attach jobs to reservation
 - [x] :baby_symbol: Task nursery
     - [x] Create parametrized tasks and assign to hosts, automatically set `CUDA_VISIBLE_DEVICES`
     - [x] Buttons for task spawning/scheduling/termination/killing actions
