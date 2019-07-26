@@ -15,7 +15,7 @@ It solves the most common problems and nightmares about accessing and sharing yo
 
 It's designed with __simplicty, flexibility and configuration-friendliness__ in mind.
 
-About project
+Use cases
 ----------------------
 Our goal is to provide solutions for painful problems that ML engineers often have to struggle with when working with remote machines in order to run neural network trainings.
 
