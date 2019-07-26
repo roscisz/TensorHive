@@ -217,7 +217,7 @@ Along with TensorHive, we are developing a set of [**sample deep neural network 
 TensorHive architecture (simplified)
 -----------------------
 
-This diagram will help you grasp the rough concept of the system.
+This diagram will help you to grasp the rough concept of the system.
 
 ![TensorHive_diagram _final](https://user-images.githubusercontent.com/12485656/59147556-7853cd80-89fd-11e9-80bc-5848e95c7574.png)
 
