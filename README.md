@@ -31,7 +31,7 @@ Our goal is to provide solutions for painful problems that ML engineers often ha
 - :date: Visualizing names of training experiments using calendar helps you track how you're progressing on the project
 - :snake: Launching distributed trainings is essential for you, no matter what the framework is
 - :dizzy_face: Managing a list of training commands for all your distributed training experiments drives you nuts
-- :zzz: Remembering to manually launch the training before going sleep is no fun anymore
+- :zzz: Remembering to manually launch the training before going sleep is no fun anymore.
 
 What TensorHive has to offer
 -----------------------------
