@@ -24,13 +24,13 @@ Our goal is to provide solutions for painful problems that ML engineers often ha
 - :angry: There are more users than resources, so they have to compete for it, but you don't know how to deal with that chaos
 - :ocean: Other popular tools are simply an overkill, have different purpose or require a lot of time to spend on reading documentation, installation and configuration (Graphana, Kubernetes, Slurm)
 - :penguin: People using your infrastructure expect only one interface for all the things related to training models (besides terminal): monitoring, reservation calendar and scheduling distributed jobs 
-- :collision: Can't risk messing up sensitive configuration by installing software on each individual machine, prefering centralized solution which can be managed from one place.
+- :collision: Can't risk messing up sensitive configuration by installing software on each individual machine, prefering centralized solution which can be managed from one place
 
 2. You're a **standalone user** who has access to beefy GPUs scatterd across multiple machines.
 - :part_alternation_mark: You want to be able to determine if batch size is too small or if there's a bottleneck when moving data from memory to GPU - charts with metrics such as `gpu_util`, `mem_util`, `mem_used` are great for this purpose
 - :date: Visualizing names of training experiments using calendar helps you track how you're progressing on the project
 - :snake: Launching distributed trainings is essential for you, no matter what the framework is
-- :dizzy_face: Managing a list of training commands for all your distributed training experiments drives you nuts (because you didn't wrap them into bash scripts)
+- :dizzy_face: Managing a list of training commands for all your distributed training experiments drives you nuts
 - :zzz: Remembering to manually launch the training before going sleep is no fun anymore
 
 What TensorHive has to offer
