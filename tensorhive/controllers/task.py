@@ -459,8 +459,8 @@ def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[C
         assert task.pid, 'task has no pid assigned'  # It means there's inconsistency
 
         # gracefully:
-        # True -> interrupt (allows stdout to be flushed into log file)
-        # None -> terminate (works almost every time, but losing stdout that could be produced before closing)
+        # True -> interrupt (allows output to be flushed into log file)
+        # None -> terminate (works almost every time, but losing output that could be produced before closing)
         # False -> kill (similar to above, but success is almost guaranteed)
         exit_code = task_nursery.terminate(task.pid, task.host, task.user.username, gracefully=gracefully)
 
@@ -497,7 +497,7 @@ def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[C
 
 
 def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
-    """Fetches log file created by spawned task (through stdout redirect).
+    """Fetches log file created by spawned task (output redirection).
 
     It relies on reading files located on filesystem, via connection with `task.user.username@task.host`
     If file does not exist there's no way to fetch it from database (currently).
@@ -511,7 +511,7 @@ def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
         task = Task.get(id)
         assert task.host, 'hostname is empty'
         assert task.user, 'user does not exist'
-        stdout_gen, log_path = task_nursery.fetch_log(task.host, task.user.username, task.id, tail)
+        output_gen, log_path = task_nursery.fetch_log(task.host, task.user.username, task.id, tail)
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except ExitCodeError as e:
@@ -524,7 +524,7 @@ def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': G['internal_error']}, 500
     else:
-        content, status = {'msg': T['get_log']['success'], 'path': log_path, 'stdout_lines': list(stdout_gen)}, 200
+        content, status = {'msg': T['get_log']['success'], 'path': log_path, 'output_lines': list(output_gen)}, 200
     finally:
         return content, status
 
@@ -658,7 +658,7 @@ if __name__ == '__main__':
                 content, status = business_get_log(int(task_id), tail=True)
             print(content, status)
             print()
-            print('\n'.join(content.get('stdout_lines') or []))
+            print('\n'.join(content.get('output_lines') or []))
         else:
             os.system('clear')
             continue

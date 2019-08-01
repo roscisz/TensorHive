@@ -883,7 +883,7 @@ paths:
               path:
                 type: string
                 example: ~/TensorHiveLogs/task_99.log
-              stdout_lines:
+              output_lines:
                 type: array
                 items:
                   type: string
