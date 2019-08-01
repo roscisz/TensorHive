@@ -13,7 +13,7 @@ TensorHive
 TensorHive is an open source system for monitoring and managing computing resources across multiple hosts.
 It solves the most common problems and nightmares about accessing and sharing your AI-oriented infrastructure across multiple, often competing users.
 
-It's designed with __simplicty, flexibility and configuration-friendliness__ in mind.
+It's designed with __simplicity, flexibility and configuration-friendliness__ in mind.
 
 Use cases
 ----------------------
