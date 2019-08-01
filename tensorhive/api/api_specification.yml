@@ -1277,6 +1277,7 @@ definitions:
       - description
       - resourceId
       - userId
+      - userName
       - gpuUtilAvg
       - memUtilAvg
       - start
@@ -1303,6 +1304,9 @@ definitions:
       userId:
         type: integer
         example: 1
+      userName:
+        type: string
+        example: Example owner's username
       gpuUtilAvg:
         type: integer
         example: 99

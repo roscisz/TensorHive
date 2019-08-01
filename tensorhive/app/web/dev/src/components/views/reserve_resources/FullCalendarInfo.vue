@@ -1,50 +1,60 @@
 <template>
   <v-layout row justify-center>
-    <v-dialog
-      width="50vw"
-      v-model="show"
-    >
+    <v-dialog width="50vw" v-model="show">
       <v-card>
+        <!-- Owner name -->
+        <v-chip class="ma-2 large-chip" color="indigo" text-color="white">
+          <v-avatar left>
+            <v-icon class="large-icon" large>account_circle</v-icon>
+          </v-avatar>
+          <div class="spaced-text">{{reservation.userName}}</div>
+        </v-chip>
+
+        <!-- Node -->
+        <v-chip class="ma-2 large-chip" color="teal" text-color="white">
+          <v-avatar>
+            <v-icon class="large-icon" large>dns</v-icon>
+          </v-avatar>
+          <div class="spaced-text">{{reservation.hostname}}</div>
+        </v-chip>
+
+        <!-- GPU name -->
+        <v-chip class="ma-2 large-chip" color="light-green" text-color="white">
+          <v-avatar>
+            <v-icon class="large-icon" large>memory</v-icon>
+          </v-avatar>
+          <div class="spaced-text">GPU{{reservation.resourceIndex}} {{reservation.resourceName}}</div>
+        </v-chip>
+
+        <v-btn class="float-right-button" flat icon color="black" @click="close()">
+          <v-icon>close</v-icon>
+        </v-btn>
+
         <v-card-text>
-          <span class="headline">{{reservation.hostname}}: GPU{{reservation.resourceIndex}}, {{reservation.resourceName}}</span>
-          <v-btn
-            class="float-right-button"
-            flat
-            icon
-            color="black"
-            @click="close()"
-          >
-            <v-icon>close</v-icon>
-          </v-btn>
-        </v-card-text>
-        <v-card-text>
-          <b>Title:</b> {{reservation.title}}
+          <b>Title:</b>
+          {{reservation.title}}
         </v-card-text>
         <v-card-text v-if="updateCard">
-          <v-textarea
-            outline
-            label="Title"
-            v-model="newTitle"
-          ></v-textarea>
+          <v-textarea outline label="Title" v-model="newTitle"></v-textarea>
         </v-card-text>
         <v-card-text>
-          <b>Description:</b> {{reservation.description}}
+          <b>Description:</b>
+          {{reservation.description}}
         </v-card-text>
         <v-card-text v-if="updateCard">
-          <v-textarea
-            outline
-            label="Description"
-            v-model="newDescription"
-          ></v-textarea>
+          <v-textarea outline label="Description" v-model="newDescription"></v-textarea>
         </v-card-text>
         <v-card-text>
-          <b>Average GPU utilization:</b> {{gpuUtilAvg}}
+          <b>Average GPU utilization:</b>
+          {{gpuUtilAvg}}
         </v-card-text>
         <v-card-text>
-          <b>Average GPU memory utilization:</b> {{memUtilAvg}}
+          <b>Average GPU memory utilization:</b>
+          {{memUtilAvg}}
         </v-card-text>
         <v-card-text>
-          <b>Start:</b> {{ prettyDate(reservation.start) }}
+          <b>Start:</b>
+          {{ prettyDate(reservation.start) }}
         </v-card-text>
         <v-card-text v-if="updateCard">
           <v-layout align-center justify-start>
@@ -66,10 +76,7 @@
                   v-on="on"
                 ></v-text-field>
               </template>
-              <v-date-picker
-                v-model="newStartDate"
-                @input="startDateMenu = false"
-              ></v-date-picker>
+              <v-date-picker v-model="newStartDate" @input="startDateMenu = false"></v-date-picker>
             </v-menu>
             <v-menu
               ref="startMenu"
@@ -104,7 +111,8 @@
           </v-layout>
         </v-card-text>
         <v-card-text>
-           <b>End:</b> {{ prettyDate(reservation.end) }}
+          <b>End:</b>
+          {{ prettyDate(reservation.end) }}
         </v-card-text>
         <v-card-text v-if="updateCard">
           <v-layout align-center justify-start>
@@ -119,17 +127,9 @@
               min-width="290px"
             >
               <template v-slot:activator="{ on }">
-                <v-text-field
-                  v-model="newEndDate"
-                  label="End date"
-                  prepend-icon="event"
-                  v-on="on"
-                ></v-text-field>
+                <v-text-field v-model="newEndDate" label="End date" prepend-icon="event" v-on="on"></v-text-field>
               </template>
-              <v-date-picker
-                v-model="newEndDate"
-                @input="endDateMenu = false"
-              ></v-date-picker>
+              <v-date-picker v-model="newEndDate" @input="endDateMenu = false"></v-date-picker>
             </v-menu>
             <v-menu
               ref="endMenu"
@@ -164,16 +164,15 @@
           </v-layout>
         </v-card-text>
         <v-card-text>
-          <b>GPU UUID:</b> {{reservation.resourceId}}
+          <b>GPU UUID:</b>
+          {{reservation.resourceId}}
         </v-card-text>
         <v-card-text v-if="tasksCard">
           <v-alert
             v-model="showAlert"
             dismissible
             type="warning"
-          >
-            Synchronization in progress. Task assign is disabled now.
-          </v-alert>
+          >Synchronization in progress. Task assign is disabled now.</v-alert>
         </v-card-text>
         <v-data-table
           v-if="tasksCard"
@@ -209,18 +208,11 @@
               </th>
             </tr>
           </template>
-          <v-progress-linear
-            v-slot:progress
-            :indeterminate="true"
-          ></v-progress-linear>
+          <v-progress-linear v-slot:progress :indeterminate="true"></v-progress-linear>
           <template v-slot:items="props">
             <tr :active="props.selected" @click="props.selected = !props.selected">
               <td>
-                <v-checkbox
-                  :input-value="props.selected"
-                  primary
-                  hide-details
-                ></v-checkbox>
+                <v-checkbox :input-value="props.selected" primary hide-details></v-checkbox>
               </td>
               <td>{{ props.item.id }}</td>
               <td class="task-command">{{ props.item.command }}</td>
@@ -236,9 +228,7 @@
           small
           round
           @click="checkActionFlag()"
-        >
-          Assign selected
-        </v-btn>
+        >Assign selected</v-btn>
         <v-card-text v-if="actionsAbility" class="container">
           <v-btn
             class="float-right-button"
@@ -246,64 +236,30 @@
             small
             round
             @click="tasksCard=!tasksCard; cancelCard=false; updateCard=false"
-          >
-            Schedule task(s) for this reservation
-          </v-btn>
+          >Schedule task(s) for this reservation</v-btn>
           <v-btn
             class="float-right-button"
             color="error"
             small
             round
             @click="cancelCard=!cancelCard; tasksCard=false; updateCard=false"
-          >
-            Cancel reservation
-          </v-btn>
+          >Cancel reservation</v-btn>
           <v-btn
             class="float-right-button"
             color="info"
             small
             round
             @click="updateCard=!updateCard; tasksCard=false, cancelCard=false"
-          >
-            Edit reservation
-          </v-btn>
+          >Edit reservation</v-btn>
         </v-card-text>
         <v-card-text v-if="cancelCard">
           Do you want to cancel selected reservation?
-          <v-btn
-            color="error"
-            small
-            outline
-            round
-            @click="cancelCard=false"
-          >
-            No
-          </v-btn>
-          <v-btn
-            color="success"
-            round
-            @click="cancelReservation()"
-          >
-            Yes
-          </v-btn>
+          <v-btn color="error" small outline round @click="cancelCard=false">No</v-btn>
+          <v-btn color="success" round @click="cancelReservation()">Yes</v-btn>
         </v-card-text>
         <v-card-text v-if="updateCard">
-          <v-btn
-            color="error"
-            small
-            outline
-            round
-            @click="updateCard=false"
-          >
-            Back
-          </v-btn>
-          <v-btn
-            color="success"
-            round
-            @click="updateReservation()"
-          >
-            Update
-          </v-btn>
+          <v-btn color="error" small outline round @click="updateCard=false">Back</v-btn>
+          <v-btn color="success" round @click="updateReservation()">Update</v-btn>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -596,5 +552,22 @@ export default {
 }
 .container {
   overflow: hidden;
+}
+
+.large-icon {
+  padding-left: 20px;
+}
+
+.spaced-text {
+  padding-left: 15px;
+  padding-right: 10px;
+}
+
+.large-chip {
+  font-size: 20px;
+  width: auto;
+  height: 50px;
+  /* margin-left: 20px; */
+  /* text-align: right; */
 }
 </style>
