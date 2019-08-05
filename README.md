@@ -13,7 +13,7 @@ TensorHive
 TensorHive is an open source system for monitoring and managing computing resources across multiple hosts.
 It solves the most common problems and nightmares about accessing and sharing your AI-oriented infrastructure across multiple, often competing users.
 
-It's designed with __simplicty, flexibility and configuration-friendliness__ in mind.
+It's designed with __simplicity, flexibility and configuration-friendliness__ in mind.
 
 Use cases
 ----------------------
@@ -26,12 +26,12 @@ Our goal is to provide solutions for painful problems that ML engineers often ha
 - :penguin: People using your infrastructure expect only one interface for all the things related to training models (besides terminal): monitoring, reservation calendar and scheduling distributed jobs 
 - :collision: Can't risk messing up sensitive configuration by installing software on each individual machine, prefering centralized solution which can be managed from one place
 
-2. You're a **standalone user** who has access to beefy GPUs scatterd across multiple machines.
+2. You're a **standalone user** who has access to beefy GPUs scattered across multiple machines.
 - :part_alternation_mark: You want to be able to determine if batch size is too small or if there's a bottleneck when moving data from memory to GPU - charts with metrics such as `gpu_util`, `mem_util`, `mem_used` are great for this purpose
 - :date: Visualizing names of training experiments using calendar helps you track how you're progressing on the project
 - :snake: Launching distributed trainings is essential for you, no matter what the framework is
 - :dizzy_face: Managing a list of training commands for all your distributed training experiments drives you nuts
-- :zzz: Remembering to manually launch the training before going sleep is no fun anymore.
+- :zzz: Remembering to manually launch the training before going sleep is no fun anymore
 
 What TensorHive has to offer
 -----------------------------
@@ -47,16 +47,16 @@ What TensorHive has to offer
 
 :three: Gather all useful GPU metrics, from all configured hosts **in one dashboard**
 
-&nbsp;&nbsp;&nbsp;&nbsp; :arrow_right: no more manually logging in to each individual machine in order to check if GPU is currently in use or not
+&nbsp;&nbsp;&nbsp;&nbsp; :arrow_right: no more manual logging in to each individual machine in order to check if GPU is currently in use or not
 
-For more details, check out the [full list of features](#features)
+For more details, check out the [full list of features](#features).
 
 Getting started
 ---------------
 ### Prerequisites
 * All nodes must be accessible via SSH, without password, using SSH Key-Based Authentication ([How to set up SSH keys](https://www.shellhacks.com/ssh-login-without-password/) - explained in [Quickstart section](#basic-usage)
 * Only NVIDIA GPUs are supported (relying on ```nvidia-smi``` command)
-* Currently TensorHive assumes that all users who want to register into the system must have identical UNIX usernames on all nodes configured by TensorHive administrator (not relevant to standalone developers)
+* Currently TensorHive assumes that all users who want to register into the system must have identical UNIX usernames on all nodes configured by TensorHive administrator (not relevant for standalone developers)
 
 ### Installation
 
@@ -93,7 +93,7 @@ tensorhive key
 tensorhive test
 ```
 
-Now you should be ready to finally launch a TensorHive instance
+Now you should be ready to launch a TensorHive instance:
 ```
 tensorhive
 ```
@@ -171,7 +171,7 @@ Features
 #### Web
 - [x] :chart_with_downwards_trend: Configurable charts view
     - [x] Metrics and active processes
-    - [ ] Detailed harware specification 
+    - [ ] Detailed hardware specification 
 - [x] :calendar: Calendar view
     - [x] Allow making reservations for selected GPUs
     - [x] Edit reservations
