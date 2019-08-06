@@ -2,6 +2,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Union, Dict, Any, Optional, List
 import smtplib
+from smtplib import SMTPException
 import os
 import logging
 log = logging.getLogger(__name__)
@@ -74,7 +75,10 @@ class Mailer:
     def send(self, message: Message) -> None:
         assert self.server, 'Must call connect() first!'
         assert message.author and message.recipients and message.body, 'Incomplete email body: {}'.format(message)
-        self.server.sendmail(message.author, message.recipients, message.body)
+        try:
+            self.server.sendmail(message.author, message.recipients, message.body)
+        except SMTPException as e:
+            log.error('Error while sending email: {}'.format(e))
 
     def connect(self, login: str, password: str) -> None:
         # assert login and password, 'Login and password must not be None!'
