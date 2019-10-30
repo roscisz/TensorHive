@@ -31,66 +31,104 @@
         @input="changeSchedule()"
       ></v-text-field>
     </div>
-    <div class="container" :key="tableKey">
-      <div class="left-table">
-        <table>
-          <tbody>
-            <th class="first-column">Resources</th>
-          </tbody>
-        </table>
-        <table>
-          <tbody>
-            <tr>
-              <td class="first-column">
-                <v-checkbox
-                  class="small-checkbox"
-                  color="success"
-                  label="Select all"
-                  v-model="selectAllCheckbox"
-                  @change="selectAll"
-                >
-                </v-checkbox>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <table>
-          <tbody>
-            <tr v-for="resource in tableContent.resources" :key="resource.id">
-              <td class="first-column">
-                <v-checkbox
-                  class="small-checkbox"
-                  color="success"
-                  :label="`${ resource.name }`"
-                  v-model="resource.selected"
-                  @change="loadResources"
-                >
-                </v-checkbox>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <div class="container">
+      <div class="container-header">
+        <div class="left-table-header">
+          <table>
+            <tbody>
+              <th class="first-column">Resources</th>
+            </tbody>
+          </table>
+          <table>
+            <tbody>
+              <tr>
+                <td class="first-column">
+                  <v-checkbox
+                    class="small-checkbox"
+                    color="success"
+                    label="Change all"
+                    v-model="changeAllCheckbox"
+                    @change="changeAll"
+                  >
+                  </v-checkbox>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="right-table-header" id="right-header">
+          <table>
+            <tbody>
+              <th v-for="header in tableContent.header" :key="header.value">{{header.value}}</th>
+            </tbody>
+          </table>
+          <table>
+            <tbody>
+              <tr>
+                <td class="hours" v-for="hours in tableContent.hours" :key="hours.id">{{hours.value}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <div class="right-table">
-        <table>
-          <tbody>
-            <th v-for="header in tableContent.header" :key="header.value">{{header.value}}</th>
-          </tbody>
-        </table>
-        <table>
-          <tbody>
-            <tr>
-              <td class="hours" v-for="hours in tableContent.hours" :key="hours.id">{{hours.value}}</td>
-            </tr>
-          </tbody>
-        </table>
-        <table>
-          <tbody>
-            <tr v-for="resource in tableContent.resources" :key="resource.id">
-              <td v-for="slots in resource.slots" :key="slots.id" :class="{ 'reserved': slots.reserved, 'userReservation': slots.userReservation }">{{slots.value}}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="container-content">
+        <div class="left-table" id="left-table">
+          <div :key="leftTableKey">
+            <table v-for="node in tableContent.nodes" :key="node.nodeName">
+              <tbody>
+                <tr>
+                  <td class="first-column">
+                    <div class="node-cell">
+                      <v-checkbox
+                        class="small-checkbox-node"
+                        color="success"
+                        :label="`${ node.nodeName }`"
+                        v-model="node.selected"
+                        input-value
+                        @change="changeWholeNode(node.nodeName)"
+                      >
+                      </v-checkbox>
+                      <v-btn class="mx-2 small-button" fab dark color="info" @click="toggle(node)">
+                        <v-icon v-if="node.hidden" dark>add</v-icon>
+                        <v-icon v-if="!node.hidden" dark>remove</v-icon>
+                      </v-btn>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+              <tbody v-show="!node.hidden">
+                <tr v-for="resourceUUID in node.resources" :key="resourceUUID">
+                  <td class="first-column">
+                    <v-checkbox
+                      class="small-checkbox"
+                      color="success"
+                      :label="`${ tableContent.resources[resourceUUID].name }`"
+                      v-model="tableContent.resources[resourceUUID].selected"
+                      @change="changeResource(node.nodeName, resourceUUID)"
+                    >
+                    </v-checkbox>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="right-table" id="right-table">
+          <div :key="rightTableKey">
+            <table v-for="node in tableContent.nodes" :key="node.nodeName">
+              <tbody>
+                <tr>
+                  <td v-for="slot in node.slots" :key="slot.id">{{slot.value}}</td>
+                </tr>
+              </tbody>
+              <tbody v-show="!node.hidden">
+                <tr v-for="resourceUUID in node.resources" :key="resourceUUID">
+                  <td v-for="slot in tableContent.resources[resourceUUID].slots" :key="slot.id" :class="{ 'reserved': slot.reserved, 'userReservation': slot.userReservation }">{{slot.value}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -104,22 +142,26 @@ export default {
   data () {
     return {
       tableContent: {
+        nodes: {},
         resources: {},
         header: [],
-        hours: [],
-        tableKey: 0
+        hours: []
       },
       scheduleStart: '',
       scheduleEnd: '',
       resourcesIds: [],
       startMoment: {},
-      tableKey: 0,
+      leftTableKey: 0,
+      rightTableKey: 0,
       picker: new Date().toISOString().substr(0, 10),
       menu: false,
       landscape: false,
       reactive: false,
       range: 7,
-      selectAllCheckbox: false
+      changeAllCheckbox: true,
+      selectedNodes: 0,
+      allFlag: false,
+      nodeFlag: false
     }
   },
 
@@ -134,11 +176,65 @@ export default {
   },
 
   methods: {
-    selectAll: function () {
-      for (var resourceId in this.tableContent.resources) {
-        this.tableContent.resources[resourceId].selected = this.selectAllCheckbox
+    changeAll: function () {
+      this.allFlag = true
+      for (var nodeName in this.tableContent.nodes) {
+        this.tableContent.nodes[nodeName].selected = this.changeAllCheckbox
+        this.changeWholeNode(nodeName)
       }
+      this.allFlag = false
       this.loadResources()
+    },
+
+    changeWholeNode: function (nodeName) {
+      this.nodeFlag = true
+      for (var resourceId in this.tableContent.nodes[nodeName].resources) {
+        var resourceName = this.tableContent.nodes[nodeName].resources[resourceId]
+        var resource = this.tableContent.resources[resourceName]
+        resource.selected = this.tableContent.nodes[nodeName].selected
+      }
+      if (!this.allFlag) {
+        if (this.tableContent.nodes[nodeName].selected) {
+          this.selectedNodes += 1
+        } else {
+          this.selectedNodes -= 1
+        }
+        this.checkIfAllNodesSelected()
+        this.loadResources()
+      }
+      this.nodeFlag = false
+    },
+
+    checkIfAllNodesSelected: function () {
+      if (this.selectedNodes === Object.keys(this.tableContent.nodes).length) {
+        this.changeAllCheckbox = true
+      } else {
+        this.changeAllCheckbox = false
+      }
+    },
+
+    changeResource: function (nodeName, resourceUUID) {
+      if (!this.allFlag && !this.nodeFlag) {
+        if (this.tableContent.resources[resourceUUID].selected) {
+          this.tableContent.nodes[nodeName].selectedResources += 1
+        } else {
+          this.tableContent.nodes[nodeName].selectedResources -= 1
+        }
+        this.checkIfAllResourcesSelected(nodeName)
+        this.checkIfAllNodesSelected()
+        this.forceRerenderTables()
+        this.loadResources()
+      }
+    },
+
+    checkIfAllResourcesSelected: function (nodeName) {
+      if (this.tableContent.nodes[nodeName].selectedResources === Object.keys(this.tableContent.nodes[nodeName].resources).length) {
+        this.tableContent.nodes[nodeName].selected = true
+        this.selectedNodes += 1
+      } else {
+        this.tableContent.nodes[nodeName].selected = false
+        this.selectedNodes -= 1
+      }
     },
 
     loadResources: function () {
@@ -168,25 +264,42 @@ export default {
 
     fillTable: function () {
       this.resourceIds = []
-      this.tableContent.resources = {}
+      this.tableContent.nodes = {}
+      this.tableContent.resources = []
       for (var nodeIndex in this.parsedNodes) {
         var node = this.parsedNodes[nodeIndex]
+        var nodeSlots = []
+        for (var i = 0; i < 48 * this.range; i++) {
+          nodeSlots.push({ value: '', id: 'slot ' + i, reserved: false, userReservation: false })
+        }
+        this.tableContent.nodes[node.nodeName] = {
+          nodeName: node.nodeName,
+          hidden: true,
+          resources: [],
+          selected: true,
+          selectedResources: 0,
+          slots: nodeSlots
+        }
         for (var resourceTypeIndex in node.resourceTypes) {
           var resourceType = node.resourceTypes[resourceTypeIndex]
           for (var resourceIndex in resourceType.resources) {
             var resource = resourceType.resources[resourceIndex]
             resource.name = resource.nodeName + ' GPU' + resourceIndex
-            resource['selected'] = false
+            resource['selected'] = true
+            this.tableContent.nodes[node.nodeName].selectedResources += 1
             this.resourcesIds.push(resource.resourceUUID)
             var slots = []
-            for (var i = 0; i < 48 * this.range; i++) {
+            for (i = 0; i < 48 * this.range; i++) {
               slots.push({ value: '', id: 'slot ' + i, reserved: false, userReservation: false })
             }
             resource['slots'] = slots
+            this.tableContent.nodes[node.nodeName].resources.push(resource.resourceUUID)
             this.tableContent.resources[resource.resourceUUID] = resource
           }
         }
+        this.tableContent.nodes[node.nodeName].selectedResources = Object.keys(this.tableContent.nodes[node.nodeName].resources).length
       }
+      this.selectedNodes = Object.keys(this.tableContent.nodes).length
       this.getReservations()
     },
 
@@ -199,7 +312,9 @@ export default {
       api
         .request('get', '/reservations?resources_ids=' + resourcesString + '&start=' + this.scheduleStart + '&end=' + this.scheduleEnd, this.$store.state.accessToken)
         .then(response => {
-          this.parseData(response.data)
+          if (response.data.length !== 0) {
+            this.parseData(response.data)
+          }
         })
         .catch(error => {
           this.$emit('handleError', error)
@@ -229,22 +344,37 @@ export default {
             this.tableContent.resources[data[i].resourceId].slots[slot].reserved = true
           }
         }
-        this.forceRerenderTable()
+        this.forceRerenderTables()
       }
     },
 
-    forceRerenderTable: function () {
-      this.tableKey += 1
+    forceRerenderTables: function (key) {
+      this.leftTableKey = !this.leftTableKey
+      this.rightTableKey = !this.rightTableKey
     },
 
     adjustTimezone: function () {
       var d = new Date()
       var v = d.getTimezoneOffset() // in minutes for example GMT+1 = -60
       return v / 60
+    },
+
+    toggle (node) {
+      this.tableContent.nodes[node.nodeName].hidden = !this.tableContent.nodes[node.nodeName].hidden
+      this.forceRerenderTables()
     }
   },
 
   mounted () {
+    // synchronise scrolls
+    var leftTable = document.getElementById('left-table')
+    var rightTable = document.getElementById('right-table')
+    var rightHeader = document.getElementById('right-header')
+    rightTable.onscroll = function () {
+      leftTable.scrollTop = this.scrollTop
+      rightHeader.scrollLeft = this.scrollLeft
+    }
+
     var start = moment(new Date().toISOString()).add(this.adjustTimezone(), 'hours')
     this.startMoment = start
     this.scheduleStart = start.toISOString()
@@ -265,7 +395,8 @@ export default {
       }
     }
     this.tableContent = {
-      resources: {},
+      nodes: {},
+      resources: [],
       header: header,
       hours: hours
     }
@@ -277,12 +408,22 @@ export default {
 .container {
   width: 100%;
   max-width: 100%;
-  max-height: 30vh;
-  overflow-y: scroll;
+}
+.container-header {
+  width: 100%;
+  max-width: 100%;
   margin-left: 0;
   white-space: nowrap;
   display: inline-block;
   position:relative;
+}
+.container-content {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  white-space: nowrap;
+  display: inline-block;
+  position: relative;
 }
 .range-select-container {
   display:flex;
@@ -293,6 +434,16 @@ export default {
 }
 .range-input {
   max-width: 150px;
+}
+.small-button {
+  height: 25px !important;
+  width: 25px !important;
+}
+.small-checkbox-node {
+  margin-top: 0px !important;
+  margin-left: 10px !important;
+  height: 15px !important;
+  width: 15px !important;
 }
 .small-checkbox {
   margin-top: -15px !important;
@@ -305,15 +456,33 @@ export default {
   overflow-x: scroll;
   overflow-y: hidden;
   display: inline-block;
+  max-height: calc(50vh - 88px);
+}
+.left-table-header {
+  min-width: 205px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  display: inline-block;
 }
 .right-table {
   width: calc(100% - 205px);
   overflow-x: scroll;
+  overflow-y: scroll;
+  display: inline-block;
+  max-height: calc(50vh - 88px);
+}
+.right-table-header {
+  width: calc(100% - 205px);
+  overflow-x: hidden;
+  overflow-y: scroll;
   display: inline-block;
 }
 .first-column {
   min-width: 200px;
-  white-space: nowrap;
+  white-space: nowrap
+}
+.node-cell {
+  display: flex;
 }
 .hours {
   min-width: 40px;
