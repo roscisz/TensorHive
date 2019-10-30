@@ -64,7 +64,9 @@ export default {
       nodeCheckbox: false,
       resourceTypeCheckbox: false,
       resourceCheckbox: false,
-      showSchedule: false
+      showSchedule: false,
+      interval: null,
+      time: 30000
     }
   },
 
@@ -78,6 +80,10 @@ export default {
       .catch(error => {
         this.handleError(error)
       })
+    let self = this
+    this.interval = setInterval(function () {
+      self.updateCalendar = !self.updateCalendar
+    }, this.time)
   },
 
   methods: {
