@@ -128,7 +128,7 @@ export default {
             start: dayStart,
             allDay: true,
             resourceId: this.selectedResources[j].uuid,
-            userId: this.$store.state.id
+            userId: -1
           }
           this.calendar.fullCalendar('renderEvent', tempReservation)
         }
@@ -309,6 +309,9 @@ export default {
           $(element).css('height', 17 * 2)
         }
         var c = self.setColor(resourceIndex, resourceNodeName)
+        if (event.userId === self.$store.state.id) {
+          c = '#15C02C' // user specified color: green
+        }
         if (event.color !== c) {
           event.color = c
           self.calendar.fullCalendar('updateEvent', event)
