@@ -1,6 +1,6 @@
-
 from tensorhive.config import SSH
 from pssh.clients.native import ParallelSSHClient
+from pssh.exceptions import PKeyFileError
 from paramiko.rsakey import RSAKey
 from typing import Dict
 from tensorhive.core import ssh
@@ -20,23 +20,31 @@ class SSHConnectionManager():
     @classmethod
     def new_parallel_ssh_client(cls, config, key_path=None) -> ParallelSSHClient:
         hostnames = config.keys()
-        if SSH.PROXY:
-            return ParallelSSHClient(
-                hosts=hostnames,
-                host_config=config,
-                pkey=key_path,
-                proxy_host=SSH.PROXY['proxy_host'],
-                proxy_user=SSH.PROXY['proxy_user'],
-                proxy_port=SSH.PROXY['proxy_port']
-                # Ignore timeout and num_retires for proxy
-            )
+        try:
+            if SSH.PROXY:
+                client = ParallelSSHClient(
+                    hosts=hostnames,
+                    host_config=config,
+                    pkey=key_path,
+                    proxy_host=SSH.PROXY['proxy_host'],
+                    proxy_user=SSH.PROXY['proxy_user'],
+                    proxy_port=SSH.PROXY['proxy_port']
+                    # Ignore timeout and num_retires for proxy
+                )
+            else:
+                client = ParallelSSHClient(
+                    hosts=hostnames,
+                    host_config=config,
+                    timeout=SSH.TIMEOUT,
+                    pkey=key_path,
+                    num_retries=SSH.NUM_RETRIES
+                )
+        except PKeyFileError as e:
+            log.error(e)
+            raise
+        else:
+            return client
 
-        return ParallelSSHClient(
-            hosts=hostnames,
-            host_config=config,
-            timeout=SSH.TIMEOUT,
-            pkey=key_path,
-            num_retries=SSH.NUM_RETRIES)
 
     def add_host(self, host_config: Dict):
         '''
@@ -72,7 +80,7 @@ class SSHConnectionManager():
         Typically runs on each TensorHive startup.
         You can turn it off (INI config -> [ssh] -> test_on_startup = off
         '''
-        key_descr = 'default system keys' if key_path is None else 'key in {}'.format(key_path)
+        key_descr = 'default system keys' if key_path is None else 'key: {}'.format(key_path)
         log.info('[⚙] Testing SSH connections using {}'.format(key_descr))
 
         # 1. Establish connection

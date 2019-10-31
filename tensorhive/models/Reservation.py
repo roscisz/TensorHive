@@ -168,6 +168,7 @@ class Reservation(CRUDModel, Base):  # type: ignore
             'description': self.description,
             'resourceId': self.protected_resource_id,
             'userId': self.user_id,
+            'userName': self.user.username,
             'gpuUtilAvg': self.gpu_util_avg,
             'memUtilAvg': self.mem_util_avg,
             'start': self.parsed_output_datetime(self.starts_at),

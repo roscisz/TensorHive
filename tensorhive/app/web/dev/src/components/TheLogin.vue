@@ -2,14 +2,22 @@
   <div id="login">
     <v-layout row justify-center>
       <v-dialog
-        persistent
         width="50vw"
         v-model="showModal"
       >
         <v-card>
-          <v-card-title>
+          <v-card-text>
+            <v-btn
+              class="float-right-button"
+              flat
+              icon
+              color="black"
+              @click="showModal=false"
+            >
+              <v-icon>close</v-icon>
+            </v-btn>
             <span class="headline">Register new account</span>
-          </v-card-title>
+          </v-card-text>
           <v-card-text>
             <form @submit.prevent="createUser">
               <div class="input-group">
@@ -52,7 +60,7 @@
                   v-model="modalPassword2"
                 >
               </div>
-              Please copy the key below and paste it into <b>~/.ssh/authorized_keys</b>.<br>It will allow TensorHive to confirm you identity and access machines with provided UNIX username.
+              Please copy the key below and paste it into <b>~/.ssh/authorized_keys</b>.<br>It will allow TensorHive to confirm your identity and access machines with provided UNIX username.
               <v-textarea
                 solo
                 name="entry"
@@ -73,15 +81,6 @@
                 {{ errorMessage }}
               </v-alert>
               <v-btn
-                color="info"
-                small
-                outline
-                round
-                @click="showModal=false"
-              >
-                Go back
-              </v-btn>
-              <v-btn
                 color="success"
                 type="submit"
               >
@@ -94,7 +93,7 @@
     </v-layout>
     <div class="text-center col-sm-12">
       <!-- login form -->
-      <form @submit.prevent="checkCreds">
+      <form class="login-form" @submit.prevent="checkCreds">
         Login to your account
         <div class="input-group">
           <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
@@ -129,7 +128,7 @@
           dismissible
           type="info"
         >
-          Account successfully created
+          Identity verification succeeded, account has been successfully created. You can now log in.
         </v-alert>
         <v-btn color="info" @click="requestEntry">Register</v-btn>
         <v-btn
@@ -294,6 +293,10 @@ export default {
 </script>
 
 <style scoped>
+.float-right-button {
+  float: right;
+}
+
 #login {
   padding: 10em;
 }
@@ -315,11 +318,10 @@ export default {
   }
 }
 @media (min-width: 1242px) {
-  form {
+  .login-form {
     padding-left: 20em;
     padding-right: 20em;
   }
-
   .input-group input {
     height: 6em;
   }

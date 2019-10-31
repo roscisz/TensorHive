@@ -40,7 +40,7 @@ class AccountCreator:
         valid_username_provided = False
         while not valid_username_provided:
             try:
-                username = click.prompt('[1/4] username', type=str)
+                username = click.prompt('[1/4] UNIX username', type=str)
                 self.new_user.username = username
             except click.Abort:
                 raise

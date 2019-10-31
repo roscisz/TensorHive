@@ -1,17 +1,25 @@
 <template>
   <v-layout row justify-center>
     <v-dialog
-      persistent
       width="50vw"
-      v-model="showModal"
+      v-model="show"
     >
       <v-card>
-        <v-card-title>
+        <v-card-text>
+          <v-btn
+            class="float-right-button"
+            flat
+            icon
+            color="black"
+            @click="close()"
+          >
+            <v-icon>close</v-icon>
+          </v-btn>
           <span class="headline">Which resources do you want to reserve?</span>
-        </v-card-title>
+        </v-card-text>
         <v-card-text>
           <div
-            class="row"
+            class="resources_row"
             v-for="checkbox in resourcesCheckboxes"
             :key="checkbox.uuid"
           >
@@ -22,6 +30,8 @@
             >
             </v-checkbox>
           </div>
+        </v-card-text>
+        <v-card-text>
           <v-layout align-center justify-start>
             <v-menu
               v-model="startDateMenu"
@@ -145,15 +155,6 @@
           <div v-show="showInfo===true" class="text-red"><p class="vertical-5p lead">You need to choose at least one resource to reserve</p></div>
           <div class="modal-footer text-right">
             <v-btn
-              color="error"
-              small
-              outline
-              round
-              @click="close()"
-            >
-              Cancel
-            </v-btn>
-            <v-btn
               color="success"
               round
               @click="reservation()"
@@ -183,6 +184,13 @@ export default {
   },
 
   watch: {
+    showModal () {
+      this.show = this.showModal
+    },
+    show () {
+      if (this.show === false) this.close()
+    },
+
     startDate () {
       if (this.startTime !== null) {
         this.newStartDate = moment(this.startDate).format('YYYY-MM-DD')
@@ -216,7 +224,8 @@ export default {
       newEndTime: '',
       showInfo: false,
       reservationTitle: '',
-      reservationDescription: ''
+      reservationDescription: '',
+      show: false
     }
   },
 
@@ -260,3 +269,12 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.float-right-button {
+  float: right;
+}
+.resources_row{
+  max-height: 25px;
+}
+</style>
