@@ -76,7 +76,6 @@ conda install tensorhive
 
 ```shell
 git clone https://github.com/roscisz/TensorHive.git && cd TensorHive
-git checkout fixes/voicelab
 pip install -e .
 ```
 
