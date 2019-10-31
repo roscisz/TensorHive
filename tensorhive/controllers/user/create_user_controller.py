@@ -1,7 +1,7 @@
 from sqlalchemy.exc import IntegrityError
 from tensorhive.models.User import User
 from tensorhive.models.Role import Role
-from paramiko.client import SSHClient
+from paramiko.client import SSHClient, WarningPolicy
 from paramiko.ssh_exception import AuthenticationException, BadHostKeyException, SSHException
 import socket
 from tensorhive.database import db_session
@@ -55,6 +55,7 @@ def ssh_signup(user):
     ssh_key = TensorHiveManager().dedicated_ssh_key
     test_client = SSHClient()
     test_client.load_system_host_keys()
+    test_client.set_missing_host_key_policy(WarningPolicy())
 
     try:
         test_client.connect(auth_node, username=user['username'], pkey=ssh_key)
