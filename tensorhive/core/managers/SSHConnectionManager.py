@@ -45,7 +45,6 @@ class SSHConnectionManager():
         else:
             return client
 
-
     def add_host(self, host_config: Dict):
         '''
         Appends a host (as hostname + config) directly into parallel ssh client instance.

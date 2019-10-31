@@ -158,18 +158,20 @@ def init():
     # First user account
     init_db()
     if User.query.count() == 0:
-        if click.confirm('[2/3] ' + orange('Database has no users.') + ' Would you like to create an account now?', default=True):
+        if click.confirm('[2/3] ' + orange('Database has no users.') + ' Would you like to create an account now?',
+                         default=True):
             AccountCreator().run_prompt()
     else:
         click.echo('[•] There are some users in the database already, skipping...')
 
     # Edit configs
     click.echo('[3/3] ' + green('Done ✔!') + ' Now you just need to adjust these config to your needs:\n')
-    click.echo(cleandoc('''        
+    click.echo(cleandoc('''
         (required) {hosts}
         (optional) {main}
         (optional) {mailbot}
-    ''').format(hosts=orange(CONFIG_FILES.HOSTS_CONFIG_PATH), main=CONFIG_FILES.MAIN_CONFIG_PATH, mailbot=CONFIG_FILES.MAILBOT_CONFIG_PATH))
+    ''').format(hosts=orange(CONFIG_FILES.HOSTS_CONFIG_PATH), main=CONFIG_FILES.MAIN_CONFIG_PATH,
+                mailbot=CONFIG_FILES.MAILBOT_CONFIG_PATH))
 
 
 @main.command()
