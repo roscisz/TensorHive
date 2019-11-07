@@ -12,7 +12,7 @@ from tensorhive.api.APIServer import APIServer
 from tensorhive.core.utils.StoppableThread import StoppableThread
 from tensorhive.core.utils.exceptions import ConfigurationException
 from tensorhive.core.monitors.Monitor import Monitor
-from tensorhive.core.monitors.GPUMonitoringBehaviour import GPUMonitoringBehaviour
+from tensorhive.core.monitors.GPUMonitor import GPUMonitor
 from tensorhive.core.services.MonitoringService import MonitoringService
 from tensorhive.core.services.ProtectionService import ProtectionService
 from tensorhive.core.services.UsageLoggingService import UsageLoggingService
@@ -31,7 +31,7 @@ class TensorHiveManager(metaclass=Singleton):
 
     def __init__(self):
         super().__init__()
-        self.infrastructure_manager = InfrastructureManager()
+        self.infrastructure_manager = InfrastructureManager(SSH.AVAILABLE_NODES)
 
         self.dedicated_ssh_key = ssh.init_ssh_key(PosixPath(SSH.KEY_FILE).expanduser())
 
@@ -71,7 +71,7 @@ class TensorHiveManager(metaclass=Singleton):
         if MONITORING_SERVICE.ENABLED:
             monitors = []
             if MONITORING_SERVICE.ENABLE_GPU_MONITOR:
-                gpu_monitor = Monitor(GPUMonitoringBehaviour())
+                gpu_monitor = GPUMonitor()
                 monitors.append(gpu_monitor)
             # TODO Add more monitors here
             monitoring_service = MonitoringService(monitors=monitors, interval=MONITORING_SERVICE.UPDATE_INTERVAL)

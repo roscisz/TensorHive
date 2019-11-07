@@ -38,9 +38,7 @@ class MonitoringService(Service):
         start_time = time_func()
 
         for monitor in self.monitors:
-            monitor.update(self.connection_manager.connections)
-            self.infrastructure_manager.update_infrastructure(
-                monitor.gathered_data)
+            monitor.update(self.connection_manager.connections, self.infrastructure_manager)
 
         end_time = time_func()
         execution_time = end_time - start_time
