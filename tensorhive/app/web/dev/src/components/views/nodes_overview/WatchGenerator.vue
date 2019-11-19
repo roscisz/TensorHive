@@ -151,19 +151,19 @@ export default {
               {
                 id: 0,
                 defaultNode: '',
-                defaultResourceType: '',
-                defaultMetric: 'gpu_util'
+                defaultResourceType: 'GPU',
+                defaultMetric: 'utilization'
               },
               {
                 id: 1,
                 defaultNode: '',
-                defaultResourceType: '',
+                defaultResourceType: 'GPU',
                 defaultMetric: 'mem_used'
               },
               {
                 id: 2,
                 defaultNode: '',
-                defaultResourceType: '',
+                defaultResourceType: 'GPU',
                 defaultMetric: 'processes'
               }
             ]
@@ -401,7 +401,7 @@ export default {
       this.watches.push({
         id: this.watchIds,
         defaultNode: '',
-        defaultResourceType: '',
+        defaultResourceType: 'GPU',
         defaultMetric: ''
       })
       this.watchIds++
