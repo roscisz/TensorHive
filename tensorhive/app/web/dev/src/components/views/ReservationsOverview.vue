@@ -129,19 +129,21 @@ export default {
       for (var nodeName in this.nodes) {
         resourceTypes = []
         node = this.nodes[nodeName]
+        resources = []
         for (var resourceTypeName in node) {
-          resources = []
-          resourceType = node[resourceTypeName]
-          for (var resourceUUID in resourceType) {
-            tempResource = {
-              nodeName: nodeName,
-              resourceUUID: resourceUUID,
-              resourceName: resourceType[resourceUUID].name,
-              resourceIndex: resourceType[resourceUUID].index,
-              metrics: resourceType[resourceUUID].metrics
+          if (resourceTypeName === 'GPU') {
+            resourceType = node[resourceTypeName]
+            for (var resourceUUID in resourceType) {
+              tempResource = {
+                nodeName: nodeName,
+                resourceUUID: resourceUUID,
+                resourceName: resourceType[resourceUUID].name,
+                resourceIndex: resourceType[resourceUUID].index,
+                metrics: resourceType[resourceUUID].metrics
+              }
+              tempResource.metrics['checked'] = true
+              resources.push(tempResource)
             }
-            tempResource.metrics['checked'] = true
-            resources.push(tempResource)
           }
           orderedResources = _.orderBy(resources, 'resourceIndex')
           tempResourceType = {
