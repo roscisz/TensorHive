@@ -1400,7 +1400,7 @@ definitions:
     type: object
     example:
       <GPU_UUID (All metrics case)>:
-        gpu_util:
+        utilization:
           unit: '%'
           value: 95
         power:
@@ -1437,7 +1437,7 @@ parameters:
       - mem_free
       - mem_used
       - mem_total
-      - gpu_util
+      - utilization
       - mem_util
       - temp
       - power
