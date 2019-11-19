@@ -13,6 +13,7 @@ from tensorhive.core.utils.StoppableThread import StoppableThread
 from tensorhive.core.utils.exceptions import ConfigurationException
 from tensorhive.core.monitors.Monitor import Monitor
 from tensorhive.core.monitors.GPUMonitor import GPUMonitor
+from tensorhive.core.monitors.CPUMonitor import CPUMonitor
 from tensorhive.core.services.MonitoringService import MonitoringService
 from tensorhive.core.services.ProtectionService import ProtectionService
 from tensorhive.core.services.UsageLoggingService import UsageLoggingService
@@ -69,10 +70,9 @@ class TensorHiveManager(metaclass=Singleton):
         '''Creates preconfigured instances of services based on config'''
         services = []  # type: List[Service]
         if MONITORING_SERVICE.ENABLED:
-            monitors = []
+            monitors = [CPUMonitor()]
             if MONITORING_SERVICE.ENABLE_GPU_MONITOR:
-                gpu_monitor = GPUMonitor()
-                monitors.append(gpu_monitor)
+                monitors.append(GPUMonitor())
             # TODO Add more monitors here
             monitoring_service = MonitoringService(monitors=monitors, interval=MONITORING_SERVICE.UPDATE_INTERVAL)
             services.append(monitoring_service)
