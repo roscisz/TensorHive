@@ -198,7 +198,7 @@ export default {
             uniqueMetricNames = []
             resourceType = node[resourceTypeName]
             if (resourceType !== null) {
-              metrics = this.findMetrics(resourceType)
+              metrics = this.findMetrics(resourceType, resourceTypeName)
               for (var metricName in metrics) {
                 uniqueMetricNames.push(metricName)
               }
@@ -213,7 +213,7 @@ export default {
       }
     },
 
-    findMetrics: function (resourceType) {
+    findMetrics: function (resourceType, resourceTypeName) {
       var resource, metric, tempMetrics, uniqueMetrics
       tempMetrics = {}
       uniqueMetrics = {}
@@ -244,13 +244,13 @@ export default {
       }
       for (var uniqueMetricName in uniqueMetrics) {
         if (uniqueMetrics[uniqueMetricName].visible === true) {
-          tempMetrics[uniqueMetricName] = this.createMetric(resourceType, uniqueMetricName)
+          tempMetrics[uniqueMetricName] = this.createMetric(resourceType, resourceTypeName, uniqueMetricName)
         }
       }
       return tempMetrics
     },
 
-    createMetric: function (resourceType, metricName) {
+    createMetric: function (resourceType, resourceTypeName, metricName) {
       var labels, totalMemory, value, unit, datasets, orderedDatasets
       labels = []
       for (var i = (this.chartLength - 1) * this.time / 1000; i >= 0; i -= this.time / 1000) {
@@ -269,7 +269,7 @@ export default {
           datasets.push(
             this.createDataset(
               resourceUUID,
-              'GPU' + resourceType[resourceUUID].index,
+              resourceTypeName + resourceType[resourceUUID].index,
               this.setColor(resourceType[resourceUUID].index + 1),
               value
             )
