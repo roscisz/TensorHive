@@ -192,7 +192,7 @@ class GPUMonitor(Monitor):
             result[host] = processes
         return result
 
-    def _update_processes(self, infrastructure_manager, processes: Dict) -> Dict:
+    def _update_processes(self, infrastructure_manager, processes: Dict):
         '''
         Updates processes for the appropriate GPU records in infrastructure manager
 

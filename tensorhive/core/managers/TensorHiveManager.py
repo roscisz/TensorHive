@@ -70,7 +70,7 @@ class TensorHiveManager(metaclass=Singleton):
         '''Creates preconfigured instances of services based on config'''
         services = []  # type: List[Service]
         if MONITORING_SERVICE.ENABLED:
-            monitors = [CPUMonitor()]
+            monitors = [CPUMonitor()]  # type: List[Monitor]
             if MONITORING_SERVICE.ENABLE_GPU_MONITOR:
                 monitors.append(GPUMonitor())
             # TODO Add more monitors here
