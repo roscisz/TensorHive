@@ -343,7 +343,7 @@ export default {
         }
       }
       obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = unit
-      if (metricName === 'mem_util' || metricName === 'gpu_util' || metricName === 'fan_speed') {
+      if (metricName === 'mem_util' || metricName === 'utilization' || metricName === 'fan_speed') {
         obj['scales']['yAxes'][0]['ticks'] = {
           suggestedMin: 0,
           max: 100
@@ -371,30 +371,35 @@ export default {
     apiRequest: function (node, nodeName, counter) {
       var metric, resourceType, value
       var data = []
-      api
-        .request('get', '/nodes/' + nodeName + '/gpu/metrics', this.$store.state.accessToken)
-        .then(response => {
-          data = response.data
-          for (var resourceTypeName in node) {
-            resourceType = node[resourceTypeName]
-            for (var metricName in resourceType.metrics) {
-              metric = resourceType.metrics[metricName]
-              for (var i = 0; i < metric.data.datasets.length; i++) {
-                value = isNaN(data[metric.data.datasets[i].uuid][metric.metricName])
-                  ? data[metric.data.datasets[i].uuid][metric.metricName].value
-                  : data[metric.data.datasets[i].uuid][metric.metricName]
-                metric.data.datasets[i].data.shift()
-                metric.data.datasets[i].data.push(value)
+      for (var resourceTypeName in node) {
+        resourceType = node[resourceTypeName]
+        api
+          .request('get', '/nodes/' + nodeName + '/' + resourceTypeName.toLowerCase() + '/metrics', this.$store.state.accessToken)
+          .then(response => {
+            data = response.data
+            for (var resourceTypeName in node) {
+              resourceType = node[resourceTypeName]
+              for (var metricName in resourceType.metrics) {
+                metric = resourceType.metrics[metricName]
+                for (var i = 0; i < metric.data.datasets.length; i++) {
+                  if (_.has(data, metric.data.datasets[i].uuid)) {
+                    value = isNaN(data[metric.data.datasets[i].uuid][metric.metricName])
+                      ? data[metric.data.datasets[i].uuid][metric.metricName].value
+                      : data[metric.data.datasets[i].uuid][metric.metricName]
+                    metric.data.datasets[i].data.shift()
+                    metric.data.datasets[i].data.push(value)
+                  }
+                }
               }
             }
-          }
-          if (!counter) {
-            this.updateChart = !this.updateChart
-          }
-        })
-        .catch(error => {
-          this.handleError(error)
-        })
+            if (!counter) {
+              this.updateChart = !this.updateChart
+            }
+          })
+          .catch(error => {
+            this.handleError(error)
+          })
+      }
     },
 
     addWatch: function () {
