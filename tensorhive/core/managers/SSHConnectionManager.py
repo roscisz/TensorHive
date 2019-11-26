@@ -40,8 +40,8 @@ class SSHConnectionManager():
                     num_retries=SSH.NUM_RETRIES
                 )
         except PKeyFileError as e:
-            log.error(e)
-            raise
+            log.error('[✘] {}'.format(str(e)))
+            return None
         else:
             return client
 
@@ -84,6 +84,9 @@ class SSHConnectionManager():
 
         # 1. Establish connection
         connections = SSHConnectionManager.new_parallel_ssh_client(config, key_path=key_path)
+        if not connections:
+            log.info('[✘] Could not establish connection.')
+            return len(config)
 
         # 2. Execute and gather output
         command = 'uname'
@@ -111,7 +114,7 @@ class SSHConnectionManager():
 
         # 4. Show simple summary of failed connections
         if num_failed > 0:
-            log.critical('Summary: {failed}/{all} failed to connect.'.format(
+            log.info('Summary: {failed}/{all} failed to connect.'.format(
                 failed=num_failed,
                 all=len(output)))
 

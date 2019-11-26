@@ -59,7 +59,7 @@ class TensorHiveManager(metaclass=Singleton):
         if failed_dedicated > 0:
             failed_system = SSHConnectionManager.test_all_connections(config=SSH.AVAILABLE_NODES)
             if failed_system < failed_dedicated:
-                log.info('[⚙] Using default system keys for monitoring SSH connections')
+                log.info('[⚙] TensorHive will be using default system keys for monitoring SSH connections')
                 ret = None
 
         return ret
