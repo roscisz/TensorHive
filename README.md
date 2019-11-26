@@ -1,7 +1,7 @@
 TensorHive
 ===
-![](https://img.shields.io/badge/release-v0.3-brightgreen.svg?style=popout-square)
-![](https://img.shields.io/badge/pypi-v0.3-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/release-v0.3.1-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/pypi-v0.3.1-brightgreen.svg?style=popout-square)
 ![](https://img.shields.io/badge/Issues%20and%20PRs-welcome-yellow.svg?style=popout-square)
 ![](https://img.shields.io/badge/platform-Linux-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/hardware-Nvidia-green.svg?style=popout-square)
@@ -22,7 +22,7 @@ Our goal is to provide solutions for painful problems that ML engineers often ha
 #### You should really consider using TensorHive if anything described in profiles below matches you:
 1. You're an **admin**, who is responsible for managing a cluster (or multiple servers) with powerful GPUs installed.
 - :angry: There are more users than resources, so they have to compete for it, but you don't know how to deal with that chaos
-- :ocean: Other popular tools are simply an overkill, have different purpose or require a lot of time to spend on reading documentation, installation and configuration (Graphana, Kubernetes, Slurm)
+- :ocean: Other popular tools are simply an overkill, have different purpose or require a lot of time to spend on reading documentation, installation and configuration (Grafana, Kubernetes, Slurm)
 - :penguin: People using your infrastructure expect only one interface for all the things related to training models (besides terminal): monitoring, reservation calendar and scheduling distributed jobs 
 - :collision: Can't risk messing up sensitive configuration by installing software on each individual machine, prefering centralized solution which can be managed from one place
 
@@ -54,25 +54,19 @@ For more details, check out the [full list of features](#features).
 Getting started
 ---------------
 ### Prerequisites
-* All nodes must be accessible via SSH, without password, using SSH Key-Based Authentication ([How to set up SSH keys](https://www.shellhacks.com/ssh-login-without-password/) - explained in [Quickstart section](#basic-usage)
+* All nodes must be accessible via SSH, without password, using SSH Key-Based Authentication ([How to set up SSH keys](https://www.shellhacks.com/ssh-login-without-password/) - explained in [Quickstart section](#basic-usage))
 * Only NVIDIA GPUs are supported (relying on ```nvidia-smi``` command)
 * Currently TensorHive assumes that all users who want to register into the system must have identical UNIX usernames on all nodes configured by TensorHive administrator (not relevant for standalone developers)
 
 ### Installation
 
-#### via pip (not updated yet)
+#### via pip
 ```shell
 pip install tensorhive
 ```
 
-#### via conda (not updated yet)
-```shell
-conda install tensorhive
-```
-
-#### From source (recommended)
-(optional) For development purposes we encourage separation from your current python packages using e.g. [Miniconda](https://docs.conda.io/en/latest/miniconda.html) 
-`conda create --name th_env python=3.5 pip; activate th_env`
+#### From source
+(optional) For development purposes we encourage separation from your current python packages using e.g. virtualenv, Anaconda. 
 
 ```shell
 git clone https://github.com/roscisz/TensorHive.git && cd TensorHive
@@ -80,16 +74,25 @@ pip install -e .
 ```
 
 TensorHive is already shipped with newest web app build, but in case you modify the source, you can can build it with `make app` (currently on `master` branch). For more useful commands see our [Makefile](https://github.com/roscisz/TensorHive/blob/master/tensorhive/Makefile).
-Build tested with `Node v11.14.0` and `npm 6.7.0`
+Build tested with `Node v10.15.2` and `npm 5.8.0`
 
 Basic usage
 -----
 #### Quickstart
-Each command will guide you through basic configuration process:
+The `init` command will guide you through basic configuration process:
 ```
 tensorhive init
-tensorhive key
+```
+
+You can check connectivity with the configured hosts using the `test` command.
+```
 tensorhive test
+```
+
+(optional) If you want to allow your UNIX users to set up their TensorHive accounts on their own and run distributed
+programs through `Task nursery` plugin, use the `key` command to generate the SSH key for TensorHive: 
+```
+tensorhive key
 ```
 
 Now you should be ready to launch a TensorHive instance:
@@ -97,10 +100,10 @@ Now you should be ready to launch a TensorHive instance:
 tensorhive
 ```
 
-Web application and API Documentation can be accessed via URLs highlighted in green (Ctrl + click to open in browser)
+Web application and API Documentation can be accessed via URLs highlighted in green (Ctrl + click to open in browser).
 
 #### Advanced configuration
-You can fully customize TensorHive behaviours via INI configuration (which will be created automatically after `tensorhive init`
+You can fully customize TensorHive behaviours via INI configuration files (which will be created automatically after `tensorhive init`):
 ```
 ~/.config/TensorHive/main_config.ini
 ~/.config/TensorHive/mailbot_config.ini
@@ -112,7 +115,7 @@ You can fully customize TensorHive behaviours via INI configuration (which will 
 Accessible infrastructure can be monitored in the Nodes overview tab. Sample screenshot:
 Here you can add new watches, select metrics and monitor ongoing GPU processes and its' owners.
 
-![image](https://user-images.githubusercontent.com/12485656/61520152-d963bd80-aa0d-11e9-9caa-1f7203cc6b42.png)
+![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/nodes_overview_screenshot.png)
 
 #### GPU Reservation calendar
 
@@ -120,29 +123,27 @@ Each column represents all reservation events for a GPU on a given day.
 In order to make a new reservation simply click and drag with your mouse, select GPU(s), add some meaningful title, optionally adjust time range.
 
 If there are many hosts and GPUs in our infrastructure, you can use our simplified, horizontal calendar to quickly identify empty time slots and filter out already reserved GPUs.
-
-(UI prototype: redesign is coming)
-![image](https://user-images.githubusercontent.com/12485656/61517527-bb935a00-aa07-11e9-8ea3-9db4a1529e24.png)
+![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/reservations_overview_screenshot.png)
 
 From now on, **only your processes are eligible to run on reserved GPU(s)**. TensorHive periodically checks if some other user has violated it. He will be spammed with warnings on all his PTYs, emailed every once in a while, additionally admin will also be notified (it all depends on the configuration).
 
 Terminal warning             |  Email warning
 :-------------------------:|:-------------------------:
-![image](https://user-images.githubusercontent.com/12485656/61520488-99e9a100-aa0e-11e9-8f35-b02c2e7de9ce.png)  |  ![image](https://user-images.githubusercontent.com/12485656/61520956-85f26f00-aa0f-11e9-8342-09023c93275b.png)
+![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/terminal_warning_screenshot.png)  |  ![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/email_warning_screenshot.png)
  
-#### What admin sees:
+#### What admin is e-mailed:
 
-![image](https://user-images.githubusercontent.com/12485656/61520807-4a57a500-aa0f-11e9-8a52-cb87208d6c71.png)
+![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/admin_warning_screenshot.png)
 
 #### Task nursery
 
 Here you can define commands for tasks you want to run on any configured nodes. You can manage them manually or set spawn/terminate date.
 Commands are run within `screen` session, so attaching to it while they are running is a piece of cake.
-![image](https://user-images.githubusercontent.com/12485656/61518173-4163d500-aa09-11e9-9916-59c907c1590c.png)
+![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/task_nursery_screenshot1.png)
 
 It provides quite simple, but flexible (**framework-agnostic**) command templating mechanism that will help you automate multi-node trainings.
 TensorHive requires that users who want to use this feature must append TensorHive's public key to their `~/.ssh/authorized_keys` on all nodes they want to connect to.
-![image](https://user-images.githubusercontent.com/12485656/61518418-bcc58680-aa09-11e9-8943-88bddc964417.png)
+![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/task_nursery_screenshot2.png)
 
 Features
 ----------------------
@@ -218,7 +219,7 @@ TensorHive architecture (simplified)
 
 This diagram will help you to grasp the rough concept of the system.
 
-![TensorHive_diagram _final](https://user-images.githubusercontent.com/12485656/59147556-7853cd80-89fd-11e9-80bc-5848e95c7574.png)
+![TensorHive_diagram _final](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/architecture.png)
 
 
 Contibution and feedback
@@ -228,12 +229,15 @@ Contibution and feedback
 We'd :heart: to collect your observations, issues and pull requests!
 
 Feel free to **report any configuration problems, we will help you**.
-We plan to redesign the UI/UX side as well as improve reliability of the system until September 2019 :shipit:, so stay tuned!
+
+We plan to develop examples of running distributed DNN training applications
+in `Task nursery` along with templates for TF_CONFIG and PyTorch, deadline - March 2020 :shipit:, so stay tuned!
 
 Credits
 -------
 
-TensorHive has been created within a joint project between [**VoiceLab.ai**](https://voicelab.ai) and
+
+TensorHive has been greatly supported within a joint project between [**VoiceLab.ai**](https://voicelab.ai) and
 [**Gdańsk University of Technology**](https://pg.edu.pl/) titled: "Exploration and selection of methods
 for parallelization of neural network training using multiple GPUs".
 
