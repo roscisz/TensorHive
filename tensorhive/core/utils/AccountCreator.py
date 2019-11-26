@@ -53,7 +53,7 @@ class AccountCreator:
         valid_email_provided = False
         while not valid_email_provided:
             try:
-                email = click.prompt('[2/4] email', type=str)
+                email = click.prompt('[2/4] email (for TensorHive warnings only)', type=str)
                 self.new_user.email = email
             except click.Abort:
                 raise
