@@ -189,10 +189,10 @@ def key():
 
     info_msg = '''
         This is the public key which will be used by TensorHive to reach your configured nodes via SSH,
-        and allow for running remote tasks. 
+        and allow for running remote tasks.
         Make sure that all nodes you've defined in ~/.config/TensorHive/hosts_config.ini know that key:
         just copy and paste it into ~/.ssh/authorized_keys on each target node.
-        
+
     '''
     authorized_keys_entry = 'ssh-rsa {pub_key} {username}@{hostname}'.format(
         pub_key=public_key,
