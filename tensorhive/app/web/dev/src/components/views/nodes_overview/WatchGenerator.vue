@@ -7,15 +7,6 @@
     >
       {{ errorMessage }}
     </v-alert>
-    <v-btn
-      color="info"
-      small
-      outline
-      round
-      v-on:click="addWatch"
-    >
-      Add watch
-    </v-btn>
     <div class="watch_table" >
       <WatchBox
         class="watch_box"
@@ -33,6 +24,17 @@
         @changeDefaultMetric="changeDefaultMetric(watch.id, ...arguments)"
         @deleteWatch="deleteWatch(watch.id)"
       />
+      <div class="button_box">
+        <v-btn
+          class="big_button"
+          fab
+          dark
+          color="#b8bcc2"
+          v-on:click="addWatch"
+        >
+          <v-icon size="100px" dark>add</v-icon>
+        </v-btn>
+      </div>
     </div>
   </div>
 </template>
@@ -410,6 +412,14 @@ export default {
 </script>
 
 <style>
+.button_box{
+  margin-top: 10vh;
+  margin-left: 10vw;
+}
+.big_button{
+  height: 150px !important;
+  width: 150px !important;
+}
 .watch_table{
   display: flex;
   flex-wrap: wrap;

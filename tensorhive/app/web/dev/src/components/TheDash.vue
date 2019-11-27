@@ -65,7 +65,7 @@
           white--text
           xs12
         >
-          Found a bug?  (<a href="https://github.com/roscisz/TensorHive/issues">Report issue</a>)
+          Found a bug or needs some improvements? Leave us an <a href="https://github.com/roscisz/TensorHive/issues">issue on Github</a>)
         </v-flex>
       </v-layout>
     </v-footer>
@@ -161,8 +161,6 @@ export default {
       if (window.localStorage) {
         window.localStorage.setItem('user', null)
         window.localStorage.setItem('role', null)
-        window.localStorage.setItem('watches', null)
-        window.localStorage.setItem('watchIds', null)
       }
       this.$router.push('/login')
     }

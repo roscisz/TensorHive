@@ -37,6 +37,7 @@ class ConfigInitilizer:
         if not all_exist:
             log.warning('[•] Detected missing default config file(s), recreating...')
             self.recreate_default_configuration_files()
+        log.info('[•] All configs already exist, skipping...')
 
     def recreate_default_configuration_files(self) -> None:
         try:
@@ -164,6 +165,7 @@ class API:
     section = 'api'
     TITLE = config.get(section, 'title', fallback='TensorHive API')
     VERSION = config.get(section, 'version', fallback='{}'.format(tensorhive.__version__))
+    URL_HOSTNAME = config.get(section, 'url_hostname', fallback='0.0.0.0')
     URL_PREFIX = config.get(section, 'url_prefix', fallback='api/{}'.format(VERSION))
     SPEC_FILE = config.get(section, 'spec_file', fallback='api_specification.yml')
     IMPL_LOCATION = config.get(section, 'impl_location', fallback='tensorhive.api.controllers')

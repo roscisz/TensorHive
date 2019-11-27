@@ -34,282 +34,203 @@
       :multipleFlag="multipleFlag"
       :selected="selected"
     />
-    <TaskLog
-      :show-modal="showModalLog"
-      @close="showModalLog = false"
-      :lines="logs"
-      :path="path"
-    />
-    <v-dialog
-      v-model="showModalHowItWorks"
-      width="500"
-    >
+    <TaskLog :show-modal="showModalLog" @close="showModalLog = false" :lines="logs" :path="path" />
+    <v-dialog v-model="showModalHowItWorks" width="500">
       <v-card>
-        <v-card-title
-          class="headline grey lighten-2"
-          primary-title
-        >
-          How it works
-        </v-card-title>
+        <v-card-text class="headline grey lighten-2" primary-title>
+          <v-btn
+            class="float-right-button"
+            flat
+            icon
+            color="black"
+            @click="showModalHowItWorks = false"
+          >
+            <v-icon>close</v-icon>
+          </v-btn>How it works
+        </v-card-text>
         <v-card-text>
           Your tasks are managed by `screen` program installed on each machine. You can attach
           to/close them as they are running. Screen sessions created by TensorHive have custom
-          names so you won't be confused which is which.<br><br>
-          When your task command stops executing, screen session will disappear from `screen -ls`
-          but stdout produced your process will be redirected to a log file.
-          Logs are automatically gathered and stored on that machine under `~/TensorHiveLogs`
+          names so you won't be confused which is which.
+          <br />
+          <br />When your task command stops executing, screen session will disappear from `screen -ls`
+          but stdout+stderr produced by your process will be redirected to a log file.
+          Logs are automatically gathered and stored on that machine under `~/TensorHiveLogs`.
         </v-card-text>
-
-        <v-divider></v-divider>
-
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="primary"
-            flat
-            @click="showModalHowItWorks = false"
-          >
-            Close
-          </v-btn>
-        </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog
-      v-model="showModalRemove"
-      width="400"
-    >
+    <v-dialog v-model="showModalRemove" width="400">
       <v-card>
-        <v-card-title
-          class="headline grey lighten-2"
-          primary-title
-        >
-          Do you want to remove this task?
-        </v-card-title>
+        <v-card-text class="headline grey lighten-2" primary-title>
+          <v-btn class="float-right-button" flat icon color="black" @click="showModalRemove= false">
+            <v-icon>close</v-icon>
+          </v-btn>Do you want to remove this task?
+        </v-card-text>
         <v-card-actions>
           <v-layout align-center justify-end>
-            <v-btn
-              color="error"
-              small
-              outline
-              round
-              @click="showModalRemove= false"
-            >
-              No
-            </v-btn>
-            <v-btn
-              color="success"
-              round
-              @click="removeTask()"
-            >
-              Yes
-            </v-btn>
+            <v-btn color="success" round @click="removeTask()">Yes</v-btn>
           </v-layout>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-data-table
-      v-model="selected"
-      :headers="headers"
-      :items="tasks"
-      :pagination.sync="pagination"
-      :loading="actionFlag"
-      select-all
-      item-key="id"
-      class="elevation-1"
-      :key="tableKey"
-    >
-      <template v-slot:headers="props">
-        <tr>
-          <th>
-            <v-layout align-center justify-start>
-              <v-checkbox
-                :input-value="props.all"
-                :indeterminate="props.indeterminate"
-                primary
-                hide-details
-                @click.stop="toggleAll"
-              ></v-checkbox>
-              <v-tooltip
-                right
-              >
+    <div class="table-container">
+      <v-data-table
+        v-model="selected"
+        :headers="headers"
+        :items="tasks"
+        :pagination.sync="pagination"
+        :loading="actionFlag"
+        select-all
+        item-key="id"
+        class="elevation-1"
+        :key="tableKey"
+        :rows-per-page-items="rowsPerPageItems"
+      >
+        <template v-slot:headers="props">
+          <tr>
+            <th>
+              <v-layout align-center justify-start>
+                <v-checkbox
+                  :input-value="props.all"
+                  :indeterminate="props.indeterminate"
+                  primary
+                  hide-details
+                  @click.stop="toggleAll"
+                ></v-checkbox>
+                <v-tooltip right>
+                  <template v-slot:activator="{ on }">
+                    <v-icon v-on="on" @click="showModalHowItWorks = true">info</v-icon>
+                  </template>
+                  <span>How it works</span>
+                </v-tooltip>
+              </v-layout>
+            </th>
+            <th
+              v-for="header in props.headers"
+              :key="header.text"
+              :class="['column sortable', pagination.descending ? 'desc' : 'asc', header.value === pagination.sortBy ? 'active' : '']"
+              @click="changeSort(header.value)"
+            >
+              <v-icon small>arrow_upward</v-icon>
+              <span class="dark-font">{{ header.text }}</span>
+            </th>
+          </tr>
+        </template>
+        <v-progress-linear v-slot:progress :indeterminate="true"></v-progress-linear>
+        <template v-slot:items="props">
+          <tr :active="props.selected" @click="props.selected = !props.selected">
+            <td>
+              <v-checkbox :input-value="props.selected" primary hide-details></v-checkbox>
+            </td>
+            <td>{{ props.item.id }}</td>
+            <td>{{ props.item.hostname}}</td>
+            <td class="task-command">{{ props.item.command }}</td>
+            <td>{{ props.item.pid }}</td>
+            <td>{{ props.item.status }}</td>
+            <td>{{ prettyDate(props.item.spawnAt) }}</td>
+            <td>{{ prettyDate(props.item.terminateAt) }}</td>
+            <td>
+              <v-tooltip top>
+                <template v-slot:activator="{ on }">
+                  <v-icon v-on="on" @click="scheduleTasks(props.item)">schedule</v-icon>
+                </template>
+                <span>Schedule task</span>
+              </v-tooltip>
+              <v-tooltip top>
+                <template v-slot:activator="{ on }">
+                  <v-icon v-on="on" @click="spawnTasks(props.item.id)">play_arrow</v-icon>
+                </template>
+                <span>Spawn task</span>
+              </v-tooltip>
+              <v-tooltip top>
+                <template v-slot:activator="{ on }">
+                  <v-icon v-on="on" @click="terminateTasks(props.item.id, null)">stop</v-icon>
+                </template>
+                <span>
+                  Terminate task - does not guarantee that
+                  <br />task will stop (depends on command)
+                </span>
+              </v-tooltip>
+              <v-tooltip top>
                 <template v-slot:activator="{ on }">
                   <v-icon
+                    style="font-size:20px;"
                     v-on="on"
-                    @click="showModalHowItWorks = true"
-                  >
-                    info
-                  </v-icon>
+                    @click="terminateTasks(props.item.id, false)"
+                  >💀</v-icon>
                 </template>
-                <span>How it works</span>
+                <span>Kill task - use when command is more stubborn</span>
               </v-tooltip>
-            </v-layout>
-          </th>
-          <th
-            v-for="header in props.headers"
-            :key="header.text"
-            :class="['column sortable', pagination.descending ? 'desc' : 'asc', header.value === pagination.sortBy ? 'active' : '']"
-            @click="changeSort(header.value)"
-          >
-            <v-icon small>arrow_upward</v-icon>
-            {{ header.text }}
-          </th>
-        </tr>
-      </template>
-      <v-progress-linear
-        v-slot:progress
-        :indeterminate="true"
-      ></v-progress-linear>
-      <template v-slot:items="props">
-        <tr :active="props.selected" @click="props.selected = !props.selected">
-          <td>
-            <v-checkbox
-              :input-value="props.selected"
-              primary
-              hide-details
-            ></v-checkbox>
-          </td>
-          <td>{{ props.item.id }}</td>
-          <td>{{ props.item.hostname}}</td>
-          <td class="task-command">{{ props.item.command }}</td>
-          <td>{{ props.item.pid }}</td>
-          <td>{{ props.item.status }}</td>
-          <td>{{ prettyDate(props.item.spawnAt) }}</td>
-          <td>{{ prettyDate(props.item.terminateAt) }}</td>
-          <td>
-            <v-tooltip top>
-              <template v-slot:activator="{ on }">
-                <v-icon v-on="on" @click="scheduleTasks(props.item)">
-                  schedule
-                </v-icon>
-              </template>
-              <span>Schedule task</span>
-            </v-tooltip>
-            <v-tooltip top>
-              <template v-slot:activator="{ on }">
-                <v-icon v-on="on" @click="spawnTasks(props.item.id)">
-                  play_arrow
-                </v-icon>
-              </template>
-              <span>Spawn task</span>
-            </v-tooltip>
-            <v-tooltip top>
-              <template v-slot:activator="{ on }">
-                <v-icon v-on="on" @click="terminateTasks(props.item.id, null)">
-                  stop
-                </v-icon>
-              </template>
-              <span>Terminate task - does not guarantee that
-                    <br> task will stop (depends on command)</span>
-            </v-tooltip>
-            <v-tooltip top>
-              <template v-slot:activator="{ on }">
-                <v-icon style="font-size:20px;" v-on="on" @click="terminateTasks(props.item.id, false)">
-                  💀
-                </v-icon>
-              </template>
-              <span>Kill task - use when command is more stubborn</span>
-            </v-tooltip>
-            <v-tooltip top>
-              <template v-slot:activator="{ on }">
-                <v-icon style="font-size:20px;" v-on="on" @click="getLog(props.item.id)">
-                  description
-                </v-icon>
-              </template>
-              <span>Show log</span>
-            </v-tooltip>
-            <v-tooltip top>
-              <template v-slot:activator="{ on }">
-                <v-icon v-on="on" @click="editTask(props.item)">
-                  edit
-                </v-icon>
-              </template>
-              <span>Edit task</span>
-            </v-tooltip>
-            <v-tooltip top>
-              <template v-slot:activator="{ on }">
-                <v-icon v-on="on" @click="showConfirmationDialog(props.item.id)">
-                  delete
-                </v-icon>
-              </template>
-              <span>Remove task</span>
-            </v-tooltip>
-          </td>
-        </tr>
-      </template>
-    </v-data-table>
+              <v-tooltip top>
+                <template v-slot:activator="{ on }">
+                  <v-icon
+                    style="font-size:20px;"
+                    v-on="on"
+                    @click="getLog(props.item.id)"
+                  >description</v-icon>
+                </template>
+                <span>Show log</span>
+              </v-tooltip>
+              <v-tooltip top>
+                <template v-slot:activator="{ on }">
+                  <v-icon v-on="on" @click="editTask(props.item)">edit</v-icon>
+                </template>
+                <span>Edit task</span>
+              </v-tooltip>
+              <v-tooltip top>
+                <template v-slot:activator="{ on }">
+                  <v-icon v-on="on" @click="showConfirmationDialog(props.item.id)">delete</v-icon>
+                </template>
+                <span>Remove task</span>
+              </v-tooltip>
+            </td>
+          </tr>
+        </template>
+      </v-data-table>
+    </div>
     <div class="text-xs-center pt-2">
       <v-btn color="primary" @click="showModalCreate=true">Create tasks</v-btn>
       <v-tooltip top>
         <template v-slot:activator="{ on }">
-          <v-icon v-on="on" @click="getTasks(true)">
-            refresh
-          </v-icon>
+          <v-icon v-on="on" @click="getTasks(true)">refresh</v-icon>
         </template>
         <span>Refresh</span>
       </v-tooltip>
       <v-tooltip top>
         <template v-slot:activator="{ on }">
-          <v-icon v-on="on" @click="scheduleTasks(null)">
-            schedule
-          </v-icon>
+          <v-icon v-on="on" @click="scheduleTasks(null)">schedule</v-icon>
         </template>
         <span>Schedule selected tasks</span>
       </v-tooltip>
       <v-tooltip top>
         <template v-slot:activator="{ on }">
-          <v-icon v-on="on" @click="spawnTasks(null)">
-            play_arrow
-          </v-icon>
+          <v-icon v-on="on" @click="spawnTasks(null)">play_arrow</v-icon>
         </template>
         <span>Spawn selected tasks</span>
       </v-tooltip>
       <v-tooltip top>
         <template v-slot:activator="{ on }">
-          <v-icon v-on="on" @click="terminateTasks(null, null)">
-            stop
-          </v-icon>
+          <v-icon v-on="on" @click="terminateTasks(null, null)">stop</v-icon>
         </template>
-        <span>Terminate selected tasks - does not guarantee that
-          <br>task will stop (depends on command)</span>
+        <span>
+          Terminate selected tasks - does not guarantee that
+          <br />task will stop (depends on command)
+        </span>
       </v-tooltip>
       <v-tooltip top>
         <template v-slot:activator="{ on }">
-          <v-icon style="font-size:20px;" v-on="on" @click="terminateTasks(null, false)">
-            💀
-          </v-icon>
+          <v-icon style="font-size:20px;" v-on="on" @click="terminateTasks(null, false)">💀</v-icon>
         </template>
         <span>Kill selected tasks - use when command is more stubborn</span>
       </v-tooltip>
     </div>
-    <v-snackbar
-      color="amber"
-      v-model="snackbar"
-      bottom
-      multi-line
-    >
-      <span style="color:black"> Synchronization in progress. Actions are not allowed now. </span>
-      <v-btn
-        color="black"
-        flat
-        @click="snackbar = false"
-      >
-        Close
-      </v-btn>
+    <v-snackbar color="amber" v-model="snackbar" bottom multi-line>
+      <span style="color:black">Synchronization in progress. Actions are not allowed now.</span>
+      <v-btn color="black" flat @click="snackbar = false">Close</v-btn>
     </v-snackbar>
-    <v-snackbar
-      color="red"
-      v-model="snackbarError"
-      bottom
-      multi-line
-    >
+    <v-snackbar color="red" v-model="snackbarError" bottom multi-line>
       {{ errorMessage }}
-      <v-btn
-        color="black"
-        flat
-        @click="snackbarError = false"
-      >
-        Close
-      </v-btn>
+      <v-btn color="black" flat @click="snackbarError = false">Close</v-btn>
     </v-snackbar>
   </section>
 </template>
@@ -336,13 +257,13 @@ export default {
       selected: [],
       headers: [
         { text: 'ID', value: 'id' },
-        { text: 'Hostname', value: 'hostname' },
-        { text: 'Command', value: 'command' },
-        { text: 'Pid', value: 'pid' },
-        { text: 'Status', value: 'status' },
-        { text: 'Spawn at', value: 'spawnAt' },
-        { text: 'Terminate at', value: 'terminateAt' },
-        { text: 'Actions', value: 'id', sortable: false }
+        { text: 'hostname', value: 'hostname' },
+        { text: 'command', value: 'command' },
+        { text: 'pid', value: 'pid' },
+        { text: 'status', value: 'status' },
+        { text: 'spawn at', value: 'spawnAt' },
+        { text: 'terminate at', value: 'terminateAt' },
+        { text: 'actions', value: 'id', sortable: false }
       ],
       tasks: [],
       hostnames: [],
@@ -371,7 +292,8 @@ export default {
       logs: [],
       path: '',
       actionType: '',
-      gracefully: null
+      gracefully: null,
+      rowsPerPageItems: [{ 'text': '$vuetify.dataIterator.rowsPerPageAll', 'value': -1 }, 25, 10, 5]
     }
   },
 
@@ -661,7 +583,7 @@ export default {
         api
           .request('get', '/tasks/' + id + '/log', this.$store.state.accessToken)
           .then(response => {
-            this.logs = response.data.stdout_lines
+            this.logs = response.data.output_lines
             this.path = response.data.path
             this.showModalLog = true
             this.snackbar = false
@@ -678,17 +600,28 @@ export default {
 }
 </script>
 <style>
-.parameter-name-input{
+.dark-font {
+  color: black !important;
+  font-size: 1.5em;
+}
+.table-container {
+  max-height: 80vh;
+  overflow-y: scroll;
+}
+.float-right-button {
+  float: right;
+}
+.parameter-name-input {
   max-width: 150px;
 }
-.task-command{
+.task-command {
   background-color: #f8f9fa;
   border: 1px solid #eaecf0;
 }
-.space{
+.space {
   width: 5px;
 }
-.task-select{
-  max-width:100px;
+.task-select {
+  max-width: 100px;
 }
 </style>
