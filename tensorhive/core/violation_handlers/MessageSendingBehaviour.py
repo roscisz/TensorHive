@@ -35,13 +35,13 @@ class MessageSendingBehaviour():
             gpu_name=data['GPU_NAME'],
             gpu_uuid=data['UUID'],
             reservation_end=data['RESERVATION_END'],
-            white_fg='\e[97m',
-            red_fg='\e[31m',
-            light_red_fg='\e[101m',
-            red_bg='\e[41m',
-            green_bg='\e[42m',
-            bold='\e[1m',
-            reset='\e[0m')
+            white_fg=r'\e[97m',
+            red_fg=r'\e[31m',
+            light_red_fg=r'\e[101m',
+            red_bg=r'\e[41m',
+            green_bg=r'\e[42m',
+            bold=r'\e[1m',
+            reset=r'\e[0m')
         return message
 
     def _build_single_command(self, recipient: str, tty, msg: str) -> str:
