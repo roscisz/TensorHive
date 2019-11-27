@@ -130,10 +130,11 @@ From now on, **only your processes are eligible to run on reserved GPU(s)**. Ten
 Terminal warning             |  Email warning
 :-------------------------:|:-------------------------:
 ![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/terminal_warning_screenshot.png)
+![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/terminal_warning_screenshot.png)  |  ![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/email_warning_screenshot.png)
  
 #### What admin is e-mailed:
 
-![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/email_warning_screenshot.png)
+![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/admin_warning_screenshot.png)
 
 #### Task nursery
 
