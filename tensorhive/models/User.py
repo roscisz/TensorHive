@@ -22,6 +22,11 @@ class PASS_COMPLEXITY:
     STRONG = 3
 
 
+USERNAME_WHITELIST = [
+    'user'
+]
+
+
 class User(CRUDModel, Base):  # type: ignore
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -70,7 +75,7 @@ class User(CRUDModel, Base):  # type: ignore
 
     @validates('username')
     def validate_username(self, key, username):
-        # assert is_safe_username(username), 'Username unsafe'
+        assert is_safe_username(username, whitelist=set(USERNAME_WHITELIST)), 'Username unsafe'
         assert 2 < len(username) < 16, 'Username must be between 3 and 15 characters long'
         return username
 

@@ -32,7 +32,7 @@ setup(
         'gunicorn==19.9.0',
         'coloredlogs==10.0',
         'Safe==0.4',
-        'python-usernames==0.2.2'
+        'python-usernames==0.2.3'
     ],
     zip_safe=False
 )
