@@ -185,6 +185,11 @@ export default {
       } else {
         this.selectedMetric = this.defaultMetric
       }
+      if (this.selectedNode !== '' && this.selectedResourceType !== '' && this.selectedMetric !== '' && this.selectedMetric !== 'processes') {
+        this.metricData = this.loadData()
+        this.metricOptions = this.loadOptions()
+        this.rerenderChart = !(this.rerenderChart)
+      }
     },
 
     checkProcesses: function () {

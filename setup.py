@@ -23,7 +23,7 @@ setup(
     install_requires=[
         'parallel-ssh==1.9.1',
         'passlib==1.7.1',
-        'sqlalchemy==1.2.14',
+        'sqlalchemy==1.3.0',
         'sqlalchemy-utils==0.33.8',
         'click==7.0',
         'connexion==1.5.3',
@@ -32,7 +32,7 @@ setup(
         'gunicorn==19.9.0',
         'coloredlogs==10.0',
         'Safe==0.4',
-        'python-usernames==0.2.2'
+        'python-usernames==0.2.3'
     ],
     zip_safe=False
 )

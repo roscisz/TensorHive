@@ -1,13 +1,21 @@
 <template>
   <v-dialog
-    persistent
     width="40vw"
-    v-model="showModal"
+    v-model="show"
   >
     <v-card>
-      <v-card-title>
+      <v-card-text>
+        <v-btn
+          class="float-right-button"
+          flat
+          icon
+          color="black"
+          @click="close()"
+        >
+          <v-icon>close</v-icon>
+        </v-btn>
         <span class="headline">Schedule task</span>
-      </v-card-title>
+      </v-card-text>
       <v-card-text>
         <v-layout align-center justify-start>
           <v-checkbox
@@ -128,15 +136,6 @@
       <v-card-text>
         <v-layout align-center justify-end>
           <v-btn
-            color="info"
-            small
-            outline
-            round
-            @click="close"
-          >
-            Cancel
-          </v-btn>
-          <v-btn
             color="success"
             @click="checkActionFlag"
           >
@@ -174,11 +173,18 @@ export default {
       newSpawnTime: '',
       newTerminateDate: '',
       newTerminateTime: '',
-      selectedIndex: 0
+      selectedIndex: 0,
+      show: false
     }
   },
 
   watch: {
+    showModal () {
+      this.show = this.showModal
+    },
+    show () {
+      if (this.show === false) this.close()
+    },
     spawnTime () {
       if (this.spawnTime !== null) {
         this.newSpawnDate = moment(this.spawnTime).format('YYYY-MM-DD')
@@ -290,4 +296,7 @@ export default {
 </script>
 
 <style scoped>
+.float-right-button {
+  float: right;
+}
 </style>

@@ -15,7 +15,24 @@
         Close
       </v-btn>
     </v-snackbar>
-    <section id="schedule_section">
+    <v-btn
+      v-if="!showSchedule"
+      color="info"
+      small
+      round
+      @click="showSchedule=true;"
+    >
+      Select visible GPUs
+    </v-btn>
+    <section v-show="showSchedule" id="schedule_section">
+      <v-btn
+        color="info"
+        small
+        round
+        @click="showSchedule=false"
+      >
+        Hide schedule
+      </v-btn>
       <MySchedule @handleError="handleError(...arguments)" @loadResources="loadResources(...arguments)" :parsed-nodes="parsedNodes"/>
     </section>
     <section id="calendar_section">
@@ -37,7 +54,7 @@ export default {
 
   data () {
     return {
-      nodes: [],
+      nodes: {},
       parsedNodes: [],
       alert: false,
       snackbar: false,
@@ -46,7 +63,10 @@ export default {
       selectedResources: [],
       nodeCheckbox: false,
       resourceTypeCheckbox: false,
-      resourceCheckbox: false
+      resourceCheckbox: false,
+      showSchedule: false,
+      interval: null,
+      time: 30000
     }
   },
 
@@ -60,6 +80,10 @@ export default {
       .catch(error => {
         this.handleError(error)
       })
+    let self = this
+    this.interval = setInterval(function () {
+      self.updateCalendar = !self.updateCalendar
+    }, this.time)
   },
 
   methods: {

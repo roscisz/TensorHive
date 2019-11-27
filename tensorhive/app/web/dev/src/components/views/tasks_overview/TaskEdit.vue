@@ -1,13 +1,21 @@
 <template>
   <v-dialog
-    persistent
     width="80vw"
-    v-model="showModal"
+    v-model="show"
   >
     <v-card>
-      <v-card-title>
+      <v-card-text>
+        <v-btn
+          class="float-right-button"
+          flat
+          icon
+          color="black"
+          @click="close()"
+        >
+          <v-icon>close</v-icon>
+        </v-btn>
         <span class="headline">Edit task</span>
-      </v-card-title>
+      </v-card-text>
       <v-card-text>
         <v-layout align-center justify-start>
           <v-text-field
@@ -27,15 +35,6 @@
       </v-card-text>
       <v-card-text>
         <v-layout align-center justify-end>
-          <v-btn
-            color="info"
-            small
-            outline
-            round
-            @click="close"
-          >
-            Cancel
-          </v-btn>
           <v-btn
             color="success"
             @click="changeTask"
@@ -62,11 +61,18 @@ export default {
   data () {
     return {
       newHost: '',
-      newCommand: ''
+      newCommand: '',
+      show: false
     }
   },
 
   watch: {
+    showModal () {
+      this.show = this.showModal
+    },
+    show () {
+      if (this.show === false) this.close()
+    },
     hostname () {
       this.newHost = this.hostname
     },
@@ -101,6 +107,9 @@ export default {
 </script>
 
 <style scoped>
+.float-right-button {
+  float: right;
+}
 .host-input{
   min-width: 10vw !important;
   max-width: 10vw !important;

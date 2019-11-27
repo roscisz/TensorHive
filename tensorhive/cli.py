@@ -95,8 +95,6 @@ def main(ctx, log_level):
 
     try:
         init_db()
-        if User.query.count() == 0:
-            prompt_to_create_first_account()
 
         manager = TensorHiveManager()
         api_server = APIServer()
@@ -120,6 +118,89 @@ def main(ctx, log_level):
 @main.group()
 def create():
     pass
+
+
+@main.command()
+def test():
+    from tensorhive.config import SSH
+    from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
+
+    logging.basicConfig(level=logging.INFO, format='%(message)-79s')
+
+    if not SSH.AVAILABLE_NODES:
+        click.echo('[!] Empty ssh configuration. Please check {}'.format(SSH.HOSTS_CONFIG_FILE))
+    else:
+        TensorHiveManager.test_ssh()
+
+
+@main.command()
+def init():
+    """Entry point for semi-automatic configuration process."""
+    from tensorhive.config import CONFIG_FILES
+    from tensorhive.config import config as main_config
+    from tensorhive.core.utils.AccountCreator import AccountCreator
+    from inspect import cleandoc
+    from tensorhive.database import init_db
+    from tensorhive.models.User import User
+    logging.basicConfig(level=logging.INFO, format='%(message)-79s')
+
+    # Exposed host
+    if click.confirm('[1/3] Do you want TensorHive to be accessible to other users in your network?'):
+        host = click.prompt(
+            '[1/3] What is the public hostname/address of this node (which is visible by all end users)?')
+    else:
+        host = '0.0.0.0'
+    main_config.set('api', 'url_hostname', host)
+    with open(CONFIG_FILES.MAIN_CONFIG_PATH, 'w') as main_config_file:
+        main_config.write(main_config_file)
+    click.echo(green('[⚙] TensorHive will be accessible via: {}'.format(host)))
+
+    # First user account
+    init_db()
+    if User.query.count() == 0:
+        if click.confirm('[2/3] ' + orange('Database has no users.') + ' Would you like to create an account now?',
+                         default=True):
+            AccountCreator().run_prompt()
+    else:
+        click.echo('[•] There are some users in the database already, skipping...')
+
+    # Edit configs
+    click.echo('[3/3] ' + green('Done ✔!') + ' Now you just need to adjust these configs to your needs:\n')
+    click.echo(cleandoc('''
+        (required) {hosts}
+        (optional) {main}
+        (optional) {mailbot}
+    ''').format(hosts=orange(CONFIG_FILES.HOSTS_CONFIG_PATH), main=CONFIG_FILES.MAIN_CONFIG_PATH,
+                mailbot=CONFIG_FILES.MAILBOT_CONFIG_PATH))
+
+
+@main.command()
+def key():
+    """Shows public key used for SSH authorization with nodes."""
+    from tensorhive.config import SSH
+    from tensorhive.core.ssh import init_ssh_key
+    from pathlib import Path
+    import os
+    import platform
+
+    key_path = Path(SSH.KEY_FILE).expanduser()
+    private_key = init_ssh_key(key_path)
+    public_key = private_key.get_base64()
+
+    info_msg = '''
+        This is the public key which will be used by TensorHive to reach your configured nodes via SSH,
+        and allow for running remote tasks.
+        Make sure that all nodes you've defined in ~/.config/TensorHive/hosts_config.ini know that key:
+        just copy and paste it into ~/.ssh/authorized_keys on each target node.
+
+    '''
+    authorized_keys_entry = 'ssh-rsa {pub_key} {username}@{hostname}'.format(
+        pub_key=public_key,
+        username=os.environ['USER'],
+        hostname=platform.node()
+    )
+    click.echo(info_msg)
+    click.echo(authorized_keys_entry)
 
 
 @create.command()

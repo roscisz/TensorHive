@@ -41,16 +41,28 @@ class TensorHiveManager(metaclass=Singleton):
 
         manager_ssh_key_path = SSH.KEY_FILE
         if SSH.TEST_ON_STARTUP:
-            failed_dedicated = SSHConnectionManager.test_all_connections(config=SSH.AVAILABLE_NODES,
-                                                                         key_path=SSH.KEY_FILE)
-            if failed_dedicated > 0:
-                failed_system = SSHConnectionManager.test_all_connections(config=SSH.AVAILABLE_NODES)
-                if failed_system < failed_dedicated:
-                    log.info('[⚙] Using default system keys for monitoring SSH connections')
-                    manager_ssh_key_path = None
+            manager_ssh_key_path = self.test_ssh()
 
         self.connection_manager = SSHConnectionManager(config=SSH.AVAILABLE_NODES, ssh_key_path=manager_ssh_key_path)
         self.service_manager = None
+
+    @staticmethod
+    def test_ssh():
+        """
+        Test SSH connectivity using dedicated key. If some nodes are failing, try default system-wide key.
+        :return: Key filename or None (meaning system-wide key) for the best performing key.
+        """
+        ret = SSH.KEY_FILE
+
+        failed_dedicated = SSHConnectionManager.test_all_connections(config=SSH.AVAILABLE_NODES, key_path=SSH.KEY_FILE)
+
+        if failed_dedicated > 0:
+            failed_system = SSHConnectionManager.test_all_connections(config=SSH.AVAILABLE_NODES)
+            if failed_system < failed_dedicated:
+                log.info('[⚙] TensorHive will be using default system keys for monitoring SSH connections')
+                ret = None
+
+        return ret
 
     @staticmethod
     def instantiate_services_from_config() -> List[Service]:

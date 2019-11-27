@@ -16,17 +16,27 @@
     </v-alert>
     <v-layout row justify-center>
       <v-dialog
-        persistent
-        width="50vw"
+        width="500px"
         v-model="showModal"
       >
         <v-card>
-          <v-card-title>
+          <v-card-text>
+            <v-btn
+              class="float-right-button"
+              flat
+              icon
+              color="black"
+              @click="showModal=false"
+            >
+              <v-icon>close</v-icon>
+            </v-btn>
             <span class="headline">Create new user</span>
-          </v-card-title>
+          </v-card-text>
           <v-card-text>
             <form @submit.prevent="createUser">
-              Username
+              <v-card-text>
+                Username
+              </v-card-text>
               <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-user"></i></span>
                 <input
@@ -78,15 +88,6 @@
                 {{ errorMessage }}
               </v-alert>
               <v-btn
-                color="info"
-                small
-                outline
-                round
-                @click="showModal=false"
-              >
-                Cancel
-              </v-btn>
-              <v-btn
                 color="success"
                 type="submit"
               >
@@ -102,23 +103,23 @@
       width="400"
     >
       <v-card>
-        <v-card-title
+        <v-card-text
           class="headline grey lighten-2"
           primary-title
         >
+          <v-btn
+            class="float-right-button"
+            flat
+            icon
+            color="black"
+            @click="showModalRemove= false"
+          >
+            <v-icon>close</v-icon>
+          </v-btn>
           Do you want to remove this user?
-        </v-card-title>
+        </v-card-text>
         <v-card-actions>
           <v-layout align-center justify-end>
-            <v-btn
-              color="error"
-              small
-              outline
-              round
-              @click="showModalRemove= false"
-            >
-              No
-            </v-btn>
             <v-btn
               color="success"
               round
@@ -137,6 +138,15 @@
       <v-dialog v-model="dialog" max-width="500px">
         <v-card>
           <v-card-text>
+            <v-btn
+              class="float-right-button"
+              flat
+              icon
+              color="black"
+              @click="dialog = false"
+            >
+              <v-icon>close</v-icon>
+            </v-btn>
             <v-card-text>
               Edit user
             </v-card-text>
@@ -211,7 +221,6 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" flat @click="dialog = false">Cancel</v-btn>
             <v-btn color="blue darken-1" flat @click="updateUser">Edit</v-btn>
           </v-card-actions>
         </v-card>
@@ -469,6 +478,9 @@ export default {
 </script>
 
 <style scoped>
+.float-right-button {
+  float: right;
+}
 .input-group {
   padding-bottom: 2em;
   height: 4em;
@@ -486,11 +498,6 @@ export default {
   }
 }
 @media (min-width: 1242px) {
-  form {
-    padding-left: 20em;
-    padding-right: 20em;
-  }
-
   .input-group input {
     height: 6em;
   }

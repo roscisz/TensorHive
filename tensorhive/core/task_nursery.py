@@ -60,7 +60,7 @@ class ScreenCommandBuilder:
             * standard way: keep session alive, user resumes and inspects it by himself.
                 May need to use some workarounds if we want to know when command stops.
             * alternative way: screen should run ``script some_output.log -c "sleep 20; echo TensorHive"`
-            * tee way (implemented here): redirect command's output from within `screen` with `tee`
+            * tee way (implemented here): redirect command's stdout + stderr from within `screen` with `tee`
                 When used with -i, --ignore-interrupts options it won't accept SIGINT so that
                 the main command will catch it instead of `tee`. Use case for this is when your command
                 prints something important after SIGINT and you want to see it + put that into log file.
@@ -73,7 +73,7 @@ class ScreenCommandBuilder:
             alive even when the command has finished execution - sometimes useful!
 
         Note: `custom_log_name` argument will be ignored when `capture_output=False`
-        # TODO Capture stderr (currently only stdout is captured)
+
         """
         if capture_output:
             if keep_alive:
@@ -84,7 +84,8 @@ class ScreenCommandBuilder:
                 create_logfile_command = ScreenCommandBuilder.custom_log_file(custom_log_name)
             else:
                 create_logfile_command = ScreenCommandBuilder.tmp_log_file()
-            capturing_command = '| tee --ignore-interrupts $({})'.format(create_logfile_command)
+            # | -> stdout only, |& -> stdout + stderr (Bash 4), 2>&1 (old Bash)
+            capturing_command = '|& tee --ignore-interrupts $({})'.format(create_logfile_command)
 
         return 'screen -Dm -S {sess_name} bash -c "{cmd}{keep_alive} {log}" {to_bg}'.format(
             sess_name=session_name,  # will help distinguishing between TensorHive and user's sessions
