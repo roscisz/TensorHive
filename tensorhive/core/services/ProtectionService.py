@@ -3,6 +3,7 @@ from tensorhive.models.Reservation import Reservation
 from tensorhive.models.User import User
 from tensorhive.database import db_session
 from tensorhive.core.utils.decorators import override
+from tensorhive.core.utils.time import utc2local
 from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.managers.SSHConnectionManager import SSHConnectionManager
 from pssh.clients.native import ParallelSSHClient
@@ -137,12 +138,12 @@ class ProtectionService(Service):
         unique_owners = list(set(owners))
         return unique_owners
 
-    def gpu_name(self, hostname: str, uuid: str) -> str:
-        '''Fetches the value of 'name' attribute for GPU with specific UUID'''
+    def gpu_attr(self, hostname: str, uuid: str, attribute='name') -> str:
+        '''Fetches the value of 'name' or 'index' attributes for GPU with specific UUID'''
         infrastructure = self.infrastructure_manager.infrastructure
         all_gpus = infrastructure.get(hostname, {}).get('GPU', {})
         gpu = all_gpus.get(uuid, {})
-        return gpu.get('name', '<GPU Name not available>')
+        return gpu.get(attribute, '<not available>')
 
     @override
     def do_run(self):
@@ -188,9 +189,10 @@ class ProtectionService(Service):
                     'INTRUDER_USERNAME': intruder,
                     'RESERVATION_OWNER_USERNAME': username,
                     'RESERVATION_OWNER_EMAIL': user.email,
-                    'RESERVATION_END': Reservation.parsed_output_datetime(reservation.ends_at),
+                    'RESERVATION_END': utc2local(reservation.ends_at),
                     'UUID': uuid,
-                    'GPU_NAME': self.gpu_name(hostname, uuid),
+                    'GPU_NAME': self.gpu_attr(hostname, uuid, attribute='name'),
+                    'GPU_ID': self.gpu_attr(hostname, uuid, attribute='index'),
                     'HOSTNAME': hostname,
                     'TTY_SESSIONS': intruder_ttys,
                     'SSH_CONNECTION': node_connection

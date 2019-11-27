@@ -9,22 +9,45 @@ log = logging.getLogger(__name__)
 class MessageSendingBehaviour():
     def get_warning_message(self, data: Dict[str, Any]):
         message_template = cleandoc(
-            '''
+            '''{red_bg}{white_fg}
             You are violating {owner_name}\'s reservation!
-            Please, stop all your computations on {gpu_name} ({gpu_uuid}).
+            Please, stop all your computations immidiately.{reset}
+            {red_fg}{bold}
+            Host: {hostname}
+            Name: GPU{gpu_id}, {gpu_name}{reset}
+            UUID: {gpu_uuid}
+
+            Current reservation ends on {red_fg}{reservation_end}{reset}.
+
+            If this was by a mistake, please do not do this again.
+            Before starting any GPU-related computations, see TensorHive reservations calendar.
+            Please visit: {green_bg}http://cuda3:5000{reset}
+
+            Regards,
+            TensorHive bot
+            {reset}
             ''')
 
         message = message_template.format(
             owner_name=data['RESERVATION_OWNER_USERNAME'],
+            hostname=data['HOSTNAME'],
+            gpu_id=data['GPU_ID'],
             gpu_name=data['GPU_NAME'],
-            gpu_uuid=data['UUID'])
+            gpu_uuid=data['UUID'],
+            reservation_end=data['RESERVATION_END'],
+            white_fg=r'\e[97m',
+            red_fg=r'\e[31m',
+            light_red_fg=r'\e[101m',
+            red_bg=r'\e[41m',
+            green_bg=r'\e[42m',
+            bold=r'\e[1m',
+            reset=r'\e[0m')
         return message
 
     def _build_single_command(self, recipient: str, tty, msg: str) -> str:
         '''Example: 'echo "Example message" | write example_username pts/1' '''
-        command = 'echo "{msg}" | write {intruder_name} {tty}'.format(
+        command = 'echo -e "{msg}" | tee /dev/{tty}'.format(
             msg=msg,
-            intruder_name=recipient,
             tty=tty['TTY'])
         return command
 

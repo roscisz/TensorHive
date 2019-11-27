@@ -128,7 +128,7 @@ class EmailSendingBehaviour:
         email = Message(author=MAILBOT.SMTP_LOGIN, to=email_address, subject=MAILBOT.INTRUDER_SUBJECT, body=email_body)
         self.mailer.send(email)
         timer.to_intruder = datetime.datetime.utcnow()
-        log.info('Email to intruder has been sent: {}'.format(email))
+        log.info('Sending email to intruder ({}) has been attempted.'.format(email_address))
 
     def _email_admin(self, violation_data: Dict, timer: LastEmailTime) -> None:
         '''Prepare message, send and update timer.'''
@@ -137,4 +137,4 @@ class EmailSendingBehaviour:
                         subject=MAILBOT.ADMIN_SUBJECT, body=email_body)
         self.mailer.send(email)
         timer.to_admin = datetime.datetime.utcnow()
-        log.info('Email to admin has been sent: {}'.format(email))
+        log.info('Sending email to admin ({}) has been attempted.'.format(MAILBOT.ADMIN_EMAIL))

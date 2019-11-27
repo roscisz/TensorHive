@@ -1,13 +1,21 @@
 <template>
   <v-dialog
-    persistent
     width="80vw"
-    v-model="showModal"
+    v-model="show"
   >
     <v-card>
-      <v-card-title>
+      <v-card-text>
+        <v-btn
+          class="float-right-button"
+          flat
+          icon
+          color="black"
+          @click="close()"
+        >
+          <v-icon>close</v-icon>
+        </v-btn>
         <span class="headline">Task log</span>
-      </v-card-title>
+      </v-card-text>
       <v-card-text>
         {{path}}
       <div class="log_box">
@@ -15,19 +23,6 @@
           {{line}}
         </div>
       </div>
-      </v-card-text>
-      <v-card-text>
-        <v-layout align-center justify-end>
-          <v-btn
-            color="info"
-            small
-            outline
-            round
-            @click="close"
-          >
-            Close
-          </v-btn>
-        </v-layout>
       </v-card-text>
     </v-card>
   </v-dialog>
@@ -40,7 +35,19 @@ export default {
     lines: Array,
     path: String
   },
-
+  data () {
+    return {
+      show: false
+    }
+  },
+  watch: {
+    showModal () {
+      this.show = this.showModal
+    },
+    show () {
+      if (this.show === false) this.close()
+    }
+  },
   methods: {
     close: function () {
       this.$emit('close')
@@ -50,6 +57,9 @@ export default {
 </script>
 
 <style scoped>
+.float-right-button {
+  float: right;
+}
 .log_box{
   resize: both;
   background-color: #f8f9fa;
