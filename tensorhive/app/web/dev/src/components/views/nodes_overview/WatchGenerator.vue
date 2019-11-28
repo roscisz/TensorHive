@@ -147,26 +147,38 @@ export default {
         .request('get', '/nodes/metrics', this.$store.state.accessToken)
         .then(response => {
           if (JSON.parse(window.localStorage.getItem('watches')) === null) {
-            this.watches = [
-              {
-                id: 0,
-                defaultNode: '',
-                defaultResourceType: 'GPU',
-                defaultMetric: 'utilization'
-              },
-              {
-                id: 1,
-                defaultNode: '',
-                defaultResourceType: 'GPU',
-                defaultMetric: 'mem_used'
-              },
-              {
-                id: 2,
-                defaultNode: '',
-                defaultResourceType: 'GPU',
-                defaultMetric: 'processes'
+            var id = 0
+            this.watches = []
+            for (var host in response.data) {
+              var hostData = response.data[host]
+              if ('GPU' in hostData) {
+                this.watches.push({
+                  id: id++,
+                  defaultNode: host,
+                  defaultResourceType: 'GPU',
+                  defaultMetric: 'utilization'
+                })
+                this.watches.push({
+                  id: id++,
+                  defaultNode: host,
+                  defaultResourceType: 'GPU',
+                  defaultMetric: 'mem_used'
+                })
+                this.watches.push({
+                  id: id,
+                  defaultNode: host,
+                  defaultResourceType: 'GPU',
+                  defaultMetric: 'processes'
+                })
+              } else {
+                this.watches.push({
+                  id: id++,
+                  defaultNode: host,
+                  defaultResourceType: 'CPU',
+                  defaultMetric: 'utilization'
+                })
               }
-            ]
+            }
           } else {
             this.watches = JSON.parse(window.localStorage.getItem('watches'))
             this.watchIds = JSON.parse(window.localStorage.getItem('watchIds'))
