@@ -22,6 +22,18 @@
         v-model="newResource"
       ></v-select>
       <span class="space"/>
+      <v-layout align-center justify-start>
+        <TaskLineEnvVariable
+          class="task-input"
+          v-for="envVariable in envVariables"
+          :key="envVariable.id"
+          :envVariable="envVariable.envVariable"
+          :value="envVariable.value"
+          @changeEnvVariable="changeEnvVariable(envVariable.id, ...arguments)"
+          @deleteEnvVariable="deleteEnvVariable(envVariable.id)"
+        />
+      </v-layout>
+      <span class="space"/>
       <v-text-field
         class="task-input"
         label="Command"
@@ -53,9 +65,11 @@
 
 <script>
 import TaskLineParameter from './TaskLineParameter.vue'
+import TaskLineEnvVariable from './TaskLineEnvVariable.vue'
 export default {
   components: {
-    TaskLineParameter
+    TaskLineParameter,
+    TaskLineEnvVariable
   },
 
   props: {
@@ -64,13 +78,21 @@ export default {
     host: String,
     resource: String,
     command: String,
-    parameters: Array
+    parameters: Array,
+    envVariables: Array
   },
 
   data () {
     return {
       newHost: '',
       newResource: '',
+      newEnvVariable: [
+        {
+          id: 0,
+          envVariable: '',
+          value: ''
+        }
+      ],
       newCommand: '',
       newParameters: [
         {
@@ -86,6 +108,8 @@ export default {
   created () {
     this.newHost = this.host
     this.newResource = this.resource
+    this.newEnvVariables = this.envVariables
+    this.envVariableIds = this.envVariables.length
     this.newCommand = this.command
     this.newParameters = this.parameters
     this.parameterIds = this.parameters.length
@@ -104,7 +128,11 @@ export default {
       for (var index in this.parameters) {
         parameters += this.parameters[index].parameter + this.parameters[index].value + ' '
       }
-      return this.host + ' ' + this.convertResource(this.resource) + ' ' + this.command + ' ' + parameters
+      var envVariables = ''
+      for (var envIndex in this.envVariables) {
+        envVariables += this.envVariables[envIndex].envVariable + this.envVariables[envIndex].value + ' '
+      }
+      return this.host + ' ' + this.convertResource(this.resource) + ' ' + envVariables + ' ' + this.command + ' ' + parameters
     }
   },
 
@@ -120,6 +148,9 @@ export default {
       this.updateLine()
     },
     newParameters () {
+      this.updateLine()
+    },
+    newEnvVariables () {
       this.updateLine()
     }
   },
@@ -154,8 +185,25 @@ export default {
       }
     },
 
+    changeEnvVariable: function (id, envVariable, value) {
+      for (var index in this.envVariables) {
+        if (this.envVariables[index].id === id) {
+          this.envVariables[index].envVariable = envVariable
+          this.envVariables[index].value = value
+        }
+      }
+    },
+
+    deleteEnvVariable: function (id) {
+      for (var index in this.envVariables) {
+        if (this.envVariables[index].id === id) {
+          this.envVariables.splice(index, 1)
+        }
+      }
+    },
+
     updateLine: function () {
-      this.$emit('changeLine', this.newHost, this.newResource, this.newCommand, this.newParameters)
+      this.$emit('changeLine', this.newHost, this.newResource, this.newCommand, this.newParameters, this.newEnvVariables)
     },
 
     removeMe: function () {

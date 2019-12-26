@@ -36,6 +36,7 @@
           :hosts="hosts"
           :host="line.host"
           :resource="line.resource"
+          :envVariables="line.envVariables"
           :command="line.command"
           :parameters="line.parameters"
           @changeLine="changeLine(line.id, ...arguments)"
@@ -66,6 +67,21 @@
             @click="addParameter"
           >
             Add parameter to all tasks
+          </v-btn>
+        </v-layout>
+        <v-layout align-center justify-start>
+          <v-text-field
+            label="Environment variable name"
+            small
+            class="parameter-name-input"
+            v-model="newEnvVariable"
+          ></v-text-field>
+          <v-btn
+            color="info"
+            round
+            @click="addEnvVariable"
+          >
+            Add env variable to all tasks
           </v-btn>
         </v-layout>
       </v-card-text>
@@ -101,6 +117,7 @@ export default {
   data () {
     return {
       newParameter: '',
+      newEnvVariable: '',
       linesIds: 1,
       lines: [
         {
@@ -110,7 +127,10 @@ export default {
           command: '',
           parameters: [
           ],
-          parameterIds: 0
+          envVariables: [
+          ],
+          parameterIds: 0,
+          envVariableIds: 0
         }
       ],
       show: false
@@ -134,7 +154,12 @@ export default {
     addTasks: function () {
       for (var lineIndex in this.lines) {
         var line = this.lines[lineIndex]
-        var command = this.convertResource(line.resource) + ' ' + line.command
+        var command = this.convertResource(line.resource)
+        for (var envIndex in line.envVariables) {
+          var envVariable = line.envVariables[envIndex]
+          command += ' ' + envVariable.envVariable + ' ' + envVariable.value
+        }
+        command += ' ' + line.command
         for (var parameterIndex in line.parameters) {
           var parameter = line.parameters[parameterIndex]
           command += ' ' + parameter.parameter + ' ' + parameter.value
@@ -167,6 +192,18 @@ export default {
       }
     },
 
+    addEnvVariable: function () {
+      for (var line in this.lines) {
+        var envVariable = {
+          id: this.lines[line].envVariableIds,
+          envVariable: this.newEnvVariable,
+          value: ''
+        }
+        this.lines[line].envVariableIds++
+        this.lines[line].envVariables.push(envVariable)
+      }
+    },
+
     copyLine: function () {
       if (this.lines.length === 0) {
         this.addLine()
@@ -183,12 +220,25 @@ export default {
           }
           newParameters.push(newParameter)
         }
+
+        var envVariablesToCopy = lineToCopy.envVariables
+        var newEnvVariables = []
+        for (var EnvIndex in envVariablesToCopy) {
+          var envVariableToCopy = envVariablesToCopy[EnvIndex]
+          var newEnvVariable = {
+            id: EnvIndex,
+            envVariable: envVariableToCopy.envVariable,
+            value: envVariableToCopy.value
+          }
+          newEnvVariables.push(newEnvVariable)
+        }
         var line = {
           id: this.linesIds,
           host: lineToCopy.host,
           resource: lineToCopy.resource,
           command: lineToCopy.command,
-          parameters: newParameters
+          parameters: newParameters,
+          envVariables: newEnvVariables
         }
         this.linesIds++
         this.lines.push(line)
@@ -201,6 +251,8 @@ export default {
         host: '',
         resource: '',
         command: '',
+        envVariables: [
+        ],
         parameters: [
         ]
       }
@@ -208,13 +260,14 @@ export default {
       this.lines.push(line)
     },
 
-    changeLine: function (id, host, resource, command, parameters) {
+    changeLine: function (id, host, resource, command, parameters, envVariables) {
       for (var index in this.lines) {
         if (this.lines[index].id === id) {
           this.lines[index].host = host
           this.lines[index].resource = resource
           this.lines[index].command = command
           this.lines[index].parameters = parameters
+          this.lines[index].envVariables = envVariables
         }
       }
     },
