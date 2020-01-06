@@ -111,7 +111,8 @@ export default {
     showModal: Boolean,
     hostnames: Array,
     hosts: Object,
-    actionFlag: Boolean
+    actionFlag: Boolean,
+    chosenTemplate: String
   },
 
   data () {
