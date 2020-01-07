@@ -40,6 +40,9 @@ export default {
   },
 
   watch: {
+    value () {
+      this.newValue = this.value
+    },
     newParameter () {
       this.$emit('changeParameter', this.newParameter, this.newValue)
     },

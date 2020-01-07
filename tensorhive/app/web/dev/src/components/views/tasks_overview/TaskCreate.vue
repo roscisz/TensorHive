@@ -37,10 +37,16 @@
           :host="line.host"
           :resource="line.resource"
           :envVariables="line.envVariables"
+          :staticEnvVariables="staticEnvVariables"
           :command="line.command"
           :parameters="line.parameters"
+          :staticParameters="staticParameters"
           @changeLine="changeLine(line.id, ...arguments)"
           @deleteLine="deleteLine(line.id)"
+          @staticParameterChanged="staticParameterChanged(line.id, ...arguments)"
+          @staticEnvVariableChanged="staticEnvVariableChanged(line.id, ...arguments)"
+          @staticParameterDeleted="staticParameterDeleted(line.id, ...arguments)"
+          @staticEnvVariableDeleted="staticEnvVariableDeleted(line.id, ...arguments)"
         />
       </v-card-text>
       <v-card-text>
@@ -75,6 +81,9 @@
           >
             Add as parameter to all tasks
           </v-btn>
+          <v-checkbox
+            v-model="isNewFieldStatic"
+            :label="`Static`"></v-checkbox>
         </v-layout>
       </v-card-text>
       <v-card-text>
@@ -125,6 +134,9 @@ export default {
           envVariableIds: 0
         }
       ],
+      staticParameters: [],
+      staticEnvVariables: [],
+      isNewFieldStatic: false,
       show: false
     }
   },
@@ -172,27 +184,33 @@ export default {
       }
     },
 
-    addParameter: function () {
+    addParameter: function (event, parameterName, parameterValue) {
       for (var line in this.lines) {
         var parameter = {
           id: this.lines[line].parameterIds,
-          parameter: this.newParameter,
-          value: ''
+          parameter: parameterName || this.newParameter,
+          value: parameterValue || ''
         }
         this.lines[line].parameterIds++
         this.lines[line].parameters.push(parameter)
       }
+      if (this.isNewFieldStatic) {
+        this.staticParameters.push(parameterName || this.newParameter)
+      }
     },
 
-    addEnvVariable: function () {
+    addEnvVariable: function (event, variableName, variableValue) {
       for (var line in this.lines) {
         var envVariable = {
           id: this.lines[line].envVariableIds,
-          envVariable: this.newParameter,
-          value: ''
+          envVariable: variableName || this.newParameter,
+          value: variableValue || ''
         }
         this.lines[line].envVariableIds++
         this.lines[line].envVariables.push(envVariable)
+      }
+      if (this.isNewFieldStatic) {
+        this.staticEnvVariables.push(variableName || this.newParameter)
       }
     },
 
@@ -268,6 +286,58 @@ export default {
       for (var index in this.lines) {
         if (this.lines[index].id === id) {
           this.lines.splice(index, 1)
+        }
+      }
+    },
+
+    staticParameterChanged: function (id, parameter, value) {
+      for (var index in this.lines) {
+        if (this.lines[index].id !== id) {
+          for (var parameterIndex in this.lines[index].parameters) {
+            if (this.lines[index].parameters[parameterIndex].parameter === parameter) {
+              this.lines[index].parameters[parameterIndex].value = value
+            }
+          }
+        }
+      }
+    },
+
+    staticParameterDeleted: function (id, parameter) {
+      var staticIndex = this.staticParameters.indexOf(parameter)
+      if (staticIndex !== -1) this.staticParameters.splice(staticIndex, 1)
+      for (var index in this.lines) {
+        if (this.lines[index].id !== id) {
+          for (var parameterIndex in this.lines[index].parameters) {
+            if (this.lines[index].parameters[parameterIndex].parameter === parameter) {
+              this.lines[index].parameters.splice(parameterIndex, 1)
+            }
+          }
+        }
+      }
+    },
+
+    staticEnvVariableChanged: function (id, variable, value) {
+      for (var index in this.lines) {
+        if (this.lines[index].id !== id) {
+          for (var variableIndex in this.lines[index].envVariables) {
+            if (this.lines[index].envVariables[variableIndex].envVariable === variable) {
+              this.lines[index].envVariables[variableIndex].value = value
+            }
+          }
+        }
+      }
+    },
+
+    staticEnvVariableDeleted: function (id, variable) {
+      var staticIndex = this.staticEnvVariables.indexOf(variable)
+      if (staticIndex !== -1) this.staticEnvVariables.splice(staticIndex, 1)
+      for (var index in this.lines) {
+        if (this.lines[index].id !== id) {
+          for (var variableIndex in this.lines[index].envVariables) {
+            if (this.lines[index].envVariables[variableIndex].envVariable === variable) {
+              this.lines[index].envVariables.splice(variableIndex, 1)
+            }
+          }
         }
       }
     },

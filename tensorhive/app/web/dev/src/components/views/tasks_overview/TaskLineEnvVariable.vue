@@ -40,6 +40,9 @@ export default {
   },
 
   watch: {
+    value () {
+      this.newValue = this.value
+    },
     newEnvVariable () {
       this.$emit('changeEnvVariable', this.newEnvVariable, this.newValue)
     },

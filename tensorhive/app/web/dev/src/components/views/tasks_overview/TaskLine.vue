@@ -79,7 +79,9 @@ export default {
     resource: String,
     command: String,
     parameters: Array,
-    envVariables: Array
+    staticParameters: Array,
+    envVariables: Array,
+    staticEnvVariables: Array
   },
 
   data () {
@@ -137,6 +139,12 @@ export default {
   },
 
   watch: {
+    parameters () {
+      this.newParameters = this.parameters
+    },
+    envVariables () {
+      this.newEnvVariables = this.envVariables
+    },
     newHost () {
       this.newResource = this.hosts[this.newHost].resources[0]
       this.updateLine()
@@ -173,6 +181,11 @@ export default {
         if (this.parameters[index].id === id) {
           this.parameters[index].parameter = parameter
           this.parameters[index].value = value
+          for (var staticParameterName of this.staticParameters) {
+            if (parameter === staticParameterName) {
+              this.$emit('staticParameterChanged', parameter, value)
+            }
+          }
         }
       }
     },
@@ -180,6 +193,11 @@ export default {
     deleteParameter: function (id) {
       for (var index in this.parameters) {
         if (this.parameters[index].id === id) {
+          for (var staticParameterName of this.staticParameters) {
+            if (this.parameters[index].parameter === staticParameterName) {
+              this.$emit('staticParameterDeleted', staticParameterName)
+            }
+          }
           this.parameters.splice(index, 1)
         }
       }
@@ -190,6 +208,11 @@ export default {
         if (this.envVariables[index].id === id) {
           this.envVariables[index].envVariable = envVariable
           this.envVariables[index].value = value
+          for (var staticEnvVariableName of this.staticEnvVariables) {
+            if (envVariable === staticEnvVariableName) {
+              this.$emit('staticEnvVariableChanged', envVariable, value)
+            }
+          }
         }
       }
     },
@@ -197,6 +220,11 @@ export default {
     deleteEnvVariable: function (id) {
       for (var index in this.envVariables) {
         if (this.envVariables[index].id === id) {
+          for (var staticEnvVariableName of this.staticEnvVariables) {
+            if (this.envVariables[index].envVariable === staticEnvVariableName) {
+              this.$emit('staticEnvVariableDeleted', staticEnvVariableName)
+            }
+          }
           this.envVariables.splice(index, 1)
         }
       }
