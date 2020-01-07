@@ -147,6 +147,32 @@ export default {
     },
     show () {
       if (this.show === false) this.close()
+      else {
+        switch (this.chosenTemplate) {
+          case 'tf1':
+            this.emptyParametersAndEnvVariables()
+            this.addParameter(undefined, '--ps_hosts=')
+            this.addParameter(undefined, '--worker_hosts=')
+            this.addParameter(undefined, '--job_name=')
+            this.addParameter(undefined, '--task_index=')
+            this.staticParameters = ['--ps_hosts=', '--worker_hosts=']
+            break
+          case 'tf2':
+            this.emptyParametersAndEnvVariables()
+            this.addEnvVariable(undefined, 'TF_CONFIG')
+            break
+          case 'torch':
+            this.emptyParametersAndEnvVariables()
+            this.addParameter(undefined, '--init-method=')
+            this.addParameter(undefined, '--backend=', 'gloo')
+            this.addParameter(undefined, '--rank=')
+            this.addParameter(undefined, '--world-size=')
+            this.staticParameters = ['--init-method=', '--backend=', '--world-size=']
+            break
+          default:
+            break
+        }
+      }
     }
   },
 
@@ -351,6 +377,18 @@ export default {
         }
       } else {
         return ''
+      }
+    },
+
+    emptyParametersAndEnvVariables: function () {
+      this.isNewFieldStatic = false
+      this.staticParameters = []
+      this.staticEnvVariables = []
+      for (var lineIndex in this.lines) {
+        this.lines[lineIndex].parameters = []
+        this.lines[lineIndex].parameterIds = 0
+        this.lines[lineIndex].envVariables = []
+        this.lines[lineIndex].envVariableIds = 0
       }
     }
   }
