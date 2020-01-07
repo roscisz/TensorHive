@@ -110,7 +110,6 @@ export default {
   data () {
     return {
       newParameter: '',
-      newEnvVariable: '',
       linesIds: 1,
       lines: [
         {
