@@ -64,24 +64,16 @@
           <v-btn
             color="info"
             round
-            @click="addParameter"
+            @click="addEnvVariable"
           >
-            Add parameter to all tasks
+            Add as ENV variable to all tasks
           </v-btn>
-        </v-layout>
-        <v-layout align-center justify-start>
-          <v-text-field
-            label="Environment variable name"
-            small
-            class="parameter-name-input"
-            v-model="newEnvVariable"
-          ></v-text-field>
           <v-btn
             color="info"
             round
-            @click="addEnvVariable"
+            @click="addParameter"
           >
-            Add env variable to all tasks
+            Add as parameter to all tasks
           </v-btn>
         </v-layout>
       </v-card-text>
@@ -197,7 +189,7 @@ export default {
       for (var line in this.lines) {
         var envVariable = {
           id: this.lines[line].envVariableIds,
-          envVariable: this.newEnvVariable,
+          envVariable: this.newParameter,
           value: ''
         }
         this.lines[line].envVariableIds++
