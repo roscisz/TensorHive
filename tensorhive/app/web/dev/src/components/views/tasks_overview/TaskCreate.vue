@@ -159,7 +159,7 @@ export default {
             break
           case 'tf2':
             this.emptyParametersAndEnvVariables()
-            this.addEnvVariable(undefined, 'TF_CONFIG')
+            this.addEnvVariable(undefined, 'TF_CONFIG=')
             break
           case 'torch':
             this.emptyParametersAndEnvVariables()

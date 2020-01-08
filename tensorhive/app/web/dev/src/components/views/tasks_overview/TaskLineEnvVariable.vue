@@ -1,5 +1,32 @@
 <template>
-  <v-layout align-center justify-start>
+  <v-layout align-center justify-start v-if="newEnvVariable==='TF_CONFIG='">
+    <TfConfigEdit
+      :value="newValue"
+      :show-modal="showModalTfConfigEdit"
+      @close="showModalTfConfigEdit = false"
+      @updateValue="updateValue(...arguments)"
+    />
+    <v-btn
+      color="info"
+      @click="showModalTfConfigEdit = true"
+      round
+      medium
+    >
+      TF_CONFIG
+    </v-btn>
+    <v-btn
+      color="indigo"
+      fab
+      dark
+      small
+      outline
+      @click="removeMe()"
+      class="remove-button remove-button-tf"
+    >
+      <v-icon dark>delete</v-icon>
+    </v-btn>
+  </v-layout>
+  <v-layout align-center justify-start v-else>
     <v-text-field
       class="task-input"
       :label="newEnvVariable"
@@ -21,7 +48,9 @@
 </template>
 
 <script>
+import TfConfigEdit from './TfConfigEdit'
 export default {
+  components: {TfConfigEdit},
   props: {
     envVariable: String,
     value: String
@@ -30,7 +59,8 @@ export default {
   data () {
     return {
       newEnvVariable: '',
-      newValue: ''
+      newValue: '',
+      showModalTfConfigEdit: false
     }
   },
 
@@ -54,6 +84,10 @@ export default {
   methods: {
     removeMe: function () {
       this.$emit('deleteEnvVariable')
+    },
+
+    updateValue: function (newValue) {
+      this.newValue = newValue
     }
   }
 }
@@ -65,6 +99,9 @@ export default {
   min-width:25px;
   min-height:25px;
   margin-left:-25px;
+}
+.remove-button-tf{
+  margin-left:-5px;
 }
 .task-input{
   max-width:200px;
