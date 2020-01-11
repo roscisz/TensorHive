@@ -51,8 +51,8 @@ export default {
       chosenTemplate: '',
       possibleTemplates: [
         'No template',
-        'TensorFlow 1.x',
-        'TensorFlow 2.x',
+        'Tensorflow - cluster parameters',
+        'Tensorflow - TF_CONFIG',
         'PyTorch'
       ],
       show: false
@@ -75,10 +75,10 @@ export default {
 
     setChosenTemplate: function (templateName) {
       switch (templateName) {
-        case 'TensorFlow 1.x':
+        case 'Tensorflow - cluster parameters':
           this.chosenTemplate = 'tf1'
           break
-        case 'TensorFlow 2.x':
+        case 'Tensorflow - TF_CONFIG':
           this.chosenTemplate = 'tf2'
           break
         case 'PyTorch':
