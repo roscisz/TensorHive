@@ -159,7 +159,7 @@ export default {
             break
           case 'tf2':
             this.emptyParametersAndEnvVariables()
-            this.addEnvVariable(undefined, 'TF_CONFIG=')
+            this.addEnvVariable(undefined, 'TF_CONFIG')
             break
           case 'torch':
             this.emptyParametersAndEnvVariables()
@@ -187,12 +187,18 @@ export default {
         var command = this.convertResource(line.resource)
         for (var envIndex in line.envVariables) {
           var envVariable = line.envVariables[envIndex]
-          command += ' ' + envVariable.envVariable + ' ' + envVariable.value
+          command += ' ' + envVariable.envVariable + '=' + envVariable.value
         }
         command += ' ' + line.command
         for (var parameterIndex in line.parameters) {
           var parameter = line.parameters[parameterIndex]
-          command += ' ' + parameter.parameter + ' ' + parameter.value
+          var parameterNameLength = parameter.parameter.length
+          if (parameter.parameter.charAt(parameterNameLength - 1) === ' ' ||
+              parameter.parameter.charAt(parameterNameLength - 1) === '=') {
+            command += ' ' + parameter.parameter + parameter.value
+          } else {
+            command += ' ' + parameter.parameter + ' ' + parameter.value
+          }
         }
         var task = {
           userId: this.$store.state.id,
@@ -226,17 +232,21 @@ export default {
     },
 
     addEnvVariable: function (event, variableName, variableValue) {
+      var newName = variableName || this.newParameter
+      if (newName.charAt(newName.length - 1) === '=') {
+        newName = newName.substring(0, newName.length - 1)
+      }
       for (var line in this.lines) {
         var envVariable = {
           id: this.lines[line].envVariableIds,
-          envVariable: variableName || this.newParameter,
+          envVariable: newName,
           value: variableValue || ''
         }
         this.lines[line].envVariableIds++
         this.lines[line].envVariables.push(envVariable)
       }
       if (this.isNewFieldStatic) {
-        this.staticEnvVariables.push(variableName || this.newParameter)
+        this.staticEnvVariables.push(newName)
       }
     },
 

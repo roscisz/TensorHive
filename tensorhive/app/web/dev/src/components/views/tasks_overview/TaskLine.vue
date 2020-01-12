@@ -128,11 +128,17 @@ export default {
     taskPreview () {
       var parameters = ''
       for (var index in this.parameters) {
-        parameters += this.parameters[index].parameter + this.parameters[index].value + ' '
+        var parameterNameLength = this.parameters[index].parameter.length
+        if (this.parameters[index].parameter.charAt(parameterNameLength - 1) === ' ' ||
+            this.parameters[index].parameter.charAt(parameterNameLength - 1) === '=') {
+          parameters += this.parameters[index].parameter + this.parameters[index].value + ' '
+        } else {
+          parameters += this.parameters[index].parameter + ' ' + this.parameters[index].value + ' '
+        }
       }
       var envVariables = ''
       for (var envIndex in this.envVariables) {
-        envVariables += this.envVariables[envIndex].envVariable + this.envVariables[envIndex].value + ' '
+        envVariables += this.envVariables[envIndex].envVariable + '=' + this.envVariables[envIndex].value + ' '
       }
       return this.host + ' ' + this.convertResource(this.resource) + ' ' + envVariables + ' ' + this.command + ' ' + parameters
     }

@@ -1,5 +1,5 @@
 <template>
-  <v-layout align-center justify-start v-if="newEnvVariable==='TF_CONFIG='">
+  <v-layout align-center justify-start v-if="newEnvVariable==='TF_CONFIG'">
     <TfConfigEdit
       :value="newValue"
       :show-modal="showModalTfConfigEdit"
