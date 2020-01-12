@@ -23,6 +23,16 @@
       ></v-select>
       <span class="space"/>
       <v-layout align-center justify-start>
+        <TaskLineTfConfig
+          v-if="newEnableTfConfig"
+          class="task-input"
+          :value="tfConfig"
+          @changeTfConfig="changeTfConfig(...arguments)"
+          @deleteTfConfig="deleteTfConfig()"
+        />
+      </v-layout>
+      <span class="space"/>
+      <v-layout align-center justify-start>
         <TaskLineEnvVariable
           class="task-input"
           v-for="envVariable in envVariables"
@@ -66,8 +76,10 @@
 <script>
 import TaskLineParameter from './TaskLineParameter.vue'
 import TaskLineEnvVariable from './TaskLineEnvVariable.vue'
+import TaskLineTfConfig from './TaskLineTfConfig'
 export default {
   components: {
+    TaskLineTfConfig,
     TaskLineParameter,
     TaskLineEnvVariable
   },
@@ -81,7 +93,9 @@ export default {
     parameters: Array,
     staticParameters: Array,
     envVariables: Array,
-    staticEnvVariables: Array
+    staticEnvVariables: Array,
+    enableTfConfig: Boolean,
+    tfConfig: String
   },
 
   data () {
@@ -103,6 +117,8 @@ export default {
           value: ''
         }
       ],
+      newEnableTfConfig: false,
+      newTfConfig: '',
       showModal: false
     }
   },
@@ -115,6 +131,8 @@ export default {
     this.newCommand = this.command
     this.newParameters = this.parameters
     this.parameterIds = this.parameters.length
+    this.newEnableTfConfig = this.enableTfConfig
+    this.newTfConfig = this.tfConfig
   },
 
   computed: {
@@ -137,6 +155,9 @@ export default {
         }
       }
       var envVariables = ''
+      if (this.newEnableTfConfig) {
+        envVariables += 'TF_CONFIG=' + this.newTfConfig + ' '
+      }
       for (var envIndex in this.envVariables) {
         envVariables += this.envVariables[envIndex].envVariable + '=' + this.envVariables[envIndex].value + ' '
       }
@@ -150,6 +171,12 @@ export default {
     },
     envVariables () {
       this.newEnvVariables = this.envVariables
+    },
+    enableTfConfig () {
+      this.newEnableTfConfig = this.enableTfConfig
+    },
+    tfConfig () {
+      this.newTfConfig = this.tfConfig
     },
     newHost () {
       this.newResource = this.hosts[this.newHost].resources[0]
@@ -165,6 +192,12 @@ export default {
       this.updateLine()
     },
     newEnvVariables () {
+      this.updateLine()
+    },
+    newEnableTfConfig () {
+      this.updateLine()
+    },
+    newTfConfig () {
       this.updateLine()
     }
   },
@@ -236,8 +269,17 @@ export default {
       }
     },
 
+    changeTfConfig: function (value) {
+      this.newTfConfig = value
+    },
+
+    deleteTfConfig: function () {
+      this.newEnableTfConfig = false
+      this.newTfConfig = ''
+    },
+
     updateLine: function () {
-      this.$emit('changeLine', this.newHost, this.newResource, this.newCommand, this.newParameters, this.newEnvVariables)
+      this.$emit('changeLine', this.newHost, this.newResource, this.newCommand, this.newParameters, this.newEnvVariables, this.newEnableTfConfig, this.newTfConfig)
     },
 
     removeMe: function () {

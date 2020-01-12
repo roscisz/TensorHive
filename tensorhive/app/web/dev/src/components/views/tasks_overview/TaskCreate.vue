@@ -41,6 +41,8 @@
           :command="line.command"
           :parameters="line.parameters"
           :staticParameters="staticParameters"
+          :enable-tf-config="line.enableTfConfig"
+          :tf-config="line.tfConfig"
           @changeLine="changeLine(line.id, ...arguments)"
           @deleteLine="deleteLine(line.id)"
           @staticParameterChanged="staticParameterChanged(line.id, ...arguments)"
@@ -131,7 +133,9 @@ export default {
           envVariables: [
           ],
           parameterIds: 0,
-          envVariableIds: 0
+          envVariableIds: 0,
+          enableTfConfig: false,
+          tfConfig: ''
         }
       ],
       staticParameters: [],
@@ -185,6 +189,9 @@ export default {
       for (var lineIndex in this.lines) {
         var line = this.lines[lineIndex]
         var command = this.convertResource(line.resource)
+        if (line.enableTfConfig) {
+          command += ' TF_CONFIG=' + line.tfConfig
+        }
         for (var envIndex in line.envVariables) {
           var envVariable = line.envVariables[envIndex]
           command += ' ' + envVariable.envVariable + '=' + envVariable.value
@@ -236,17 +243,25 @@ export default {
       if (newName.charAt(newName.length - 1) === '=') {
         newName = newName.substring(0, newName.length - 1)
       }
-      for (var line in this.lines) {
-        var envVariable = {
-          id: this.lines[line].envVariableIds,
-          envVariable: newName,
-          value: variableValue || ''
+      var line
+      if (newName === 'TF_CONFIG') {
+        for (line in this.lines) {
+          this.lines[line].enableTfConfig = true
+          this.lines[line].tfConfig = ''
         }
-        this.lines[line].envVariableIds++
-        this.lines[line].envVariables.push(envVariable)
-      }
-      if (this.isNewFieldStatic) {
-        this.staticEnvVariables.push(newName)
+      } else {
+        for (line in this.lines) {
+          var envVariable = {
+            id: this.lines[line].envVariableIds,
+            envVariable: newName,
+            value: variableValue || ''
+          }
+          this.lines[line].envVariableIds++
+          this.lines[line].envVariables.push(envVariable)
+        }
+        if (this.isNewFieldStatic) {
+          this.staticEnvVariables.push(newName)
+        }
       }
     },
 
@@ -284,7 +299,9 @@ export default {
           resource: lineToCopy.resource,
           command: lineToCopy.command,
           parameters: newParameters,
-          envVariables: newEnvVariables
+          envVariables: newEnvVariables,
+          enableTfConfig: lineToCopy.enableTfConfig,
+          tfConfig: lineToCopy.tfConfig
         }
         this.linesIds++
         this.lines.push(line)
@@ -300,13 +317,17 @@ export default {
         envVariables: [
         ],
         parameters: [
-        ]
+        ],
+        parameterIds: 0,
+        envVariableIds: 0,
+        enableTfConfig: false,
+        tfConfig: ''
       }
       this.linesIds++
       this.lines.push(line)
     },
 
-    changeLine: function (id, host, resource, command, parameters, envVariables) {
+    changeLine: function (id, host, resource, command, parameters, envVariables, enableTfConfig, tfConfig) {
       for (var index in this.lines) {
         if (this.lines[index].id === id) {
           this.lines[index].host = host
@@ -314,6 +335,8 @@ export default {
           this.lines[index].command = command
           this.lines[index].parameters = parameters
           this.lines[index].envVariables = envVariables
+          this.lines[index].enableTfConfig = enableTfConfig
+          this.lines[index].tfConfig = tfConfig
         }
       }
     },

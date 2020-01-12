@@ -1,32 +1,5 @@
 <template>
-  <v-layout align-center justify-start v-if="newEnvVariable==='TF_CONFIG'">
-    <TfConfigEdit
-      :value="newValue"
-      :show-modal="showModalTfConfigEdit"
-      @close="showModalTfConfigEdit = false"
-      @updateValue="updateValue(...arguments)"
-    />
-    <v-btn
-      color="info"
-      @click="showModalTfConfigEdit = true"
-      round
-      medium
-    >
-      TF_CONFIG
-    </v-btn>
-    <v-btn
-      color="indigo"
-      fab
-      dark
-      small
-      outline
-      @click="removeMe()"
-      class="remove-button remove-button-tf"
-    >
-      <v-icon dark>delete</v-icon>
-    </v-btn>
-  </v-layout>
-  <v-layout align-center justify-start v-else>
+  <v-layout align-center justify-start>
     <v-text-field
       class="task-input"
       :label="newEnvVariable"
@@ -48,9 +21,7 @@
 </template>
 
 <script>
-import TfConfigEdit from './TfConfigEdit'
 export default {
-  components: {TfConfigEdit},
   props: {
     envVariable: String,
     value: String
