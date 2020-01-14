@@ -25,8 +25,6 @@
         class="tf-short"
         label="Index"
         type="number"
-        hide-details
-        single-line
         small
         v-if="newTaskIndex >= 0"
         v-model="newTaskIndex"
