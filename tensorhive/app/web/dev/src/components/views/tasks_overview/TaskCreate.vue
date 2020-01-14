@@ -27,6 +27,10 @@
             <br>(having active reservation for that GPU).
           </span>
         </v-tooltip>
+        <v-switch
+          class="float-right-button"
+          v-model="enableSmartTfConfig"
+          label="Smart TF_CONFIG"/>
       </v-card-text>
       <v-card-text>
         <TaskLine
@@ -43,12 +47,20 @@
           :staticParameters="staticParameters"
           :enable-tf-config="line.enableTfConfig"
           :tf-config="line.tfConfig"
+          :tf-config-port="line.tfConfigPort"
+          :tf-config-task-type="line.tfConfigTaskType"
+          :tf-config-task-index="line.tfConfigTaskIndex"
+          :tf-cluster="tfCluster"
+          :enable-smart-tf-config="enableSmartTfConfig"
           @changeLine="changeLine(line.id, ...arguments)"
           @deleteLine="deleteLine(line.id)"
           @staticParameterChanged="staticParameterChanged(line.id, ...arguments)"
           @staticEnvVariableChanged="staticEnvVariableChanged(line.id, ...arguments)"
           @staticParameterDeleted="staticParameterDeleted(line.id, ...arguments)"
           @staticEnvVariableDeleted="staticEnvVariableDeleted(line.id, ...arguments)"
+          @updateTfConfigPort="updateTfConfigPort(line.id, ...arguments)"
+          @updateTfConfigTaskType="updateTfConfigTaskType(line.id, ...arguments)"
+          @updateTfConfigTaskIndex="updateTfConfigTaskIndex(line.id, ...arguments)"
         />
       </v-card-text>
       <v-card-text>
@@ -135,12 +147,17 @@ export default {
           parameterIds: 0,
           envVariableIds: 0,
           enableTfConfig: false,
-          tfConfig: ''
+          tfConfig: '',
+          tfConfigPort: '',
+          tfConfigTaskType: '',
+          tfConfigTaskIndex: -1
         }
       ],
+      tfCluster: {},
       staticParameters: [],
       staticEnvVariables: [],
       isNewFieldStatic: false,
+      enableSmartTfConfig: false,
       show: false
     }
   },
@@ -164,6 +181,7 @@ export default {
           case 'tf2':
             this.emptyParametersAndEnvVariables()
             this.addEnvVariable(undefined, 'TF_CONFIG')
+            this.enableSmartTfConfig = true
             break
           case 'torch':
             this.emptyParametersAndEnvVariables()
@@ -301,10 +319,17 @@ export default {
           parameters: newParameters,
           envVariables: newEnvVariables,
           enableTfConfig: lineToCopy.enableTfConfig,
-          tfConfig: lineToCopy.tfConfig
+          tfConfig: lineToCopy.tfConfig,
+          tfConfigPort: '',
+          tfConfigTaskType: '',
+          tfConfigTaskIndex: -1
         }
         this.linesIds++
         this.lines.push(line)
+
+        if (lineToCopy.enableTfConfig && this.enableSmartTfConfig) {
+          this.updateTfConfigTaskType(line.id, lineToCopy.tfConfigTaskType)
+        }
       }
     },
 
@@ -321,7 +346,10 @@ export default {
         parameterIds: 0,
         envVariableIds: 0,
         enableTfConfig: false,
-        tfConfig: ''
+        tfConfig: '',
+        tfConfigPort: '',
+        tfConfigTaskType: '',
+        tfConfigTaskIndex: -1
       }
       this.linesIds++
       this.lines.push(line)
@@ -330,6 +358,9 @@ export default {
     changeLine: function (id, host, resource, command, parameters, envVariables, enableTfConfig, tfConfig) {
       for (var index in this.lines) {
         if (this.lines[index].id === id) {
+          if (host !== this.lines[index].host && enableTfConfig && this.enableSmartTfConfig) {
+            this.updateTfConfigHost(id, host)
+          }
           this.lines[index].host = host
           this.lines[index].resource = resource
           this.lines[index].command = command
@@ -344,6 +375,9 @@ export default {
     deleteLine: function (id) {
       for (var index in this.lines) {
         if (this.lines[index].id === id) {
+          if (this.lines[index].enableTfConfig && this.enableSmartTfConfig) {
+            this.updateTfConfigTaskType(this.lines[index].id, '')
+          }
           this.lines.splice(index, 1)
         }
       }
@@ -401,6 +435,138 @@ export default {
       }
     },
 
+    updateTfConfigHost: function (id, host) {
+      // search for line
+      var lineIndex
+      for (lineIndex in this.lines) {
+        if (this.lines[lineIndex].id === id) {
+          break
+        }
+      }
+
+      // check if given line has taskIndex set
+      var taskIndex = this.lines[lineIndex].tfConfigTaskIndex
+      if (taskIndex !== -1) {
+        var taskType = this.lines[lineIndex].tfConfigTaskType
+        this.tfCluster[taskType][taskIndex] = host + ':' + this.lines[lineIndex].tfConfigPort
+        this.tfCluster.__ob__.dep.notify()
+      }
+    },
+
+    updateTfConfigPort: function (id, port) {
+      // search for line
+      var lineIndex
+      for (lineIndex in this.lines) {
+        if (this.lines[lineIndex].id === id) {
+          break
+        }
+      }
+
+      if (!this.lines[lineIndex].enableTfConfig || !this.enableSmartTfConfig) {
+        return
+      }
+
+      this.lines[lineIndex].tfConfigPort = port
+
+      // check if given line has taskIndex set
+      var taskIndex = this.lines[lineIndex].tfConfigTaskIndex
+      if (taskIndex !== -1) {
+        var taskType = this.lines[lineIndex].tfConfigTaskType
+        this.tfCluster[taskType][taskIndex] = this.lines[lineIndex].host + ':' + this.lines[lineIndex].tfConfigPort
+        this.tfCluster.__ob__.dep.notify()
+      }
+    },
+
+    updateTfConfigTaskType: function (id, taskType) {
+      // search for line
+      var lineIndex
+      for (lineIndex in this.lines) {
+        if (this.lines[lineIndex].id === id) {
+          break
+        }
+      }
+
+      if (!this.lines[lineIndex].enableTfConfig || !this.enableSmartTfConfig) {
+        return
+      }
+
+      // remove from old list of cluster tasks
+      var oldTaskType = this.lines[lineIndex].tfConfigTaskType
+      if (oldTaskType && oldTaskType.length !== 0) {
+        var oldTaskIndex = this.lines[lineIndex].tfConfigTaskIndex
+        this.tfCluster[oldTaskType].splice(oldTaskIndex, 1)
+        if (this.tfCluster[oldTaskType].length !== 0) {
+          for (var otherLineIndex in this.lines) {
+            if (this.lines[otherLineIndex].tfConfigTaskType === oldTaskType &&
+              this.lines[otherLineIndex].tfConfigTaskIndex > oldTaskIndex) {
+              this.lines[otherLineIndex].tfConfigTaskIndex -= 1
+            }
+          }
+        } else {
+          delete this.tfCluster[oldTaskType]
+        }
+      }
+
+      // Assign new taskType and taskIndex
+      if (!taskType || taskType.length === 0) {
+        this.lines[lineIndex].tfConfigTaskType = taskType
+        this.lines[lineIndex].tfConfigTaskIndex = -1
+      } else {
+        // check if there is a list with new taskType
+        if (!this.tfCluster.hasOwnProperty(taskType)) {
+          this.tfCluster[taskType] = []
+        }
+
+        this.lines[lineIndex].tfConfigTaskType = taskType
+        this.lines[lineIndex].tfConfigTaskIndex = this.tfCluster[taskType].length
+
+        this.tfCluster[taskType].push(this.lines[lineIndex].host + ':' + this.lines[lineIndex].tfConfigPort)
+      }
+      this.tfCluster.__ob__.dep.notify()
+    },
+
+    updateTfConfigTaskIndex: function (id, newTaskIndex) {
+      // search for line
+      var lineIndex
+      for (lineIndex in this.lines) {
+        if (this.lines[lineIndex].id === id) {
+          break
+        }
+      }
+
+      if (!this.lines[lineIndex].enableTfConfig || !this.enableSmartTfConfig ||
+          newTaskIndex === this.lines[lineIndex].tfConfigTaskIndex) {
+        return
+      }
+
+      var taskType = this.lines[lineIndex].tfConfigTaskType
+      var oldTaskIndex = this.lines[lineIndex].tfConfigTaskIndex
+      if (this.tfCluster[taskType].length <= newTaskIndex) {
+        newTaskIndex = 0
+      } else if (newTaskIndex < 0) {
+        newTaskIndex = this.tfCluster[taskType].length - 1
+      }
+      if (newTaskIndex === this.lines[lineIndex].tfConfigTaskIndex) {
+        return
+      }
+
+      var value = this.tfCluster[taskType][oldTaskIndex]
+      this.tfCluster[taskType].splice(oldTaskIndex, 1)
+      for (var otherLineIndex in this.lines) {
+        if (this.lines[otherLineIndex].tfConfigTaskType === taskType &&
+          this.lines[otherLineIndex].tfConfigTaskIndex > oldTaskIndex) {
+          this.lines[otherLineIndex].tfConfigTaskIndex -= 1
+        }
+        if (this.lines[otherLineIndex].tfConfigTaskType === taskType &&
+          this.lines[otherLineIndex].tfConfigTaskIndex >= newTaskIndex) {
+          this.lines[otherLineIndex].tfConfigTaskIndex += 1
+        }
+      }
+      this.tfCluster[taskType].splice(newTaskIndex, 0, value)
+      this.lines[lineIndex].tfConfigTaskIndex = newTaskIndex
+      this.tfCluster.__ob__.dep.notify()
+    },
+
     convertResource: function (resource) {
       if (resource !== '' && resource !== null) {
         if (resource === 'CPU') {
@@ -418,11 +584,15 @@ export default {
       this.staticParameters = []
       this.staticEnvVariables = []
       for (var lineIndex in this.lines) {
+        this.lines[lineIndex].tfConfigTaskIndex = -1
+        this.lines[lineIndex].tfConfigTaskType = ''
+        this.lines[lineIndex].tfConfigPort = ''
         this.lines[lineIndex].parameters = []
         this.lines[lineIndex].parameterIds = 0
         this.lines[lineIndex].envVariables = []
         this.lines[lineIndex].envVariableIds = 0
       }
+      this.tfCluster = {}
     }
   }
 }

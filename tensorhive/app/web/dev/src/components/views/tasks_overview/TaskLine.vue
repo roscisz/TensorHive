@@ -25,10 +25,17 @@
       <v-layout align-center justify-start>
         <TaskLineTfConfig
           v-if="newEnableTfConfig"
-          class="task-input"
           :value="tfConfig"
+          :port="tfConfigPort"
+          :task-type="tfConfigTaskType"
+          :task-index="tfConfigTaskIndex"
+          :tf-cluster="tfCluster"
+          :enable-smart-tf-config="enableSmartTfConfig"
           @changeTfConfig="changeTfConfig(...arguments)"
           @deleteTfConfig="deleteTfConfig()"
+          @updateTfConfigPort="updateTfConfigPort(...arguments)"
+          @updateTfConfigTaskType="updateTfConfigTaskType(...arguments)"
+          @updateTfConfigTaskIndex="updateTfConfigTaskIndex(...arguments)"
         />
       </v-layout>
       <span class="space"/>
@@ -95,7 +102,12 @@ export default {
     envVariables: Array,
     staticEnvVariables: Array,
     enableTfConfig: Boolean,
-    tfConfig: String
+    tfConfig: String,
+    tfConfigPort: String,
+    tfConfigTaskType: String,
+    tfConfigTaskIndex: Number,
+    tfCluster: Object,
+    enableSmartTfConfig: Boolean
   },
 
   data () {
@@ -274,8 +286,21 @@ export default {
     },
 
     deleteTfConfig: function () {
+      this.$emit('updateTfConfigTaskType', '')
       this.newEnableTfConfig = false
       this.newTfConfig = ''
+    },
+
+    updateTfConfigPort: function (newPort) {
+      this.$emit('updateTfConfigPort', newPort)
+    },
+
+    updateTfConfigTaskType: function (newTaskType) {
+      this.$emit('updateTfConfigTaskType', newTaskType)
+    },
+
+    updateTfConfigTaskIndex: function (newTaskIndex) {
+      this.$emit('updateTfConfigTaskIndex', newTaskIndex)
     },
 
     updateLine: function () {
