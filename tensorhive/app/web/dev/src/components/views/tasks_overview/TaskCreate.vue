@@ -267,8 +267,19 @@ export default {
           this.lines[line].enableTfConfig = true
           this.lines[line].tfConfig = ''
         }
+        let machinePorts = {}
         for (line in this.lines) {
+          const host = this.lines[line].host
           this.updateTfConfigTaskType(this.lines[line].id, 'worker')
+          if (host) {
+            if (machinePorts.hasOwnProperty(host)) {
+              this.updateTfConfigPort(this.lines[line].id, machinePorts[host].toString())
+              machinePorts[host]++
+            } else {
+              this.updateTfConfigPort(this.lines[line].id, '2222')
+              machinePorts[host] = 2223
+            }
+          }
         }
       } else {
         for (line in this.lines) {
@@ -332,6 +343,23 @@ export default {
 
         if (lineToCopy.enableTfConfig && this.enableSmartTfConfig) {
           this.updateTfConfigTaskType(line.id, lineToCopy.tfConfigTaskType)
+          if (line.host) {
+            let machineHosts = {}
+            machineHosts[line.host] = 2221
+            for (var lineIndex in this.lines) {
+              if (this.lines[lineIndex].host && this.lines[lineIndex].tfConfigPort) {
+                if (machineHosts.hasOwnProperty(this.lines[lineIndex].host)) {
+                  machineHosts[this.lines[lineIndex].host] = Math.max(
+                    machineHosts[this.lines[lineIndex].host],
+                    parseInt(this.lines[lineIndex].tfConfigPort)
+                  )
+                } else {
+                  machineHosts[this.lines[lineIndex].host] = 2221
+                }
+              }
+            }
+            this.updateTfConfigPort(line.id, (machineHosts[line.host] + 1).toString())
+          }
         }
       }
     },
@@ -446,6 +474,23 @@ export default {
           break
         }
       }
+
+      // set new config port
+      let machineHosts = {}
+      machineHosts[host] = 2221
+      for (var line in this.lines) {
+        if (this.lines[line].id !== id && this.lines[line].host && this.lines[line].tfConfigPort) {
+          if (machineHosts.hasOwnProperty(this.lines[line].host)) {
+            machineHosts[this.lines[line].host] = Math.max(
+              machineHosts[this.lines[line].host],
+              parseInt(this.lines[line].tfConfigPort)
+            )
+          } else {
+            machineHosts[this.lines[line].host] = 2221
+          }
+        }
+      }
+      this.lines[lineIndex].tfConfigPort = (machineHosts[host] + 1).toString()
 
       // check if given line has taskIndex set
       var taskIndex = this.lines[lineIndex].tfConfigTaskIndex
