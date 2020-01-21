@@ -180,8 +180,8 @@ export default {
             break
           case 'tf2':
             this.emptyParametersAndEnvVariables()
-            this.addEnvVariable(undefined, 'TF_CONFIG')
             this.enableSmartTfConfig = true
+            this.addEnvVariable(undefined, 'TF_CONFIG')
             break
           case 'torch':
             this.emptyParametersAndEnvVariables()
@@ -266,6 +266,9 @@ export default {
         for (line in this.lines) {
           this.lines[line].enableTfConfig = true
           this.lines[line].tfConfig = ''
+        }
+        for (line in this.lines) {
+          this.updateTfConfigTaskType(this.lines[line].id, 'worker')
         }
       } else {
         for (line in this.lines) {
