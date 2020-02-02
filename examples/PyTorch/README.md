@@ -65,7 +65,7 @@ For more details about the usage refer to the [original repo](https://github.com
 
 ## Running without tensorhive
 
-First export envoirment variable on every node as shown in Usage section. After find a port that is available on every node for communication. Then run separate commands as above on very node. Make sure to start with rank 0. Set world size to number of nodes you want to run the code on. The training code and dataset needs to be avaiable on every node.
+First export the `GLOO_SOCKET_IFNAME` environment variable on every node as shown in the Usage section. Next, find a port that is available on every node for communication. Then run separate commands as above on very node. Make sure to start with rank 0. Set world size to the number of nodes you want to run the code on. The training code and dataset needs to be available on every node.
 
 ## Running with tensorhive
 Head to "Task Overview" (1) and click on "CREATE TASKS FROM TEMPLATE". Choose PyTorch from the drop-down list. 
