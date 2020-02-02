@@ -95,4 +95,4 @@ After that you can control the tasks from "Task Overview". You can see avaiable 
 - Edit 
 - Remove
 
-Having that high level control over all of the tasks from single place can be extremly powerfull and time-saving!
+Having that high level control over all of the tasks from single place can be extremly time-saving!
