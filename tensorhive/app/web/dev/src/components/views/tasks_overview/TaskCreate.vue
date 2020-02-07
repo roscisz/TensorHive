@@ -267,6 +267,7 @@ export default {
       }
       var line
       if (newName === 'TF_CONFIG') {
+        this.chosenTemplate = 'tf2'
         for (line in this.lines) {
           this.lines[line].enableTfConfig = true
           this.lines[line].tfConfig = ''
