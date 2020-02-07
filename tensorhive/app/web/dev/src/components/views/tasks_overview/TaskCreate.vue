@@ -248,7 +248,8 @@ export default {
           parameter: parameterName || this.newParameter,
           value: parameterValue || ''
         }
-        if (this.chosenTemplate === 'tf1' && parameterName === '--task_index=') {
+        if ((this.chosenTemplate === 'tf1' && parameterName === '--task_index=') ||
+          (this.chosenTemplate === 'torch' && parameterName === '--rank=')) {
           parameter.value = taskIndex.toString()
           taskIndex++
         }
@@ -316,7 +317,8 @@ export default {
             parameter: parameterToCopy.parameter,
             value: parameterToCopy.value
           }
-          if (this.chosenTemplate === 'tf1' && newParameter.parameter === '--task_index=') {
+          if ((this.chosenTemplate === 'tf1' && newParameter.parameter === '--task_index=') ||
+            (this.chosenTemplate === 'torch' && newParameter.parameter === '--rank=')) {
             newParameter.value = (parseInt(newParameter.value) + 1).toString()
           }
           newParameters.push(newParameter)
