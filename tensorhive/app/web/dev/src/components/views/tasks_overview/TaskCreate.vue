@@ -175,7 +175,7 @@ export default {
           case 'tf1':
             this.addParameter(undefined, '--ps_hosts=')
             this.addParameter(undefined, '--worker_hosts=')
-            this.addParameter(undefined, '--job_name=')
+            this.addParameter(undefined, '--job_name=', 'worker')
             this.addParameter(undefined, '--task_index=')
             this.staticParameters = ['--ps_hosts=', '--worker_hosts=']
             break
@@ -241,11 +241,16 @@ export default {
     },
 
     addParameter: function (event, parameterName, parameterValue) {
+      let taskIndex = 0
       for (var line in this.lines) {
         var parameter = {
           id: this.lines[line].parameterIds,
           parameter: parameterName || this.newParameter,
           value: parameterValue || ''
+        }
+        if (this.chosenTemplate === 'tf1' && parameterName === '--task_index=') {
+          parameter.value = taskIndex.toString()
+          taskIndex++
         }
         this.lines[line].parameterIds++
         this.lines[line].parameters.push(parameter)
@@ -309,6 +314,9 @@ export default {
             id: index,
             parameter: parameterToCopy.parameter,
             value: parameterToCopy.value
+          }
+          if (this.chosenTemplate === 'tf1' && newParameter.parameter === '--task_index=') {
+            newParameter.value = (parseInt(newParameter.value) + 1).toString()
           }
           newParameters.push(newParameter)
         }
