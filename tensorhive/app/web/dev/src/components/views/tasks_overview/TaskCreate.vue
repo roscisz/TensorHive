@@ -29,6 +29,7 @@
         </v-tooltip>
         <v-switch
           class="float-right-button"
+          v-if="chosenTemplate === 'tf2'"
           v-model="enableSmartTfConfig"
           label="Smart TF_CONFIG"/>
       </v-card-text>
@@ -169,9 +170,9 @@ export default {
     show () {
       if (this.show === false) this.close()
       else {
+        this.emptyParametersAndEnvVariables()
         switch (this.chosenTemplate) {
           case 'tf1':
-            this.emptyParametersAndEnvVariables()
             this.addParameter(undefined, '--ps_hosts=')
             this.addParameter(undefined, '--worker_hosts=')
             this.addParameter(undefined, '--job_name=')
@@ -179,12 +180,10 @@ export default {
             this.staticParameters = ['--ps_hosts=', '--worker_hosts=']
             break
           case 'tf2':
-            this.emptyParametersAndEnvVariables()
             this.enableSmartTfConfig = true
             this.addEnvVariable(undefined, 'TF_CONFIG')
             break
           case 'torch':
-            this.emptyParametersAndEnvVariables()
             this.addParameter(undefined, '--init-method=')
             this.addParameter(undefined, '--backend=', 'gloo')
             this.addParameter(undefined, '--rank=')
@@ -628,13 +627,15 @@ export default {
     },
 
     emptyParametersAndEnvVariables: function () {
+      this.enableSmartTfConfig = false
       this.isNewFieldStatic = false
       this.staticParameters = []
       this.staticEnvVariables = []
       for (var lineIndex in this.lines) {
-        this.lines[lineIndex].tfConfigTaskIndex = -1
+        this.lines[lineIndex].tfConfigTaskIndex = 0
         this.lines[lineIndex].tfConfigTaskType = ''
         this.lines[lineIndex].tfConfigPort = ''
+        this.lines[lineIndex].enableTfConfig = false
         this.lines[lineIndex].parameters = []
         this.lines[lineIndex].parameterIds = 0
         this.lines[lineIndex].envVariables = []
