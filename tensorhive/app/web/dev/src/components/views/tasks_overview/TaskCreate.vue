@@ -249,9 +249,15 @@ export default {
           value: parameterValue || ''
         }
         if ((this.chosenTemplate === 'tf1' && parameterName === '--task_index=') ||
-          (this.chosenTemplate === 'torch' && parameterName === '--rank=')) {
-          parameter.value = taskIndex.toString()
-          taskIndex++
+          (this.chosenTemplate === 'torch' && parameterName === '--rank=') ||
+          (this.chosenTemplate === 'torch' && parameterName === '--world-size=')) {
+          if (parameterName === '--world-size=') {
+            taskIndex++
+            parameter.value = taskIndex.toString()
+          } else {
+            parameter.value = taskIndex.toString()
+            taskIndex++
+          }
         }
         this.lines[line].parameterIds++
         this.lines[line].parameters.push(parameter)
@@ -318,7 +324,8 @@ export default {
             value: parameterToCopy.value
           }
           if ((this.chosenTemplate === 'tf1' && newParameter.parameter === '--task_index=') ||
-            (this.chosenTemplate === 'torch' && newParameter.parameter === '--rank=')) {
+            (this.chosenTemplate === 'torch' && newParameter.parameter === '--rank=') ||
+            (this.chosenTemplate === 'torch' && newParameter.parameter === '--world-size=')) {
             newParameter.value = (parseInt(newParameter.value) + 1).toString()
           }
           newParameters.push(newParameter)
