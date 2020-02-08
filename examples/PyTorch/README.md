@@ -17,12 +17,8 @@ and running
 python download.py -c bedroom
 ```
 
-For testing and/or benchmarking purposes it is also possible to the train the model on fake dataset. To do this run this command instead of the one given in the Usage section:
+For testing and/or benchmarking purposes it is also possible to the train the model on fake dataset. To do this, set the parameter `--dataset fake` when running the training program (ommit --dataroot parameter).
 
-```
-CUDA_VISIBLE_DEVICES=0 python main.py --init-method tcp://127.0.0.1:20011 --rank 0 --world 2 --dataset fake --cuda
-CUDA_VISIBLE_DEVICES=1 python main.py --init-method tcp://127.0.0.1:20011 --rank 1 --world 2 --dataset fake --cuda
-```
 
 ## Making the code parallel
 
@@ -57,8 +53,8 @@ export GLOO_SOCKET_IFNAME=eth0
 ```
 
 ```
-CUDA_VISIBLE_DEVICES=0 python main.py --init-method tcp://127.0.0.1:20011 --rank 0 --world 2 --dataset lsun --dataroot <path to lsun dataset> --cuda
-CUDA_VISIBLE_DEVICES=1 python main.py --init-method tcp://127.0.0.1:20011 --rank 1 --world 2 --dataset lsun --dataroot <path to lsun dataset> --cuda
+CUDA_VISIBLE_DEVICES=0 python main.py --init-method tcp://127.0.0.1:20011 --rank 0 --world-size 2 --dataset lsun --dataroot <path to lsun dataset> --cuda
+CUDA_VISIBLE_DEVICES=1 python main.py --init-method tcp://127.0.0.1:20011 --rank 1 --world-size 2 --dataset lsun --dataroot <path to lsun dataset> --cuda
 
 For more details about the usage refer to the [original repo](https://github.com/pytorch/examples/tree/master/dcgan)
 ```
@@ -72,11 +68,11 @@ Head to "Task Overview" (1) and click on "CREATE TASKS FROM TEMPLATE". Choose Py
 
 ![1](https://github.com/roscisz/TensorHive/tree/master/examples/PyTorch/img/1.png)
 
-Choose host and resource to run the task on for the first node. Under command specify path to your pyhon and script to wish to run (as shown). Specify init-method and world-size (number of nodes you wish to distribute the training between).
+Choose host and resource to run the task on for the first node. Under command specify path to your pyhon and script to wish to run (as shown). Specify init-method. You don't need to fill in rank or world-size parameters as tensorhive will do that automatically for you.
 
 ![2](https://github.com/roscisz/TensorHive/tree/master/examples/PyTorch/img/2.png)
 
-Add as many tasks as resources you wish the code to run on using "ADD TASK" button. You can see that every parameter filled is copied to newly created tasks to save time. Adjust Hostnames and resources on the added tasks as needed. And fill in the rank parameter starting from 0.
+Add as many tasks as resources you wish the code to run on using "ADD TASK" button. You can see that every parameter filled is copied to newly created tasks to save time. Adjust Hostnames and resources on the added tasks as needed.
 
 ![3](https://github.com/roscisz/TensorHive/tree/master/examples/PyTorch/img/3.png)
 
