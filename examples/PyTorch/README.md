@@ -1,67 +1,13 @@
 # Using tensorhive for running distributed trainings in PyTorch
 
-This example is based on [this implementation](https://github.com/pytorch/examples/tree/master/dcgan)
-```
-git clone https://github.com/pytorch/examples.git
-```
-
-## Downloading the dataset
-
-You can download the LSUN dataset by cloning [this repo](https://github.com/fyu/lsun) 
-
-```
-git clone https://github.com/fyu/lsun.git
-```
-and running
-```
-python download.py -c bedroom
-```
-
-For testing and/or benchmarking purposes it is also possible to the train the model on fake dataset. To do this, set the parameter `--dataset fake` when running the training program (ommit --dataroot parameter).
-
-
-## Making the code parallel
-
-It is actually very easy to allow PyTorch code to run on multiple GPUs
-
-### Locally
-
-All you need to do to make a data parallel model that can be run on multiple GPUs locally:
-```
-from torch import nn
-<your code including creating the model>
-model = nn.DataParallel(model)
-```
-That's it. After that you just control which GPUs you would like your code to run on by specifing their number in CUDA_VISIBLE_DEVICES before your command (tensorhive takes care of that for you when you specify the devices while creating the task).
-
-### Distributed
-
-To make the code distributed apply provided patch by running:
-
-```
-git apply distributed.patch
-```
-
-You might want to checkout commit 0c1654d6913f77f09c0505fb284d977d89c17c1a to make sure there are no conflicts before applying the patch.
-
-To learn how to easily adapt PyTorch code for distributed learning please examine the patch. 
-
-## Usage
-```
-# set accroding to your configuration
-export GLOO_SOCKET_IFNAME=eth0 
-```
-
-```
-CUDA_VISIBLE_DEVICES=0 python main.py --init-method tcp://127.0.0.1:20011 --rank 0 --world-size 2 --dataset lsun --dataroot <path to lsun dataset> --cuda
-CUDA_VISIBLE_DEVICES=1 python main.py --init-method tcp://127.0.0.1:20011 --rank 1 --world-size 2 --dataset lsun --dataroot <path to lsun dataset> --cuda
-
-For more details about the usage refer to the [original repo](https://github.com/pytorch/examples/tree/master/dcgan)
-```
+## Detailed example description
+For detailed description on how to run the example in general see [this README](https://github.com/roscisz/dnn_training_benchmarks/tree/master/PyTorch_dcgan_lsun/README.md)
 
 ## Running without tensorhive
 
-First export the `GLOO_SOCKET_IFNAME` environment variable on every node as shown in the Usage section. Next, find a port that is available on every node for communication. Then run separate commands as above on very node. Make sure to start with rank 0. Set world size to the number of nodes you want to run the code on. The training code and dataset needs to be available on every node.
+First export the `GLOO_SOCKET_IFNAME` environment variable on every node as shown in the Usage section in the linked README. Next, find a port that is available on every node for communication. Then run separate commands, as shown in description, on every node. Make sure to start with rank 0. Set world size to the number of nodes you want to run the code on. 
+
+The training code and dataset needs to be available on every node.
 
 ## Running with tensorhive
 Head to "Task Overview" (1) and click on "CREATE TASKS FROM TEMPLATE". Choose PyTorch from the drop-down list. 
