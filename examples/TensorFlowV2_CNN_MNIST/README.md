@@ -22,7 +22,7 @@ pip install -r requirements.txt
 ## Running the training without TensorHive
 For the sake of example let's assume that:
 
- - we have a cluster of two nodes: gl01 and gl02
+ - we have a cluster of two nodes: des01.kask and des02.kask
  - on each of them Python binary location is `/path/to/python`
  - training file location is `/path/to/train_multi_worker_mirrored_strategy.py`
 
@@ -31,13 +31,13 @@ On each node we need to specify the **TF_CONFIG** environment variable, which is
 
 Exaple settings of **TF_CONFIG** in our cluster:
 
-gl01:
+des01.kask:
 ```json
 {
    "cluster":{
       "worker":[
-         "gl01:2222",
-         "gl02:2222"
+         "des01.kask:2222",
+         "des02.kask:2222"
       ]
    },
    "task":{
@@ -48,13 +48,13 @@ gl01:
 ```
 
 
-gl02:
+des02.kask:
 ```json
 {
    "cluster":{
       "worker":[
-         "gl01:2222",
-         "gl02:2222"
+         "des01.kask:2222",
+         "des02.kask:2222"
       ]
    },
    "task":{
@@ -70,16 +70,16 @@ Usually we can adjust training settings via command line parameters. In our exam
 ### Summary
 In order to start distributed training on our cluster we will need to run following command line:
 
-gl01:
+des01.kask:
 ```bash
-export TF_CONFIG='{"cluster":{"worker":["gl01:2222", "gl02:2222"]}, "task":{"type": "worker", "index": 0}}'
+export TF_CONFIG='{"cluster":{"worker":["des01.kask:2222", "des02.kask:2222"]}, "task":{"type": "worker", "index": 0}}'
 ```
 ```bash
 /path/to/python /path/to/train_multi_worker_mirrored_strategy.py --batch_size 32
 ```
-gl02:
+des02.kask:
 ```bash
-export TF_CONFIG='{"cluster":{"worker":["gl01:2222", "gl02:2222"]}, "task":{"type": "worker", "index": 1}}'
+export TF_CONFIG='{"cluster":{"worker":["des01.kask:2222", "des02.kask:2222"]}, "task":{"type": "worker", "index": 1}}'
 ```
 ```bash
 /path/to/python /path/to/train_multi_worker_mirrored_strategy.py --batch_size 32
