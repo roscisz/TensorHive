@@ -86,21 +86,35 @@ export TF_CONFIG='{"cluster":{"worker":["des01.kask:2222", "des02.kask:2222"]}, 
 /path/to/python /path/to/train_multi_worker_mirrored_strategy.py --batch_size 32
 ```
 ## Running the training with TensorHive
-Head to `Tasks Overview` view. 
-//1.png
+Head to `Tasks Overview` view.
+
+![1](https://github.com/roscisz/TensorHive/tree/master/examples/TensorFlowV2_CNN_MNIST/img/1.PNG)
+
 Click on `CREATE TASKS FROM TEMPLATE` button and choose *Tensorflow - TF_CONFIG* from the drop-down list. Now `Task Creator` popup window should be visible.
-//2.png
+
+![2](https://github.com/roscisz/TensorHive/tree/master/examples/TensorFlowV2_CNN_MNIST/img/2.PNG)
+
+
 `Task Creator` provides GUI for commands creation. Current command state is always displayed at the top of the popup window.
 Start by setting *Command* to:
 ```
 /path/to/python /path/to/train_multi_worker_mirrored_strategy.py
 ```
 To add command parameter, start by inserting it's name - in our example "batch_size". Make sure to check `Static` checkbox (which will propagate parameter value to all processes). After clicking `ADD AS PARAMETER TO ALL TASKS` button, *batch_size* pamater input should be visible next to *Command* input. Finally, we can set it's value to 32.
-//3.png
+
+![3](https://github.com/roscisz/TensorHive/tree/master/examples/TensorFlowV2_CNN_MNIST/img/3.PNG)
+
+
 Now select the *hostname* and *resource* (CPU/GPU) for your first machine. Note that `CUDA_VISIBLE_DEVICES` and `TF_CONFIG` environment variables are configured automatically.
-//4.png
+
+![4](https://github.com/roscisz/TensorHive/tree/master/examples/TensorFlowV2_CNN_MNIST/img/4.PNG)
+
+
 First command is ready. Adding commands for other nodes is very simple - you just need to use `ADD TASK` button and set *hostname* value (note that other parameters are adjusted automatically). Finally, click `CREATE ALL TASKS` button to save commands.
-//5.png
+
+![5](https://github.com/roscisz/TensorHive/tree/master/examples/TensorFlowV2_CNN_MNIST/img/5.PNG)
+
+
 Now newly created task should be visible in `Task Overview` view. You can now control them from here, see available actions on far right next to them. For now available options are:
 - Schedule (Choose when to run the task)
 - Spawn (Run the task now)
