@@ -1,4 +1,5 @@
 
+
 # Using TensorHive for running distributed trainings in TensorFlow
 Running distributed training in TensorFlow in multi-node environment requires spawning and managing processes on multiple machines.
 
@@ -96,3 +97,17 @@ Start by setting *Command* to:
 ```
 To add command parameter, start by inserting it's name - in our example "batch_size". Make sure to check `Static` checkbox (which will propagate parameter value to all processes). After clicking `ADD AS PARAMETER TO ALL TASKS` button, *batch_size* pamater input should be visible next to *Command* input. Finally, we can set it's value to 32.
 //3.png
+Now select the *hostname* and *resource* (CPU/GPU) for your first machine. Note that `CUDA_VISIBLE_DEVICES` and `TF_CONFIG` environment variables are configured automatically.
+//4.png
+First command is ready. Adding commands for other nodes is very simple - you just need to use `ADD TASK` button and set *hostname* value (note that other parameters are adjusted automatically). Finally, click `CREATE ALL TASKS` button to save commands.
+//5.png
+Now newly created task should be visible in `Task Overview` view. You can now control them from here, see available actions on far right next to them. For now available options are:
+- Schedule (Choose when to run the task)
+- Spawn (Run the task now)
+- Terminate (Send terminate command to the task)
+- Kill (Send kill command)
+- Show log (Read output of the task)
+- Edit 
+- Remove
+
+Having that high level control over all of the tasks from a single place can be extremely time-saving!
