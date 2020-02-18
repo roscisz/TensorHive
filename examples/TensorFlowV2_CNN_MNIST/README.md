@@ -115,7 +115,7 @@ First command is ready. Adding commands for other nodes is very simple - you jus
 ![5](https://github.com/roscisz/TensorHive/tree/master/examples/TensorFlowV2_CNN_MNIST/img/5.PNG)
 
 
-Now newly created task should be visible in `Task Overview` view. You can now control them from here, see available actions on far right next to them. For now available options are:
+Now newly created tasks should be visible in `Task Overview` view. You can control them from here, see available actions on far right next to them. For now available options are:
 - Schedule (Choose when to run the task)
 - Spawn (Run the task now)
 - Terminate (Send terminate command to the task)
