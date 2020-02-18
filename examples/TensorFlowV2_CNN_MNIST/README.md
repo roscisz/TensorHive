@@ -68,7 +68,7 @@ gl02:
 Usually we can adjust training settings via command line parameters. In our example we will use `--batch_size` parameter to set batch size to 32.
 
 ### Summary
-To sum up, in order to start distributed training on our cluster we will need to run following command line:
+In order to start distributed training on our cluster we will need to run following command line:
 
 gl01:
 ```bash
