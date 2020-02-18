@@ -84,3 +84,15 @@ export TF_CONFIG='{"cluster":{"worker":["gl01:2222", "gl02:2222"]}, "task":{"typ
 ```bash
 /path/to/python /path/to/train_multi_worker_mirrored_strategy.py --batch_size 32
 ```
+## Running the training with TensorHive
+Head to `Tasks Overview` view. 
+//1.png
+Click on `CREATE TASKS FROM TEMPLATE` button and choose *Tensorflow - TF_CONFIG* from the drop-down list. Now `Task Creator` popup window should be visible.
+//2.png
+`Task Creator` provides GUI for commands creation. Current command state is always displayed at the top of the popup window.
+Start by setting *Command* to:
+```
+/path/to/python /path/to/train_multi_worker_mirrored_strategy.py
+```
+To add command parameter, start by inserting it's name - in our example "batch_size". Make sure to check `Static` checkbox (which will propagate parameter value to all processes). After clicking `ADD AS PARAMETER TO ALL TASKS` button, *batch_size* pamater input should be visible next to *Command* input. Finally, we can set it's value to 32.
+//3.png
