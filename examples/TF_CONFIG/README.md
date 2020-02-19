@@ -13,7 +13,7 @@ has to be run on each node with the appropriate values of parameters set as foll
 
 **TF_CONFIG**
 
-The TF_CONFIG environment variable has to be appropriatly configured depending
+The TF_CONFIG environment variable has to be appropriately configured depending
 on the set of nodes taking part in the computations.
 For example, a training on two nodes gl01 and gl02 would require the following
 settings of TF_CONFIG:
