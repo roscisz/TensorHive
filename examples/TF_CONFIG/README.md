@@ -79,7 +79,7 @@ In the task creator, we set the Command to
 /home/roy/venv/p37avxmpitf2/bin/python /home/roy/dnn_training_benchmarks/TensorFlowV2_MSG-GAN_Fashion-MNIST/train.py
 ```
 
-In order to add the LD_LIBRARY_PATH environment variable, we specify the parameter name,
+In order to add the LD_LIBRARY_PATH environment variable, we enter the parameter name,
 select Static (the same value for all processes) and click `ADD AS ENV VARIABLE TO ALL TASKS`:
 
 ![env_var](https://github.com/roscisz/TensorHive/tree/master/examples/TF_CONFIG/img/env_var.png)
@@ -87,8 +87,8 @@ select Static (the same value for all processes) and click `ADD AS ENV VARIABLE 
 Then, set the appropriate value of the environment variable (/usr/mpi/gcc/openmpi-4.0.0rc5/lib/).
 
 The task creator allows also to conveniently specify other command-line arguments. For example,
-to specify batch size, we specify parameter name --batch_size, again select Static and click
-`ADD AS PARAMETER TO ALL TASKS` and specify its value (in our case 32).
+to specify batch size, we enter parameter name --batch_size, again select Static and click
+`ADD AS PARAMETER TO ALL TASKS` and set its value (in our case 32).
 
 Select the required hostname and resource (CPU/GPU_N) for the specified training process. The resultant
 command that will be executed by TensorHive on the selected node will be displayed above the process specification:
