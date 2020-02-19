@@ -44,6 +44,27 @@ is used, so the python binary has to be defined as follows:
 /home/roy/venv/p37avxmpitf2/bin/python
 ```
 
+**Summary**
+
+Finally, full commands required to start in the exemplary setup our environment, we be as follows:
+
+gl01:
+
+```bash
+export TF_CONFIG='{"cluster":{"worker":["gl01:2222", "gl02:2222"]}, "task":{"type": "worker", "index": 0}}'
+export LD_LIBRARY_PATH='/usr/mpi/gcc/openmpi-4.0.0rc5/lib/'
+/home/roy/venv/p37avxmpitf2/bin/python /home/roy/dnn_training_benchmarks/TensorFlowV2_MSG-GAN_Fashion-MNIST/train.py
+```
+
+gl02:
+
+```
+export TF_CONFIG='{"cluster":{"worker":["gl01:2222", "gl02:2222"]}, "task":{"type": "worker", "index": 1}}'
+export LD_LIBRARY_PATH='/usr/mpi/gcc/openmpi-4.0.0rc5/lib/'
+/home/roy/venv/p37avxmpitf2/bin/python /home/roy/dnn_training_benchmarks/TensorFlowV2_MSG-GAN_Fashion-MNIST/train.py
+```
+
+
 ## Running the training with TensorHive
 
 The TensorHive `task nursery` module allows convenient orchestration of distributed trainings.
