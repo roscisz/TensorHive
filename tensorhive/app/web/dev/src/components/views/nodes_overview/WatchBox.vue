@@ -169,12 +169,14 @@ export default {
       for (var metricIndex in metrics) {
         this.metrics.push(metrics[metricIndex])
       }
-      this.metrics.push('processes')
+      if (this.selectedResourceType === 'GPU') {
+        this.metrics.push('processes')
+      }
       if (this.defaultMetric === '') {
         var metric = this.metrics[0]
         for (metricIndex in this.metrics) {
           var metricName = this.metrics[metricIndex]
-          if (metricName === 'gpu_util') {
+          if (metricName === 'utilization') {
             metric = metricName
             break
           } else if (metricName === 'mem_used') {

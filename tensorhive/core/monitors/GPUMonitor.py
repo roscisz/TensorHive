@@ -1,4 +1,4 @@
-from tensorhive.core.monitors.MonitoringBehaviour import MonitoringBehaviour
+from tensorhive.core.monitors.Monitor import Monitor
 from tensorhive.core.utils.decorators import override
 from typing import Dict, List
 from tensorhive.core.utils.NvidiaSmiParser import NvidiaSmiParser
@@ -7,15 +7,14 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class GPUMonitoringBehaviour(MonitoringBehaviour):
+class GPUMonitor(Monitor):
     '''Responsible for fetching data about installed GPUs within configured network'''
 
     @override
-    def update(self, group_connection) -> Dict:
-        metrics = self._query_gpu_for_metrics(group_connection)  # type: Dict
-        processes = self._current_processes(group_connection)  # type: Dict
-        result = self._combine_outputs(metrics, processes)  # type: Dict
-        return result
+    def update(self, group_connection, infrastructure_manager):
+        self._update_gpu_metrics(group_connection, infrastructure_manager)
+        processes = self._current_processes(group_connection, infrastructure_manager)  # type: Dict
+        self._update_processes(infrastructure_manager, processes)
 
     @property
     def composed_query_command(self) -> str:
@@ -48,7 +47,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
             format_options=format_options)
         return command
 
-    def _query_gpu_for_metrics(self, group_connection) -> Dict:
+    def _update_gpu_metrics(self, group_connection, infrastructure_manager):
         '''
         Executes a query on each node within group_connection, then
         it returns gathered information as a dictionary.
@@ -78,7 +77,6 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         output = group_connection.run_command(self.composed_query_command, stop_on_errors=False)
         group_connection.join(output)
 
-        result = {}
         for host, host_out in output.items():
             if host_out.exit_code == 0:
                 # Command executed successfully
@@ -90,8 +88,8 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
                 elif host_out.exception:
                     log.error('nvidia-smi raised {} on {}'.format(host_out.exception.__class__.__name__, host))
                 metrics = None
-            result[host] = {'GPU': metrics}
-        return result
+
+            infrastructure_manager.infrastructure[host]['GPU'] = metrics
 
     def _get_process_owner(self, pid: int, hostname: str, connection) -> str:
         '''Use single-host connection to acquire process owner using `ps`'''
@@ -159,7 +157,7 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
             fi
         '''
 
-    def _current_processes(self, group_connection) -> Dict:
+    def _current_processes(self, group_connection, infrastructure_manager) -> Dict:
         '''
         Fetches the information about all active gpu processes using nvidia-smi pmon
 
@@ -194,9 +192,9 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
             result[host] = processes
         return result
 
-    def _combine_outputs(self, metrics: Dict, processes: Dict) -> Dict:
+    def _update_processes(self, infrastructure_manager, processes: Dict):
         '''
-        Merges two dicts in place
+        Updates processes for the appropriate GPU records in infrastructure manager
 
         Example result:
         {
@@ -226,20 +224,19 @@ class GPUMonitoringBehaviour(MonitoringBehaviour):
         }
         '''
         for hostname, gpu_processes_on_node in processes.items():
-            if metrics[hostname].get('GPU') is None:
+            if infrastructure_manager.infrastructure[hostname].get('GPU') is None:
                 # Can't access any GPU right now, e.g. could not connect to host or nvidia-smi failure
                 continue
 
             # Introduce new key - 'processes' with default value
-            for uuid, _ in metrics[hostname]['GPU'].items():
-                metrics[hostname]['GPU'][uuid]['processes'] = None
+            for uuid, _ in infrastructure_manager.infrastructure[hostname]['GPU'].items():
+                infrastructure_manager.infrastructure[hostname]['GPU'][uuid]['processes'] = None
 
             # Unpack every known process and move to the corresponding GPU
             for process in gpu_processes_on_node:
                 uuid = process.pop('uuid')
 
                 # Replace default value with an empty list, because we have a new process to append
-                if metrics[hostname]['GPU'][uuid]['processes'] is None:
-                    metrics[hostname]['GPU'][uuid]['processes'] = []
-                metrics[hostname]['GPU'][uuid]['processes'].append(process)
-        return metrics
+                if infrastructure_manager.infrastructure[hostname]['GPU'][uuid]['processes'] is None:
+                    infrastructure_manager.infrastructure[hostname]['GPU'][uuid]['processes'] = []
+                infrastructure_manager.infrastructure[hostname]['GPU'][uuid]['processes'].append(process)

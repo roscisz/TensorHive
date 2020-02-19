@@ -8,12 +8,12 @@ class InfrastructureManager():
     '''
     Holds the state/representation of discovered/known infrastruture with metrics
     '''
-    _infrastructure = {}  # type: Dict
+
+    def __init__(self, available_nodes):
+        self._infrastructure = {}  # type: Dict
+        for node in available_nodes.keys():
+            self._infrastructure[node] = {}  # type: Dict
 
     @property
     def infrastructure(self) -> Dict:
         return self._infrastructure
-
-    def update_infrastructure(self, new_value: Dict):
-        self._infrastructure = new_value
-        # log.debug('\n{}\n'.format(json.dumps(self._infrastructure, indent=4)))

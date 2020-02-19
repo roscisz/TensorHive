@@ -147,26 +147,38 @@ export default {
         .request('get', '/nodes/metrics', this.$store.state.accessToken)
         .then(response => {
           if (JSON.parse(window.localStorage.getItem('watches')) === null) {
-            this.watches = [
-              {
-                id: 0,
-                defaultNode: '',
-                defaultResourceType: '',
-                defaultMetric: 'gpu_util'
-              },
-              {
-                id: 1,
-                defaultNode: '',
-                defaultResourceType: '',
-                defaultMetric: 'mem_used'
-              },
-              {
-                id: 2,
-                defaultNode: '',
-                defaultResourceType: '',
-                defaultMetric: 'processes'
+            var id = 0
+            this.watches = []
+            for (var host in response.data) {
+              var hostData = response.data[host]
+              if ('GPU' in hostData) {
+                this.watches.push({
+                  id: id++,
+                  defaultNode: host,
+                  defaultResourceType: 'GPU',
+                  defaultMetric: 'utilization'
+                })
+                this.watches.push({
+                  id: id++,
+                  defaultNode: host,
+                  defaultResourceType: 'GPU',
+                  defaultMetric: 'mem_used'
+                })
+                this.watches.push({
+                  id: id,
+                  defaultNode: host,
+                  defaultResourceType: 'GPU',
+                  defaultMetric: 'processes'
+                })
+              } else {
+                this.watches.push({
+                  id: id++,
+                  defaultNode: host,
+                  defaultResourceType: 'CPU',
+                  defaultMetric: 'utilization'
+                })
               }
-            ]
+            }
           } else {
             this.watches = JSON.parse(window.localStorage.getItem('watches'))
             this.watchIds = JSON.parse(window.localStorage.getItem('watchIds'))
@@ -198,7 +210,7 @@ export default {
             uniqueMetricNames = []
             resourceType = node[resourceTypeName]
             if (resourceType !== null) {
-              metrics = this.findMetrics(resourceType)
+              metrics = this.findMetrics(resourceType, resourceTypeName)
               for (var metricName in metrics) {
                 uniqueMetricNames.push(metricName)
               }
@@ -213,7 +225,7 @@ export default {
       }
     },
 
-    findMetrics: function (resourceType) {
+    findMetrics: function (resourceType, resourceTypeName) {
       var resource, metric, tempMetrics, uniqueMetrics
       tempMetrics = {}
       uniqueMetrics = {}
@@ -244,13 +256,13 @@ export default {
       }
       for (var uniqueMetricName in uniqueMetrics) {
         if (uniqueMetrics[uniqueMetricName].visible === true) {
-          tempMetrics[uniqueMetricName] = this.createMetric(resourceType, uniqueMetricName)
+          tempMetrics[uniqueMetricName] = this.createMetric(resourceType, resourceTypeName, uniqueMetricName)
         }
       }
       return tempMetrics
     },
 
-    createMetric: function (resourceType, metricName) {
+    createMetric: function (resourceType, resourceTypeName, metricName) {
       var labels, totalMemory, value, unit, datasets, orderedDatasets
       labels = []
       for (var i = (this.chartLength - 1) * this.time / 1000; i >= 0; i -= this.time / 1000) {
@@ -269,7 +281,7 @@ export default {
           datasets.push(
             this.createDataset(
               resourceUUID,
-              'GPU' + resourceType[resourceUUID].index,
+              resourceTypeName + resourceType[resourceUUID].index,
               this.setColor(resourceType[resourceUUID].index + 1),
               value
             )
@@ -343,7 +355,7 @@ export default {
         }
       }
       obj['scales']['yAxes'][0]['scaleLabel']['labelString'] = unit
-      if (metricName === 'mem_util' || metricName === 'gpu_util' || metricName === 'fan_speed') {
+      if (metricName === 'mem_util' || metricName === 'utilization' || metricName === 'fan_speed') {
         obj['scales']['yAxes'][0]['ticks'] = {
           suggestedMin: 0,
           max: 100
@@ -371,37 +383,42 @@ export default {
     apiRequest: function (node, nodeName, counter) {
       var metric, resourceType, value
       var data = []
-      api
-        .request('get', '/nodes/' + nodeName + '/gpu/metrics', this.$store.state.accessToken)
-        .then(response => {
-          data = response.data
-          for (var resourceTypeName in node) {
-            resourceType = node[resourceTypeName]
-            for (var metricName in resourceType.metrics) {
-              metric = resourceType.metrics[metricName]
-              for (var i = 0; i < metric.data.datasets.length; i++) {
-                value = isNaN(data[metric.data.datasets[i].uuid][metric.metricName])
-                  ? data[metric.data.datasets[i].uuid][metric.metricName].value
-                  : data[metric.data.datasets[i].uuid][metric.metricName]
-                metric.data.datasets[i].data.shift()
-                metric.data.datasets[i].data.push(value)
+      for (var resourceTypeName in node) {
+        resourceType = node[resourceTypeName]
+        api
+          .request('get', '/nodes/' + nodeName + '/' + resourceTypeName.toLowerCase() + '/metrics', this.$store.state.accessToken)
+          .then(response => {
+            data = response.data
+            for (var resourceTypeName in node) {
+              resourceType = node[resourceTypeName]
+              for (var metricName in resourceType.metrics) {
+                metric = resourceType.metrics[metricName]
+                for (var i = 0; i < metric.data.datasets.length; i++) {
+                  if (_.has(data, metric.data.datasets[i].uuid)) {
+                    value = isNaN(data[metric.data.datasets[i].uuid][metric.metricName])
+                      ? data[metric.data.datasets[i].uuid][metric.metricName].value
+                      : data[metric.data.datasets[i].uuid][metric.metricName]
+                    metric.data.datasets[i].data.shift()
+                    metric.data.datasets[i].data.push(value)
+                  }
+                }
               }
             }
-          }
-          if (!counter) {
-            this.updateChart = !this.updateChart
-          }
-        })
-        .catch(error => {
-          this.handleError(error)
-        })
+            if (!counter) {
+              this.updateChart = !this.updateChart
+            }
+          })
+          .catch(error => {
+            this.handleError(error)
+          })
+      }
     },
 
     addWatch: function () {
       this.watches.push({
         id: this.watchIds,
         defaultNode: '',
-        defaultResourceType: '',
+        defaultResourceType: 'GPU',
         defaultMetric: ''
       })
       this.watchIds++
