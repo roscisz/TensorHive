@@ -33,5 +33,3 @@ class CPUMonitor(Monitor):
                     log.error('cpu query raised {} on {}'.format(host_out.exception.__class__.__name__, host))
                 metrics = None
             infrastructure_manager.infrastructure[host]['CPU'] = metrics
-
-
