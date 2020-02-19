@@ -14,12 +14,12 @@ setup(
             'tensorhive = tensorhive.__main__:main'
         ],
     },
-    description='Lightweight computing resource management tool for executing distributed TensorFlow programs',
-    author='Pawel Rosciszewski, Michal Martyniak, Filip Schodowski, Tomasz Menet',
+    description='A user-friendly GPU management tool for distributed machine learning workloads',
+    author='Pawel Rosciszewski, Michal Martyniak, Filip Schodowski',
     author_email='pawel.rosciszewski@pg.edu.pl',
     url='https://github.com/roscisz/TensorHive',
     download_url='https://github.com/roscisz/TensorHive/archive/{}.tar.gz'.format(tensorhive.__version__),
-    keywords='distributed machine learning tensorflow resource management',
+    keywords='reservation monitoring machine learning distributed tensorflow pytorch',
     install_requires=[
         'parallel-ssh==1.9.1',
         'passlib==1.7.1',
