@@ -46,7 +46,7 @@ is used, so the python binary has to be defined as follows:
 
 **Summary**
 
-Finally, full commands required to start in the exemplary setup our environment, we be as follows:
+Finally, full commands required to start in the exemplary setup our environment, will be as follows:
 
 gl01:
 
