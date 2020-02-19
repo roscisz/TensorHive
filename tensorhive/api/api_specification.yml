@@ -571,6 +571,29 @@ paths:
           description: {{RESPONSES['general']['auth_error']}}
       security:
         - Bearer: []
+  /nodes/{hostname}/cpu/metrics:
+    get:
+      tags:
+        - nodes
+      summary: Get node's CPU metric data
+      description: Puts null if some data is unavailable
+      operationId: tensorhive.controllers.nodes.cpu_controller.get_metrics
+      parameters:
+        - $ref: '#/parameters/hostnameParam'
+        - $ref: '#/parameters/cpuMetricTypeQuery'
+      responses:
+        200:
+          description: {{RESPONSES['general']['ok']}}
+          schema:
+            $ref: '#/definitions/CPUMetrics'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        404:
+          description: {{RESPONSES['nodes']['hostname']['not_found']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
+      security:
+        - Bearer: []
   /nodes/{hostname}/gpu/processes:
     get:
       tags: 
@@ -1400,7 +1423,7 @@ definitions:
     type: object
     example:
       <GPU_UUID (All metrics case)>:
-        gpu_util:
+        utilization:
           unit: '%'
           value: 95
         power:
@@ -1409,6 +1432,8 @@ definitions:
       <GPU_UUID (Specific metric case)>:
         unit: '%'
         value: 95
+  CPUMetrics:
+    type: object
   GPUProcesses:
     type: object
     example:
@@ -1437,10 +1462,21 @@ parameters:
       - mem_free
       - mem_used
       - mem_total
-      - gpu_util
+      - utilization
       - mem_util
       - temp
       - power
+  cpuMetricTypeQuery:
+    description: Metric type. If not present, queries for all metrics
+    in: query
+    name: metric_type
+    required: false
+    type: string
+    enum:
+      - mem_free
+      - mem_used
+      - mem_total
+      - utilization
 securityDefinitions:
   Bearer:
     type: apiKey

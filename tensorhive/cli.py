@@ -165,7 +165,7 @@ def init():
         click.echo('[•] There are some users in the database already, skipping...')
 
     # Edit configs
-    click.echo('[3/3] ' + green('Done ✔!') + ' Now you just need to adjust these config to your needs:\n')
+    click.echo('[3/3] ' + green('Done ✔!') + ' Now you just need to adjust these configs to your needs:\n')
     click.echo(cleandoc('''
         (required) {hosts}
         (optional) {main}
@@ -188,9 +188,11 @@ def key():
     public_key = private_key.get_base64()
 
     info_msg = '''
-        This is the public key which will be used by TensorHive to reach configured nodes via SSH.
-        Copy and paste it into ~/.ssh/authorized_keys
-        Make sure that all nodes you've defined in hosts_config.ini know that key.
+        This is the public key which will be used by TensorHive to reach your configured nodes via SSH,
+        and allow for running remote tasks.
+        Make sure that all nodes you've defined in ~/.config/TensorHive/hosts_config.ini know that key:
+        just copy and paste it into ~/.ssh/authorized_keys on each target node.
+
     '''
     authorized_keys_entry = 'ssh-rsa {pub_key} {username}@{hostname}'.format(
         pub_key=public_key,

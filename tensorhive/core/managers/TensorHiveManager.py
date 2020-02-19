@@ -12,7 +12,8 @@ from tensorhive.api.APIServer import APIServer
 from tensorhive.core.utils.StoppableThread import StoppableThread
 from tensorhive.core.utils.exceptions import ConfigurationException
 from tensorhive.core.monitors.Monitor import Monitor
-from tensorhive.core.monitors.GPUMonitoringBehaviour import GPUMonitoringBehaviour
+from tensorhive.core.monitors.GPUMonitor import GPUMonitor
+from tensorhive.core.monitors.CPUMonitor import CPUMonitor
 from tensorhive.core.services.MonitoringService import MonitoringService
 from tensorhive.core.services.ProtectionService import ProtectionService
 from tensorhive.core.services.UsageLoggingService import UsageLoggingService
@@ -31,7 +32,7 @@ class TensorHiveManager(metaclass=Singleton):
 
     def __init__(self):
         super().__init__()
-        self.infrastructure_manager = InfrastructureManager()
+        self.infrastructure_manager = InfrastructureManager(SSH.AVAILABLE_NODES)
 
         self.dedicated_ssh_key = ssh.init_ssh_key(PosixPath(SSH.KEY_FILE).expanduser())
 
@@ -59,7 +60,7 @@ class TensorHiveManager(metaclass=Singleton):
         if failed_dedicated > 0:
             failed_system = SSHConnectionManager.test_all_connections(config=SSH.AVAILABLE_NODES)
             if failed_system < failed_dedicated:
-                log.info('[⚙] Using default system keys for monitoring SSH connections')
+                log.info('[⚙] TensorHive will be using default system keys for monitoring SSH connections')
                 ret = None
 
         return ret
@@ -69,10 +70,9 @@ class TensorHiveManager(metaclass=Singleton):
         '''Creates preconfigured instances of services based on config'''
         services = []  # type: List[Service]
         if MONITORING_SERVICE.ENABLED:
-            monitors = []
+            monitors = [CPUMonitor()]  # type: List[Monitor]
             if MONITORING_SERVICE.ENABLE_GPU_MONITOR:
-                gpu_monitor = Monitor(GPUMonitoringBehaviour())
-                monitors.append(gpu_monitor)
+                monitors.append(GPUMonitor())
             # TODO Add more monitors here
             monitoring_service = MonitoringService(monitors=monitors, interval=MONITORING_SERVICE.UPDATE_INTERVAL)
             services.append(monitoring_service)

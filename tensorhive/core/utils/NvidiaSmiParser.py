@@ -17,7 +17,7 @@ class NvidiaSmiParser():
         'memory.free [MiB]': 'mem_free',
         'memory.used [MiB]': 'mem_used',
         'memory.total [MiB]': 'mem_total',
-        'utilization.gpu [%]': 'gpu_util',
+        'utilization.gpu [%]': 'utilization',
         'utilization.memory [%]': 'mem_util',
         'temperature.gpu': 'temp',
         'power.draw [W]': 'power'
