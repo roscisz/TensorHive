@@ -56,6 +56,7 @@
           @changeLine="changeLine(line.id, ...arguments)"
           @deleteLine="deleteLine(line.id)"
           @staticParameterChanged="staticParameterChanged(line.id, ...arguments)"
+          @psWorkerParameterChanged="updatePsWorkerHosts(-1, '')"
           @staticEnvVariableChanged="staticEnvVariableChanged(line.id, ...arguments)"
           @staticParameterDeleted="staticParameterDeleted(line.id, ...arguments)"
           @staticEnvVariableDeleted="staticEnvVariableDeleted(line.id, ...arguments)"
@@ -409,6 +410,9 @@ export default {
           if (host !== this.lines[index].host && enableTfConfig && this.enableSmartTfConfig) {
             this.updateTfConfigHost(id, host)
           }
+          if (this.chosenTemplate === 'tf1') {
+            this.updatePsWorkerHosts(index, host)
+          }
           this.lines[index].host = host
           this.lines[index].resource = resource
           this.lines[index].command = command
@@ -478,6 +482,61 @@ export default {
             if (this.lines[index].envVariables[variableIndex].envVariable === variable) {
               this.lines[index].envVariables.splice(variableIndex, 1)
             }
+          }
+        }
+      }
+    },
+
+    updatePsWorkerHosts: function (index, host) {
+      var psHosts = []
+      var workerHosts = []
+      var currentPort = 2222
+
+      for (let line in this.lines) {
+        let currLine = this.lines[line]
+        let jobName = ''
+        for (let paramIndex in currLine.parameters) {
+          if (currLine.parameters[paramIndex].parameter === '--job_name=') {
+            jobName = currLine.parameters[paramIndex].value
+          }
+        }
+        for (let paramIndex in currLine.parameters) {
+          if (currLine.parameters[paramIndex].parameter === '--task_index=') {
+            let lineHost = ''
+            if (line === index) {
+              lineHost = host
+            } else {
+              lineHost = currLine.host
+            }
+            if (jobName === 'worker') {
+              workerHosts[currLine.parameters[paramIndex].value] = lineHost + ':' + currentPort.toString()
+              currentPort++
+            } else if (jobName === 'ps') {
+              psHosts[currLine.parameters[paramIndex].value] = lineHost + ':' + currentPort.toString()
+              currentPort++
+            }
+          }
+        }
+      }
+
+      var psHostsParam = ''
+      var workerHostsParam = ''
+
+      for (let pHost in psHosts) {
+        psHostsParam += psHosts[pHost] + ','
+      }
+      psHostsParam = psHostsParam.replace(/,\s*$/, '')
+      for (let wHost in workerHosts) {
+        workerHostsParam += workerHosts[wHost] + ','
+      }
+      workerHostsParam = workerHostsParam.replace(/,\s*$/, '')
+
+      for (let line in this.lines) {
+        for (let paramIndex in this.lines[line].parameters) {
+          if (this.lines[line].parameters[paramIndex].parameter === '--ps_hosts=') {
+            this.lines[line].parameters[paramIndex].value = psHostsParam
+          } else if (this.lines[line].parameters[paramIndex].parameter === '--worker_hosts=') {
+            this.lines[line].parameters[paramIndex].value = workerHostsParam
           }
         }
       }

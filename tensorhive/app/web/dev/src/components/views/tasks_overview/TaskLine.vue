@@ -237,6 +237,9 @@ export default {
               this.$emit('staticParameterChanged', parameter, value)
             }
           }
+          if (parameter === '--job_name=' || parameter === '--task_index=') {
+            this.$emit('psWorkerParameterChanged')
+          }
         }
       }
     },
