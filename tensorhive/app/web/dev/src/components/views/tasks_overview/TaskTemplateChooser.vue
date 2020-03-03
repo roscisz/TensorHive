@@ -51,8 +51,8 @@ export default {
       chosenTemplate: '',
       possibleTemplates: [
         'No template',
-        'Tensorflow - cluster parameters',
-        'Tensorflow - TF_CONFIG',
+        'TensorFlow - cluster parameters',
+        'TensorFlow - TF_CONFIG',
         'PyTorch'
       ],
       show: false
