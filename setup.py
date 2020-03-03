@@ -26,6 +26,7 @@ setup(
         'sqlalchemy==1.3.0',
         'sqlalchemy-utils==0.33.8',
         'click==7.0',
+        'werkzeug==0.16.1',
         'connexion==1.5.3',
         'flask_cors==3.0.7',
         'flask_jwt_extended==3.13.1',
