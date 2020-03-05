@@ -7,6 +7,12 @@
       :hostnames="hostnames"
       :hosts="hosts"
       :actionFlag="actionFlag"
+      :chosen-template="chosenTemplate"
+    />
+    <TaskTemplateChooser
+      :show-modal="showModalChooseTemplate"
+      @close="showModalChooseTemplate = false"
+      @openFromTemplate="openFromTemplate"
     />
     <TaskEdit
       :show-modal="showModalEdit"
@@ -189,7 +195,8 @@
       </v-data-table>
     </div>
     <div class="text-xs-center pt-2">
-      <v-btn color="primary" @click="showModalCreate=true">Create tasks</v-btn>
+      <v-btn color="primary" @click="openFromTemplate('')">Create tasks</v-btn>
+      <v-btn color="primary" @click="showModalChooseTemplate=true">Create tasks from template</v-btn>
       <v-tooltip top>
         <template v-slot:activator="{ on }">
           <v-icon v-on="on" @click="getTasks(true)">refresh</v-icon>
@@ -242,8 +249,10 @@ import TaskCreate from './tasks_overview/TaskCreate.vue'
 import TaskEdit from './tasks_overview/TaskEdit.vue'
 import TaskSchedule from './tasks_overview/TaskSchedule.vue'
 import TaskLog from './tasks_overview/TaskLog.vue'
+import TaskTemplateChooser from './tasks_overview/TaskTemplateChooser'
 export default {
   components: {
+    TaskTemplateChooser,
     TaskCreate,
     TaskEdit,
     TaskSchedule,
@@ -269,6 +278,8 @@ export default {
       hostnames: [],
       hosts: {},
       showModalCreate: false,
+      chosenTemplate: '',
+      showModalChooseTemplate: false,
       showModalEdit: false,
       showModalSchedule: false,
       showModalHowItWorks: false,
@@ -595,6 +606,11 @@ export default {
             this.actionFlag = false
           })
       }
+    },
+
+    openFromTemplate: function (chosenTemplate) {
+      this.chosenTemplate = chosenTemplate
+      this.showModalCreate = true
     }
   }
 }

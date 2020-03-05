@@ -68,7 +68,7 @@ class Log:
         'messages': [],
         'timestamps': [],
         'metrics': {
-            'gpu_util': {
+            'utilization': {
                 'values': [],
                 'unit': '%'
             },
@@ -90,15 +90,15 @@ class Log:
         log['index'] = self.data['index']
 
         mem_util = self.data['metrics']['mem_util']['value']
-        gpu_util = self.data['metrics']['gpu_util']['value']
+        gpu_util = self.data['metrics']['utilization']['value']
 
         if gpu_util is not None and mem_util is not None:
             log['timestamps'].append(datetime.datetime.utcnow())
-            log['metrics']['gpu_util']['values'].append(gpu_util)
+            log['metrics']['utilization']['values'].append(gpu_util)
             log['metrics']['mem_util']['values'].append(mem_util)
             # TODO Add more metrics here
         else:
-            err_msg = '`mem_util` or `gpu_util` is not supported by this GPU'
+            err_msg = '`mem_util` or `utilization` is not supported by this GPU'
             # Append message only once
             if err_msg not in log['messages']:
                 log['messages'].append(err_msg)
@@ -215,7 +215,7 @@ class UsageLoggingService(Service):
 
                         # Generate and persist summary
                         log_contents = JSONLogFile(path=item).read()
-                        reservation.gpu_util_avg = avg(log_contents['metrics']['gpu_util']['values'])
+                        reservation.gpu_util_avg = avg(log_contents['metrics']['utilization']['values'])
                         reservation.mem_util_avg = avg(log_contents['metrics']['mem_util']['values'])
                         log.debug('Saving summary...')
                         reservation.save()

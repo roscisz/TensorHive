@@ -1,7 +1,7 @@
 TensorHive
 ===
-![](https://img.shields.io/badge/release-v0.3.1-brightgreen.svg?style=popout-square)
-![](https://img.shields.io/badge/pypi-v0.3.1-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/release-v0.3.2-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/pypi-v0.3.2-brightgreen.svg?style=popout-square)
 ![](https://img.shields.io/badge/Issues%20and%20PRs-welcome-yellow.svg?style=popout-square)
 ![](https://img.shields.io/badge/platform-Linux-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/hardware-Nvidia-green.svg?style=popout-square)
@@ -150,7 +150,8 @@ Features
 #### Core
 - [x] :mag_right: Monitor metrics on each host
     - [x] :tm: Nvidia GPUs
-    - [ ] :pager: CPU, RAM, HDD
+    - [x] :pager: CPU, RAM
+    - [ ] :open_file_folder: HDD
 - [x] :customs: Protection of reserved resources
     - [x] :warning:	Send warning messages to terminal of users who violate the rules
     - [x] :mailbox_with_no_mail: Send e-mail warnings
@@ -224,19 +225,21 @@ This diagram will help you to grasp the rough concept of the system.
 
 Contibution and feedback
 ------------------------
-**Project is still in early beta version**, so there will be some inconveniences, just be patient and keep an eye on upcoming updates.
-
 We'd :heart: to collect your observations, issues and pull requests!
 
 Feel free to **report any configuration problems, we will help you**.
 
-We plan to develop examples of running distributed DNN training applications
-in `Task nursery` along with templates for TF_CONFIG and PyTorch, deadline - March 2020 :shipit:, so stay tuned!
+We are working on user groups for differentiated GPU access control,
+grouping tasks into jobs and process-killing reservation violation handler,
+deadline - July 2020 :shipit:, so stay tuned!
+
+If you consider becoming a contributor, please look at issues labeled as 
+[**good-first-issue**](https://github.com/roscisz/TensorHive/issues?q=is%3Aissue+is%3Aopen+label%3Agood-first-issue)
+and
+[**help wanted**](https://github.com/roscisz/TensorHive/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22).
 
 Credits
 -------
-
-
 TensorHive has been greatly supported within a joint project between [**VoiceLab.ai**](https://voicelab.ai) and
 [**Gdańsk University of Technology**](https://pg.edu.pl/) titled: "Exploration and selection of methods
 for parallelization of neural network training using multiple GPUs".
