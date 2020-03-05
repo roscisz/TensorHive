@@ -9,7 +9,7 @@ class CPUMonitor(Monitor):
     @override
     def update(self, group_connection, infrastructure_manager):
         cmd = 'awk \'{u=$2+$4; t=$2+$4+$5; if (NR==1){u1=u; t1=t;} else print ($2+$4-u1) * 100 / (t-t1); }\' \
-        <(grep \'cpu \' /proc/stat) <(sleep 1;grep \'cpu \' /proc/stat);free -m | grep Mem'
+        <(grep \'cpu \' /proc/stat) <(sleep 1;grep \'cpu \' /proc/stat);free -m | awk \'NR==2\''
         output = group_connection.run_command(cmd, stop_on_errors=False)
         group_connection.join(output)
 
