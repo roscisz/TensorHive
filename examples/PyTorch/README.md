@@ -1,34 +1,89 @@
-# Using tensorhive for running distributed trainings in PyTorch
+# Using TensorHive for running distributed trainings in PyTorch
 
 ## Detailed example description
-For detailed description on how to run the example in general see [this README](https://github.com/roscisz/dnn_training_benchmarks/tree/master/PyTorch_dcgan_lsun/README.md)
 
-## Running without tensorhive
+In this example we show how the TensorHive `task execution` module can be
+used for convenient configuration and execution of distributed trainings
+implemented in PyTorch. For this purpose, we run
+[this PyTorch DCGAN sample application](https://github.com/roscisz/dnn_training_benchmarks/tree/master/PyTorch_dcgan_lsun/README.md)
+in a distributed setup consisting of a NVIDIA DGX Station server `ai` and NVIDIA DGX-1 server `dl`,
+equipped with 4 and 8 NVIDIA Tesla V100 GPUs respectively.
 
-First export the `GLOO_SOCKET_IFNAME` environment variable on every node as shown in the Usage section in the linked README. Next, find a port that is available on every node for communication. Then run separate commands, as shown in description, on every node. Make sure to start with rank 0. Set world size to the number of nodes you want to run the code on. 
+In the presented scenario, the servers were shared by a group of users using TensorHive
+and at the moment we were granted reservations for GPUs 1 and 2 on `ai` and GPUs 1 and 7 on `dl`.
+The python environment and training code were available on both nodes and
+fake training dataset was used.
 
-The training code and dataset needs to be available on every node.
 
-## Running with tensorhive
-Head to "Task Overview" (1) and click on "CREATE TASKS FROM TEMPLATE". Choose PyTorch from the drop-down list. 
+## Running without TensorHive
 
-![1](https://github.com/roscisz/TensorHive/tree/master/examples/PyTorch/img/1.png)
+In order to enable networking, we had to set the `GLOO_SOCKET_IFNAME`
+environment variable to proper network interface names on both nodes.
+We selected the 20011 TCP port for communication. 
 
-Choose host and resource to run the task on for the first node. Under command specify path to your pyhon and script to wish to run (as shown). Specify init-method. You don't need to fill in rank or world-size parameters as tensorhive will do that automatically for you.
+For our 4 GPU scenario, the following 4 processes had to be executed,
+taking into account setting consecutive `rank` parameters starting from 0 and the `world-size`
+parameter to 4:
 
-![2](https://github.com/roscisz/TensorHive/tree/master/examples/PyTorch/img/2.png)
+worker 0 on `ai`:
+```
+export CUDA_VISIBLE_DEVICES=1
+export GLOO_SOCKET_IFNAME=enp2s0f1
+./dnn_training_benchmarks/PyTorch_dcgan_lsun/examples/dcgan/venv/bin/python dnn_training_benchmarks/PyTorch_dcgan_lsun/examples/dcgan/main.py --init-method tcp://ai.eti.pg.gda.pl:20011 --backend=gloo --rank=0 --world-size=4 --dataset fake --cuda
+``` 
 
-Add as many tasks as resources you wish the code to run on using "ADD TASK" button. You can see that every parameter filled is copied to newly created tasks to save time. Adjust Hostnames and resources on the added tasks as needed.
+worker 1 on `ai`:
+```
+export CUDA_VISIBLE_DEVICES=2
+export GLOO_SOCKET_IFNAME=enp2s0f1
+./dnn_training_benchmarks/PyTorch_dcgan_lsun/examples/dcgan/venv/bin/python dnn_training_benchmarks/PyTorch_dcgan_lsun/examples/dcgan/main.py --init-method tcp://ai.eti.pg.gda.pl:20011 --backend=gloo --rank=1 --world-size=4 --dataset fake --cuda
+```
+ 
+worker 2 on `dl`:
+```
+export CUDA_VISIBLE_DEVICES=1
+export GLOO_SOCKET_IFNAME=enp1s0f0
+./dnn_training_benchmarks/PyTorch_dcgan_lsun/examples/dcgan/venv/bin/python dnn_training_benchmarks/PyTorch_dcgan_lsun/examples/dcgan/main.py --init-method tcp://ai.eti.pg.gda.pl:20011 --backend=gloo --rank=2 --world-size=4 --dataset fake --cuda
+``` 
 
-![3](https://github.com/roscisz/TensorHive/tree/master/examples/PyTorch/img/3.png)
+worker 3 on ai:
+```
+export CUDA_VISIBLE_DEVICES=7
+export GLOO_SOCKET_IFNAME=enp1s0f0
+./dnn_training_benchmarks/PyTorch_dcgan_lsun/examples/dcgan/venv/bin/python dnn_training_benchmarks/PyTorch_dcgan_lsun/examples/dcgan/main.py --init-method tcp://ai.eti.pg.gda.pl:20011 --backend=gloo --rank=3 --world-size=4 --dataset fake --cuda
+``` 
 
-Add GLOO_SOCKET_IFNAME envoirmental variable. By filling in the "Parameter name" below the tasks and clicking on "ADD AS ENV VARIABLE TO ALL TASKS" button. If you check the "Static" checkbox next to it you will be able to fill it only for one task and it will be copied to the rest of them. For most cases you will have the same connection configuration on all nodes so it can save you some effort. Fill the newly added env variable according to the configuration on your nodes. You can check the names of your internet interfaces by running `ifconfig` command on your nodes.
+
+## Running with TensorHive
+
+Because running the distributed training required in our scenario means
+logging into distributed nodes, configuring environments and running processes
+with multiple, similar parameters, differing only slightly, it is a good
+use case for the TensorHive `task execution` module.
+
+To use it, first head to "Task Overview" and click on "CREATE TASKS FROM TEMPLATE". Choose PyTorch from the drop-down list: 
+
+![choose_template](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/PyTorch/img/choose_template.png)
+
+Fill the PyTorch process template with your specific python command, command-line
+parameters and environment variables. 
+You don't need to fill in rank or world-size parameters as TensorHive will do that automatically for you:
+
+![parameters](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/PyTorch/img/parameters.png)
+
+Add as many tasks as resources you wish the code to run on using "ADD TASK" button. You can see that every parameter filled is copied to newly created tasks to save time. Adjust hostnames and resources on the added tasks as needed.
+
+![full_conf](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/PyTorch/img/full_conf.png)
+
 
 Click "CREATE ALL TASKS" button in the right bottom corner to create the tasks.
+Then, select them in the process table and use the "Spawn selected tasks" button,
+to run them on the appropriate nodes:
 
-![4](https://github.com/roscisz/TensorHive/tree/master/examples/PyTorch/img/4.png)
+![running](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/PyTorch/img/running.png)
 
-After that you can control the tasks from "Task Overview". You can see avaiable actions on far right next to them. For now avaiable options are:
+After that, the tasks can be controlled from "Task Overview". 
+The following actions are currently available:
 - Schedule (Choose when to run the task)
 - Spawn (Run the task now)
 - Terminate (Send terminate command to the task)
