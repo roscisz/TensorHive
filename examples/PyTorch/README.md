@@ -57,7 +57,7 @@ export GLOO_SOCKET_IFNAME=enp1s0f0
 ## Running with TensorHive
 
 Because running the distributed training required in our scenario means
-logging into distributed nodes, configuring environments and running processes
+logging into multiple nodes, configuring environments and running processes
 with multiple, similar parameters, differing only slightly, it is a good
 use case for the TensorHive `task execution` module.
 
