@@ -116,7 +116,8 @@ should the `train_files`, `dev_files` and `test_files` parameters change through
 processes, they could be handled by `ADD AS PARAMETER TO ALL TASKS`.
 
 Use `ADD TASK` to create as many copies of the defined process as required and
-select the appropriate hostname and resource (CPU/GPU_N) for the specified training process. The resultant
+select the appropriate hostname and resource (CPU/GPU_N) for the specified training process. Change
+`job_name` to `ps` for the parameter server process. The resultant
 command that will be executed by TensorHive on the selected node will be displayed above the process specification.
 Note that the cluster parameters and CUDA_VISIBLE_DEVICES variable are configured automatically:
  
