@@ -1,7 +1,7 @@
 TensorHive
 ===
-![](https://img.shields.io/badge/release-v0.3.2-brightgreen.svg?style=popout-square)
-![](https://img.shields.io/badge/pypi-v0.3.2-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/release-v0.3.3-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/pypi-v0.3.3-brightgreen.svg?style=popout-square)
 ![](https://img.shields.io/badge/Issues%20and%20PRs-welcome-yellow.svg?style=popout-square)
 ![](https://img.shields.io/badge/platform-Linux-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/hardware-Nvidia-green.svg?style=popout-square)
@@ -90,7 +90,7 @@ tensorhive test
 ```
 
 (optional) If you want to allow your UNIX users to set up their TensorHive accounts on their own and run distributed
-programs through `Task nursery` plugin, use the `key` command to generate the SSH key for TensorHive: 
+programs through `Task execution` plugin, use the `key` command to generate the SSH key for TensorHive: 
 ```
 tensorhive key
 ```
@@ -135,15 +135,22 @@ Terminal warning             |  Email warning
 
 ![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/admin_warning_screenshot.png)
 
-#### Task nursery
+#### Task execution
 
-Here you can define commands for tasks you want to run on any configured nodes. You can manage them manually or set spawn/terminate date.
+Thanks to the `Task execution` module, you can define commands for tasks you want to run on any configured nodes.
+You can manage them manually or set spawn/terminate date.
 Commands are run within `screen` session, so attaching to it while they are running is a piece of cake.
-![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/task_nursery_screenshot1.png)
 
-It provides quite simple, but flexible (**framework-agnostic**) command templating mechanism that will help you automate multi-node trainings.
+It provides a simple, but flexible (**framework-agnostic**) command templating mechanism that will help you automate multi-node trainings.
+Additionally, specialized templates help to conveniently set proper parameters for chosen well known frameworks:
+
+![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/TF_CONFIG/img/multi_process.png)
+
+In the [examples](https://github.com/roscisz/TensorHive/tree/master/examples)
+directory, you will find sample scenarios of using the `Task execution` module for various
+frameworks and computing environments.
+
 TensorHive requires that users who want to use this feature must append TensorHive's public key to their `~/.ssh/authorized_keys` on all nodes they want to connect to.
-![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/task_nursery_screenshot2.png)
 
 Features
 ----------------------
@@ -156,7 +163,7 @@ Features
     - [x] :warning:	Send warning messages to terminal of users who violate the rules
     - [x] :mailbox_with_no_mail: Send e-mail warnings
     - [ ] :bomb: Kill unwanted processes
-- [X] :rocket: Task nursery and scheduling
+- [X] :rocket: Task execution and scheduling
     - [x] :old_key: Execute any command in the name of a user
     - [x] :alarm_clock: Schedule spawn and termination
     - [x] :repeat: Synchronize process status
@@ -178,7 +185,7 @@ Features
     - [x] Edit reservations
     - [x] Cancel reservations
     - [x] Attach jobs to reservation
-- [x] :baby_symbol: Task nursery
+- [x] :baby_symbol: Task execution
     - [x] Create parametrized tasks and assign to hosts, automatically set `CUDA_VISIBLE_DEVICES`
     - [x] Buttons for task spawning/scheduling/termination/killing actions
     - [x] Fetch log produced by running task
@@ -204,16 +211,11 @@ TensorHive is currently being used in production in the following environments:
 
 | Organization  | Hardware | No. users |
 | ------ | -------- | --------- |
-| ![](https://cdn.pg.edu.pl/ekontakt-updated-theme/images/favicon/favicon-16x16.png?v=jw6lLb8YQ4) [Gdansk University of Technology](https://eti.pg.edu.pl/en) | NVIDIA DGX Station (4x Tesla V100 16GB | 30+ |
-| ![](https://cdn.pg.edu.pl/ekontakt-updated-theme/images/favicon/favicon-16x16.png?v=jw6lLb8YQ4) [Lab at GUT](https://eti.pg.edu.pl/katedra-architektury-systemow-komputerowych/main) | 18x machines with GTX 1060 6GB | 20+ |
-| ![](http://martyniak.tech/images/gradient_logo_small-628ed211.png)[Gradient PG](http://gradient.eti.pg.gda.pl/en/) | TITAN X 12GB | 10+ |
-| ![](https://res-4.cloudinary.com/crunchbase-production/image/upload/c_lpad,h_20,w_20,f_auto,q_auto:eco/v1444894092/jeuh0l6opc159e1ltzky.png) [VoiceLab - Conversational Intelligence](https://www.voicelab.ai) | 30+ GTX and RTX cards | 10+
+| ![](https://cdn.pg.edu.pl/ekontakt-updated-theme/images/favicon/favicon-16x16.png?v=jw6lLb8YQ4) [Gdansk University of Technology](https://eti.pg.edu.pl/en) | NVIDIA DGX Station (4x Tesla V100) + NVIDIA DGX-1 (8x Tesla V100) | 30+ |
+| ![](https://cdn.pg.edu.pl/ekontakt-updated-theme/images/favicon/favicon-16x16.png?v=jw6lLb8YQ4) [Lab at GUT](https://eti.pg.edu.pl/katedra-architektury-systemow-komputerowych/main) | 20 machines with GTX 1060 each | 20+ |
+| <img src="http://gradient.eti.pg.gda.pl/assets/logo.png" width=15>[Gradient PG](http://gradient.eti.pg.gda.pl/en/) | A server with two GPUs shared by the Gradient science club at GUT. | 30+ |
+| ![](https://res-4.cloudinary.com/crunchbase-production/image/upload/c_lpad,h_20,w_20,f_auto,q_auto:eco/v1444894092/jeuh0l6opc159e1ltzky.png) [VoiceLab - Conversational Intelligence](https://www.voicelab.ai) | 30+ GTX and RTX GPUs | 10+
 
-Application examples and benchmarks
---------
-Along with TensorHive, we are developing a set of [**sample deep neural network training applications**](https://github.com/roscisz/TensorHive/tree/master/examples) in Distributed TensorFlow which will be used as test applications for the system. They can also serve as benchmarks for single GPU, distributed multi-GPU and distributed multi-node architectures. For each example, a full set of instructions to reproduce is provided.
-
-<hr/>
 
 TensorHive architecture (simplified)
 -----------------------
@@ -223,13 +225,13 @@ This diagram will help you to grasp the rough concept of the system.
 ![TensorHive_diagram _final](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/architecture.png)
 
 
-Contibution and feedback
+Contribution and feedback
 ------------------------
 We'd :heart: to collect your observations, issues and pull requests!
 
 Feel free to **report any configuration problems, we will help you**.
 
-We are working on user groups for differentiated GPU access control,
+Currently we are working on user groups for differentiated GPU access control,
 grouping tasks into jobs and process-killing reservation violation handler,
 deadline - July 2020 :shipit:, so stay tuned!
 
@@ -249,7 +251,7 @@ Project created and maintained by:
 - ![](https://avatars2.githubusercontent.com/u/12485656?s=22&v=4) [Michał Martyniak (@micmarty)](https://micmarty.github.io)
 - Filip Schodowski [(@filschod)](https://github.com/filschod)
 
- Recent contributions:
+ Top contributors:
 - Tomasz Menet [(@tomenet)](https://github.com/tomenet)
 - Dariusz Piotrowski [(@PiotrowskiD)](https://github.com/PiotrowskiD)
 - Karol Draszawka [(@szarakawka)](https://github.com/szarakawka)
