@@ -61,7 +61,7 @@ logging into multiple nodes, configuring environments and running processes
 with multiple, similar parameters, differing only slightly, it is a good
 use case for the TensorHive `task execution` module.
 
-To use it, first head to "Task Overview" and click on "CREATE TASKS FROM TEMPLATE". Choose PyTorch from the drop-down list: 
+To use it, first head to `Task Overview` and click on `CREATE TASKS FROM TEMPLATE`. Choose PyTorch from the drop-down list: 
 
 ![choose_template](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/PyTorch/img/choose_template.png)
 
@@ -71,18 +71,18 @@ You don't need to fill in rank or world-size parameters as TensorHive will do th
 
 ![parameters](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/PyTorch/img/parameters.png)
 
-Add as many tasks as resources you wish the code to run on using "ADD TASK" button. You can see that every parameter filled is copied to newly created tasks to save time. Adjust hostnames and resources on the added tasks as needed.
+Add as many tasks as resources you wish the code to run on using `ADD TASK` button. You can see that every parameter filled is copied to newly created tasks to save time. Adjust hostnames and resources on the added tasks as needed.
 
 ![full_conf](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/PyTorch/img/full_conf.png)
 
 
-Click "CREATE ALL TASKS" button in the right bottom corner to create the tasks.
-Then, select them in the process table and use the "Spawn selected tasks" button,
+Click `CREATE ALL TASKS` button in the right bottom corner to create the tasks.
+Then, select them in the process table and use the `Spawn selected tasks` button,
 to run them on the appropriate nodes:
 
 ![running](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/PyTorch/img/running.png)
 
-After that, the tasks can be controlled from "Task Overview". 
+After that, the tasks can be controlled from `Task Overview`. 
 The following actions are currently available:
 - Schedule (Choose when to run the task)
 - Spawn (Run the task now)
