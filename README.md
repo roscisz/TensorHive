@@ -246,7 +246,7 @@ for parallelization of neural network training using multiple GPUs".
 
 Project created and maintained by:
 - Paweł Rościszewski [(@roscisz)](https://github.com/roscisz)
-- ![](https://avatars2.githubusercontent.com/u/12485656?s=22&v=4) [Michał Martyniak (@micmarty)](http://martyniak.me)
+- ![](https://avatars2.githubusercontent.com/u/12485656?s=22&v=4) [Michał Martyniak (@micmarty)](https://micmarty.github.io)
 - Filip Schodowski [(@filschod)](https://github.com/filschod)
 
  Recent contributions:
