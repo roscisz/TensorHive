@@ -104,7 +104,7 @@ hosts: gl01, gl02, gl03, gl04:
 
 ![multi_process](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/TF_CONFIG/img/multi_process.png)
 
-After clicking the `CREATE ALL TASKS` button, the processes will be available in the process list for future actions.
+After clicking the `CREATE ALL TASKS` button, the processes will be available on the process list for future actions.
 To run the processes, select them and use the `Spawn selected tasks` button. If TensorHive is configured properly,
 the task status should change to `running`:
 

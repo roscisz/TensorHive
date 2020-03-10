@@ -2,7 +2,7 @@
 
 This example shows how to use the TensorHive `task execution` module to
 conveniently configure and execute distributed trainings configured using
-standard TensorFlowiV1 parameters for the [ClusterSpec](https://www.tensorflow.org/api_docs/python/tf/train/ClusterSpec)
+standard TensorFlowV1 parameters for the [ClusterSpec](https://www.tensorflow.org/api_docs/python/tf/train/ClusterSpec)
 cluster configuration class. 
 [This DeepSpeech training application](https://github.com/roscisz/dnn_training_benchmarks/tree/master/TensorFlowV1_DeepSpeech_ldc93s1)
 was used for the example.
@@ -123,7 +123,7 @@ Note that the cluster parameters and CUDA_VISIBLE_DEVICES variable are configure
  
 ![ready](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/TensorFlow_ClusterSpec/img/ready.png)
 
-After clicking the `CREATE ALL TASKS` button, the processes will be available in the process list for future actions.
+After clicking the `CREATE ALL TASKS` button, the processes will be available on the process list for future actions.
 To run the processes, select them and use the `Spawn selected tasks` button. If TensorHive is configured properly,
 the task status should change to `running`:
 
