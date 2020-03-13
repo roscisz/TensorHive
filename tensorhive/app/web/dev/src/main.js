@@ -41,7 +41,7 @@ axios.get('static/config.json').then(response => {
     }
     if (version === null) {
       if (config.version !== undefined) {
-        window.localStorage.setItem('version', JSON.stringify(config.apiVersion))
+        window.localStorage.setItem('version', JSON.stringify(config.version))
       } else {
         window.localStorage.setItem('version', JSON.stringify('no data in config file'))
       }
