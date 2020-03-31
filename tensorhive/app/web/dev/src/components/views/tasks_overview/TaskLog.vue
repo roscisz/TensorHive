@@ -30,7 +30,6 @@
             style="display: inline"
             label="Tail mode"
             v-model="tailMode"
-            @click="refresh"
             hide-details
            />
           <v-checkbox
@@ -40,7 +39,6 @@
             v-model="autoRefresh"
             v-on="on"
             :disabled="!tailMode"
-            @click="toggleAutoRefresh"
             hide-details
           />
         </span>
@@ -79,10 +77,20 @@ export default {
     },
     show () {
       if (this.show === false) this.close()
+    },
+    tailMode () {
+      this.refresh()
+    },
+    autoRefresh () {
+      this.toggleAutoRefresh()
     }
   },
   methods: {
     close: function () {
+      if (this.autoRefreshIntervalId !== -1) {
+        window.clearInterval(this.autoRefreshIntervalId)
+        this.autoRefreshIntervalId = -1
+      }
       this.$emit('close')
     },
     refresh: function () {
