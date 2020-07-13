@@ -40,7 +40,13 @@
       :multipleFlag="multipleFlag"
       :selected="selected"
     />
-    <TaskLog :show-modal="showModalLog" @close="showModalLog = false" :lines="logs" :path="path" />
+    <TaskLog
+      :show-modal="showModalLog"
+      @close="showModalLog = false"
+      @getLog="getLog(...arguments)"
+      :lines="logs"
+      :path="path"
+      :taskId="taskId"/>
     <v-dialog v-model="showModalHowItWorks" width="500">
       <v-card>
         <v-card-text class="headline grey lighten-2" primary-title>
@@ -587,27 +593,26 @@ export default {
       }
     },
 
-    getLog: function (id) {
+    getLog: function (id, tailMode = false) {
+      this.taskId = id
       if (!this.actionFlag) {
         this.snackbar = true
         this.actionFlag = true
         api
-          .request('get', '/tasks/' + id + '/log', this.$store.state.accessToken)
+          .request('get', '/tasks/' + id + '/log?tail=' + tailMode, this.$store.state.accessToken)
           .then(response => {
             this.logs = response.data.output_lines
             this.path = response.data.path
             this.showModalLog = true
-            this.snackbar = false
-            this.actionFlag = false
           })
           .catch(error => {
             this.handleError(error)
+          }).finally(() => {
             this.snackbar = false
             this.actionFlag = false
           })
       }
     },
-
     openFromTemplate: function (chosenTemplate) {
       this.chosenTemplate = chosenTemplate
       this.showModalCreate = true

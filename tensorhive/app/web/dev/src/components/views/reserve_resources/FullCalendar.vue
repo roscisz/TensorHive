@@ -103,14 +103,29 @@ export default {
           this.$emit('handleError', error)
         })
       var obj
+      var previousCheckboxes = []
+      var previousLength = this.resourcesCheckboxes.length
+      for (i = 0; i < previousLength; i++) {
+        obj = {
+          uuid: this.resourcesCheckboxes[i].uuid,
+          checked: this.resourcesCheckboxes[i].checked
+        }
+        previousCheckboxes[i] = obj
+      }
       this.resourcesCheckboxes = []
       for (i = 0; i < this.selectedResources.length; i++) {
+        var previousChecked = false
+        for (var j = 0; j < previousLength; j++) {
+          if (this.selectedResources[i].uuid === previousCheckboxes[j].uuid) {
+            previousChecked = previousCheckboxes[j].checked
+          }
+        }
         obj = {
           nodeName: this.selectedResources[i].nodeName,
           name: this.selectedResources[i].name,
           uuid: this.selectedResources[i].uuid,
           index: this.selectedResources[i].index,
-          checked: false,
+          checked: previousChecked,
           disabled: false
         }
         this.resourcesCheckboxes[i] = obj
@@ -321,7 +336,6 @@ export default {
       select: function (startDate, endDate) {
         if (!startDate._ambigTime) {
           for (var i = 0; i < self.selectedResources.length; i++) {
-            self.resourcesCheckboxes[i].checked = false
             self.resourcesCheckboxes[i].disabled = false
           }
           var events = self.calendar.fullCalendar('clientEvents')
