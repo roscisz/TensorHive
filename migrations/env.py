@@ -14,6 +14,7 @@ fileConfig(config.config_file_name)
 # Schema metadata
 from tensorhive.database import Base
 from tensorhive.models.User import User
+from tensorhive.models.Group import Group, User2Group
 from tensorhive.models.Reservation import Reservation
 from tensorhive.models.RevokedToken import RevokedToken
 from tensorhive.models.Role import Role

@@ -1,6 +1,7 @@
 import pytest
 from tensorhive.models.Reservation import Reservation
 from tensorhive.models.User import User
+from tensorhive.models.Group import Group
 from tensorhive.models.Role import Role
 from datetime import datetime, timedelta
 
@@ -50,3 +51,16 @@ def new_reservation_2(new_user, new_admin):
         starts_at=now,
         ends_at=now + duration,
     )
+
+
+@pytest.fixture(scope='function')
+def new_group():
+    return Group(name='TestGroup1')
+
+
+@pytest.fixture(scope='function')
+def new_group_with_member(new_user):
+    group = Group(name='TestGroup1')
+    group.save()
+    group.add_user(new_user)
+    return group

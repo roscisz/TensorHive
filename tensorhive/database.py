@@ -24,6 +24,7 @@ def init_db() -> None:
     # Import all modules that define models so that
     # they could be registered properly on the metadata.
     from tensorhive.models.User import User
+    from tensorhive.models.Group import Group, User2Group
     from tensorhive.models.Reservation import Reservation
     from tensorhive.models.RevokedToken import RevokedToken
     from tensorhive.models.Role import Role

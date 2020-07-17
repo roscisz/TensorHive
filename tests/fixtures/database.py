@@ -5,6 +5,7 @@ import pytest
 def tables():
     from tensorhive.database import Base, engine
     from tensorhive.models.User import User
+    from tensorhive.models.Group import Group, User2Group
     from tensorhive.models.Reservation import Reservation
     from tensorhive.models.Role import Role
     from tensorhive.models.RevokedToken import RevokedToken

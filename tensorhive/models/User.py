@@ -37,6 +37,7 @@ class User(CRUDModel, Base):  # type: ignore
     # Managed via property getters and setters
     _hashed_password = Column(String(120), nullable=False)
     _roles = relationship('Role', cascade='all,delete', backref=backref('user'))
+    _groups = relationship('Group', secondary='user2group')
 
     min_password_length = 8
 
@@ -62,6 +63,10 @@ class User(CRUDModel, Base):  # type: ignore
 
     def has_role(self, role_name):
         return bool(role_name in self.role_names)
+
+    @hybrid_property
+    def groups(self):
+        return self._groups
 
     @hybrid_property
     def password(self):
@@ -114,6 +119,7 @@ class User(CRUDModel, Base):  # type: ignore
                 'username': self.username,
                 'createdAt': self.created_at.isoformat(),
                 'roles': roles,
+                'groups': self.groups,
                 'email': self.email
             }
 
