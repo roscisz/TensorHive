@@ -21,11 +21,12 @@ def new_admin():
 
 @pytest.fixture(scope='function')
 def new_reservation(new_user):
+    new_user.save()
     now = datetime.utcnow()
     duration = timedelta(minutes=60)
 
     return Reservation(
-        user_id=1,
+        user_id=new_user.id,
         title='TEST TITLE',
         description='TEST_DESCRIPTION',
         protected_resource_id='0123456789012345678901234567890123456789',
@@ -35,12 +36,14 @@ def new_reservation(new_user):
 
 
 @pytest.fixture(scope='function')
-def new_reservation_2(new_user):
+def new_reservation_2(new_user, new_admin):
+    new_user.save()
+    new_admin.save()
     now = datetime.utcnow()
     duration = timedelta(minutes=60)
 
     return Reservation(
-        user_id=2,
+        user_id=new_admin.id,
         title='TEST TITLE',
         description='TEST_DESCRIPTION',
         protected_resource_id='0123456789012345678901234567890123456789',

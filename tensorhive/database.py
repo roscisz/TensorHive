@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_utils import database_exists
@@ -34,3 +34,10 @@ def init_db() -> None:
         log.info('[✔] Database created ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
     else:
         log.info('[•] Database found ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
+
+
+def _fk_pragma_on_connect(dbapi_con, con_record):
+    dbapi_con.execute('pragma foreign_keys=ON')
+
+
+event.listen(engine, 'connect', _fk_pragma_on_connect)
