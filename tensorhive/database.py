@@ -26,6 +26,9 @@ def init_db() -> None:
     from tensorhive.models.User import User
     from tensorhive.models.Group import Group, User2Group
     from tensorhive.models.Reservation import Reservation
+    from tensorhive.models.Resource import Resource
+    from tensorhive.models.Restriction import Restriction, Restriction2Assignee, Restriction2Resource
+    from tensorhive.models.RestrictionSchedule import RestrictionSchedule, Restriction2Schedule
     from tensorhive.models.RevokedToken import RevokedToken
     from tensorhive.models.Role import Role
     from tensorhive.models.Task import Task

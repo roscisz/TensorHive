@@ -7,11 +7,12 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.database import Base
 from tensorhive.models.CRUDModel import CRUDModel
 from tensorhive.models.User import User
+from tensorhive.models.RestrictionAssignee import RestrictionAssignee
 
 log = logging.getLogger(__name__)
 
 
-class Group(CRUDModel, Base):  # type: ignore
+class Group(CRUDModel, RestrictionAssignee):  # type: ignore
     __tablename__ = 'groups'
     __table_args__ = {'sqlite_autoincrement': True}
 
@@ -20,6 +21,7 @@ class Group(CRUDModel, Base):  # type: ignore
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     _users = relationship('User', secondary='user2group')
+    _restrictions = relationship('Restriction', secondary='restriction2assignee')
 
     def __repr__(self):
         return '<Group id={id}, name={name}>'.format(id=self.id, name=self.name)

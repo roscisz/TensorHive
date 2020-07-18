@@ -1,5 +1,5 @@
 import pytest
-from sqlalchemy.exc import OperationalError, IntegrityError
+from sqlalchemy.exc import IntegrityError
 from tensorhive.models.User import User
 
 
