@@ -45,7 +45,8 @@ class Restriction(CRUDModel, Base):  # type: ignore
             starts_at={starts_at}
             ends_at={ends_at}
             is_global={is_global}
-        '''.format(id=self.id, name=self.name, starts_at=self.starts_at, ends_at=self.ends_at, is_global=self.is_global)
+        '''.format(id=self.id, name=self.name, starts_at=self.starts_at,
+                   ends_at=self.ends_at, is_global=self.is_global)
 
     def check_assertions(self):
         if self.ends_at is not None:

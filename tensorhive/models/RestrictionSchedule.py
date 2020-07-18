@@ -78,5 +78,7 @@ class Restriction2Schedule(Base):  # type: ignore
     restriction_id = Column(Integer, ForeignKey('restrictions.id', ondelete='CASCADE'), primary_key=True)
     schedule_id = Column(Integer, ForeignKey('restriction_schedules.id', ondelete='CASCADE'), primary_key=True)
 
-    restriction = relationship('Restriction', backref=backref('restriction2schedule', cascade='all,delete-orphan'))
-    schedule = relationship('RestrictionSchedule', backref=backref('restriction2schedule', cascade='all,delete-orphan'))
+    restriction = relationship('Restriction',
+                               backref=backref('restriction2schedule', cascade='all,delete-orphan'))
+    schedule = relationship('RestrictionSchedule',
+                            backref=backref('restriction2schedule', cascade='all,delete-orphan'))

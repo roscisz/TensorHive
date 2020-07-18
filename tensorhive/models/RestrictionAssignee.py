@@ -26,8 +26,8 @@ class RestrictionAssignee(Base):  # type: ignore
             restrictions = [r for r in self._restrictions if not r.is_expired]
 
         if include_global:
-            restrictions = list(set(restrictions +
-                                    Restriction.get_global_restrictions(include_expired=include_expired)))
+            restrictions = list(set(restrictions + Restriction
+                                    .get_global_restrictions(include_expired=include_expired)))
         return restrictions
 
     def get_active_restrictions(self, include_global=False):

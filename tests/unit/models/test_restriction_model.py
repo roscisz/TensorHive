@@ -8,7 +8,7 @@ def test_restriction_creation(tables):
     starts_at = datetime.utcnow() + timedelta(minutes=5)
     duration = timedelta(hours=12)
     new_restriction = Restriction(name='TestRestriction', starts_at=starts_at,
-                                  ends_at=starts_at+duration, is_global=False)
+                                  ends_at=starts_at + duration, is_global=False)
     new_restriction.save()
 
     assert new_restriction.id is not None
@@ -18,7 +18,7 @@ def test_get_global_restrictions_returns_them(tables):
     starts_at = datetime.utcnow() + timedelta(minutes=5)
     duration = timedelta(hours=12)
     new_restriction = Restriction(name='TestRestriction', starts_at=starts_at,
-                                  ends_at=starts_at+duration, is_global=True)
+                                  ends_at=starts_at + duration, is_global=True)
     new_restriction.save()
 
     assert new_restriction in Restriction.get_global_restrictions()
