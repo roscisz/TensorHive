@@ -44,8 +44,8 @@ def do_create(user):
 
 
 @admin_required
-def create(user):
-    return do_create(user)
+def create(newUser):
+    return do_create(newUser)
 
 
 def ssh_signup(user):

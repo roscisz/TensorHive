@@ -10,7 +10,8 @@ G = API.RESPONSES['general']
 
 @admin_required
 @jwt_required
-def update(user):
+def update(newValues):
+    user = newValues
     print('REQ', user)
     if user.get('id') is not None:
         try:
