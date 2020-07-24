@@ -25,8 +25,27 @@ def test_cannot_create_schedule_with_wrong_schedule_expression(tables):
         schedule.save()
 
 
-def test_add_schedule_to_restriction(tables, restriction, schedule):
-    restriction.add_schedule(schedule)
+def test_add_schedule_to_restriction(tables, restriction, active_schedule):
+    restriction.add_schedule(active_schedule)
 
-    assert schedule in restriction.schedules
-    assert restriction in schedule.restrictions
+    assert active_schedule in restriction.schedules
+    assert restriction in active_schedule.restrictions
+
+
+def test_schedule_is_active_method_returns_valid_status(tables, restriction):
+    # schedule that runs only on current day of the week
+    today_schedule_expression = str(datetime.datetime.utcnow().weekday() + 1)
+    hour_start = datetime.time(0, 0, 0)
+    hour_end = datetime.time(23, 59, 59)
+    active_schedule = RestrictionSchedule(schedule_days=today_schedule_expression, hour_start=hour_start,
+                                          hour_end=hour_end)
+    active_schedule.save()
+
+    # schedule that runs on every day of the week except for today
+    not_today_schedule_expression = '1234567'.replace(today_schedule_expression, '')
+    inactive_schedule = RestrictionSchedule(schedule_days=not_today_schedule_expression, hour_start=hour_start,
+                                            hour_end=hour_end)
+    inactive_schedule.save()
+
+    assert active_schedule.is_active is True
+    assert inactive_schedule.is_active is False

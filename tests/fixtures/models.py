@@ -94,8 +94,19 @@ def restriction():
 
 
 @pytest.fixture(scope='function')
-def schedule():
-    schedule_expression = '12345'
+def active_schedule():
+    schedule_expression = '1234567'
+    start_time = datetime.time(0, 0, 0)
+    end_time = datetime.time(23, 59, 59)
+    schedule = RestrictionSchedule(schedule_days=schedule_expression, hour_start=start_time, hour_end=end_time)
+    schedule.save()
+    return schedule
+
+
+@pytest.fixture(scope='function')
+def inactive_schedule():
+    today = str(datetime.datetime.utcnow().weekday() + 1)
+    schedule_expression = '1234567'.replace(today, '')
     start_time = datetime.time(8, 0, 0)
     end_time = datetime.time(10, 0, 0)
     schedule = RestrictionSchedule(schedule_days=schedule_expression, hour_start=start_time, hour_end=end_time)

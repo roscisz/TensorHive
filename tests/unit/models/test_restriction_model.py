@@ -79,3 +79,34 @@ def test_global_restriction_applies_to_all_resources(tables, restriction, resour
     assert len(restriction.resources) == 0
     assert restriction in resource1.get_restrictions(include_global=True)
     assert restriction in resource2.get_restrictions(include_global=True)
+
+
+def test_restriction_without_schedules_is_active_only_when_between_start_and_end_dates(tables):
+    start_time = datetime.utcnow() - timedelta(hours=5)
+    end_time = datetime.utcnow() + timedelta(hours=5)
+    active_restriction = Restriction(name='ActiveRestriction', starts_at=start_time, ends_at=end_time, is_global=False)
+    active_restriction.save()
+
+    start_time = datetime.utcnow() + timedelta(hours=1)
+    inactive_restriction = Restriction(name='InactiveRestriction', starts_at=start_time, ends_at=end_time,
+                                       is_global=False)
+    inactive_restriction.save()
+
+    assert active_restriction.is_active is True
+    assert inactive_restriction.is_active is False
+
+
+def test_restriction_with_schedules_is_active_only_when_at_least_one_of_its_schedules_is_active(tables,
+                                                                                                active_schedule,
+                                                                                                inactive_schedule):
+    start_time = datetime.utcnow() - timedelta(hours=5)
+    end_time = datetime.utcnow() + timedelta(hours=5)
+    restriction = Restriction(name='ActiveRestriction', starts_at=start_time, ends_at=end_time, is_global=False)
+    restriction.save()
+
+    restriction.add_schedule(inactive_schedule)
+    assert restriction.is_active is False
+
+    print(active_schedule.is_active)
+    restriction.add_schedule(active_schedule)
+    assert restriction.is_active is True
