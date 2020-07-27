@@ -3,8 +3,9 @@ import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship, backref
-from tensorhive.database import db_session, Base
+from tensorhive.database import db_session
 from tensorhive.models.CRUDModel import CRUDModel
+from tensorhive.models.RestrictionAssignee import RestrictionAssignee
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm import validates
 from usernames import is_safe_username
@@ -27,7 +28,7 @@ USERNAME_WHITELIST = [
 ]
 
 
-class User(CRUDModel, Base):  # type: ignore
+class User(CRUDModel, RestrictionAssignee):  # type: ignore
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
@@ -37,6 +38,8 @@ class User(CRUDModel, Base):  # type: ignore
     # Managed via property getters and setters
     _hashed_password = Column(String(120), nullable=False)
     _roles = relationship('Role', cascade='all,delete', backref=backref('user'))
+    _groups = relationship('Group', secondary='user2group')
+    _restrictions = relationship('Restriction', secondary='restriction2assignee')
 
     min_password_length = 8
 
@@ -62,6 +65,10 @@ class User(CRUDModel, Base):  # type: ignore
 
     def has_role(self, role_name):
         return bool(role_name in self.role_names)
+
+    @hybrid_property
+    def groups(self):
+        return self._groups
 
     @hybrid_property
     def password(self):
@@ -114,9 +121,26 @@ class User(CRUDModel, Base):  # type: ignore
                 'username': self.username,
                 'createdAt': self.created_at.isoformat(),
                 'roles': roles,
+                'groups': self.groups,
                 'email': self.email
             }
 
     @staticmethod
     def verify_hash(password, hash):
         return sha256.verify(password, hash)
+
+    def get_restrictions(self, include_expired=False, include_global=False, include_group=False):
+        restrictions = super(User, self).get_restrictions(include_expired=include_expired,
+                                                          include_global=include_global)
+        if include_group:
+            for group in self.groups:
+                restrictions = restrictions + group.get_restrictions(include_expired=include_expired,
+                                                                     include_global=include_global)
+        return list(set(restrictions))
+
+    def get_active_restrictions(self, include_global=False, include_group=False):
+        restrictions = super(User, self).get_active_restrictions(include_global=include_global)
+        if include_group:
+            for group in self.groups:
+                restrictions = restrictions + group.get_active_restrictions(include_global=include_global)
+        return list(set(restrictions))
