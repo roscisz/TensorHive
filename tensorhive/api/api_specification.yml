@@ -1,35 +1,40 @@
-swagger: "2.0"
+openapi: "3.0.3"
 
 info:
   title: "{{title}} {{version}}"
   version: "{{version}}"
 
-basePath: "/{{url_prefix}}"
+servers:
+  - url: "/{{url_prefix}}"
 
 paths:
   /users:
     get:
-      tags: 
+      tags:
         - users
       summary: Get all users
       operationId: tensorhive.controllers.user.get_users_controller.get
       responses:
         200:
           description: {{RESPONSES['users']['get']['success']}}
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/UserToDisplay'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserToDisplay'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unpriviliged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
       security:
@@ -45,36 +50,43 @@ paths:
           in: path
           name: id
           required: true
-          type: integer
+          schema:
+            type: integer
       responses:
         200:
           description: {{RESPONSES['users']['get']['success']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['user']['get']['success']}}
-              user:
-                $ref: '#/definitions/UserToDisplay'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['user']['get']['success']}}
+                  user:
+                    $ref: '#/components/schemas/UserToDisplay'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unpriviliged']}}
         404:
           description: {{RESPONSES['user']['not_found']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['user']['not_found']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['user']['not_found']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
         500:
@@ -83,40 +95,45 @@ paths:
         - Bearer: []
   /user/create:
     post:
-      tags: 
+      tags:
         - users
       summary: Create new user
       operationId: tensorhive.controllers.user.create_user_controller.create
-      parameters:
-        - description: User object
-          in: body
-          name: user
-          required: true
-          schema:
-            $ref: '#/definitions/UserForm'
+      requestBody:
+        description: User object
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserForm'
+              x-body-name: newUser
       responses:
         201:
           description: {{RESPONSES['user']['create']['success']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['user']['create']['success']}}
-              user:
-                $ref: '#/definitions/UserToDisplay'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['user']['create']['success']}}
+                  user:
+                    $ref: '#/components/schemas/UserToDisplay'
         400:
           description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unpriviliged']}}
         409:
           description: {{RESPONSES['user']['create']['failure']['duplicate']}}
         422:
@@ -128,77 +145,44 @@ paths:
   /user:
     put:
       tags:
-      - users
-      summary: Create new user
+        - users
+      summary: Update existing user
       operationId: tensorhive.controllers.user.update_user_controller.update
-      parameters:
-      - description: User object
-        in: body
-        name: user
+      requestBody:
+        description: User object
         required: true
-        schema:
-          $ref: '#/definitions/UserUpdateForm'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateForm'
+              x-body-name: newValues
       responses:
         201:
           description: {{RESPONSES['user']['update']['success']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['user']['update']['success']}}
-              user:
-                $ref: '#/definitions/UserToDisplay'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['user']['update']['success']}}
+                  user:
+                    $ref: '#/components/schemas/UserToDisplay'
         400:
           description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
-        409:
-          description: {{RESPONSES['user']['create']['failure']['duplicate']}}
-        422:
-          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['user']['create']['failure']['invalid']}}
-        500:
-          description: {{RESPONSES['general']['internal_error']}}
-      security:
-      - Bearer: []
-  /user/ssh_signup:
-    post:
-      tags:
-        - users
-      summary: Create new user account based on SSH authentication
-      operationId: tensorhive.controllers.user.create_user_controller.ssh_signup
-      parameters:
-        - description: User object
-          in: body
-          name: user
-          required: true
-          schema:
-            $ref: '#/definitions/UserForm'
-      responses:
-        201:
-          description: {{RESPONSES['user']['create']['success']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['user']['create']['success']}}
-              user:
-                type: array
-                items:
-                  $ref: '#/definitions/UserToDisplay'
-        400:
-          description: {{RESPONSES['general']['bad_request']}}
-        403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unpriviliged']}}
         409:
           description: {{RESPONSES['user']['create']['failure']['duplicate']}}
         422:
@@ -207,6 +191,45 @@ paths:
           description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
+  /user/ssh_signup:
+    post:
+      tags:
+        - users
+      summary: Create new user account based on SSH authentication
+      operationId: tensorhive.controllers.user.create_user_controller.ssh_signup
+      requestBody:
+        description: User object
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserForm'
+              x-body-name: user
+      responses:
+        201:
+          description: {{RESPONSES['user']['create']['success']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['user']['create']['success']}}
+                  user:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserToDisplay'
+        400:
+          description: {{RESPONSES['general']['bad_request']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+        409:
+          description: {{RESPONSES['user']['create']['failure']['duplicate']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['user']['create']['failure']['invalid']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
   /user/delete/{id}:
     delete:
       tags:
@@ -218,23 +241,28 @@ paths:
           in: path
           name: id
           required: true
-          type: integer
+          schema:
+            type: integer
       responses:
         200:
           description: {{RESPONSES['user']['delete']['success']}}
-          schema:
-            example:
-              msg: {{RESPONSES['user']['delete']['success']}}
+          content:
+            application/json:
+              schema:
+                example:
+                  msg: {{RESPONSES['user']['delete']['success']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unpriviliged']}}
         404:
           description: {{RESPONSES['user']['not_found']}}
         422:
@@ -252,15 +280,17 @@ paths:
       responses:
         200:
           description: {{RESPONSES['user']['logout']['success']}}
-          schema:
-            example:
-              msg: {{RESPONSES['user']['logout']['success']}}
+          content:
+            application/json:
+              schema:
+                example:
+                  msg: {{RESPONSES['user']['logout']['success']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
         500:
-          description: {{RESPONSES['general']['internal_error']}}      
+          description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
   /user/logout/refresh_token:
@@ -272,9 +302,11 @@ paths:
       responses:
         200:
           description: {{RESPONSES['user']['logout']['success']}}
-          schema:
-            example:
-              msg: {{RESPONSES['user']['logout']['success']}}
+          content:
+            application/json:
+              schema:
+                example:
+                  msg: {{RESPONSES['user']['logout']['success']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         422:
@@ -292,10 +324,12 @@ paths:
       responses:
         200:
           description: {{RESPONSES['token']['refresh']['success']}}
-          schema:
-            example:
-              msg: {{RESPONSES['token']['refresh']['success']}}
-              access_token: <ACCESS_TOKEN>
+          content:
+            application/json:
+              schema:
+                example:
+                  msg: {{RESPONSES['token']['refresh']['success']}}
+                  access_token: <ACCESS_TOKEN>
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         422:
@@ -308,21 +342,24 @@ paths:
         - authentication
       summary: Login user
       operationId: 'tensorhive.controllers.user.login_user_controller.login'
-      parameters:
-        - description: User object
-          in: body
-          name: user
-          required: true
-          schema:
-            $ref: '#/definitions/UserLoginForm'
+      requestBody:
+        description: User object
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLoginForm'
+              x-body-name: user
       responses:
         200:
           description: {{RESPONSES['user']['login']['success']}}
-          schema:
-            example:
-              msg: {{RESPONSES['user']['login']['success']}}
-              access_token: <ACCESS_TOKEN>
-              refresh_token: <REFRESH_TOKEN>
+          content:
+            application/json:
+              schema:
+                example:
+                  msg: {{RESPONSES['user']['login']['success']}}
+                  access_token: <ACCESS_TOKEN>
+                  refresh_token: <REFRESH_TOKEN>
         400:
           description: {{RESPONSES['general']['bad_request']}}
         401:
@@ -342,13 +379,15 @@ paths:
       responses:
         200:
           description: {{RESPONSES['user']['authorized_keys_entry']['success']}}
-          schema:
-            example: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCWuvmEw9RWI0WMv9aseFadgDXZbHW7KjQt6H7keoQ13y/XQX0+vosmEq70DQ9HCxmwvrSruR63DLe8eW5k80OBeAcHZ+e6f6g/017tCKfYTibCEboB7v7TgGO74kWcihZK5jPHg/jxwKktxDdbCfqvl6hrR5hwE2sJ5gVAx6UPJNVoZYRD2rAPhjKJ1NlENhCWrxrt72c/a6Qe9aRSvJ/Yxn+PWr5BbxyFFKEcmos9bUwh7NgdmsZphVrKeGnx9Nl1q46/PLBW2V4FbBpsv6OD6FksIdZF0irFNmfq1LGHDLlRwVrEXrTdQST2FqyNZJSXRxblEchzYijLA1J03xir tensorhive@ai'
+          content:
+            application/json:
+              schema:
+                example: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCWuvmEw9RWI0WMv9aseFadgDXZbHW7KjQt6H7keoQ13y/XQX0+vosmEq70DQ9HCxmwvrSruR63DLe8eW5k80OBeAcHZ+e6f6g/017tCKfYTibCEboB7v7TgGO74kWcihZK5jPHg/jxwKktxDdbCfqvl6hrR5hwE2sJ5gVAx6UPJNVoZYRD2rAPhjKJ1NlENhCWrxrt72c/a6Qe9aRSvJ/Yxn+PWr5BbxyFFKEcmos9bUwh7NgdmsZphVrKeGnx9Nl1q46/PLBW2V4FbBpsv6OD6FksIdZF0irFNmfq1LGHDLlRwVrEXrTdQST2FqyNZJSXRxblEchzYijLA1J03xir tensorhive@ai'
         500:
           description: {{RESPONSES['general']['internal_error']}}
   /reservations:
     get:
-      tags: 
+      tags:
         - reservations
       summary: Get all or specific reservation events
       operationId: tensorhive.controllers.reservation.get_reservation_controller.get
@@ -357,29 +396,33 @@ paths:
           in: query
           name: resources_ids
           required: false
-          type: array
-          items: {
+          schema:
+            type: array
+            items:
               type: string
-            }
         - description: UTC ISO (e.g. 2018-10-22T10:00:00.0Z)
           in: query
           name: start
           required: false
-          type: string
-          format: date-time
+          schema:
+            type: string
+            format: date-time
         - description: UTC ISO (e.g. 2018-10-22T19:00:00.0Z)
           in: query
           name: end
           required: false
-          type: string
-          format: date-time
+          schema:
+            type: string
+            format: date-time
       responses:
         200:
           description: {{RESPONSES['general']['ok']}}
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Reservation'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reservation'
         400:
           description: {{RESPONSES['general']['bad_request']}}. Specify all parameters or none.
         422:
@@ -389,28 +432,31 @@ paths:
       security:
         - Bearer: []
     post:
-      tags: 
+      tags:
         - reservations
       summary: Make new reservation
       operationId: tensorhive.controllers.reservation.create_reservation_controller.create
-      parameters:
-        - description: Reservation object
-          in: body
-          name: reservation
-          required: true
-          schema:
-            $ref: '#/definitions/ReservationForm'
+      requestBody:
+        description: Reservation object
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservationForm'
+              x-body-name: reservation
       responses:
         201:
           description: {{RESPONSES['reservation']['create']['success']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['reservation']['create']['success']}}
-              reservation:
-                $ref: '#/definitions/Reservation'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['reservation']['create']['success']}}
+                  reservation:
+                    $ref: '#/components/schemas/Reservation'
         400:
           description: {{RESPONSES['general']['bad_request']}}
         401:
@@ -424,37 +470,42 @@ paths:
   /reservations/{id}:
     put:
       tags:
-      - reservations
+        - reservations
       summary: Update existing reservation
       operationId: tensorhive.controllers.reservation.update_reservation_controller.update
+      requestBody:
+        description: Reservation object with fields to overwrite.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservationUpdateForm'
+              x-body-name: newValues
       parameters:
         - description: Reservation ID
           in: path
           name: id
           required: true
-          type: integer
-        - description: Reservation object with fields to overwrite.
-          in: body
-          name: newValues
-          required: true
           schema:
-            $ref: '#/definitions/ReservationUpdateForm'
+            type: integer
       responses:
         201:
           description: {{RESPONSES['reservation']['update']['success']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['reservation']['update']['success']}}
-              reservation:
-                $ref: '#/definitions/Reservation'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['reservation']['update']['success']}}
+                  reservation:
+                    $ref: '#/components/schemas/Reservation'
         400:
           description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
-        401:
+        404:
           description: {{RESPONSES['reservation']['not_found']}}
         422:
           description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['reservation']['update']['failure']['assertions']}}
@@ -463,8 +514,8 @@ paths:
       security:
         - Bearer: []
     delete:
-      tags: 
-          - reservations
+      tags:
+        - reservations
       summary: Delete reservation
       operationId: tensorhive.controllers.reservation.delete_reservation_controller.delete
       parameters:
@@ -472,13 +523,16 @@ paths:
           in: path
           name: id
           required: true
-          type: integer
+          schema:
+            type: integer
       responses:
         200:
           description: {{RESPONSES['reservation']['delete']['success']}}
-          schema:
-            example:
-              msg: {{RESPONSES['reservation']['delete']['success']}}
+          content:
+            application/json:
+              schema:
+                example:
+                  msg: {{RESPONSES['reservation']['delete']['success']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         404:
@@ -491,17 +545,19 @@ paths:
         - Bearer: []
   /nodes/hostnames:
     get:
-      tags: 
+      tags:
         - nodes
       summary: Get all hostnames
       operationId: tensorhive.controllers.nodes.infrastructure_controller.get_hostnames
       responses:
         200:
           description: {{RESPONSES['general']['ok']}}
-          schema:
-            example:
-              - hostname1
-              - hostname2
+          content:
+            application/json:
+              schema:
+                example:
+                  - hostname1
+                  - hostname2
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         422:
@@ -510,16 +566,18 @@ paths:
         - Bearer: []
   /nodes/metrics:
     get:
-      tags: 
+      tags:
         - nodes
       summary: Get each node's all metric data
       description: Puts null if some data is unavailable
       operationId: tensorhive.controllers.nodes.infrastructure_controller.get_all_data
       responses:
         200:
-          description: {{RESPONSES['general']['ok']}} 
-          schema:
-            $ref: '#/definitions/GPUAllData'
+          description: {{RESPONSES['general']['ok']}}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GPUAllData'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         422:
@@ -528,41 +586,44 @@ paths:
         - Bearer: []
   /nodes/{hostname}/gpu/info:
     get:
-      tags: 
+      tags:
         - nodes
       summary: Get node's basic GPU information
       operationId: tensorhive.controllers.nodes.gpu_controller.get_info
       parameters:
-        - $ref: '#/parameters/hostnameParam'
+        - $ref: '#/components/parameters/hostnameParam'
       responses:
         200:
           description: {{RESPONSES['general']['ok']}}
-          schema:
-            $ref: '#/definitions/GPUInfo'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GPUInfo'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         404:
           description: {{RESPONSES['nodes']['hostname']['not_found']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
-        
       security:
         - Bearer: []
   /nodes/{hostname}/gpu/metrics:
     get:
-      tags: 
+      tags:
         - nodes
       summary: Get node's GPU metric data
       description: Puts null if some data is unavailable
       operationId: tensorhive.controllers.nodes.gpu_controller.get_metrics
       parameters:
-        - $ref: '#/parameters/hostnameParam'
-        - $ref: '#/parameters/gpuMetricTypeQuery'
+        - $ref: '#/components/parameters/hostnameParam'
+        - $ref: '#/components/parameters/gpuMetricTypeQuery'
       responses:
         200:
           description: {{RESPONSES['general']['ok']}}
-          schema:
-            $ref: '#/definitions/GPUMetricsInTwoCases'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GPUMetricsInTwoCases'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         404:
@@ -579,13 +640,15 @@ paths:
       description: Puts null if some data is unavailable
       operationId: tensorhive.controllers.nodes.cpu_controller.get_metrics
       parameters:
-        - $ref: '#/parameters/hostnameParam'
-        - $ref: '#/parameters/cpuMetricTypeQuery'
+        - $ref: '#/components/parameters/hostnameParam'
+        - $ref: '#/components/parameters/cpuMetricTypeQuery'
       responses:
         200:
           description: {{RESPONSES['general']['ok']}}
-          schema:
-            $ref: '#/definitions/CPUMetrics'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CPUMetrics'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         404:
@@ -596,29 +659,31 @@ paths:
         - Bearer: []
   /nodes/{hostname}/gpu/processes:
     get:
-      tags: 
+      tags:
         - nodes
       summary: Get node's GPU processes data
       description: Puts null if some data is unavailable
       operationId: tensorhive.controllers.nodes.gpu_controller.get_processes
       parameters:
-        - $ref: '#/parameters/hostnameParam'
+        - $ref: '#/components/parameters/hostnameParam'
       responses:
         200:
           description: {{RESPONSES['general']['ok']}}
-          schema:
-            $ref: '#/definitions/GPUProcesses'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GPUProcesses'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         404:
           description: {{RESPONSES['nodes']['hostname']['not_found']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
-      security:
-        - Bearer: []
+      # security:
+      #   - Bearer: []
   /tasks:
     get:
-      tags: 
+      tags:
         - tasks
       operationId: tensorhive.controllers.task.get_all
       summary: Query tasks
@@ -627,81 +692,92 @@ paths:
         - description: User ID (optional)
           in: query
           name: userId
-          type: integer
           required: false
-          default: null
-          x-nullable: true
+          schema:
+            type: integer
+            default: null
+            nullable: true
         - description: Synchronize all tasks (optional)
           in: query
           name: syncAll
-          type: boolean
           required: false
-          default: false
+          schema:
+            type: boolean
+            default: false
       responses:
         200:
           description: {{RESPONSES['task']['all']['success']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['all']['success']}}
-              tasks:
-                type: array
-                items:
-                  $ref: '#/definitions/TaskToDisplay'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['all']['success']}}
+                  tasks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TaskToDisplay'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unpriviliged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
       security:
         - Bearer: []
     post:
-      tags: 
+      tags:
         - tasks
       summary: Create new task
       operationId: tensorhive.controllers.task.create
-      parameters:
-        - description: |
-            Task object
-            * spawn field is nullable string
-            * terminate field is nullable string
-          in: body
-          name: task
-          required: true
-          schema:
-            $ref: '#/definitions/TaskForm'
+      requestBody:
+        description: |
+          Task object
+          * spawn field is nullable string
+          * terminate field is nullable string
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskForm'
+              x-body-name: task
       responses:
         201:
           description: {{RESPONSES['task']['create']['success']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['create']['success']}}
-              task:
-                $ref: '#/definitions/TaskToDisplay'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['create']['success']}}
+                  task:
+                    $ref: '#/components/schemas/TaskToDisplay'
         400:
           description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unpriviliged']}}
         # 409:
         #   description: {{RESPONSES['task']['create']['failure']['duplicate']}}
         422:
@@ -712,7 +788,7 @@ paths:
         - Bearer: []
   /tasks/{id}:
     get:
-      tags: 
+      tags:
         - tasks
       operationId: tensorhive.controllers.task.get
       summary: Get task by ID
@@ -721,47 +797,56 @@ paths:
         - description: Task ID
           in: path
           name: id
-          type: integer
           required: true
+          schema:
+            type: integer
       responses:
         200:
           description: {{RESPONSES['general']['ok']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['get']['success']}}
-              task:
-                $ref: '#/definitions/TaskToDisplay'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['get']['success']}}
+                  task:
+                    $ref: '#/components/schemas/TaskToDisplay'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unpriviliged']}}
         404:
           description: {{RESPONSES['task']['not_found']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['not_found']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['not_found']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['internal_error']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
     put:
@@ -769,60 +854,71 @@ paths:
         - tasks
       summary: Update task
       operationId: tensorhive.controllers.task.update
+      requestBody:
+        description: |
+          Task object with fields to overwrite.
+          * spawn field is nullable string
+          * terminate field is nullable string
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdateForm'
+              x-body-name: newValues
       parameters:
         - description: Task ID
           in: path
           name: id
           required: true
-          type: integer
-        - description: |
-            Task object with fields to overwrite.
-            * spawn field is nullable string
-            * terminate field is nullable string
-          in: body
-          name: newValues
-          required: true
           schema:
-            $ref: '#/definitions/TaskUpdateForm'
+            type: integer
       responses:
         201:
           description: {{RESPONSES['general']['ok']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['update']['success']}}
-              task:
-                $ref: '#/definitions/TaskToDisplay'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['update']['success']}}
+                  task:
+                    $ref: '#/components/schemas/TaskToDisplay'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unpriviliged']}}
         404:
           description: {{RESPONSES['task']['not_found']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['not_found']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['not_found']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['internal_error']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
     delete:
@@ -835,44 +931,53 @@ paths:
           in: path
           name: id
           required: true
-          type: integer
+          schema:
+            type: integer
       responses:
         200:
           description: {{RESPONSES['general']['ok']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['delete']['success']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['delete']['success']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unpriviliged']}}
         404:
           description: {{RESPONSES['task']['not_found']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['not_found']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['not_found']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['internal_error']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
   /tasks/{id}/log:
@@ -886,74 +991,87 @@ paths:
         - description: Task ID
           in: path
           name: id
-          type: integer
           required: true
+          schema:
+            type: integer
         - description: Only tail (10 lines)
           in: query
           name: tail
-          type: boolean
           required: false
-          default: false
+          schema:
+            type: boolean
+            default: false
       responses:
         200:
           description: {{RESPONSES['general']['ok']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['get']['success']}}
-              path:
-                type: string
-                example: ~/TensorHiveLogs/task_99.log
-              output_lines:
-                type: array
-                items:
-                  type: string
-                example:
-                  - first line
-                  - second line
-                  - etc.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['get']['success']}}
+                  path:
+                    type: string
+                    example: ~/TensorHiveLogs/task_99.log
+                  output_lines:
+                    type: array
+                    items:
+                      type: string
+                    example:
+                      - first line
+                      - second line
+                      - etc.
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unpriviliged']}}
         404:
           description: {{RESPONSES['task']['get_log']['failure']['not_found']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['get_log']['failure']['not_found']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['get_log']['failure']['not_found']}}
         422:
           description: {{RESPONSES['task']['get_log']['failure']['assertions']}} or {{RESPONSES['general']['auth_error']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['get_log']['failure']['assertions']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['get_log']['failure']['assertions']}}
         500:
           description: {{RESPONSES['ssh']['failure']['connection']}} or {{RESPONSES['general']['internal_error']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['ssh']['failure']['connection']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['ssh']['failure']['connection']}}
       security:
         - Bearer: []
   /screen-sessions:
     get:
       tags:
-       - tasks
+        - tasks
+      operationId: tensorhive.controllers.task.screen_sessions
       summary: Returns PIDs of active screen sessions running on username@hostname
       description: |
         It shows only sessions labeled by TensorHive and ignores anything else.
@@ -963,522 +1081,552 @@ paths:
           in: query
           name: username
           required: true
-          type: string
+          schema:
+            type: string
         - description: Hostname
           in: query
           name: hostname
           required: true
-          type: string
-      summary: Returns pids of running screen sessions on username@hostname
-      operationId: tensorhive.controllers.task.screen_sessions
+          schema:
+            type: string
       responses:
         200:
           description: {{RESPONSES['general']['ok']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['screen-sessions']['success']}}
-              pids:
-                type: array
-                example:
-                  - 1234
-                  - 2345
-                  - 3456
-                items:
-                  type: integer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['screen-sessions']['success']}}
+                  pids:
+                    type: array
+                    example:
+                      - 1234
+                      - 2345
+                      - 3456
+                    items:
+                      type: integer
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         422:
           description: {{RESPONSES['screen-sessions']['failure']['assertions']}} or {{RESPONSES['general']['auth_error']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['screen-sessions']['failure']['assertions']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['screen-sessions']['failure']['assertions']}}
         500:
           description: {{RESPONSES['ssh']['failure']['connection']}} or {{RESPONSES['general']['internal_error']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['ssh']['failure']['connection']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['ssh']['failure']['connection']}}
       # security:
       #   - Bearer: []
   /tasks/{id}/spawn:
     get:
-      tags: 
+      tags:
         - tasks
-      parameters:
-        - description: Task ID
-          in: path
-          name: id
-          required: true
-          type: integer
+      operationId: tensorhive.controllers.task.spawn
       summary: Spawns a task by id
       description: |
         Task which is already running will not be spawned.
         Task's state will be synced automatically.
-      operationId: tensorhive.controllers.task.spawn
-      responses:
-        200:
-          description: {{RESPONSES['general']['ok']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['spawn']['success']}}
-              pid:
-                type: integer
-                example: 4321
-        403:
-          description: {{RESPONSES['general']['unpriviliged']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
-        404:
-          description: {{RESPONSES['task']['not_found']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['not_found']}}
-        401:
-          description: {{RESPONSES['general']['unauthorized']}}
-        422:
-          description: {{RESPONSES['task']['spawn']['failure']['assertions']}} or {{RESPONSES['general']['auth_error']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['spawn']['failure']['assertions']}}
-        500:
-          description: {{RESPONSES['task']['spawn']['failure']['backend']}} or {{RESPONSES['general']['internal_error']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['not_found']}}
-      security:
-        - Bearer: []
-  /tasks/{id}/terminate:
-    get:
-      tags: 
-        - tasks
       parameters:
         - description: Task ID
           in: path
           name: id
           required: true
-          type: integer
-        - description: false to kill, null to terminate, true to interrupt
-          in: query
-          name: gracefully
-          type: boolean
-          required: false
-          x-nullable: true
-          default: null
+          schema:
+            type: integer
+      responses:
+        200:
+          description: {{RESPONSES['general']['ok']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['spawn']['success']}}
+                  pid:
+                    type: integer
+                    example: 4321
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unpriviliged']}}
+        404:
+          description: {{RESPONSES['task']['not_found']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['not_found']}}
+        422:
+          description: {{RESPONSES['task']['spawn']['failure']['assertions']}} or {{RESPONSES['general']['auth_error']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['spawn']['failure']['assertions']}}
+        500:
+          description: {{RESPONSES['task']['spawn']['failure']['backend']}} or {{RESPONSES['general']['internal_error']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['not_found']}}
+      security:
+        - Bearer: []
+  /tasks/{id}/terminate:
+    get:
+      tags:
+        - tasks
+      operationId: tensorhive.controllers.task.terminate
       summary: Interrupts/terminates/kills task by id
       description: |
         Kill - almost guaranteed termination
 
         Terminate - sends SIGTERM, works in most cases
-        
+
         Interrupt - sends SIGINT. Only this method allows for capturing logs when program is closing
 
         Returns exit code of the operation, not task's command!
         Task state will be synced automatically.
-      operationId: tensorhive.controllers.task.terminate
+      parameters:
+        - description: Task ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - description: false to kill, null to terminate, true to interrupt
+          in: query
+          name: gracefully
+          required: false
+          schema:
+            type: boolean
+            nullable: true
+            default: null
       responses:
         200:
           description: {{RESPONSES['task']['terminate']['success']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['terminate']['success']}}
-              exit_code:
-                type: integer
-                example: 0
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['terminate']['success']}}
+                  exit_code:
+                    type: integer
+                    example: 0
         202:
           description: {{RESPONSES['task']['terminate']['failure']['exit_code']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['terminate']['failure']['exit_code']}}
-              exit_code:
-                type: integer
-                example: 1
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['terminate']['failure']['exit_code']}}
+                  exit_code:
+                    type: integer
+                    example: 1
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unpriviliged']}}
         404:
           description: {{RESPONSES['task']['not_found']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['not_found']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['not_found']}}
         409:
           description: {{RESPONSES['task']['terminate']['failure']['state']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['terminate']['failure']['state']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['task']['terminate']['failure']['state']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
-definitions:
-  UserToDisplay:
-    type: object
-    properties:
-      id:
-        type: integer
-        format: int64
-        example: 1
-      username:
-        type: string
-        example: foobar
-      email:
-        type: string
-        example: foo@bar.com
-      createdAt:
-        type: string
-        format: date-time
-  TaskForm:
-    type: object
-    required:
-      - command
-      - hostname
-      - userId
-    properties:
-      command:
-        type: string
-        example: CUDA_VISIBLE_DEVICES=0 train.py
-      hostname:
-        type: string
-        example: localhost
-      userId:
-        type: integer
-        example: 1
-      spawnAt:
-        type: string
-        format: date-time
-        x-nullable: true
-      terminateAt:
-        type: string
-        format: date-time
-        x-nullable: true
-  TaskToDisplay:
-    type: object
-    properties:
-      id:
-        type: integer
-        format: int64
-        example: 1
-      userId:
-        type: integer
-        example: 1
-      command:
-        type: string
-        example: CUDA_VISIBLE_DEVICES=0 train.py
-      pid:
-        type: integer
-        format: int64
-        example: 4321
-      hostname:
-        type: string
-        format: 'localhost'
-      spawnAt:
-        type: string
-        format: date-time
-        x-nullable: true
-        example: 2019-05-08T12:00:00.066Z (or null!)
-      terminateAt:
-        type: string
-        format: date-time
-        x-nullable: true
-        example: 2019-05-08T13:00:00.066Z (or null!)
-  UserUpdateForm:
-    type: object
-    required:
-      - id
-    properties:
-      roles:
-        type: array
-        items: {
-          type: string
-        }
-      username:
-        type: string
-        example: foobar
-      password:
-        type: string
-        example: difficult_password
-      id:
-        type: integer
-        format: int64
-        example: 1
-        readOnly: true
-  TaskUpdateForm:
-    type: object
-    properties:
-      command:
-        type: string
-        example: CUDA_VISIBLE_DEVICES=0 train.py --worker-id=2
-      hostname:
-        type: string
-        example: localhost
-      spawnAt:
-        type: string
-        format: date-time
-        x-nullable: true
-        example: 2019-05-08T12:00:00.066Z (or null!)
-      terminateAt:
-        type: string
-        format: date-time
-        x-nullable: true
-        example: 2019-05-08T13:00:00.066Z (or null!)
-  UserForm:
-    type: object
-    required:
-      - username
-      - email
-      - password
-    properties:
-      username:
-        type: string
-        example: foobar
-      email:
-        type: string
-        example: foo@bar.com
-      password:
-        type: string
-        example: difficult_password
-  UserLoginForm:
-    type: object
-    required:
-      - username
-      - password
-    properties:
-      username:
-        type: string
-        example: foobar
-      password:
-        type: string
-        example: difficult_password
-  Reservation:
-    type: object
-    required:
-      - title
-      - description
-      - resourceId
-      - userId
-      - userName
-      - gpuUtilAvg
-      - memUtilAvg
-      - start
-      - end
-    properties:
-      id:
-        type: integer
-        format: int64
-        example: 1
-        readOnly: true
-      createdAt:
-        type: string
-        format: date-time
-        readOnly: true
-      title:
-        type: string
-        example: Example title
-      description:
-        type: string
-        example: Example description
-      resourceId:
-        type: string
-        example: GPU-d38d4de3-85ee-e837-3d87-e8e2faeb6a63
-      userId:
-        type: integer
-        example: 1
-      userName:
-        type: string
-        example: Example owner's username
-      gpuUtilAvg:
-        type: integer
-        example: 99
-      memUtilAvg:
-        example: 67
-      start:
-        type: string
-        format: date-time
-      end:
-        type: string
-        format: date-time
-  ReservationForm:
-    type: object
-    required:
-      - title
-      - description
-      - resourceId
-      - userId
-      - start
-      - end
-    properties:
-      title:
-        type: string
-        example: Example title
-      description:
-        type: string
-        example: Example description
-      resourceId:
-        type: string
-        example: GPU-d38d4de3-85ee-e837-3d87-e8e2faeb6a63
-      userId:
-        type: integer
-        example: 1
-      start:
-        type: string
-        format: date-time
-      end:
-        type: string
-        format: date-time
-  ReservationUpdateForm:
-    type: object
-    #required:
-    # - start
-    # - end
-    properties:
-      title:
-        type: string
-        example: Example title
-      description:
-        type: string
-        example: Example description
-      resourceId:
-        type: string
-        example: GPU-d38d4de3-85ee-e837-3d87-e8e2faeb6a63
-      userId:
-        type: integer
-        example: 1
-      start:
-        type: string
-        format: date-time
-      end:
-        type: string
-        format: date-time
-  GPUAllData:
-    type: object
-    example:
-      <HOSTNAME>:
-        GPU:
-          <GPU_UUID>:
-            index: 0
-            name: GeForce GTX 1060
-            metrics: 
-              fan_speed:
-                unit: '%'
-                value: 30
-              power:
-                unit: W
-                value: 90
-            processes: 'null'
-  GPUInfo:
-    type: object
-    example:
-      <GPU_UUID>:
-        index:
+components:
+  schemas:
+    UserToDisplay:
+      type: object
+      properties:
+        id:
           type: integer
-          example: 0
-        name:
+          format: int64
+          example: 1
+        username:
           type: string
-          example: GeForce GTX 1060
-  GPUMetricsInTwoCases:
-    type: object
-    example:
-      <GPU_UUID (All metrics case)>:
-        utilization:
+          example: foobar
+        email:
+          type: string
+          example: foo@bar.com
+        createdAt:
+          type: string
+          format: date-time
+    TaskForm:
+      type: object
+      required:
+        - command
+        - hostname
+        - userId
+      properties:
+        command:
+          type: string
+          example: CUDA_VISIBLE_DEVICES=0 train.py
+        hostname:
+          type: string
+          example: localhost
+        userId:
+          type: integer
+          example: 1
+        spawnAt:
+          type: string
+          format: date-time
+          nullable: true
+        terminateAt:
+          type: string
+          format: date-time
+          nullable: true
+    TaskToDisplay:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        userId:
+          type: integer
+          example: 1
+        command:
+          type: string
+          example: CUDA_VISIBLE_DEVICES=0 train.py
+        pid:
+          type: integer
+          format: int64
+          example: 4321
+        hostname:
+          type: string
+          format: localhost
+        spawnAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: 2019-05-08T12:00:00.066Z (or null!)
+        terminateAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: 2019-05-08T13:00:00.066Z (or null!)
+    UserUpdateForm:
+      type: object
+      required:
+        - id
+      properties:
+        roles:
+          type: array
+          items:
+            type: string
+        username:
+          type: string
+          example: foobar
+        password:
+          type: string
+          example: difficult_password
+        id:
+          type: integer
+          format: int64
+          example: 1
+    TaskUpdateForm:
+      type: object
+      properties:
+        command:
+          type: string
+          example: CUDA_VISIBLE_DEVICES=0 train.py --worker-id=2
+        hostname:
+          type: string
+          example: localhost
+        spawnAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: 2019-05-08T12:00:00.066Z (or null!)
+        terminateAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: 2019-05-08T13:00:00.066Z (or null!)
+    UserForm:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          example: foobar
+        email:
+          type: string
+          example: foo@bar.com
+        password:
+          type: string
+          example: difficult_password
+    UserLoginForm:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: foobar
+        password:
+          type: string
+          example: difficult_password
+    Reservation:
+      type: object
+      required:
+        - title
+        - description
+        - resourceId
+        - userId
+        - userName
+        - gpuUtilAvg
+        - memUtilAvg
+        - start
+        - end
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        title:
+          type: string
+          example: Example title
+        description:
+          type: string
+          example: Example description
+        resourceId:
+          type: string
+          example: GPU-d38d4de3-85ee-e837-3d87-e8e2faeb6a63
+        userId:
+          type: integer
+          example: 1
+        userName:
+          type: string
+          example: Example owner's username
+        gpuUtilAvg:
+          type: integer
+          example: 99
+        memUtilAvg:
+          type: integer
+          example: 67
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+    ReservationForm:
+      type: object
+      required:
+        - title
+        - description
+        - resourceId
+        - userId
+        - start
+        - end
+      properties:
+        title:
+          type: string
+          example: Example title
+        description:
+          type: string
+          example: Example description
+        resourceId:
+          type: string
+          example: GPU-d38d4de3-85ee-e837-3d87-e8e2faeb6a63
+        userId:
+          type: integer
+          example: 1
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+    ReservationUpdateForm:
+      type: object
+      #required:
+      # - start
+      # - end
+      properties:
+        title:
+          type: string
+          example: Example title
+        description:
+          type: string
+          example: Example description
+        resourceId:
+          type: string
+          example: GPU-d38d4de3-85ee-e837-3d87-e8e2faeb6a63
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+    GPUAllData:
+      type: object
+      example:
+        <HOSTNAME>:
+          GPU:
+            <GPU_UUID>:
+              index: 0
+              name: GeForce GTX 1060
+              metrics:
+                fan_speed:
+                  unit: '%'
+                  value: 30
+                power:
+                  unit: W
+                  value: 90
+              processes: 'null'
+    GPUInfo:
+      type: object
+      example:
+        <GPU_UUID>:
+          index:
+            type: integer
+            example: 0
+          name:
+            type: string
+            example: GeForce GTX 1060
+    GPUMetricsInTwoCases:
+      type: object
+      example:
+        <GPU_UUID (All metrics case)>:
+          utilization:
+            unit: '%'
+            value: 95
+          power:
+            unit: W
+            value: 90
+        <GPU_UUID (Specific metric case)>:
           unit: '%'
           value: 95
-        power:
-          unit: W
-          value: 90
-      <GPU_UUID (Specific metric case)>:
-        unit: '%'
-        value: 95
-  CPUMetrics:
-    type: object
-  GPUProcesses:
-    type: object
-    example:
-      <GPU_UUID>:
-        - command: python
-          owner: foo
-          pid: 1111
-        - command: java
-          owner: bar
-          pid: 2222
-parameters:
-  hostnameParam:
-    description: Node's hostname in the network
-    in: path
-    name: hostname
-    required: true
-    type: string
-  gpuMetricTypeQuery:
-    description: Metric type. If not present, queries for all metrics
-    in: query
-    name: metric_type
-    required: false
-    type: string
-    enum:
-      - fan_speed
-      - mem_free
-      - mem_used
-      - mem_total
-      - utilization
-      - mem_util
-      - temp
-      - power
-  cpuMetricTypeQuery:
-    description: Metric type. If not present, queries for all metrics
-    in: query
-    name: metric_type
-    required: false
-    type: string
-    enum:
-      - mem_free
-      - mem_used
-      - mem_total
-      - utilization
-securityDefinitions:
-  Bearer:
-    type: apiKey
-    name: Authorization
-    in: header
+    CPUMetrics:
+      type: object
+    GPUProcesses:
+      type: object
+      example:
+        <GPU_UUID>:
+          - command: python
+            owner: foo
+            pid: 1111
+          - command: java
+            owner: bar
+            pid: 2222
+  parameters:
+    hostnameParam:
+      description: Node's hostname in the network
+      in: path
+      name: hostname
+      required: true
+      schema:
+        type: string
+    gpuMetricTypeQuery:
+      description: Metric type. If not present, queries for all metrics
+      in: query
+      name: metric_type
+      required: false
+      schema:
+        type: string
+        enum:
+          - fan_speed
+          - mem_free
+          - mem_used
+          - mem_total
+          - utilization
+          - mem_util
+          - temp
+          - power
+    cpuMetricTypeQuery:
+      description: Metric type. If not present, queries for all metrics
+      in: query
+      name: metric_type
+      required: false
+      schema:
+        type: string
+        enum:
+          - mem_free
+          - mem_used
+          - mem_total
+          - utilization
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      x-bearerInfoFunc: tensorhive.authorization.decode_token
