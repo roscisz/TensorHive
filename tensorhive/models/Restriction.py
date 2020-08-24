@@ -1,14 +1,18 @@
 import datetime
+import logging
 
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.database import db_session, Base
+from tensorhive.utils.DateUtils import DateUtils
 from tensorhive.models.CRUDModel import CRUDModel
 from tensorhive.models.User import User
 from tensorhive.models.Group import Group
 from tensorhive.models.Resource import Resource
 from tensorhive.models.RestrictionSchedule import RestrictionSchedule
+
+log = logging.getLogger(__name__)
 
 
 class Restriction(CRUDModel, Base):  # type: ignore
@@ -29,9 +33,9 @@ class Restriction(CRUDModel, Base):  # type: ignore
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50))
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    starts_at = Column(DateTime, nullable=False)
-    ends_at = Column(DateTime)
+    _created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    _starts_at = Column(DateTime, nullable=False)
+    _ends_at = Column(DateTime)
     is_global = Column(Boolean, nullable=False)
 
     _users = relationship('User', secondary='restriction2assignee')
@@ -53,6 +57,36 @@ class Restriction(CRUDModel, Base):  # type: ignore
             assert self.ends_at >= self.starts_at, 'End date must happen after the start date!'
             assert self.ends_at > datetime.datetime.utcnow(), 'You are trying to edit restriction that has already' \
                                                               ' expired - please do not do that!'
+
+    @hybrid_property
+    def starts_at(self):
+        return self._starts_at
+
+    @hybrid_property
+    def ends_at(self):
+        return self._ends_at
+
+    @hybrid_property
+    def created_at(self):
+        return self._created_at
+
+    @starts_at.setter
+    def starts_at(self, value: str):
+        self._starts_at = DateUtils.try_parse_string(value)
+        if not self._starts_at:
+            log.error('Unsupported type (starts_at={})'.format(value))
+
+    @ends_at.setter
+    def ends_at(self, value: str):
+        self._ends_at = DateUtils.try_parse_string(value)
+        if not self._ends_at:
+            log.error('Unsupported type (ends_at={})'.format(value))
+
+    @created_at.setter
+    def created_at(self, value: str):
+        self._created_at = DateUtils.try_parse_string(value)
+        if not self._created_at:
+            log.error('Unsupported type (created_at={})'.format(value))
 
     @hybrid_property
     def users(self):
@@ -129,9 +163,9 @@ class Restriction(CRUDModel, Base):  # type: ignore
         return {
             'id': self.id,
             'name': self.name,
-            'created_at': self.created_at,
-            'starts_at': self.starts_at,
-            'ends_at': self.ends_at,
+            'created_at': DateUtils.parse_datetime(self.created_at),
+            'starts_at': DateUtils.parse_datetime(self.starts_at),
+            'ends_at': DateUtils.parse_datetime(self.ends_at),
             'is_global': self.is_global
         }
 

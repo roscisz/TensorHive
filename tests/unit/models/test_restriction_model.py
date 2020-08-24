@@ -110,3 +110,13 @@ def test_restriction_with_schedules_is_active_only_when_at_least_one_of_its_sche
     print(active_schedule.is_active)
     restriction.add_schedule(active_schedule)
     assert restriction.is_active is True
+
+
+def test_restriction_with_dates_passed_as_string_gets_added_successfully(tables):
+    new_restriction = Restriction(
+        name='TestRestriction',
+        is_global=False
+    )
+    new_restriction.starts_at = '2020-09-29T18:07:44.191Z'
+    new_restriction.ends_at = '2020-09-30T18:07:44.191Z'
+    new_restriction.save()

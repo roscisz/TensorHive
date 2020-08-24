@@ -1,6 +1,7 @@
-from tensorhive.models.Task import Task, TaskStatus, try_parse_input_datetime
+from tensorhive.models.Task import Task, TaskStatus
 from tensorhive.models.User import User
 from tensorhive.core import task_nursery, ssh
+from tensorhive.utils.DateUtils import DateUtils
 from tensorhive.core.task_nursery import SpawnError, ExitCodeError
 from pssh.exceptions import ConnectionErrorException, AuthenticationException, UnknownHostException
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt_claims
@@ -287,8 +288,8 @@ def business_create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
             host=task['hostname'],
             command=task['command'],
             # TODO Adjust API spec, optional fields
-            spawn_at=try_parse_input_datetime(task.get('spawnAt')),
-            terminate_at=try_parse_input_datetime(task.get('terminateAt')))
+            spawn_at=DateUtils.try_parse_string(task.get('spawnAt')),
+            terminate_at=DateUtils.try_parse_string(task.get('terminateAt')))
         # assert all(task.values()), 'fields cannot be blank or null'
         new_task.save()
     except ValueError:
@@ -337,7 +338,7 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
                 field_name = 'host'
             if field_name in {'spawnAt', 'terminateAt'}:
                 field_name = field_name.replace('At', '_at')
-                new_value = try_parse_input_datetime(new_value)
+                new_value = DateUtils.try_parse_string(new_value)
             else:
                 # Check that every other field matches
                 assert hasattr(task, field_name), 'task has no {} column'.format(field_name)

@@ -1,44 +1,11 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Enum, DateTime
-from datetime import datetime
 from tensorhive.database import Base
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.models.CRUDModel import CRUDModel
-from typing import Optional, Union
+from tensorhive.utils.DateUtils import DateUtils
 import enum
 import logging
 log = logging.getLogger(__name__)
-
-
-# FIXME Move to utils
-def parsed_input_datetime(value: str) -> datetime:
-    """Tries to parse string into datetime.
-
-    Re-raises ValueError on failure
-    """
-    client_datetime_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-    try:
-        result = datetime.strptime(value, client_datetime_format)
-    except ValueError:
-        log.warning('Could not parse input into datetime')
-        raise
-    else:
-        return result
-
-
-# FIXME Move to utils
-def try_parse_input_datetime(value: Union[str, datetime, None]) -> Optional[datetime]:
-    """Allows for string to datetime conversion given in API request.
-    If new value is of `datetime` type then it just returns original value as it is.
-
-    Re-rasies ValueError
-    """
-    if isinstance(value, str):
-        return parsed_input_datetime(value)
-    elif isinstance(value, datetime):
-        return value
-    else:
-        return None
 
 
 class TaskStatus(enum.Enum):
@@ -76,18 +43,6 @@ class Task(CRUDModel, Base):  # type: ignore
     def check_assertions(self):
         pass
 
-    # FIXME Code copied from `Reservation.py` and adapted to Optional[datetime] use case (refactor in both places)
-    @classmethod
-    def try_parse_output_datetime(cls, value: Optional[datetime]) -> Optional[str]:
-        """Parses datetime object taking timezone postfix into consideration.
-        Note that `spawn_at`, `terminate_at` are nullable fields, hence None can be returned.
-        """
-        if not value:
-            return None
-        display_datetime_format = '%Y-%m-%dT%H:%M:%S'
-        server_timezone = '+00:00'
-        return value.strftime(display_datetime_format) + server_timezone
-
     @property
     def as_dict(self):
         return {
@@ -97,6 +52,6 @@ class Task(CRUDModel, Base):  # type: ignore
             'pid': self.pid,
             'status': self.status.name,
             'command': self.command,
-            'spawnAt': self.try_parse_output_datetime(self.spawn_at),
-            'terminateAt': self.try_parse_output_datetime(self.terminate_at)
+            'spawnAt': DateUtils.parse_datetime(self.spawn_at),
+            'terminateAt': DateUtils.parse_datetime(self.terminate_at)
         }
