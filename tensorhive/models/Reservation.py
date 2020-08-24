@@ -1,9 +1,10 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, and_, not_, or_, event
 from tensorhive.database import db_session, Base
 from tensorhive.models.CRUDModel import CRUDModel
+from tensorhive.utils.DateUtils import DateUtils
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, backref
-from typing import Optional, List
+from typing import List
 import datetime
 import logging
 log = logging.getLogger(__name__)
@@ -54,35 +55,14 @@ class Reservation(CRUDModel, Base):  # type: ignore
     def duration(self):
         return self.ends_at - self.starts_at
 
-    @classmethod
-    def parsed_input_datetime(cls, value: str) -> Optional[datetime.datetime]:
-        client_datetime_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-        try:
-            result = datetime.datetime.strptime(value, client_datetime_format)
-        except ValueError as e:
-            log.error(e)
-            raise
-        else:
-            return result
-
-    @classmethod
-    def parsed_output_datetime(cls, value: datetime.datetime) -> str:
-        display_datetime_format = '%Y-%m-%dT%H:%M:%S'
-        server_timezone = '+00:00'
-        return value.strftime(display_datetime_format) + server_timezone
-
     @hybrid_property
     def starts_at(self):
         return self._starts_at
 
     @starts_at.setter  # type: ignore
     def starts_at(self, value):
-        if isinstance(value, str):
-            self._starts_at = self.parsed_input_datetime(value)
-        elif isinstance(value, datetime.datetime):
-            self._starts_at = value
-        else:
-            self._starts_at = None
+        self._starts_at = DateUtils.try_parse_string(value)
+        if not self._starts_at:
             log.error('Unsupported type (starts_at={})'.format(value))
 
     @hybrid_property
@@ -91,17 +71,8 @@ class Reservation(CRUDModel, Base):  # type: ignore
 
     @ends_at.setter  # type: ignore
     def ends_at(self, value):
-        if isinstance(value, str):
-            try:
-                self._ends_at = Reservation.parsed_input_datetime(value)
-            except ValueError:
-                # Catch, but don't propagate at this moment,
-                # let the dev to change it to correct value later
-                self._ends_at = None
-        elif isinstance(value, datetime.datetime):
-            self._ends_at = value
-        else:
-            self._ends_at = None
+        self._ends_at = DateUtils.try_parse_string(value)
+        if not self._ends_at:
             log.error('Unsupported type (ends_at={})'.format(value))
 
     @classmethod
@@ -161,7 +132,7 @@ class Reservation(CRUDModel, Base):  # type: ignore
 
     @property
     def as_dict(self):
-        '''Serializes model instance into dict (which is interpreted as json automatically)'''
+        """Serializes model instance into dict (which is interpreted as json automatically)"""
         return {
             'id': self.id,
             'title': self.title,
@@ -171,7 +142,7 @@ class Reservation(CRUDModel, Base):  # type: ignore
             'userName': self.user.username,
             'gpuUtilAvg': self.gpu_util_avg,
             'memUtilAvg': self.mem_util_avg,
-            'start': self.parsed_output_datetime(self.starts_at),
-            'end': self.parsed_output_datetime(self.ends_at),
-            'createdAt': self.parsed_output_datetime(self.created_at)
+            'start': DateUtils.parse_datetime(self.starts_at),
+            'end': DateUtils.parse_datetime(self.ends_at),
+            'createdAt': DateUtils.parse_datetime(self.created_at)
         }
