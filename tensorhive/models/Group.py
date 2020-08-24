@@ -41,14 +41,31 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
         self.users.remove(user)
         self.save()
 
-    @property
+    @hybrid_property
     def as_dict(self):
-        return {
+        """
+        Serializes current instance into dict.
+        :return: Dictionary representing current instance.
+        """
+        return self._as_dict(True)
+
+    @hybrid_property
+    def as_dict_shallow(self):
+        """
+        Serializes current instance into dict. Will not include group's users (to prevent recurrence).
+        :return: Dictionary representing current instance (without users).
+        """
+        return self._as_dict(False)
+
+    def _as_dict(self, include_users):
+        group = {
             'id': self.id,
             'name': self.name,
-            'createdAt': self.created_at.isoformat(),
-            'users': self.users
+            'createdAt': self.created_at.isoformat()
         }
+        if include_users:
+            group['users'] = [user.as_dict_shallow for user in self.users]
+        return group
 
 
 class User2Group(Base):  # type: ignore

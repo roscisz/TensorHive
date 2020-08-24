@@ -108,22 +108,38 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
         else:
             return result
 
-    @property
+    @hybrid_property
     def as_dict(self):
-        '''Serializes model instance into dict (which is interpreted as json automatically)'''
+        """
+        Serializes current instance into dict.
+        :return: Dictionary representing current instance.
+        """
+        return self._as_dict(True)
+
+    @hybrid_property
+    def as_dict_shallow(self):
+        """
+        Serializes current instance into dict. Will not include user's groups (to prevent recurrence).
+        :return: Dictionary representing current instance (without groups).
+        """
+        return self._as_dict(False)
+
+    def _as_dict(self, include_groups):
         try:
             roles = self.role_names
         except Exception:
             roles = []
         finally:
-            return {
+            user = {
                 'id': self.id,
                 'username': self.username,
                 'createdAt': self.created_at.isoformat(),
                 'roles': roles,
-                'groups': self.groups,
                 'email': self.email
             }
+            if include_groups:
+                user['groups'] = [group.as_dict_shallow for group in self.groups]
+            return user
 
     @staticmethod
     def verify_hash(password, hash):
