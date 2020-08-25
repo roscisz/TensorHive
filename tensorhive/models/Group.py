@@ -5,6 +5,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.database import Base
+from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from tensorhive.models.CRUDModel import CRUDModel
 from tensorhive.models.User import User
 from tensorhive.models.RestrictionAssignee import RestrictionAssignee
@@ -34,10 +35,17 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
         return self._users
 
     def add_user(self, user: User):
+        if user in self.users:
+            raise InvalidRequestException('User {user} is already a member of group {group}!'
+                                          .format(user=user, group=self))
         self.users.append(user)
         self.save()
 
     def remove_user(self, user: User):
+        if user not in self.users:
+            raise InvalidRequestException('User {user} is not a member of group {group}!'
+                                          .format(user=user, group=self))
+
         self.users.remove(user)
         self.save()
 

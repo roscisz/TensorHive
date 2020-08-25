@@ -2,6 +2,7 @@ import pytest
 
 from datetime import datetime, timedelta
 from tensorhive.models.Restriction import Restriction
+from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 
 
 def test_restriction_creation(tables):
@@ -120,3 +121,75 @@ def test_restriction_with_dates_passed_as_string_gets_added_successfully(tables)
     new_restriction.starts_at = '2020-09-29T18:07:44.191Z'
     new_restriction.ends_at = '2020-09-30T18:07:44.191Z'
     new_restriction.save()
+
+
+def test_when_trying_to_apply_restriction_to_the_same_group_twice_an_exception_is_thrown(tables, restriction,
+                                                                                         new_group):
+    new_group.save()
+    restriction.apply_to_group(new_group)
+
+    with pytest.raises(InvalidRequestException):
+        restriction.apply_to_group(new_group)
+
+
+def test_when_trying_to_apply_restriction_to_the_same_user_twice_an_exception_is_thrown(tables, restriction,
+                                                                                        new_user):
+    new_user.save()
+    restriction.apply_to_user(new_user)
+
+    with pytest.raises(InvalidRequestException):
+        restriction.apply_to_user(new_user)
+
+
+def test_when_trying_to_add_an_already_assigned_schedule_to_restriction_an_exception_is_thrown(tables, restriction,
+                                                                                               inactive_schedule):
+    inactive_schedule.save()
+    restriction.add_schedule(inactive_schedule)
+
+    with pytest.raises(InvalidRequestException):
+        restriction.add_schedule(inactive_schedule)
+
+
+def test_when_trying_to_add_an_already_assigned_resource_to_restriction_an_exception_is_thrown(tables, restriction,
+                                                                                               resource1):
+    resource1.save()
+    restriction.apply_to_resource(resource1)
+
+    with pytest.raises(InvalidRequestException):
+        restriction.apply_to_resource(resource1)
+
+
+def test_when_trying_to_remove_restriction_from_group_that_wasnt_assigned_to_it_an_exception_is_thrown(tables,
+                                                                                                       restriction,
+                                                                                                       new_group):
+    new_group.save()
+
+    with pytest.raises(InvalidRequestException):
+        restriction.remove_from_group(new_group)
+
+
+def test_when_trying_to_remove_restriction_from_user_that_wasnt_assigned_to_it_an_exception_is_thrown(tables,
+                                                                                                      restriction,
+                                                                                                      new_user):
+    new_user.save()
+
+    with pytest.raises(InvalidRequestException):
+        restriction.remove_from_user(new_user)
+
+
+def test_when_trying_to_remove_schedule_that_wasnt_assigned_to_restriction_an_exception_is_thrown(tables,
+                                                                                                  restriction,
+                                                                                                  inactive_schedule):
+    inactive_schedule.save()
+
+    with pytest.raises(InvalidRequestException):
+        restriction.remove_schedule(inactive_schedule)
+
+
+def test_when_trying_to_remove_restriction_from_resource_that_wasnt_assigned_to_it_an_exception_is_thrown(tables,
+                                                                                                          restriction,
+                                                                                                          resource1):
+    resource1.save()
+
+    with pytest.raises(InvalidRequestException):
+        restriction.remove_from_resource(resource1)
