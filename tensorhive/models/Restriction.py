@@ -5,6 +5,7 @@ from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.database import db_session, Base
+from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from tensorhive.utils.DateUtils import DateUtils
 from tensorhive.models.CRUDModel import CRUDModel
 from tensorhive.models.User import User
@@ -79,8 +80,6 @@ class Restriction(CRUDModel, Base):  # type: ignore
     @ends_at.setter
     def ends_at(self, value: str):
         self._ends_at = DateUtils.try_parse_string(value)
-        if not self._ends_at:
-            log.error('Unsupported type (ends_at={})'.format(value))
 
     @created_at.setter
     def created_at(self, value: str):
@@ -105,34 +104,58 @@ class Restriction(CRUDModel, Base):  # type: ignore
         return self._schedules
 
     def apply_to_user(self, user: User):
+        if user in self.users:
+            raise InvalidRequestException('Restriction {restriction} is already being applied to user {user}'
+                                          .format(restriction=self, user=user))
         self.users.append(user)
         self.save()
 
     def remove_from_user(self, user: User):
+        if user not in self.users:
+            raise InvalidRequestException('User {user} is not affected by restriction {restriction}'
+                                          .format(user=user, restriction=self))
         self.users.remove(user)
         self.save()
 
     def apply_to_group(self, group: Group):
+        if group in self.groups:
+            raise InvalidRequestException('Restriction {restriction} is already being applied to group {group}'
+                                          .format(restriction=self, group=group))
         self.groups.append(group)
         self.save()
 
     def remove_from_group(self, group: Group):
+        if group not in self.groups:
+            raise InvalidRequestException('Group {group} is not affected by restriction {restriction}'
+                                          .format(group=group, restriction=self))
         self.groups.remove(group)
         self.save()
 
     def apply_to_resource(self, resource: Resource):
+        if resource in self.resources:
+            raise InvalidRequestException('Restriction {restriction} is already being applied to resource {resource}'
+                                          .format(restriction=self, resource=resource))
         self.resources.append(resource)
         self.save()
 
     def remove_from_resource(self, resource: Resource):
+        if resource not in self.resources:
+            raise InvalidRequestException('Resource {resource} is not affected by restriction {restriction}'
+                                          .format(resource=resource, restriction=self))
         self.resources.remove(resource)
         self.save()
 
     def add_schedule(self, schedule: RestrictionSchedule):
+        if schedule in self.schedules:
+            raise InvalidRequestException('Schedule {schedule} is already being applied to restriction {restriction}'
+                                          .format(schedule=schedule, restriction=self))
         self.schedules.append(schedule)
         self.save()
 
     def remove_schedule(self, schedule: RestrictionSchedule):
+        if schedule not in self.schedules:
+            raise InvalidRequestException('Schedule {schedule} is not assigned to restriction {restriction}'
+                                          .format(schedule=schedule, restriction=self))
         self.schedules.remove(schedule)
         self.save()
 
@@ -165,7 +188,7 @@ class Restriction(CRUDModel, Base):  # type: ignore
             'name': self.name,
             'created_at': DateUtils.parse_datetime(self.created_at),
             'starts_at': DateUtils.parse_datetime(self.starts_at),
-            'ends_at': DateUtils.parse_datetime(self.ends_at),
+            'ends_at': DateUtils.try_parse_datetime(self.ends_at),
             'is_global': self.is_global
         }
 
