@@ -2,6 +2,7 @@ import pytest
 import datetime
 
 from tensorhive.models.RestrictionSchedule import RestrictionSchedule
+from tensorhive.utils.Weekday import Weekday
 
 
 def test_schedule_creation(tables):
@@ -49,3 +50,11 @@ def test_schedule_is_active_method_returns_valid_status(tables, restriction):
 
     assert active_schedule.is_active is True
     assert inactive_schedule.is_active is False
+
+
+def test_schedule_with_schedule_days_as_list_of_enums_gets_saved_successfully(tables):
+    schedule_expression = [Weekday.Monday, Weekday.Tuesday]
+    starts_at = datetime.time(8, 0, 0)
+    ends_at = datetime.time(15, 0, 0)
+    schedule = RestrictionSchedule(schedule_days=schedule_expression, hour_start=starts_at, hour_end=ends_at)
+    schedule.save()
