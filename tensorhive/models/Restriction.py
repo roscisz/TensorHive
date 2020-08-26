@@ -181,16 +181,23 @@ class Restriction(CRUDModel, Base):  # type: ignore
         now = datetime.datetime.utcnow()
         return self.ends_at is not None and self.ends_at <= now
 
-    @property
-    def as_dict(self):
-        return {
+    def as_dict(self, include_groups=False, include_users=False, include_resources=False):
+        restriction = {
             'id': self.id,
             'name': self.name,
-            'created_at': DateUtils.parse_datetime(self.created_at),
-            'starts_at': DateUtils.parse_datetime(self.starts_at),
-            'ends_at': DateUtils.try_parse_datetime(self.ends_at),
-            'is_global': self.is_global
+            'createdAt': DateUtils.parse_datetime(self.created_at),
+            'startsAt': DateUtils.parse_datetime(self.starts_at),
+            'endsAt': DateUtils.try_parse_datetime(self.ends_at),
+            'isGlobal': self.is_global,
+            'schedules': self.schedules
         }
+        if include_groups:
+            restriction['groups'] = self.groups
+        if include_users:
+            restriction['users'] = self.users
+        if include_resources:
+            restriction['resources'] = self.resources
+        return restriction
 
 
 class Restriction2Assignee(Base):  # type: ignore
