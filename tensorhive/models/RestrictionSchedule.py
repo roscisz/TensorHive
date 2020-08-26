@@ -65,9 +65,9 @@ class RestrictionSchedule(CRUDModel, Base):  # type: ignore
     def as_dict(self):
         return {
             'id': self.id,
-            'schedule_days': self.schedule_days,
-            'hour_start': self.hour_start,
-            'hour_end': self.hour_end
+            'scheduleDays': self.schedule_days,
+            'hourStart': self.hour_start.strftime('%H:%M'),
+            'hourEnd': self.hour_end.strftime('%H:%M')
         }
 
 
