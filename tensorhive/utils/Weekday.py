@@ -10,3 +10,6 @@ class Weekday(Enum):
     Friday = 5
     Saturday = 6
     Sunday = 7
+
+    def to_str(self):
+        return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][self.value - 1]
