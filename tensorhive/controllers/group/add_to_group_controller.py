@@ -24,7 +24,7 @@ def add_user(group_id, user_id):
             content, status = {'msg': GROUP['not_found']}, 404
         else:
             content, status = {'msg': U['not_found']}, 404
-    except InvalidRequestException as e:
+    except InvalidRequestException:
         content, status = {'msg': GROUP['users']['add']['failure']['duplicate']}, 409
     except AssertionError as e:
         content, status = {'msg': GROUP['users']['add']['failure']['assertions'].format(reason=e)}, 422

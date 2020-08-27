@@ -30,7 +30,7 @@ def apply_to_user(restriction_id, user_id):
             content, status = {'msg': R['not_found']}, 404
         else:
             content, status = {'msg': U['not_found']}, 404
-    except InvalidRequestException as e:
+    except InvalidRequestException:
         content, status = {'msg': R['users']['apply']['failure']['duplicate']}, 409
     except AssertionError as e:
         content, status = {'msg': R['users']['apply']['failure']['assertions'].format(reason=e)}, 422
@@ -58,7 +58,7 @@ def apply_to_group(restriction_id, group_id):
             content, status = {'msg': R['not_found']}, 404
         else:
             content, status = {'msg': GROUP['not_found']}, 404
-    except InvalidRequestException as e:
+    except InvalidRequestException:
         content, status = {'msg': R['groups']['apply']['failure']['duplicate']}, 409
     except AssertionError as e:
         content, status = {'msg': R['groups']['apply']['failure']['assertions'].format(reason=e)}, 422
@@ -86,7 +86,7 @@ def apply_to_resource(restriction_id, resource_uuid):
             content, status = {'msg': R['not_found']}, 404
         else:
             content, status = {'msg': RESOURCE['not_found']}, 404
-    except InvalidRequestException as e:
+    except InvalidRequestException:
         content, status = {'msg': R['resources']['apply']['failure']['duplicate']}, 409
     except AssertionError as e:
         content, status = {'msg': R['resources']['apply']['failure']['assertions'].format(reason=e)}, 422
@@ -114,7 +114,7 @@ def add_schedule(restriction_id, schedule_id):
             content, status = {'msg': R['not_found']}, 404
         else:
             content, status = {'msg': S['not_found']}, 404
-    except InvalidRequestException as e:
+    except InvalidRequestException:
         content, status = {'msg': R['schedules']['add']['failure']['duplicate']}, 409
     except AssertionError as e:
         content, status = {'msg': R['schedules']['add']['failure']['assertions'].format(reason=e)}, 422

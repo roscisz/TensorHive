@@ -114,7 +114,7 @@ def remove_schedule(restriction_id, schedule_id):
             content, status = {'msg': R['not_found']}, 404
         else:
             content, status = {'msg': S['not_found']}, 404
-    except InvalidRequestException :
+    except InvalidRequestException:
         content, status = {'msg': R['schedules']['remove']['failure']['not_found']}, 404
     except AssertionError as e:
         content, status = {'msg': R['schedules']['remove']['failure']['assertions'].format(reason=e)}, 422

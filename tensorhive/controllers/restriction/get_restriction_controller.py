@@ -16,9 +16,9 @@ G = API.RESPONSES['general']
 @jwt_required
 def get_all():
     return [
-               restriction.as_dict(include_groups=True, include_users=True,
-                                   include_resources=True) for restriction in Restriction.all()
-           ], 200
+        restriction.as_dict(include_groups=True, include_users=True,
+                            include_resources=True) for restriction in Restriction.all()
+    ], 200
 
 
 @jwt_required
