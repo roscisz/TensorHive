@@ -3,7 +3,6 @@ from tensorhive.config import API
 from tensorhive.authorization import admin_required
 from tensorhive.models.Role import Role
 from flask_jwt_extended import jwt_required
-
 R = API.RESPONSES['user']
 G = API.RESPONSES['general']
 

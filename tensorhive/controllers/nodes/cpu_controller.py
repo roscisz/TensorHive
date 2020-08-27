@@ -1,4 +1,4 @@
-from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
+from tensorhive.controllers.nodes.infrastructure_controller import get_infrastructure
 from connexion import NoContent
 from flask_jwt_extended import jwt_required
 
@@ -6,7 +6,7 @@ from flask_jwt_extended import jwt_required
 @jwt_required
 def get_metrics(hostname: str, metric_type: str = None):
     try:
-        infrastructure = TensorHiveManager().infrastructure_manager.infrastructure
+        infrastructure = get_infrastructure()
         resource_data = infrastructure[hostname]['CPU']
 
         # No data about GPU

@@ -2,6 +2,8 @@ from flask_jwt_extended import jwt_required
 from tensorhive.models.Reservation import Reservation
 from typing import List
 from tensorhive.config import API
+from tensorhive.utils.DateUtils import DateUtils
+
 G = API.RESPONSES['general']
 
 
@@ -19,8 +21,8 @@ def get_selected(resources_ids: List, start: str, end: str):
     all_not_none = resources_ids and start and end
     if all_not_none:
         try:
-            start_as_datetime = Reservation.parsed_input_datetime(start)
-            ends_as_datetime = Reservation.parsed_input_datetime(end)
+            start_as_datetime = DateUtils.parse_string(start)
+            ends_as_datetime = DateUtils.parse_string(end)
             matches = list(Reservation.filter_by_uuids_and_time_range(
                 resources_ids, start_as_datetime, ends_as_datetime))
             matches = [match.as_dict for match in matches]

@@ -1,4 +1,4 @@
-from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
+from tensorhive.controllers.nodes.infrastructure_controller import get_infrastructure
 from connexion import NoContent
 from flask_jwt_extended import jwt_required
 from tensorhive.config import API
@@ -8,7 +8,7 @@ R = API.RESPONSES['nodes']
 @jwt_required
 def get_metrics(hostname: str, metric_type: str = None):
     try:
-        infrastructure = TensorHiveManager().infrastructure_manager.infrastructure
+        infrastructure = get_infrastructure()
         resource_data = infrastructure[hostname]['GPU']
 
         '''
@@ -47,7 +47,7 @@ def get_metrics(hostname: str, metric_type: str = None):
 # @jwt_required
 def get_processes(hostname: str):
     try:
-        infrastructure = TensorHiveManager().infrastructure_manager.infrastructure
+        infrastructure = get_infrastructure()
         resource_data = infrastructure[hostname]['GPU']
         result = {uuid: gpu_data['processes'] for uuid, gpu_data in resource_data.items()}
         response = result, 200
@@ -60,7 +60,7 @@ def get_processes(hostname: str):
 @jwt_required
 def get_info(hostname: str):
     try:
-        infrastructure = TensorHiveManager().infrastructure_manager.infrastructure
+        infrastructure = get_infrastructure()
         resource_data = infrastructure[hostname]['GPU']
 
         def basic_info(full_dict):
