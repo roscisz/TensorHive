@@ -189,14 +189,16 @@ class Restriction(CRUDModel, Base):  # type: ignore
             'startsAt': DateUtils.parse_datetime(self.starts_at),
             'endsAt': DateUtils.try_parse_datetime(self.ends_at),
             'isGlobal': self.is_global,
-            'schedules': self.schedules
+            'schedules': [schedule.as_dict for schedule in self.schedules]
         }
         if include_groups:
-            restriction['groups'] = self.groups
+            restriction['groups'] = [group.as_dict for group in self.groups]
         if include_users:
-            restriction['users'] = self.users
+            # using as_dict_shallow as we do not want to include user's groups here, as they are insignificant
+            # considering the scope of the restriction
+            restriction['users'] = [user.as_dict_shallow for user in self.users]
         if include_resources:
-            restriction['resources'] = self.resources
+            restriction['resources'] = [resource.as_dict for resource in self.resources]
         return restriction
 
 
