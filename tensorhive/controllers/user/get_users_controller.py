@@ -18,7 +18,6 @@ def get():
 
 @jwt_required
 def get_by_id(id):
-    # Dead code, web app is currently not using it
     try:
         user = User.get(id)
     except NoResultFound as e:

@@ -8,6 +8,10 @@ from tensorhive.config import API
 G = API.RESPONSES['general']
 
 
+def decode_token(token):
+    return {}
+
+
 def init_jwt(app):
     for key, value in AUTH.FLASK_JWT.items():
         app.config[key] = value
