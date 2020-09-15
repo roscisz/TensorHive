@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from tensorhive.authorization import admin_required
 from tensorhive.models.Group import Group
 from sqlalchemy.orm.exc import NoResultFound
@@ -17,17 +18,18 @@ def update(id, newValues):
         group = Group.get(id)
 
         for field_name, new_value in new_values.items():
-            assert hasattr(group, field_name), 'group has no {} column'.format(field_name)
+            assert hasattr(group, field_name), 'group has no {} field'.format(field_name)
             setattr(group, field_name, new_value)
         group.save()
     except NoResultFound:
-        content, status = {'msg': GROUP['not_found']}, 404
+        content, status = {'msg': GROUP['not_found']}, HTTPStatus.NOT_FOUND.value
     except AssertionError as e:
-        content, status = {'msg': GROUP['update']['failure']['assertions'].format(reason=e)}, 422
+        content, status = {'msg': GROUP['update']['failure']['assertions'].format(reason=e)}, \
+                          HTTPStatus.UNPROCESSABLE_ENTITY.value
     except Exception as e:
         log.critical(e)
-        content, status = {'msg': G['internal_error']}, 500
+        content, status = {'msg': G['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
-        content, status = {'msg': GROUP['update']['success'], 'group': group.as_dict}, 201
+        content, status = {'msg': GROUP['update']['success'], 'group': group.as_dict}, HTTPStatus.OK.value
     finally:
         return content, status

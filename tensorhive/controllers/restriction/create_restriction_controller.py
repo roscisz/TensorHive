@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from tensorhive.models.Restriction import Restriction
 from tensorhive.utils.DateUtils import DateUtils
 from tensorhive.authorization import admin_required
@@ -18,15 +19,15 @@ def create(restriction):
         new_restriction.save()
     except AssertionError as e:
         content = {'msg': R['create']['failure']['invalid'].format(reason=e)}
-        status = 422
+        status = HTTPStatus.UNPROCESSABLE_ENTITY.value
     except Exception as e:
         content = {'msg': G['internal_error'] + str(e)}
-        status = 500
+        status = HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
         content = {
             'msg': R['create']['success'],
             'restriction': new_restriction.as_dict(include_groups=True, include_users=True, include_resources=True)
         }
-        status = 201
+        status = HTTPStatus.CREATED.value
     finally:
         return content, status

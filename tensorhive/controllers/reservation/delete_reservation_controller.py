@@ -19,17 +19,17 @@ def delete(id):
         # Fetch the reservation
         reservation_to_destroy = Reservation.get(id)
 
-        # Must be priviliged
+        # Must be privileged
         is_admin = 'admin' in claims['roles']
         is_owner = reservation_to_destroy.user_id == current_user_id
-        assert is_owner or is_admin, G['unpriviliged']
+        assert is_owner or is_admin, G['unprivileged']
 
         # Destroy
         reservation_to_destroy.destroy()
     except AssertionError as error_message:
         content, status = {'msg': str(error_message)}, 403
     except NoResultFound:
-        # FIXME It is theoretically posibble that User.get() could also raise this exception
+        # FIXME It is theoretically possible that User.get() could also raise this exception
         content, status = {'msg': R['not_found']}, 404
     except Exception as e:
         content, status = {'msg': G['internal_error'] + str(e)}, 500

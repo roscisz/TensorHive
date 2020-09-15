@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from tensorhive.models.Group import Group
 from tensorhive.authorization import admin_required
 from tensorhive.config import API
@@ -14,15 +15,15 @@ def create(group):
         new_group.save()
     except AssertionError as e:
         content = {'msg': GROUP['create']['failure']['invalid'].format(reason=e)}
-        status = 422
+        status = HTTPStatus.UNPROCESSABLE_ENTITY.value
     except Exception as e:
         content = {'msg': G['internal_error'] + str(e)}
-        status = 500
+        status = HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
         content = {
             'msg': GROUP['create']['success'],
             'group': new_group.as_dict
         }
-        status = 201
+        status = HTTPStatus.CREATED.value
     finally:
         return content, status

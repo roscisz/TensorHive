@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.authorization import admin_required
 from tensorhive.models.Restriction import Restriction
@@ -12,12 +13,12 @@ def delete(id):
         restriction_to_destroy = Restriction.get(id)
         restriction_to_destroy.destroy()
     except AssertionError as error_message:
-        content, status = {'msg': str(error_message)}, 403
+        content, status = {'msg': str(error_message)}, HTTPStatus.FORBIDDEN.value
     except NoResultFound:
-        content, status = {'msg': R['not_found']}, 404
+        content, status = {'msg': R['not_found']}, HTTPStatus.NOT_FOUND.value
     except Exception as e:
-        content, status = {'msg': G['internal_error'] + str(e)}, 500
+        content, status = {'msg': G['internal_error'] + str(e)}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
-        content, status = {'msg': R['delete']['success']}, 200
+        content, status = {'msg': R['delete']['success']}, HTTPStatus.OK.value
     finally:
         return content, status

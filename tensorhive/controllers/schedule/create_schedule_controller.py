@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from tensorhive.models.RestrictionSchedule import RestrictionSchedule
 from datetime import datetime
 from tensorhive.utils.Weekday import Weekday
@@ -10,10 +11,7 @@ G = API.RESPONSES['general']
 @admin_required
 def create(schedule):
     try:
-        days = []
-        for day in schedule['scheduleDays']:
-            days.append(Weekday[day])
-
+        days = [Weekday[day] for day in schedule['scheduleDays']]
         new_schedule = RestrictionSchedule(
             schedule_days=days,
             hour_start=datetime.strptime(schedule['hourStart'], "%H:%M").time(),
@@ -23,18 +21,18 @@ def create(schedule):
     except KeyError:
         # Invalid day
         content = {'msg': G['bad_request']}
-        status = 422
+        status = HTTPStatus.UNPROCESSABLE_ENTITY.value
     except AssertionError as e:
         content = {'msg': S['create']['failure']['invalid'].format(reason=e)}
-        status = 422
+        status = HTTPStatus.UNPROCESSABLE_ENTITY.value
     except Exception as e:
         content = {'msg': G['internal_error'] + str(e)}
-        status = 500
+        status = HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
         content = {
             'msg': S['create']['success'],
             'schedule': new_schedule.as_dict
         }
-        status = 201
+        status = HTTPStatus.CREATED.value
     finally:
         return content, status

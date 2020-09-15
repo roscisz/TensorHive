@@ -15,9 +15,9 @@ def update(newValues):
     if user.get('id') is not None:
         try:
             found_user = User.get(user['id'])
-            updateable_field_names = ['username', 'password', 'email']
+            updatable_field_names = ['username', 'password', 'email']
 
-            for field_name in updateable_field_names:
+            for field_name in updatable_field_names:
                 if user.get(field_name) is not None:
                     if field_name == 'roles':
                         new_value = [Role(name=role_name) for role_name in user['roles']]

@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from flask_jwt_extended import jwt_required
 from tensorhive.models.Restriction import Restriction
 from tensorhive.models.User import User
@@ -18,44 +19,44 @@ def get_all():
     return [
         restriction.as_dict(include_groups=True, include_users=True,
                             include_resources=True) for restriction in Restriction.all()
-    ], 200
+    ], HTTPStatus.OK.value
 
 
 @jwt_required
 def get_selected(user_id, include_user_groups, group_id, resource_id, schedule_id):
     try:
-        include_groups = True
-        include_users = True
-        include_resources = True
+        # If a specific group is selected then groups are not included in the restriction information in response
+        # The same applies to users and resources
+        include_groups = group_id is None
+        include_users = user_id is None
+        include_resources = schedule_id is None
+
         restrictions = []
         if user_id is not None:
             user = User.get(user_id)
-            restrictions.append(set(user.get_restrictions(include_global=True, include_group=include_user_groups)))
-            include_users = False
+            restrictions.extend(user.get_restrictions(include_global=True, include_group=include_user_groups))
         if group_id is not None:
             group = Group.get(group_id)
-            restrictions.append(set(group.get_restrictions(include_global=True)))
-            include_groups = False
+            restrictions.extend(group.get_restrictions(include_global=True))
         if resource_id is not None:
             resource = Resource.get(resource_id)
-            restrictions.append(set(resource.get_restrictions(include_global=True)))
-            include_resources = False
+            restrictions.extend(resource.get_restrictions(include_global=True))
         if schedule_id is not None:
             schedule = RestrictionSchedule.get(schedule_id)
-            restrictions.append(set(schedule.restrictions))
+            restrictions.extend(schedule.restrictions)
 
-        result = restrictions[0]
-        for restriction in restrictions:
-            result = result & restriction
+        # Take unique restrictions
+        result = set(restrictions)
     except NoResultFound as e:
         log.warning(e)
-        content, status = {'msg': G['bad_request']}, 400
+        content, status = {'msg': G['bad_request']}, HTTPStatus.BAD_REQUEST.value
     except Exception as e:
         log.critical(e)
-        content, status = {'msg': G['internal_error']}, 500
+        content, status = {'msg': G['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
         content, status = [restriction.as_dict(include_groups=include_groups, include_users=include_users,
-                                               include_resources=include_resources) for restriction in result], 200
+                                               include_resources=include_resources) for restriction in result],\
+                          HTTPStatus.OK.value
     finally:
         return content, status
 

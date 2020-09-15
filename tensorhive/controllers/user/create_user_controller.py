@@ -60,9 +60,9 @@ def ssh_signup(user):
     try:
         test_client.connect(auth_node, username=user['username'], pkey=ssh_key)
     except AuthenticationException:
-        return {'msg': G['unpriviliged']}, 403
+        return {'msg': G['unprivileged']}, 403
     except (BadHostKeyException, SSHException, socket.error) as e:
-        return 'An error ocurred while authenticating: {}'.format(e), 500
+        return 'An error occurred while authenticating: {}'.format(e), 500
     finally:
         test_client.close()
 

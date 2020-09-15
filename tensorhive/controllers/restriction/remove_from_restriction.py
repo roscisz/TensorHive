@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from tensorhive.authorization import admin_required
 from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from sqlalchemy.orm.exc import NoResultFound
@@ -19,111 +20,111 @@ G = API.RESPONSES['general']
 
 @admin_required
 def remove_from_user(restriction_id, user_id):
+    restriction = None
     try:
-        restriction_not_found = True
         restriction = Restriction.get(restriction_id)
-        restriction_not_found = False
         user = User.get(user_id)
         restriction.remove_from_user(user)
     except NoResultFound:
-        if restriction_not_found:
-            content, status = {'msg': R['not_found']}, 404
+        if restriction is None:
+            content, status = {'msg': R['not_found']}, HTTPStatus.NOT_FOUND.value
         else:
-            content, status = {'msg': U['not_found']}, 404
+            content, status = {'msg': U['not_found']}, HTTPStatus.NOT_FOUND.value
     except InvalidRequestException:
-        content, status = {'msg': R['users']['remove']['failure']['not_found']}, 404
+        content, status = {'msg': R['users']['remove']['failure']['not_found']}, HTTPStatus.NOT_FOUND.value
     except AssertionError as e:
-        content, status = {'msg': R['users']['remove']['failure']['assertions'].format(reason=e)}, 422
+        content, status = {'msg': R['users']['remove']['failure']['assertions'].format(reason=e)}, \
+                          HTTPStatus.UNPROCESSABLE_ENTITY.value
     except Exception as e:
         log.critical(e)
-        content, status = {'msg': G['internal_error']}, 500
+        content, status = {'msg': G['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
         content, status = {'msg': R['users']['remove']['success'],
                            'restriction': restriction.as_dict(include_groups=True, include_users=True,
-                                                              include_resources=True)}, 201
+                                                              include_resources=True)}, HTTPStatus.OK.value
     finally:
         return content, status
 
 
 @admin_required
 def remove_from_group(restriction_id, group_id):
+    restriction = None
     try:
-        restriction_not_found = True
         restriction = Restriction.get(restriction_id)
-        restriction_not_found = False
         group = Group.get(group_id)
         restriction.remove_from_group(group)
     except NoResultFound:
-        if restriction_not_found:
-            content, status = {'msg': R['not_found']}, 404
+        if restriction is None:
+            content, status = {'msg': R['not_found']}, HTTPStatus.NOT_FOUND.value
         else:
-            content, status = {'msg': G['not_found']}, 404
+            content, status = {'msg': G['not_found']}, HTTPStatus.NOT_FOUND.value
     except InvalidRequestException:
-        content, status = {'msg': R['groups']['remove']['failure']['not_found']}, 404
+        content, status = {'msg': R['groups']['remove']['failure']['not_found']}, HTTPStatus.NOT_FOUND.value
     except AssertionError as e:
-        content, status = {'msg': R['groups']['remove']['failure']['assertions'].format(reason=e)}, 422
+        content, status = {'msg': R['groups']['remove']['failure']['assertions'].format(reason=e)}, \
+                          HTTPStatus.UNPROCESSABLE_ENTITY.value
     except Exception as e:
         log.critical(e)
-        content, status = {'msg': G['internal_error']}, 500
+        content, status = {'msg': G['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
         content, status = {'msg': R['groups']['remove']['success'],
                            'restriction': restriction.as_dict(include_groups=True, include_users=True,
-                                                              include_resources=True)}, 201
+                                                              include_resources=True)}, HTTPStatus.OK.value
     finally:
         return content, status
 
 
 @admin_required
 def remove_from_resource(restriction_id, resource_uuid):
+    restriction = None
     try:
-        restriction_not_found = True
         restriction = Restriction.get(restriction_id)
-        restriction_not_found = False
         resource = Resource.get(resource_uuid)
         restriction.remove_from_resource(resource)
     except NoResultFound:
-        if restriction_not_found:
-            content, status = {'msg': R['not_found']}, 404
+        if restriction is None:
+            content, status = {'msg': R['not_found']}, HTTPStatus.NOT_FOUND.value
         else:
-            content, status = {'msg': RESOURCE['not_found']}, 404
+            content, status = {'msg': RESOURCE['not_found']}, HTTPStatus.NOT_FOUND.value
     except InvalidRequestException:
-        content, status = {'msg': R['resources']['remove']['failure']['not_found']}, 404
+        content, status = {'msg': R['resources']['remove']['failure']['not_found']}, HTTPStatus.NOT_FOUND.value
     except AssertionError as e:
-        content, status = {'msg': R['resources']['remove']['failure']['assertions'].format(reason=e)}, 422
+        content, status = {'msg': R['resources']['remove']['failure']['assertions'].format(reason=e)}, \
+                          HTTPStatus.UNPROCESSABLE_ENTITY.value
     except Exception as e:
         log.critical(e)
-        content, status = {'msg': G['internal_error']}, 500
+        content, status = {'msg': G['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
         content, status = {'msg': R['resources']['remove']['success'],
                            'restriction': restriction.as_dict(include_groups=True, include_users=True,
-                                                              include_resources=True)}, 201
+                                                              include_resources=True)}, HTTPStatus.OK.value
     finally:
         return content, status
 
 
 @admin_required
 def remove_schedule(restriction_id, schedule_id):
+    restriction = None
     try:
-        restriction_not_found = True
         restriction = Restriction.get(restriction_id)
-        restriction_not_found = False
         schedule = RestrictionSchedule.get(schedule_id)
         restriction.remove_schedule(schedule)
     except NoResultFound:
-        if restriction_not_found:
-            content, status = {'msg': R['not_found']}, 404
+        if restriction is None:
+            content, status = {'msg': R['not_found']}, HTTPStatus.NOT_FOUND.value
         else:
-            content, status = {'msg': S['not_found']}, 404
+            content, status = {'msg': S['not_found']}, HTTPStatus.NOT_FOUND.value
     except InvalidRequestException:
-        content, status = {'msg': R['schedules']['remove']['failure']['not_found']}, 404
+        content, status = {'msg': R['schedules']['remove']['failure']['not_found']}, HTTPStatus.NOT_FOUND.value
     except AssertionError as e:
-        content, status = {'msg': R['schedules']['remove']['failure']['assertions'].format(reason=e)}, 422
+        content, status = {'msg': R['schedules']['remove']['failure']['assertions'].format(reason=e)}, \
+                          HTTPStatus.UNPROCESSABLE_ENTITY.value
     except Exception as e:
         log.critical(e)
-        content, status = {'msg': G['internal_error']}, 500
+        content, status = {'msg': G['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
         content, status = {'msg': R['schedules']['remove']['success'],
                            'restriction': restriction.as_dict(include_groups=True, include_users=True,
-                                                              include_resources=True)}, 201
+                                                              include_resources=True)}, HTTPStatus.OK.value
     finally:
         return content, status

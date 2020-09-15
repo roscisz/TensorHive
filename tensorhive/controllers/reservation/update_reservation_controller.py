@@ -8,6 +8,16 @@ R = API.RESPONSES['reservation']
 G = API.RESPONSES['general']
 
 
+def to_db_column():
+    return {
+        'title': 'title',
+        'description': 'description',
+        'resourceId': 'protected_resource_id',
+        'start': 'starts_at',
+        'end': 'ends_at',
+    }
+
+
 @jwt_required
 def update(id, newValues):
     new_values = newValues
@@ -17,13 +27,9 @@ def update(id, newValues):
         reservation = Reservation.get(id)
 
         for field_name, new_value in new_values.items():
-            # Mapping API field name to column used by Reservation model
-            if field_name in ['start', 'end']:
-                # start -> starts_at, end -> ends_at
-                field_name += 's_at'
-            if field_name == 'resourceId':
-                field_name = 'protected_resource_id'
-            assert hasattr(reservation, field_name), 'reservation has no {} column'.format(field_name)
+            field_name = to_db_column().get(field_name)
+            assert (field_name is not None) and hasattr(reservation, field_name), \
+                'reservation has no {} field'.format(field_name)
             setattr(reservation, field_name, new_value)
         reservation.save()
     except NoResultFound:

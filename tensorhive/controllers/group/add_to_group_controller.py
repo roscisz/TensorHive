@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from tensorhive.authorization import admin_required
 from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from sqlalchemy.orm.exc import NoResultFound
@@ -13,25 +14,25 @@ G = API.RESPONSES['general']
 
 @admin_required
 def add_user(group_id, user_id):
+    group = None
     try:
-        group_not_found = True
         group = Group.get(group_id)
-        group_not_found = False
         user = User.get(user_id)
         group.add_user(user)
     except NoResultFound:
-        if group_not_found:
-            content, status = {'msg': GROUP['not_found']}, 404
+        if group is None:
+            content, status = {'msg': GROUP['not_found']}, HTTPStatus.NOT_FOUND.value
         else:
-            content, status = {'msg': U['not_found']}, 404
+            content, status = {'msg': U['not_found']}, HTTPStatus.NOT_FOUND.value
     except InvalidRequestException:
-        content, status = {'msg': GROUP['users']['add']['failure']['duplicate']}, 409
+        content, status = {'msg': GROUP['users']['add']['failure']['duplicate']}, HTTPStatus.CONFLICT.value
     except AssertionError as e:
-        content, status = {'msg': GROUP['users']['add']['failure']['assertions'].format(reason=e)}, 422
+        content, status = {'msg': GROUP['users']['add']['failure']['assertions'].format(reason=e)}, \
+                          HTTPStatus.UNPROCESSABLE_ENTITY.value
     except Exception as e:
         log.critical(e)
-        content, status = {'msg': G['internal_error']}, 500
+        content, status = {'msg': G['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
-        content, status = {'msg': GROUP['users']['add']['success'], 'group': group.as_dict}, 201
+        content, status = {'msg': GROUP['users']['add']['success'], 'group': group.as_dict}, HTTPStatus.OK.value
     finally:
         return content, status

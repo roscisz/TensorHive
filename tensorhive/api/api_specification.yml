@@ -26,7 +26,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -34,7 +34,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
       security:
@@ -68,7 +68,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -76,7 +76,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['user']['not_found']}}
           content:
@@ -125,7 +125,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -133,7 +133,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         409:
           description: {{RESPONSES['user']['create']['failure']['duplicate']}}
         422:
@@ -174,7 +174,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -182,7 +182,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         409:
           description: {{RESPONSES['user']['create']['failure']['duplicate']}}
         422:
@@ -223,7 +223,7 @@ paths:
         400:
           description: {{RESPONSES['general']['bad_request']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
         409:
           description: {{RESPONSES['user']['create']['failure']['duplicate']}}
         422:
@@ -254,7 +254,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -262,7 +262,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['user']['not_found']}}
         422:
@@ -403,7 +403,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -411,7 +411,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
       security:
@@ -447,7 +447,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -455,7 +455,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['group']['create']['failure']['invalid']}}
         500:
@@ -527,7 +527,7 @@ paths:
             schema:
               type: integer
       responses:
-        201:
+        200:
           description: {{RESPONSES['group']['update']['success']}}
           content:
             application/json:
@@ -544,7 +544,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -552,7 +552,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['group']['not_found']}}
         422:
@@ -584,7 +584,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -592,7 +592,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['group']['not_found']}}
         422:
@@ -621,7 +621,7 @@ paths:
           schema:
             type: integer
       responses:
-        201:
+        200:
           description: {{RESPONSES['group']['users']['add']['success']}}
           content:
             application/json:
@@ -638,7 +638,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -646,7 +646,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['group']['not_found']}} or {{RESPONSES['user']['not_found']}}
         409:
@@ -676,7 +676,7 @@ paths:
           schema:
             type: integer
       responses:
-        201:
+        200:
           description: {{RESPONSES['group']['users']['remove']['success']}}
           content:
             application/json:
@@ -693,7 +693,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -701,7 +701,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['group']['not_found']}} or {{RESPONSES['user']['not_found']}} or {{RESPONSES['group']['users']['remove']['failure']['not_found']}}
         422:
@@ -807,7 +807,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -815,7 +815,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['restriction']['create']['failure']['invalid']}}
         500:
@@ -844,7 +844,7 @@ paths:
             schema:
               type: integer
       responses:
-        201:
+        200:
           description: {{RESPONSES['restriction']['update']['success']}}
           content:
             application/json:
@@ -861,7 +861,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -869,7 +869,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['restriction']['not_found']}}
         422:
@@ -901,7 +901,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -909,7 +909,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['restriction']['not_found']}}
         422:
@@ -938,7 +938,7 @@ paths:
           schema:
             type: integer
       responses:
-        201:
+        200:
           description: {{RESPONSES['restriction']['users']['apply']['success']}}
           content:
             application/json:
@@ -955,7 +955,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -963,7 +963,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['restriction']['not_found']}} or {{RESPONSES['user']['not_found']}}
         409:
@@ -1010,7 +1010,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1018,7 +1018,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['restriction']['not_found']}} or {{RESPONSES['user']['not_found']}} or {{RESPONSES['restriction']['users']['remove']['failure']['not_found']}}
         422:
@@ -1047,7 +1047,7 @@ paths:
           schema:
             type: integer
       responses:
-        201:
+        200:
           description: {{RESPONSES['restriction']['groups']['apply']['success']}}
           content:
             application/json:
@@ -1064,7 +1064,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1072,7 +1072,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['restriction']['not_found']}} or {{RESPONSES['group']['not_found']}}
         409:
@@ -1119,7 +1119,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1127,7 +1127,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['restriction']['not_found']}} or {{RESPONSES['group']['not_found']}} or {{RESPONSES['restriction']['groups']['remove']['failure']['not_found']}}
         422:
@@ -1156,7 +1156,7 @@ paths:
           schema:
             type: string
       responses:
-        201:
+        200:
           description: {{RESPONSES['restriction']['resources']['apply']['success']}}
           content:
             application/json:
@@ -1173,7 +1173,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1181,7 +1181,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['restriction']['not_found']}} or {{RESPONSES['resource']['not_found']}}
         409:
@@ -1228,7 +1228,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1236,7 +1236,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['restriction']['not_found']}} or {{RESPONSES['resource']['not_found']}} or {{RESPONSES['restriction']['resources']['remove']['failure']['not_found']}}
         422:
@@ -1265,7 +1265,7 @@ paths:
           schema:
             type: integer
       responses:
-        201:
+        200:
           description: {{RESPONSES['restriction']['schedules']['add']['success']}}
           content:
             application/json:
@@ -1282,7 +1282,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1290,7 +1290,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['restriction']['not_found']}} or {{RESPONSES['schedule']['not_found']}}
         409:
@@ -1337,7 +1337,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1345,7 +1345,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['restriction']['not_found']}} or {{RESPONSES['schedule']['not_found']}} or {{RESPONSES['restriction']['schedules']['remove']['failure']['not_found']}}
         422:
@@ -1372,7 +1372,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1380,7 +1380,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
       security:
@@ -1416,7 +1416,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1424,7 +1424,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['schedule']['create']['failure']['invalid']}}
         500:
@@ -1496,7 +1496,7 @@ paths:
             schema:
               type: integer
       responses:
-        201:
+        200:
           description: {{RESPONSES['schedule']['update']['success']}}
           content:
             application/json:
@@ -1513,7 +1513,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1521,7 +1521,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['schedule']['not_found']}}
         422:
@@ -1553,7 +1553,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1561,7 +1561,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['schedule']['not_found']}}
         422:
@@ -1748,7 +1748,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1756,7 +1756,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
       security:
@@ -1984,7 +1984,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1992,7 +1992,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
       security:
@@ -2031,7 +2031,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -2039,7 +2039,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         # 409:
         #   description: {{RESPONSES['task']['create']['failure']['duplicate']}}
         422:
@@ -2078,7 +2078,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -2086,7 +2086,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['task']['not_found']}}
           content:
@@ -2150,7 +2150,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -2158,7 +2158,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['task']['not_found']}}
           content:
@@ -2209,7 +2209,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -2217,7 +2217,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['task']['not_found']}}
           content:
@@ -2288,7 +2288,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -2296,7 +2296,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['task']['get_log']['failure']['not_found']}}
           content:
@@ -2427,7 +2427,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -2435,7 +2435,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['task']['not_found']}}
           content:
@@ -2528,7 +2528,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -2536,7 +2536,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['task']['not_found']}}
           content:

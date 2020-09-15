@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from flask_jwt_extended import jwt_required
 from tensorhive.models.Group import Group
 from sqlalchemy.orm.exc import NoResultFound
@@ -12,7 +13,7 @@ G = API.RESPONSES['general']
 def get():
     return [
         group.as_dict for group in Group.all()
-    ], 200
+    ], HTTPStatus.OK.value
 
 
 @jwt_required
@@ -21,11 +22,11 @@ def get_by_id(id):
         group = Group.get(id)
     except NoResultFound as e:
         log.warning(e)
-        content, status = {'msg': GROUP['not_found']}, 404
+        content, status = {'msg': GROUP['not_found']}, HTTPStatus.NOT_FOUND.value
     except Exception as e:
         log.critical(e)
-        content, status = {'msg': G['internal_error']}, 500
+        content, status = {'msg': G['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
-        content, status = {'msg': GROUP['get']['success'], 'group': group.as_dict}, 200
+        content, status = {'msg': GROUP['get']['success'], 'group': group.as_dict}, HTTPStatus.OK.value
     finally:
         return content, status

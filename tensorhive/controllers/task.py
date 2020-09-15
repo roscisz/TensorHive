@@ -26,7 +26,7 @@ manual and automatic testing doesn't require patching Flask context
 
 In before: some controller MUST have camelCased arguments in order to keep up with API.
 They are aliased to snake_case immediately inside controller body.
-Connexion has this feature under the hood but it does not alsways work as it should (only in simple cases)
+Connexion has this feature under the hood but it does not always work as it should (only in simple cases)
 """
 
 # Typing aliases
@@ -125,7 +125,7 @@ def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError:
-        content, status = {'msg': G['unpriviliged']}, 403
+        content, status = {'msg': G['unprivileged']}, 403
     else:
         content, status = business_create(task)
     finally:
@@ -141,7 +141,7 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError:
-        content, status = {'msg': G['unpriviliged']}, 403
+        content, status = {'msg': G['unprivileged']}, 403
     else:
         content, status = business_get(id)
     finally:
@@ -163,7 +163,7 @@ def get_all(userId: Optional[int], syncAll: Optional[bool]) -> Tuple[Content, Ht
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError:
-        content, status = {'msg': G['unpriviliged']}, 403
+        content, status = {'msg': G['unprivileged']}, 403
     else:
         content, status = business_get_all(user_id, sync_all)
     finally:
@@ -179,7 +179,7 @@ def update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCo
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError:
-        content, status = {'msg': G['unpriviliged']}, 403
+        content, status = {'msg': G['unprivileged']}, 403
     else:
         content, status = business_update(id, newValues)
     finally:
@@ -195,7 +195,7 @@ def destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError:
-        content, status = {'msg': G['unpriviliged']}, 403
+        content, status = {'msg': G['unprivileged']}, 403
     else:
         content, status = business_destroy(id)
     finally:
@@ -212,7 +212,7 @@ def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         log.error(e)
         content, status = {'msg': T['not_found']}, 404
     except AssertionError:
-        content, status = {'msg': G['unpriviliged']}, 403
+        content, status = {'msg': G['unprivileged']}, 403
     else:
         content, status = business_spawn(id)
     finally:
@@ -228,7 +228,7 @@ def terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[Content, H
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError:
-        content, status = {'msg': G['unpriviliged']}, 403
+        content, status = {'msg': G['unprivileged']}, 403
     else:
         content, status = business_terminate(id, gracefully)
     finally:
@@ -244,7 +244,7 @@ def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
     except NoResultFound:
         content, status = {'msg': T['not_found']}, 404
     except AssertionError:
-        content, status = {'msg': G['unpriviliged']}, 403
+        content, status = {'msg': G['unprivileged']}, 403
     else:
         content, status = business_get_log(id, tail)
     finally:
@@ -325,6 +325,15 @@ def business_get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
+def to_db_column():
+    return {
+        'command': 'command',
+        'hostname': 'host',
+        'spawnAt': 'spawn_at',
+        'terminateAt': 'terminate_at'
+    }
+
+
 # TODO What if task is already running: allow for updating command, hostname, etc.?
 def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """Updates certain fields of a Task db record, see `allowed_fields`."""
@@ -333,15 +342,11 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
         assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
         task = Task.get(id)
         for field_name, new_value in new_values.items():
-            if field_name == 'hostname':
-                # API client is allowed to use more verbose name here (hostname <=> host)
-                field_name = 'host'
             if field_name in {'spawnAt', 'terminateAt'}:
-                field_name = field_name.replace('At', '_at')
                 new_value = DateUtils.try_parse_string(new_value)
-            else:
-                # Check that every other field matches
-                assert hasattr(task, field_name), 'task has no {} column'.format(field_name)
+            field_name = to_db_column().get(field_name)
+            # Check that every field matches
+            assert (field_name is not None) and hasattr(task, field_name), 'task has no {} field'.format(field_name)
             setattr(task, field_name, new_value)
         task.save()
     except NoResultFound:

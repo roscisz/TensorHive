@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from tensorhive.authorization import admin_required
 from tensorhive.models.Restriction import Restriction
 from sqlalchemy.orm.exc import NoResultFound
@@ -6,6 +7,15 @@ import logging
 log = logging.getLogger(__name__)
 R = API.RESPONSES['restriction']
 G = API.RESPONSES['general']
+
+
+def to_db_column():
+    return {
+        'name': 'name',
+        'start': 'starts_at',
+        'end': 'ends_at',
+        'isGlobal': 'is_global'
+    }
 
 
 @admin_required
@@ -17,25 +27,22 @@ def update(id, newValues):
         restriction = Restriction.get(id)
 
         for field_name, new_value in new_values.items():
-            # Mapping API field name to column used by Restriction model
-            if field_name in ['start', 'end']:
-                # start -> starts_at, end -> ends_at
-                field_name += 's_at'
-            if field_name == 'isGlobal':
-                field_name = 'is_global'
-            assert hasattr(restriction, field_name), 'restriction has no {} column'.format(field_name)
+            field_name = to_db_column().get(field_name)
+            assert (field_name is not None) and hasattr(restriction, field_name), \
+                'restriction has no {} field'.format(field_name)
             setattr(restriction, field_name, new_value)
         restriction.save()
     except NoResultFound:
-        content, status = {'msg': R['not_found']}, 404
+        content, status = {'msg': R['not_found']}, HTTPStatus.NOT_FOUND.value
     except AssertionError as e:
-        content, status = {'msg': R['update']['failure']['assertions'].format(reason=e)}, 422
+        content, status = {'msg': R['update']['failure']['assertions'].format(reason=e)}, \
+                          HTTPStatus.UNPROCESSABLE_ENTITY.value
     except Exception as e:
         log.critical(e)
-        content, status = {'msg': G['internal_error']}, 500
+        content, status = {'msg': G['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
         content, status = {'msg': R['update']['success'],
                            'restriction': restriction.as_dict(include_groups=True, include_users=True,
-                                                              include_resources=True)}, 201
+                                                              include_resources=True)}, HTTPStatus.OK.value
     finally:
         return content, status
