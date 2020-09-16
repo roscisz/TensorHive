@@ -1,12 +1,74 @@
-from tensorhive.controllers.nodes.infrastructure_controller import get_infrastructure
 from connexion import NoContent
 from flask_jwt_extended import jwt_required
 from tensorhive.config import API
-R = API.RESPONSES['nodes']
+from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
+from tensorhive.models.Resource import Resource
+
+NODES = API.RESPONSES['nodes']
+
+
+def get_infrastructure():
+    infrastructure = TensorHiveManager().infrastructure_manager.infrastructure
+
+    # Try to save gpu resource to database
+    try:
+        resources = Resource.all()
+        id_list = [resource.id for resource in resources]
+        for hostname, value in infrastructure.items():
+            gpu_list = value.get('GPU')
+            if gpu_list is not None:
+                for gpu_uuid, gpu_metrics in gpu_list.items():
+                    if gpu_uuid not in id_list:
+                        new_resource = Resource(
+                            id=gpu_uuid,
+                            name=gpu_metrics.get('name')
+                        )
+                        new_resource.save()
+    except Exception:
+        # In case of failure just return infrastructure
+        pass
+
+    return infrastructure
 
 
 @jwt_required
-def get_metrics(hostname: str, metric_type: str = None):
+def get_all_data():
+    infrastructure = get_infrastructure()
+    return infrastructure, 200
+
+
+@jwt_required
+def get_hostnames():
+    infrastructure = get_infrastructure()
+    hostnames = infrastructure.keys()
+    return list(hostnames), 200
+
+
+@jwt_required
+def get_cpu_metrics(hostname: str, metric_type: str = None):
+    try:
+        infrastructure = get_infrastructure()
+        resource_data = infrastructure[hostname]['CPU']
+
+        # No data about GPU
+        assert resource_data
+
+        if metric_type is None:
+            # Put all gathered metric data for each GPU
+            result = {uuid: cpu_data['metrics'] for uuid, cpu_data in resource_data.items()}
+        else:
+            # Put only requested metric data for each GPU
+            result = {uuid: gpu_data['metrics'][metric_type] for uuid, gpu_data in resource_data.items()}
+    except (KeyError, AssertionError):
+        content, status = NoContent, 404
+    else:
+        content, status = result, 200
+    finally:
+        return content, status
+
+
+@jwt_required
+def get_gpu_metrics(hostname: str, metric_type: str = None):
     try:
         infrastructure = get_infrastructure()
         resource_data = infrastructure[hostname]['GPU']
@@ -45,7 +107,7 @@ def get_metrics(hostname: str, metric_type: str = None):
 
 
 # @jwt_required
-def get_processes(hostname: str):
+def get_gpu_processes(hostname: str):
     try:
         infrastructure = get_infrastructure()
         resource_data = infrastructure[hostname]['GPU']
@@ -58,7 +120,7 @@ def get_processes(hostname: str):
 
 
 @jwt_required
-def get_info(hostname: str):
+def get_gpu_info(hostname: str):
     try:
         infrastructure = get_infrastructure()
         resource_data = infrastructure[hostname]['GPU']
@@ -73,7 +135,7 @@ def get_info(hostname: str):
         status = 200
     except KeyError:
         # TODO Theoretically possible that ['GPU'] can trigger this exception
-        content = {'msg': R['hostname']['not_found']}
+        content = {'msg': NODES['hostname']['not_found']}
         status = 404
     finally:
         return content, status

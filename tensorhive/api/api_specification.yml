@@ -13,7 +13,7 @@ paths:
       tags:
         - users
       summary: Get all users
-      operationId: tensorhive.controllers.user.get_users_controller.get
+      operationId: tensorhive.controllers.user.get
       responses:
         200:
           description: {{RESPONSES['general']['success']}}
@@ -44,7 +44,7 @@ paths:
       tags:
         - users
       summary: Get user with given ID
-      operationId: tensorhive.controllers.user.get_users_controller.get_by_id
+      operationId: tensorhive.controllers.user.get_by_id
       parameters:
         - description: User ID
           in: path
@@ -98,7 +98,7 @@ paths:
       tags:
         - users
       summary: Create new user
-      operationId: tensorhive.controllers.user.create_user_controller.create
+      operationId: tensorhive.controllers.user.create
       requestBody:
         description: User object
         required: true
@@ -147,7 +147,7 @@ paths:
       tags:
         - users
       summary: Update existing user
-      operationId: tensorhive.controllers.user.update_user_controller.update
+      operationId: tensorhive.controllers.user.update
       requestBody:
         description: User object
         required: true
@@ -196,7 +196,7 @@ paths:
       tags:
         - users
       summary: Create new user account based on SSH authentication
-      operationId: tensorhive.controllers.user.create_user_controller.ssh_signup
+      operationId: tensorhive.controllers.user.ssh_signup
       requestBody:
         description: User object
         required: true
@@ -235,7 +235,7 @@ paths:
       tags:
         - users
       summary: Delete user
-      operationId: tensorhive.controllers.user.delete_user_controller.delete
+      operationId: tensorhive.controllers.user.delete
       parameters:
         - description: User ID
           in: path
@@ -276,7 +276,7 @@ paths:
       tags:
         - authentication
       summary: Logout user using access token
-      operationId: tensorhive.controllers.user.logout_user_controller.logout_with_access_token
+      operationId: tensorhive.controllers.user.logout_with_access_token
       responses:
         200:
           description: {{RESPONSES['user']['logout']['success']}}
@@ -298,7 +298,7 @@ paths:
       tags:
         - authentication
       summary: Logout user using refresh token
-      operationId: tensorhive.controllers.user.logout_user_controller.logout_with_refresh_token
+      operationId: tensorhive.controllers.user.logout_with_refresh_token
       responses:
         200:
           description: {{RESPONSES['user']['logout']['success']}}
@@ -320,7 +320,7 @@ paths:
       tags:
         - authentication
       summary: Generate new access token using refresh token
-      operationId: tensorhive.controllers.user.refresh_access_token_controller.generate
+      operationId: tensorhive.controllers.user.generate
       responses:
         200:
           description: {{RESPONSES['token']['refresh']['success']}}
@@ -341,7 +341,7 @@ paths:
       tags:
         - authentication
       summary: Login user
-      operationId: tensorhive.controllers.user.login_user_controller.login
+      operationId: tensorhive.controllers.user.login
       requestBody:
         description: User object
         required: true
@@ -375,7 +375,7 @@ paths:
       tags:
         - authentication
       summary: Get TensorHive public SSH key record for authorized_keys
-      operationId: tensorhive.controllers.user.create_user_controller.authorized_keys_entry
+      operationId: tensorhive.controllers.user.authorized_keys_entry
       responses:
         200:
           description: {{RESPONSES['user']['authorized_keys_entry']['success']}}
@@ -390,7 +390,7 @@ paths:
       tags:
         - groups
       summary: Get all groups
-      operationId: tensorhive.controllers.group.get_group_controller.get
+      operationId: tensorhive.controllers.group.get
       responses:
         200:
           description: {{RESPONSES['general']['success']}}
@@ -420,7 +420,7 @@ paths:
       tags:
         - groups
       summary: Create new group
-      operationId: tensorhive.controllers.group.create_group_controller.create
+      operationId: tensorhive.controllers.group.create
       requestBody:
         description: Group object
         required: true
@@ -467,7 +467,7 @@ paths:
       tags:
         - groups
       summary: Get group with given ID
-      operationId: tensorhive.controllers.group.get_group_controller.get_by_id
+      operationId: tensorhive.controllers.group.get_by_id
       parameters:
         - description: Group ID
           in: path
@@ -510,7 +510,7 @@ paths:
       tags:
         - groups
       summary: Update existing group
-      operationId: tensorhive.controllers.group.update_group_controller.update
+      operationId: tensorhive.controllers.group.update
       requestBody:
         description: Group object with fields to overwrite.
         required: true
@@ -565,7 +565,7 @@ paths:
       tags:
         - groups
       summary: Delete group
-      operationId: tensorhive.controllers.group.delete_group_controller.delete
+      operationId: tensorhive.controllers.group.delete
       parameters:
         - description: Group ID
           in: path
@@ -606,7 +606,7 @@ paths:
       tags:
         - groups
       summary: Add user to group
-      operationId: tensorhive.controllers.group.add_to_group_controller.add_user
+      operationId: tensorhive.controllers.group.add_user
       parameters:
         - description: Group ID
           in: path
@@ -661,7 +661,7 @@ paths:
       tags:
         - groups
       summary: Remove user from group
-      operationId: tensorhive.controllers.group.remove_from_group_controller.remove_user
+      operationId: tensorhive.controllers.group.remove_user
       parameters:
         - description: Group ID
           in: path
@@ -715,7 +715,7 @@ paths:
       tags:
         - restrictions
       summary: Get all or specific restrictions
-      operationId: tensorhive.controllers.restriction.get_restriction_controller.get
+      operationId: tensorhive.controllers.restriction.get
       parameters:
         - description: User id
           in: query
@@ -780,7 +780,7 @@ paths:
       tags:
         - restrictions
       summary: Create new restriction
-      operationId: tensorhive.controllers.restriction.create_restriction_controller.create
+      operationId: tensorhive.controllers.restriction.create
       requestBody:
         description: Restriction object
         required: true
@@ -827,7 +827,7 @@ paths:
       tags:
         - restrictions
       summary: Update existing restriction
-      operationId: tensorhive.controllers.restriction.update_restriction_controller.update
+      operationId: tensorhive.controllers.restriction.update
       requestBody:
         description: Restriction object with fields to overwrite.
         required: true
@@ -882,7 +882,7 @@ paths:
       tags:
         - restrictions
       summary: Delete restriction
-      operationId: tensorhive.controllers.restriction.delete_restriction_controller.delete
+      operationId: tensorhive.controllers.restriction.delete
       parameters:
         - description: Restriction ID
           in: path
@@ -923,7 +923,7 @@ paths:
       tags:
         - restrictions
       summary: Apply restriction to user
-      operationId: tensorhive.controllers.restriction.add_to_restriction_controller.apply_to_user
+      operationId: tensorhive.controllers.restriction.apply_to_user
       parameters:
         - description: Restriction ID
           in: path
@@ -978,7 +978,7 @@ paths:
       tags:
         - restrictions
       summary: Remove restriction from user
-      operationId: tensorhive.controllers.restriction.remove_from_restriction.remove_from_user
+      operationId: tensorhive.controllers.restriction.remove_from_user
       parameters:
         - description: Restriction ID
           in: path
@@ -1032,7 +1032,7 @@ paths:
       tags:
         - restrictions
       summary: Apply restriction to group
-      operationId: tensorhive.controllers.restriction.add_to_restriction_controller.apply_to_group
+      operationId: tensorhive.controllers.restriction.apply_to_group
       parameters:
         - description: Restriction ID
           in: path
@@ -1087,7 +1087,7 @@ paths:
       tags:
         - restrictions
       summary: Remove restriction from group
-      operationId: tensorhive.controllers.restriction.remove_from_restriction.remove_from_group
+      operationId: tensorhive.controllers.restriction.remove_from_group
       parameters:
         - description: Restriction ID
           in: path
@@ -1141,7 +1141,7 @@ paths:
       tags:
         - restrictions
       summary: Apply restriction to resource
-      operationId: tensorhive.controllers.restriction.add_to_restriction_controller.apply_to_resource
+      operationId: tensorhive.controllers.restriction.apply_to_resource
       parameters:
         - description: Restriction ID
           in: path
@@ -1196,7 +1196,7 @@ paths:
       tags:
         - restrictions
       summary: Remove restriction from resource
-      operationId: tensorhive.controllers.restriction.remove_from_restriction.remove_from_resource
+      operationId: tensorhive.controllers.restriction.remove_from_resource
       parameters:
         - description: Restriction ID
           in: path
@@ -1250,7 +1250,7 @@ paths:
       tags:
         - restrictions
       summary: Add schedule to restriction
-      operationId: tensorhive.controllers.restriction.add_to_restriction_controller.add_schedule
+      operationId: tensorhive.controllers.restriction.add_schedule
       parameters:
         - description: Restriction ID
           in: path
@@ -1305,7 +1305,7 @@ paths:
       tags:
         - restrictions
       summary: Remove schedule from restriction
-      operationId: tensorhive.controllers.restriction.remove_from_restriction.remove_schedule
+      operationId: tensorhive.controllers.restriction.remove_schedule
       parameters:
         - description: Restriction ID
           in: path
@@ -1359,7 +1359,7 @@ paths:
       tags:
         - schedules
       summary: Get all schedules
-      operationId: tensorhive.controllers.schedule.get_schedule_controller.get
+      operationId: tensorhive.controllers.schedule.get
       responses:
         200:
           description: {{RESPONSES['general']['success']}}
@@ -1389,7 +1389,7 @@ paths:
       tags:
         - schedules
       summary: Create new restriction schedule
-      operationId: tensorhive.controllers.schedule.create_schedule_controller.create
+      operationId: tensorhive.controllers.schedule.create
       requestBody:
         description: Schedule object
         required: true
@@ -1436,7 +1436,7 @@ paths:
       tags:
         - schedules
       summary: Get schedule with given ID
-      operationId: tensorhive.controllers.schedule.get_schedule_controller.get_by_id
+      operationId: tensorhive.controllers.schedule.get_by_id
       parameters:
         - description: Schedule ID
           in: path
@@ -1479,7 +1479,7 @@ paths:
       tags:
         - schedules
       summary: Update existing schedule
-      operationId: tensorhive.controllers.schedule.update_schedule_controller.update
+      operationId: tensorhive.controllers.schedule.update
       requestBody:
         description: Schedule object with fields to overwrite.
         required: true
@@ -1534,7 +1534,7 @@ paths:
       tags:
         - schedules
       summary: Delete schedule
-      operationId: tensorhive.controllers.schedule.delete_schedule_controller.delete
+      operationId: tensorhive.controllers.schedule.delete
       parameters:
         - description: Schedule ID
           in: path
@@ -1575,7 +1575,7 @@ paths:
       tags:
         - reservations
       summary: Get all or specific reservation events
-      operationId: tensorhive.controllers.reservation.get_reservation_controller.get
+      operationId: tensorhive.controllers.reservation.get
       parameters:
         - description: Array of uuids
           in: query
@@ -1622,7 +1622,7 @@ paths:
       tags:
         - reservations
       summary: Make new reservation
-      operationId: tensorhive.controllers.reservation.create_reservation_controller.create
+      operationId: tensorhive.controllers.reservation.create
       requestBody:
         description: Reservation object
         required: true
@@ -1659,7 +1659,7 @@ paths:
       tags:
         - reservations
       summary: Update existing reservation
-      operationId: tensorhive.controllers.reservation.update_reservation_controller.update
+      operationId: tensorhive.controllers.reservation.update
       requestBody:
         description: Reservation object with fields to overwrite.
         required: true
@@ -1704,7 +1704,7 @@ paths:
       tags:
         - reservations
       summary: Delete reservation
-      operationId: tensorhive.controllers.reservation.delete_reservation_controller.delete
+      operationId: tensorhive.controllers.reservation.delete
       parameters:
         - description: Reservation ID
           in: path
@@ -1735,7 +1735,7 @@ paths:
       tags:
         - resources
       summary: Get all resources
-      operationId: tensorhive.controllers.resource.get_resource_controller.get
+      operationId: tensorhive.controllers.resource.get
       responses:
         200:
           description: {{RESPONSES['general']['success']}}
@@ -1766,7 +1766,7 @@ paths:
       tags:
         - resources
       summary: Get resource with given UUID
-      operationId: tensorhive.controllers.resource.get_resource_controller.get_by_id
+      operationId: tensorhive.controllers.resource.get_by_id
       parameters:
         - description: Resource UUID
           in: path
@@ -1810,7 +1810,7 @@ paths:
       tags:
         - nodes
       summary: Get all hostnames
-      operationId: tensorhive.controllers.nodes.infrastructure_controller.get_hostnames
+      operationId: tensorhive.controllers.nodes.get_hostnames
       responses:
         200:
           description: {{RESPONSES['general']['ok']}}
@@ -1832,7 +1832,7 @@ paths:
         - nodes
       summary: Get each node's all metric data
       description: Puts null if some data is unavailable
-      operationId: tensorhive.controllers.nodes.infrastructure_controller.get_all_data
+      operationId: tensorhive.controllers.nodes.get_all_data
       responses:
         200:
           description: {{RESPONSES['general']['ok']}}
@@ -1851,7 +1851,7 @@ paths:
       tags:
         - nodes
       summary: Get node's basic GPU information
-      operationId: tensorhive.controllers.nodes.gpu_controller.get_info
+      operationId: tensorhive.controllers.nodes.get_gpu_info
       parameters:
         - $ref: '#/components/parameters/hostnameParam'
       responses:
@@ -1875,7 +1875,7 @@ paths:
         - nodes
       summary: Get node's GPU metric data
       description: Puts null if some data is unavailable
-      operationId: tensorhive.controllers.nodes.gpu_controller.get_metrics
+      operationId: tensorhive.controllers.nodes.get_gpu_metrics
       parameters:
         - $ref: '#/components/parameters/hostnameParam'
         - $ref: '#/components/parameters/gpuMetricTypeQuery'
@@ -1900,7 +1900,7 @@ paths:
         - nodes
       summary: Get node's CPU metric data
       description: Puts null if some data is unavailable
-      operationId: tensorhive.controllers.nodes.cpu_controller.get_metrics
+      operationId: tensorhive.controllers.nodes.get_cpu_metrics
       parameters:
         - $ref: '#/components/parameters/hostnameParam'
         - $ref: '#/components/parameters/cpuMetricTypeQuery'
@@ -1925,7 +1925,7 @@ paths:
         - nodes
       summary: Get node's GPU processes data
       description: Puts null if some data is unavailable
-      operationId: tensorhive.controllers.nodes.gpu_controller.get_processes
+      operationId: tensorhive.controllers.nodes.get_gpu_processes
       parameters:
         - $ref: '#/components/parameters/hostnameParam'
       responses:

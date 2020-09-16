@@ -1,6 +1,6 @@
 from tensorhive.models.Task import Task, TaskStatus
 from tensorhive.models.User import User
-from tensorhive.core import task_nursery, ssh
+from tensorhive.core import task_nursery
 from tensorhive.utils.DateUtils import DateUtils
 from tensorhive.core.task_nursery import SpawnError, ExitCodeError
 from pssh.exceptions import ConnectionErrorException, AuthenticationException, UnknownHostException
@@ -8,13 +8,15 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt_claims
 from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.config import API
 from functools import wraps
-from typing import List, Optional, Callable, Any, Dict, Tuple, Iterator
+from typing import Optional, Callable, Any, Dict, Tuple
 from datetime import datetime, timedelta
 import logging
+
 log = logging.getLogger(__name__)
-T = API.RESPONSES['task']
-S = API.RESPONSES['screen-sessions']
-G = API.RESPONSES['general']
+TASK = API.RESPONSES['task']
+SSH = API.RESPONSES['ssh']
+SCREEN_SESSIONS = API.RESPONSES['screen-sessions']
+GENERAL = API.RESPONSES['general']
 """
 This module contains two kinds of controllers:
 - production-ready with authorization and authentication
@@ -123,9 +125,9 @@ def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         # User is not allowed to create task for someone else
         assert task.get('userId') == get_jwt_identity()
     except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
+        content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:
-        content, status = {'msg': G['unprivileged']}, 403
+        content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_create(task)
     finally:
@@ -139,9 +141,9 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         task = Task.get(id)
         assert get_jwt_identity() == task.user_id or is_admin()
     except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
+        content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:
-        content, status = {'msg': G['unprivileged']}, 403
+        content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_get(id)
     finally:
@@ -161,9 +163,9 @@ def get_all(userId: Optional[int], syncAll: Optional[bool]) -> Tuple[Content, Ht
             assert is_admin()
 
     except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
+        content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:
-        content, status = {'msg': G['unprivileged']}, 403
+        content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_get_all(user_id, sync_all)
     finally:
@@ -177,9 +179,9 @@ def update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCo
         task = Task.get(id)
         assert task.user_id == get_jwt_identity(), 'Not an owner'
     except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
+        content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:
-        content, status = {'msg': G['unprivileged']}, 403
+        content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_update(id, newValues)
     finally:
@@ -193,9 +195,9 @@ def destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         task = Task.get(id)
         assert task.user_id == get_jwt_identity(), 'Not an owner'
     except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
+        content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:
-        content, status = {'msg': G['unprivileged']}, 403
+        content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_destroy(id)
     finally:
@@ -210,9 +212,9 @@ def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         assert task.user_id == get_jwt_identity(), 'Not an owner'
     except NoResultFound as e:
         log.error(e)
-        content, status = {'msg': T['not_found']}, 404
+        content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:
-        content, status = {'msg': G['unprivileged']}, 403
+        content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_spawn(id)
     finally:
@@ -226,9 +228,9 @@ def terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[Content, H
         task = Task.get(id)
         assert get_jwt_identity() == task.user_id or is_admin()
     except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
+        content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:
-        content, status = {'msg': G['unprivileged']}, 403
+        content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_terminate(id, gracefully)
     finally:
@@ -242,9 +244,9 @@ def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
         task = Task.get(id)
         assert get_jwt_identity() == task.user_id or is_admin()
     except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
+        content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:
-        content, status = {'msg': G['unprivileged']}, 403
+        content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_get_log(id, tail)
     finally:
@@ -275,7 +277,7 @@ def business_get_all(user_id: Optional[int], sync_all: Optional[bool]) -> Tuple[
         if sync_all:
             synchronize(task.id)
         results.append(task.as_dict)
-    return {'msg': T['all']['success'], 'tasks': results}, 200
+    return {'msg': TASK['all']['success'], 'tasks': results}, 200
 
 
 def business_create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
@@ -294,17 +296,17 @@ def business_create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         new_task.save()
     except ValueError:
         # Invalid string format for datetime
-        content, status = {'msg': G['bad_request']}, 422
+        content, status = {'msg': GENERAL['bad_request']}, 422
     except KeyError:
         # At least one of required fields was not present
-        content, status = {'msg': G['bad_request']}, 422
+        content, status = {'msg': GENERAL['bad_request']}, 422
     except AssertionError as e:
-        content, status = {'msg': T['create']['failure']['invalid'].format(reason=e)}, 422
+        content, status = {'msg': TASK['create']['failure']['invalid'].format(reason=e)}, 422
     except Exception as e:
         log.critical(e)
-        content, status = {'msg': G['internal_error']}, 500
+        content, status = {'msg': GENERAL['internal_error']}, 500
     else:
-        content, status = {'msg': T['create']['success'], 'task': new_task.as_dict}, 201
+        content, status = {'msg': TASK['create']['success'], 'task': new_task.as_dict}, 201
     finally:
         return content, status
 
@@ -315,17 +317,17 @@ def business_get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
     except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
+        content, status = {'msg': TASK['not_found']}, 404
     except Exception as e:
         log.critical(e)
-        content, status = {'msg': G['internal_error']}, 500
+        content, status = {'msg': GENERAL['internal_error']}, 500
     else:
-        content, status = {'msg': T['get']['success'], 'task': task.as_dict}, 200
+        content, status = {'msg': TASK['get']['success'], 'task': task.as_dict}, 200
     finally:
         return content, status
 
 
-def to_db_column():
+def to_db_column() -> Dict[str, str]:
     return {
         'command': 'command',
         'hostname': 'host',
@@ -350,17 +352,17 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
             setattr(task, field_name, new_value)
         task.save()
     except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
+        content, status = {'msg': TASK['not_found']}, 404
     except ValueError:
         # Invalid string format for datetime
-        content, status = {'msg': G['bad_request']}, 422
+        content, status = {'msg': GENERAL['bad_request']}, 422
     except AssertionError as e:
-        content, status = {'msg': T['update']['failure']['assertions'].format(reason=e)}, 422
+        content, status = {'msg': TASK['update']['failure']['assertions'].format(reason=e)}, 422
     except Exception as e:
         log.critical(e)
-        content, status = {'msg': G['internal_error']}, 500
+        content, status = {'msg': GENERAL['internal_error']}, 500
     else:
-        content, status = {'msg': T['update']['success'], 'task': task.as_dict}, 201
+        content, status = {'msg': TASK['update']['success'], 'task': task.as_dict}, 201
     finally:
         return content, status
 
@@ -373,13 +375,13 @@ def business_destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         assert task.status is not TaskStatus.running, 'must be terminated first'
         task.destroy()
     except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
+        content, status = {'msg': TASK['not_found']}, 404
     except AssertionError as e:
-        content, status = {'msg': T['delete']['failure']['assertions'].format(reason=e)}, 422
+        content, status = {'msg': TASK['delete']['failure']['assertions'].format(reason=e)}, 422
     except Exception:
-        content, status = {'msg': G['internal_error']}, 500
+        content, status = {'msg': GENERAL['internal_error']}, 500
     else:
-        content, status = {'msg': T['delete']['success']}, 200
+        content, status = {'msg': TASK['delete']['success']}, 200
     finally:
         return content, status
 
@@ -396,15 +398,15 @@ def screen_sessions(username: str, hostname: str) -> Tuple[Content, HttpStatusCo
         assert username and hostname, 'parameters must not be empty'
         pids = task_nursery.running(host=hostname, user=username)
     except AssertionError as e:
-        content, status = {'msg': S['failure']['assertions'].format(reason=e)}, 422
+        content, status = {'msg': SCREEN_SESSIONS['failure']['assertions'].format(reason=e)}, 422
     except (ConnectionErrorException, AuthenticationException, UnknownHostException) as e:
-        content, status = {'msg': API.RESPONSES['ssh']['failure']['connection'].format(reason=e)}, 500
+        content, status = {'msg': SSH['failure']['connection'].format(reason=e)}, 500
     except Exception as e:
         log.critical(e)
-        content, status = {'msg': G['internal_error']}, 500
+        content, status = {'msg': GENERAL['internal_error']}, 500
     else:
         # FIXME
-        content, status = {'msg': S['success'], 'pids': pids}, 200
+        content, status = {'msg': SCREEN_SESSIONS['success'], 'pids': pids}, 200
     finally:
         return content, status
 
@@ -433,18 +435,18 @@ def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         # continue to watch and terminate the task automatically.
         task.save()
     except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
+        content, status = {'msg': TASK['not_found']}, 404
     except AssertionError as e:
-        content, status = {'msg': T['spawn']['failure']['assertions'].format(reason=e)}, 422
+        content, status = {'msg': TASK['spawn']['failure']['assertions'].format(reason=e)}, 422
     except SpawnError as e:
         log.warning(e)
-        content, status = {'msg': T['spawn']['failure']['backend'].format(reason=e)}, 500
+        content, status = {'msg': TASK['spawn']['failure']['backend'].format(reason=e)}, 500
     except Exception as e:
         log.critical(e)
-        content, status = {'msg': G['internal_error']}, 500
+        content, status = {'msg': GENERAL['internal_error']}, 500
     else:
         log.info('Task {} is now: {}'.format(task.id, task.status.name))
-        content, status = {'msg': T['spawn']['success'], 'pid': pid}, 200
+        content, status = {'msg': TASK['spawn']['success'], 'pid': pid}, 200
     finally:
         return content, status
 
@@ -487,17 +489,17 @@ def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[C
             task.spawn_at = None
             task.save()
     except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
+        content, status = {'msg': TASK['not_found']}, 404
     except AssertionError as e:
-        content, status = {'msg': T['terminate']['failure']['state'].format(reason=e)}, 409
+        content, status = {'msg': TASK['terminate']['failure']['state'].format(reason=e)}, 409
     except ExitCodeError:
-        content, status = {'msg': T['terminate']['failure']['exit_code'], 'exit_code': exit_code}, 202
+        content, status = {'msg': TASK['terminate']['failure']['exit_code'], 'exit_code': exit_code}, 202
     # TODO What if terminate could not connect, ConnectionErrorException?
     except Exception as e:
         log.critical(e)
-        content, status = {'msg': G['internal_error']}, 500
+        content, status = {'msg': GENERAL['internal_error']}, 500
     else:
-        content, status = {'msg': T['terminate']['success'], 'exit_code': exit_code}, 200
+        content, status = {'msg': TASK['terminate']['success'], 'exit_code': exit_code}, 200
     finally:
         return content, status
 
@@ -519,18 +521,18 @@ def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
         assert task.user, 'user does not exist'
         output_gen, log_path = task_nursery.fetch_log(task.host, task.user.username, task.id, tail)
     except NoResultFound:
-        content, status = {'msg': T['not_found']}, 404
+        content, status = {'msg': TASK['not_found']}, 404
     except ExitCodeError as e:
-        content, status = {'msg': T['get_log']['failure']['not_found'].format(location=e)}, 404
+        content, status = {'msg': TASK['get_log']['failure']['not_found'].format(location=e)}, 404
     except AssertionError as e:
-        content, status = {'msg': T['get_log']['failure']['assertions'].format(reason=e)}, 422
+        content, status = {'msg': TASK['get_log']['failure']['assertions'].format(reason=e)}, 422
     except (ConnectionErrorException, AuthenticationException, UnknownHostException) as e:
-        content, status = {'msg': API.RESPONSES['ssh']['failure']['connection'].format(reason=e)}, 500
+        content, status = {'msg': SSH['failure']['connection'].format(reason=e)}, 500
     except Exception as e:
         log.critical(e)
-        content, status = {'msg': G['internal_error']}, 500
+        content, status = {'msg': GENERAL['internal_error']}, 500
     else:
-        content, status = {'msg': T['get_log']['success'], 'path': log_path, 'output_lines': list(output_gen)}, 200
+        content, status = {'msg': TASK['get_log']['success'], 'path': log_path, 'output_lines': list(output_gen)}, 200
     finally:
         return content, status
 
