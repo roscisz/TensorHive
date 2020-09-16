@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, and_, not_, or_, event
+from sqlalchemy import Column, Boolean, Integer, String, DateTime, ForeignKey, and_, not_, or_, event
 from tensorhive.database import db_session, Base
 from tensorhive.models.CRUDModel import CRUDModel
 from tensorhive.utils.DateUtils import DateUtils
@@ -24,6 +24,7 @@ class Reservation(CRUDModel, Base):  # type: ignore
     title = Column(String(60), unique=False, nullable=False)
     description = Column(String(200), nullable=True)
     protected_resource_id = Column(String(60), nullable=False)
+    _is_cancelled = Column(Boolean, nullable=True)
 
     gpu_util_avg = Column(Integer, nullable=True)
     mem_util_avg = Column(Integer, nullable=True)
@@ -74,6 +75,14 @@ class Reservation(CRUDModel, Base):  # type: ignore
         self._ends_at = DateUtils.try_parse_string(value)
         if not self._ends_at:
             log.error('Unsupported type (ends_at={})'.format(value))
+
+    @hybrid_property
+    def is_cancelled(self):
+        return self._is_cancelled is not None and self._is_cancelled
+
+    @is_cancelled.setter  # type: ignore
+    def is_cancelled(self, value):
+        self._is_cancelled = value
 
     @classmethod
     def current_events(cls):
@@ -144,5 +153,6 @@ class Reservation(CRUDModel, Base):  # type: ignore
             'memUtilAvg': self.mem_util_avg,
             'start': DateUtils.parse_datetime(self.starts_at),
             'end': DateUtils.parse_datetime(self.ends_at),
-            'createdAt': DateUtils.parse_datetime(self.created_at)
+            'createdAt': DateUtils.parse_datetime(self.created_at),
+            'isCancelled': str(self.is_cancelled)
         }
