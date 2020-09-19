@@ -21,18 +21,3 @@ def client():
                 strict_validation=True)
     CORS(app.app)
     return app.app.test_client()
-
-
-# @pytest.fixture(scope='function')
-# def skip_jwt(monkeypatch):
-#     monkeypatch.setattr('flask_jwt_extended.view_decorators.verify_jwt_in_request', lambda: None)
-#
-#
-# @pytest.fixture(scope='function')
-# def skip_admin(monkeypatch):
-#     def no_verify():
-#         pass
-#
-#     # monkeypatch.setattr('flask_jwt_extended.view_decorators.verify_jwt_in_request', lambda: None)
-#     monkeypatch.setattr('tensorhive.authorization.admin_required', no_verify)
-#
