@@ -34,9 +34,9 @@ class Restriction(CRUDModel, Base):  # type: ignore
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50))
-    _created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    _starts_at = Column(DateTime, nullable=False)
-    _ends_at = Column(DateTime)
+    _created_at = Column('created_at', DateTime, default=datetime.datetime.utcnow)
+    _starts_at = Column('starts_at', DateTime, nullable=False)
+    _ends_at = Column('ends_at', DateTime)
     is_global = Column(Boolean, nullable=False)
 
     _users = relationship('User', secondary='restriction2assignee')
