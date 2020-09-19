@@ -1,5 +1,6 @@
+from tensorhive.database import db_session
 from tensorhive.models.Restriction import Restriction
-from tests.functional.controllers import API_URI as BASE_URI, HEADERS
+from fixtures.controllers import API_URI as BASE_URI, HEADERS
 from http import HTTPStatus
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -13,7 +14,7 @@ ENDPOINT = BASE_URI + '/restrictions'
 # GET /restrictions
 def test_get_all_restrictions(tables, client):
     resp = client.get(ENDPOINT, headers=HEADERS)
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
     assert len(resp_json) == 0
@@ -25,7 +26,7 @@ def test_get_all_restrictions(tables, client):
     restriction.save()
 
     resp = client.get(ENDPOINT, headers=HEADERS)
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
     assert len(resp_json) == 1
@@ -37,7 +38,7 @@ def test_get_user_restrictions(tables, client, new_user, restriction):
     restriction.apply_to_user(new_user)
 
     resp = client.get(ENDPOINT + '?user_id={}'.format(new_user.id), headers=HEADERS)
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
     assert resp_json[0]['id'] == restriction.id
@@ -50,7 +51,7 @@ def test_get_users_group_restrictions(tables, client, new_group_with_member, res
 
     user = new_group_with_member.users[0]
     resp = client.get(ENDPOINT + '?user_id={}&include_user_groups=True'.format(user.id), headers=HEADERS)
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
     assert resp_json[0]['id'] == restriction.id
@@ -62,7 +63,7 @@ def test_get_group_restrictions(tables, client, new_group, restriction):
     restriction.apply_to_group(new_group)
 
     resp = client.get(ENDPOINT + '?group_id={}'.format(new_group.id), headers=HEADERS)
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
     assert resp_json[0]['id'] == restriction.id
@@ -74,7 +75,7 @@ def test_get_resource_restrictions(tables, client, resource1, restriction):
     restriction.apply_to_resource(resource1)
 
     resp = client.get(ENDPOINT + '?resource_id={}'.format(resource1.id), headers=HEADERS)
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
     assert resp_json[0]['id'] == restriction.id
@@ -86,7 +87,7 @@ def test_get_schedule_restrictions(tables, client, active_schedule, restriction)
     restriction.add_schedule(active_schedule)
 
     resp = client.get(ENDPOINT + '?schedule_id={}'.format(active_schedule.id), headers=HEADERS)
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
     assert resp_json[0]['id'] == restriction.id
@@ -101,7 +102,7 @@ def test_create_restriction(tables, client):
         'isGlobal': False
     }
     resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.CREATED
     assert Restriction.get(resp_json['restriction']['id']) is not None
@@ -134,7 +135,6 @@ def test_update_restriction(tables, client, restriction):
 
 # PUT /restrictions/{id} - update existing restriction - incorrect, verify that parameters did not get updated
 def test_update_restriction_incorrect_data(tables, client, restriction):
-    restriction.save()
     old_start_date = restriction.starts_at
     old_end_date = restriction.ends_at
     data = {
@@ -143,6 +143,8 @@ def test_update_restriction_incorrect_data(tables, client, restriction):
     }
     resp = client.put(ENDPOINT + '/' + str(restriction.id), headers=HEADERS, data=json.dumps(data))
 
+    db_session.remove()  # make sure we'll get the restriction from the DB, and not from memory
+    restriction = Restriction.get(restriction.id)
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert restriction.starts_at == old_start_date
     assert restriction.ends_at == old_end_date

@@ -1,5 +1,5 @@
 from tensorhive.models.Group import Group
-from tests.functional.controllers import API_URI as BASE_URI, HEADERS
+from fixtures.controllers import API_URI as BASE_URI, HEADERS
 from http import HTTPStatus
 
 import json
@@ -13,7 +13,7 @@ def test_create(tables, client):
     data = {'name': group_name}
 
     resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.CREATED
     assert resp_json['group']['id'] is not None
@@ -24,7 +24,7 @@ def test_create(tables, client):
 # GET /groups
 def test_get_list_of_groups(tables, client):
     resp = client.get(ENDPOINT, headers=HEADERS)
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
     assert len(resp_json) == 0  # no groups added yet
@@ -33,7 +33,7 @@ def test_get_list_of_groups(tables, client):
     client.post(ENDPOINT, headers=HEADERS, data=json.dumps({'name': 'Test'}))
 
     resp = client.get(ENDPOINT, headers=HEADERS)
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
     assert len(resp_json) == 1  # one group added already
@@ -45,7 +45,7 @@ def test_get_group_by_id(tables, client, new_group):
 
     # Now try getting it
     resp = client.get(ENDPOINT + '/' + str(new_group.id), headers=HEADERS)
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
     assert resp_json['group']['id'] == new_group.id
@@ -66,7 +66,7 @@ def test_update_group(tables, client, new_group):
 
     new_group_name = new_group.name + '111'
     resp = client.put(ENDPOINT + '/' + str(new_group.id), headers=HEADERS, data=json.dumps({'name': new_group_name}))
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
     assert resp_json['group']['name'] == new_group_name
@@ -91,7 +91,7 @@ def test_delete_group(tables, client, new_group):
 
     # Let's get all groups to verify
     resp = client.get(ENDPOINT, headers=HEADERS)
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert len(resp_json) == 0
 

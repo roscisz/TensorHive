@@ -1,5 +1,6 @@
+from tensorhive.database import db_session
 from tensorhive.models.RestrictionSchedule import RestrictionSchedule
-from tests.functional.controllers import API_URI as BASE_URI, HEADERS
+from fixtures.controllers import API_URI as BASE_URI, HEADERS
 from http import HTTPStatus
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -18,7 +19,7 @@ def test_create_schedule(tables, client):
         'scheduleDays': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
     }
     resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.CREATED
     assert RestrictionSchedule.get(resp_json['schedule']['id']) is not None
@@ -61,7 +62,7 @@ def test_create_schedule_with_no_schedule_days(tables, client):
 # GET /schedules
 def test_get_list_of_schedules(tables, client):
     resp = client.get(ENDPOINT, headers=HEADERS)
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
     assert len(resp_json) == 0
@@ -69,7 +70,7 @@ def test_get_list_of_schedules(tables, client):
     client.post(ENDPOINT, headers=HEADERS, data=json.dumps({'hourStart': '8:00', 'hourEnd': '16:00',
                                                             'scheduleDays': ['Monday']}))
     resp = client.get(ENDPOINT, headers=HEADERS)
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
     assert len(resp_json) == 1
@@ -78,7 +79,7 @@ def test_get_list_of_schedules(tables, client):
 # GET /schedules/{id}
 def test_get_schedule_by_id(tables, client, active_schedule):
     resp = client.get(ENDPOINT + '/' + str(active_schedule.id), headers=HEADERS)
-    resp_json = json.loads(resp.data)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
     assert resp_json['schedule']['id'] == active_schedule.id
@@ -151,6 +152,8 @@ def test_update_schedule_with_invalid_start_and_end_hours(tables, client, active
     }
     resp = client.put(ENDPOINT + '/' + str(active_schedule.id), headers=HEADERS, data=json.dumps(data))
 
+    db_session.remove()  # make sure we'll get the restriction from the DB, and not from memory
+    active_schedule = RestrictionSchedule.get(active_schedule.id)
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert active_schedule.hour_start == datetime.time(8, 0, 0)
     assert active_schedule.hour_end == datetime.time(10, 0, 0)
