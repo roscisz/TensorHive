@@ -26,7 +26,7 @@ class DateUtils:
             return result
 
     @classmethod
-    def parse_datetime(cls, value: datetime) -> str:
+    def stringify_datetime(cls, value: datetime) -> str:
         """
         Parses datetime object into string.
         :param value: datetime object representing certain date
@@ -49,12 +49,12 @@ class DateUtils:
         return None
 
     @classmethod
-    def try_parse_datetime(cls, value: Optional[datetime]) -> Optional[str]:
+    def try_stringify_datetime(cls, value: Optional[datetime]) -> Optional[str]:
         """
         Parses datetime object into string gracefully.
         :param value: datetime object representing certain date or None.
         :return: string with date that was represented by the datetime object or None if input value was None.
         """
-        if not value:
+        if value is None:
             return None
-        return cls.parse_datetime(value)
+        return cls.stringify_datetime(value)

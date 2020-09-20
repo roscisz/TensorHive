@@ -97,7 +97,7 @@ class RestrictionSchedule(CRUDModel, Base):  # type: ignore
 
     @staticmethod
     def parse_schedule_list(schedule: List[Weekday]) -> str:
-        return ''.join((sorted(''.join([str(day.value) for day in schedule]))))
+        return ''.join((sorted([str(day.value) for day in schedule])))
 
 
 class Restriction2Schedule(Base):  # type: ignore

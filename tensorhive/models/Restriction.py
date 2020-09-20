@@ -74,7 +74,7 @@ class Restriction(CRUDModel, Base):  # type: ignore
     @starts_at.setter
     def starts_at(self, value: str):
         self._starts_at = DateUtils.try_parse_string(value)
-        if not self._starts_at:
+        if self._starts_at is None:
             log.error('Unsupported type (starts_at={})'.format(value))
 
     @ends_at.setter
@@ -84,7 +84,7 @@ class Restriction(CRUDModel, Base):  # type: ignore
     @created_at.setter
     def created_at(self, value: str):
         self._created_at = DateUtils.try_parse_string(value)
-        if not self._created_at:
+        if self._created_at is None:
             log.error('Unsupported type (created_at={})'.format(value))
 
     @hybrid_property
@@ -185,9 +185,9 @@ class Restriction(CRUDModel, Base):  # type: ignore
         restriction = {
             'id': self.id,
             'name': self.name,
-            'createdAt': DateUtils.parse_datetime(self.created_at),
-            'startsAt': DateUtils.parse_datetime(self.starts_at),
-            'endsAt': DateUtils.try_parse_datetime(self.ends_at),
+            'createdAt': DateUtils.stringify_datetime(self.created_at),
+            'startsAt': DateUtils.stringify_datetime(self.starts_at),
+            'endsAt': DateUtils.try_stringify_datetime(self.ends_at),
             'isGlobal': self.is_global,
             'schedules': [schedule.as_dict for schedule in self.schedules]
         }

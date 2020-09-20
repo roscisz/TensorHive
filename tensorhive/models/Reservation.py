@@ -63,7 +63,7 @@ class Reservation(CRUDModel, Base):  # type: ignore
     @starts_at.setter  # type: ignore
     def starts_at(self, value):
         self._starts_at = DateUtils.try_parse_string(value)
-        if not self._starts_at:
+        if self._starts_at is None:
             log.error('Unsupported type (starts_at={})'.format(value))
 
     @hybrid_property
@@ -73,7 +73,7 @@ class Reservation(CRUDModel, Base):  # type: ignore
     @ends_at.setter  # type: ignore
     def ends_at(self, value):
         self._ends_at = DateUtils.try_parse_string(value)
-        if not self._ends_at:
+        if self._ends_at is None:
             log.error('Unsupported type (ends_at={})'.format(value))
 
     @hybrid_property
@@ -151,8 +151,8 @@ class Reservation(CRUDModel, Base):  # type: ignore
             'userName': self.user.username,
             'gpuUtilAvg': self.gpu_util_avg,
             'memUtilAvg': self.mem_util_avg,
-            'start': DateUtils.parse_datetime(self.starts_at),
-            'end': DateUtils.parse_datetime(self.ends_at),
-            'createdAt': DateUtils.parse_datetime(self.created_at),
+            'start': DateUtils.stringify_datetime(self.starts_at),
+            'end': DateUtils.stringify_datetime(self.ends_at),
+            'createdAt': DateUtils.stringify_datetime(self.created_at),
             'isCancelled': str(self.is_cancelled)
         }
