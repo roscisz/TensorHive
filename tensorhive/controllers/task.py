@@ -266,7 +266,7 @@ def business_get_all(user_id: Optional[int], sync_all: Optional[bool]) -> Tuple[
     # TODO Exceptions should never occur, but need to experiment more
     if user_id:
         # Returns [] if such User with such id does not exist (SQLAlchemy behavior)
-        tasks = Task.query.filter(Task.user_id == user_id).all()
+        tasks = Task.all()
     else:
         tasks = Task.all()
 
@@ -286,7 +286,6 @@ def business_create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """
     try:
         new_task = Task(
-            user_id=task['userId'],
             host=task['hostname'],
             command=task['command'],
             # TODO Adjust API spec, optional fields
@@ -339,7 +338,7 @@ def to_db_column() -> Dict[str, str]:
 # TODO What if task is already running: allow for updating command, hostname, etc.?
 def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """Updates certain fields of a Task db record, see `allowed_fields`."""
-    allowed_fields = {'command', 'hostname', 'spawnAt', 'terminateAt'}
+    allowed_fields = {'command', 'hostname', 'spawnsAt', 'terminatesAt'}
     try:
         assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
         task = Task.get(id)

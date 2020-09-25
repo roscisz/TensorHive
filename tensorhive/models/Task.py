@@ -18,27 +18,25 @@ class TaskStatus(enum.Enum):
 class Task(CRUDModel, Base):  # type: ignore
     __tablename__ = 'tasks'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
-    user = relationship(
-        'User', backref=backref('tasks', passive_deletes=True, cascade='all, delete, delete-orphan'), lazy='subquery')
+    job_id = Column(Integer, ForeignKey('jobs.id', ondelete='CASCADE'))
+    place_in_job_sequence = Column(Integer)
     host = Column(String(40), nullable=False)
-    pid = Column(Integer, nullable=True)
+    pid = Column(Integer)
     status = Column(Enum(TaskStatus), default=TaskStatus.not_running, nullable=False)
     command = Column(String(400), nullable=False)
-    spawn_at = Column(DateTime, nullable=True)
-    terminate_at = Column(DateTime, nullable=True)
+    _spawns_at = Column(DateTime)
+    _terminates_at = Column(DateTime)
 
     def __repr__(self):
-        return '<Task id={id}, user={user}, name={host}, command={command}\n' \
-            '\tpid={pid}, status={status}, spawn_at={spawn_at}, terminate_at={terminate_at}>'.format(
+        return '<Task id={id}, job={job}, place_in_jobseq={place_in_jobseq}, name={host}, command={command}\n' \
+            '\tpid={pid}, status={status}>'.format(
                 id=self.id,
-                user=self.user,
+                job=self.job,
+                place_in_jobseq=self.place_in_job_sequence,
                 host=self.host,
                 command=self.command,
                 pid=self.pid,
-                status=self.status.name,
-                spawn_at=self.spawn_at,
-                terminate_at=self.terminate_at)
+                status=self.status.name)                
 
     def check_assertions(self):
         pass
@@ -47,7 +45,8 @@ class Task(CRUDModel, Base):  # type: ignore
     def as_dict(self):
         return {
             'id': self.id,
-            'userId': self.user_id,
+            'jobId': self.job_id,
+            'placeInSeq': self.place_in_job_sequence,
             'hostname': self.host,
             'pid': self.pid,
             'status': self.status.name,
