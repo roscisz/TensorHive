@@ -1,6 +1,7 @@
-from tensorhive.models.Task import Task, TaskStatus, try_parse_input_datetime
+from tensorhive.models.Task import Task, TaskStatus
 from tensorhive.models.User import User
 from tensorhive.core import task_nursery, ssh
+from tensorhive.utils.DateUtils import DateUtils
 from tensorhive.core.task_nursery import SpawnError, ExitCodeError
 from pssh.exceptions import ConnectionErrorException, AuthenticationException, UnknownHostException
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt_claims
@@ -263,7 +264,8 @@ def business_get_all(user_id: Optional[int], sync_all: Optional[bool]) -> Tuple[
     # TODO Exceptions should never occur, but need to experiment more
     if user_id:
         # Returns [] if such User with such id does not exist (SQLAlchemy behavior)
-        tasks = Task.query.filter(Task.user_id == user_id).all()
+#TODO change to job.user_id        tasks = Task.query.filter(Task.user_id == user_id).all()
+        tasks = Task.all()
     else:
         tasks = Task.all()
 
@@ -283,12 +285,11 @@ def business_create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """
     try:
         new_task = Task(
-            user_id=task['userId'],
             host=task['hostname'],
             command=task['command'],
             # TODO Adjust API spec, optional fields
-            spawn_at=try_parse_input_datetime(task.get('spawnAt')),
-            terminate_at=try_parse_input_datetime(task.get('terminateAt')))
+            _spawns_at=DateUtils.try_parse_string(task.get('spawnsAt')),
+            _terminates_at=DateUtils.try_parse_string(task.get('terminatesAt')))
         # assert all(task.values()), 'fields cannot be blank or null'
         new_task.save()
     except ValueError:
@@ -327,7 +328,7 @@ def business_get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 # TODO What if task is already running: allow for updating command, hostname, etc.?
 def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """Updates certain fields of a Task db record, see `allowed_fields`."""
-    allowed_fields = {'command', 'hostname', 'spawnAt', 'terminateAt'}
+    allowed_fields = {'command', 'hostname', 'spawnsAt', 'terminatesAt'}
     try:
         assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
         task = Task.get(id)
@@ -335,9 +336,9 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
             if field_name == 'hostname':
                 # API client is allowed to use more verbose name here (hostname <=> host)
                 field_name = 'host'
-            if field_name in {'spawnAt', 'terminateAt'}:
+            if field_name in {'spawnsAt', 'terminatesAt'}:
                 field_name = field_name.replace('At', '_at')
-                new_value = try_parse_input_datetime(new_value)
+                new_value = DateUtils.try_parse_string(new_value)
             else:
                 # Check that every other field matches
                 assert hasattr(task, field_name), 'task has no {} column'.format(field_name)

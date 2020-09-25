@@ -1,44 +1,12 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Enum, DateTime
-from datetime import datetime
 from tensorhive.database import Base
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.models.CRUDModel import CRUDModel
-from typing import Optional, Union
+from tensorhive.utils.DateUtils import DateUtils
 import enum
 import logging
 log = logging.getLogger(__name__)
-
-
-# FIXME Move to utils
-def parsed_input_datetime(value: str) -> datetime:
-    """Tries to parse string into datetime.
-
-    Re-raises ValueError on failure
-    """
-    client_datetime_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-    try:
-        result = datetime.strptime(value, client_datetime_format)
-    except ValueError:
-        log.warning('Could not parse input into datetime')
-        raise
-    else:
-        return result
-
-
-# FIXME Move to utils
-def try_parse_input_datetime(value: Union[str, datetime, None]) -> Optional[datetime]:
-    """Allows for string to datetime conversion given in API request.
-    If new value is of `datetime` type then it just returns original value as it is.
-
-    Re-rasies ValueError
-    """
-    if isinstance(value, str):
-        return parsed_input_datetime(value)
-    elif isinstance(value, datetime):
-        return value
-    else:
-        return None
 
 
 class TaskStatus(enum.Enum):
@@ -51,52 +19,47 @@ class TaskStatus(enum.Enum):
 class Task(CRUDModel, Base):  # type: ignore
     __tablename__ = 'tasks'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
-    user = relationship(
-        'User', backref=backref('tasks', passive_deletes=True, cascade='all, delete, delete-orphan'), lazy='subquery')
+    job_id = Column(Integer, ForeignKey('jobs.id', ondelete='CASCADE'))
+    place_in_job_sequence = Column(Integer)
     host = Column(String(40), nullable=False)
-    pid = Column(Integer, nullable=True)
+    pid = Column(Integer)
     status = Column(Enum(TaskStatus), default=TaskStatus.not_running, nullable=False)
     command = Column(String(400), nullable=False)
-    spawn_at = Column(DateTime, nullable=True)
-    terminate_at = Column(DateTime, nullable=True)
+    _spawns_at = Column(DateTime)
+    _terminates_at = Column(DateTime)
 
     def __repr__(self):
-        return '<Task id={id}, user={user}, name={host}, command={command}\n' \
-            '\tpid={pid}, status={status}, spawn_at={spawn_at}, terminate_at={terminate_at}>'.format(
+        return '<Task id={id}, job={job}, place_in_jobseq={place_in_jobseq}, name={host}, command={command}\n' \
+            '\tpid={pid}, status={status}>'.format(
                 id=self.id,
-                user=self.user,
+                job=self.job,
+                place_in_jobseq=self.place_in_job_sequence,
                 host=self.host,
                 command=self.command,
                 pid=self.pid,
-                status=self.status.name,
-                spawn_at=self.spawn_at,
-                terminate_at=self.terminate_at)
+                status=self.status.name)                
 
     def check_assertions(self):
         pass
 
-    # FIXME Code copied from `Reservation.py` and adapted to Optional[datetime] use case (refactor in both places)
-    @classmethod
-    def try_parse_output_datetime(cls, value: Optional[datetime]) -> Optional[str]:
-        """Parses datetime object taking timezone postfix into consideration.
-        Note that `spawn_at`, `terminate_at` are nullable fields, hence None can be returned.
-        """
-        if not value:
-            return None
-        display_datetime_format = '%Y-%m-%dT%H:%M:%S'
-        server_timezone = '+00:00'
-        return value.strftime(display_datetime_format) + server_timezone
+    @hybrid_property
+    def spawns_at(self):
+        return self._spawns_at
+
+    @hybrid_property
+    def terminates_at(self):
+        return self._terminates_at
 
     @property
     def as_dict(self):
         return {
             'id': self.id,
-            'userId': self.user_id,
+            'jobId': self.job_id,
+            'placeInSeq': self.place_in_job_sequence,
             'hostname': self.host,
             'pid': self.pid,
             'status': self.status.name,
             'command': self.command,
-            'spawnAt': self.try_parse_output_datetime(self.spawn_at),
-            'terminateAt': self.try_parse_output_datetime(self.terminate_at)
+            'spawnsAt': DateUtils.try_stringify_datetime(self._spawns_at),
+            'terminatesAt': DateUtils.try_stringify_datetime(self._terminates_at)
         }

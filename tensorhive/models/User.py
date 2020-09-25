@@ -37,6 +37,9 @@ class User(CRUDModel, Base):  # type: ignore
     # Managed via property getters and setters
     _hashed_password = Column(String(120), nullable=False)
     _roles = relationship('Role', cascade='all,delete', backref=backref('user'))
+    _jobs = relationship(
+        'Job', backref=backref('user', single_parent=True, cascade='all, delete-orphan'), lazy='subquery')
+
 
     min_password_length = 8
 
@@ -51,6 +54,10 @@ class User(CRUDModel, Base):  # type: ignore
     @hybrid_property
     def roles(self):
         return self._roles
+
+    @hybrid_property
+    def jobs(self):
+        return self._jobs
 
     @roles.setter  # type: ignore
     def roles(self, new_roles):
