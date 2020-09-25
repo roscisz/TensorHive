@@ -38,10 +38,10 @@ class TaskSchedulingService(Service):
         - SQLAlchemy ORM requires explicit None checks (looks uglier though).
         - Controller implementation takes full responsibility for spawning logic.
         """
-        is_scheduled = Task.spawn_at.isnot(None)
-        before_terminate = or_(Task.terminate_at.is_(None), Task.spawn_at < Task.terminate_at)
-        # TODO What if terminate_at is None? It can prevent from spawning
-        can_spawn_now = and_(Task.spawn_at < now, now < Task.terminate_at)
+        is_scheduled = Task._spawns_at.isnot(None)
+        before_terminate = or_(Task._terminates_at.is_(None), Task._spawns_at < Task._terminates_at)
+        # TODO What if _terminates_at is None? It can prevent from spawning
+        can_spawn_now = and_(Task._spawns_at < now, now < Task._terminates_at)
 
         # All requirements must be satisfied (AND operator)
         tasks_to_spawn = Task.query.filter(is_scheduled, before_terminate, can_spawn_now).all()
@@ -49,7 +49,7 @@ class TaskSchedulingService(Service):
         log.debug('{} tasks should be running.'.format(len(tasks_to_spawn)))
         for task in tasks_to_spawn:
             content, status = business_spawn(task.id)
-            log.info(self._log_msg(now=now, action='Spawning', id=task.id, scheduled=task.spawn_at))
+            log.info(self._log_msg(now=now, action='Spawning', id=task.id, scheduled=task._spawns_at))
 
             if status == 200:
                 log.debug(content['pid'])
@@ -70,16 +70,16 @@ class TaskSchedulingService(Service):
         - Controller implementation takes full responsibility for termination logic.
         """
         consideration_threshold = now - self.stop_attempts_after
-        recently_scheduled = and_(Task.terminate_at.isnot(None), Task.terminate_at > consideration_threshold)
-        after_spawn = or_(Task.spawn_at < Task.terminate_at, Task.spawn_at.isnot(None))
-        can_terminate_now = Task.terminate_at < now
+        recently_scheduled = and_(Task._terminates_at.isnot(None), Task._terminates_at > consideration_threshold)
+        after_spawn = or_(Task._spawns_at < Task._terminates_at, Task._spawns_at.isnot(None))
+        can_terminate_now = Task._terminates_at < now
         # TODO Try replacing with Task.query.filter
         tasks_to_terminate = db_session.query(Task).filter(recently_scheduled, after_spawn, can_terminate_now).all()
 
         log.debug('{} tasks should be terminated.'.format(len(tasks_to_terminate)))
         for task in tasks_to_terminate:
             content, status = business_terminate(task.id, gracefully=False)
-            log.info(self._log_msg(now=now, action='Killing', id=task.id, scheduled=task.terminate_at))
+            log.info(self._log_msg(now=now, action='Killing', id=task.id, scheduled=task._terminates_at))
 
             if status == 201:
                 log.debug(content['exit_code'])

@@ -27,8 +27,8 @@ class Task(CRUDModel, Base):  # type: ignore
     pid = Column(Integer, nullable=True)
     status = Column(Enum(TaskStatus), default=TaskStatus.not_running, nullable=False)
     command = Column(String(400), nullable=False)
-    spawn_at = Column(DateTime, nullable=True)
-    terminate_at = Column(DateTime, nullable=True)
+    _spawns_at = Column(DateTime)
+    _terminates_at = Column(DateTime)
 
     def __repr__(self):
         return '<Task id={id}, user={user}, name={hostname}, command={command}\n' \
@@ -38,9 +38,7 @@ class Task(CRUDModel, Base):  # type: ignore
                 hostname=self.hostname,
                 command=self.command,
                 pid=self.pid,
-                status=self.status.name,
-                spawn_at=self.spawn_at,
-                terminate_at=self.terminate_at)
+                status=self.status.name)                
 
     def check_assertions(self):
         pass
