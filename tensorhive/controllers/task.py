@@ -1,8 +1,7 @@
 from tensorhive.models.Task import Task, TaskStatus
-from tensorhive.models.CommandSegment import CommandSegment, CommandSegment2Task, SegmentType
 from tensorhive.models.User import User
-from tensorhive.models.Job import Job
-from tensorhive.core import task_nursery
+from tensorhive.core import task_nursery, ssh
+from tensorhive.utils.DateUtils import DateUtils
 from tensorhive.core.task_nursery import SpawnError, ExitCodeError
 from pssh.exceptions import ConnectionErrorException, AuthenticationException, UnknownHostException
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt_claims
@@ -266,53 +265,11 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
     try:
         new_task = Task(
             host=task['hostname'],
-            command=task['command'])
-        parent_job = Job.query.filter(Job.id == job_id).one()
-        command_segments = new_task.command.split()
-        if_envs = True
-        if_eqsign_found = False
-        if_parameter_value_expected = False
-        actual_command = ''
-        for segment in command_segments:
-            for x in segment:
-                if x == '=':
-                    if_eqsign_found = True
-                    break
-            if if_eqsign_found is False:
-                if_envs = False
-            if_eqsign_found = False
-            if if_envs:
-                splitted_segment = segment.split('=')
-                segment_type = SegmentType.env_variable
-            elif segment[0] == '-':
-                splitted_segment = segment.split('=')
-                segment_type = SegmentType.parameter
-                if len(splitted_segment) == 1:
-                    splitted_segment.append('')
-                    if_parameter_value_expected = True
-            elif if_parameter_value_expected is True:
-                splitted_segment[1] = segment
-                if_parameter_value_expected = False
-            else:
-                actual_command += segment + ' '
-                continue
-
-            if if_parameter_value_expected is False:
-                new_segment = CommandSegment.query.filter(CommandSegment.segment_type == segment_type,
-                                                            CommandSegment.name == splitted_segment[0]).first()
-                if (new_segment is None):
-                    new_segment = CommandSegment(
-                        name=splitted_segment[0],
-                        _segment_type=segment_type)
-                new_task.add_cmd_segment(new_segment, splitted_segment[1])
-
-        new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.actual_command,
-                                                    CommandSegment.name == '').first()
-        if (new_segment is None):
-            new_segment = CommandSegment(
-                name='',
-                _segment_type=SegmentType.actual_command)
-        new_task.add_cmd_segment(new_segment, actual_command[:-1])
+            command=task['command'],
+            # TODO Adjust API spec, optional fields
+            _spawns_at=DateUtils.try_parse_string(task.get('spawnsAt')),
+            _terminates_at=DateUtils.try_parse_string(task.get('terminatesAt')))
+        # assert all(task.values()), 'fields cannot be blank or null'
         new_task.save()
         parent_job.add_task(new_task)
     except ValueError:
@@ -356,18 +313,14 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
         for key, value in new_values.items():
             if key == 'hostname':
                 # API client is allowed to use more verbose name here (hostname <=> host)
-                key = 'host'
-                setattr(task, key, value)
-            elif key.startswith('cmd_segment'):
-                segment = value
-                cmd_segment = CommandSegment.find_by_name(segment['name'])
-                assert cmd_segment is not None, 'Invalid command segment name' 
-                if (segment['mode'] == 'remove'):
-                    task.remove_cmd_segment(cmd_segment)
-                elif (segment['mode'] == 'update'):
-                    link = task.get_cmd_segment_link(cmd_segment)
-                    setattr(link, '_value', segment['value'])
-        task.update_command()        
+                field_name = 'host'
+            if field_name in {'spawnsAt', 'terminatesAt'}:
+                field_name = field_name.replace('At', '_at')
+                new_value = DateUtils.try_parse_string(new_value)
+            else:
+                # Check that every other field matches
+                assert hasattr(task, field_name), 'task has no {} column'.format(field_name)
+            setattr(task, field_name, new_value)
         task.save()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404

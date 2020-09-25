@@ -74,8 +74,6 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
     def roles(self, new_roles):
         self._roles = new_roles
 
-    @hybrid_property
-    def role_names(self):
         return [role.name for role in self._roles]
 
     def has_role(self, role_name):
