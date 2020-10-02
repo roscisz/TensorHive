@@ -21,7 +21,6 @@ HttpStatusCode = int
 TaskId = int
 JobId = int
 
-
 def is_admin():
     claims = get_jwt_claims()
     return 'admin' in claims['roles']

@@ -16,7 +16,7 @@ class SegmentType(enum.Enum):
 
 class CommandSegment(CRUDModel, Base):  # type: ignore
     __tablename__ = 'command_segments'
-    
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), nullable=False)
     _segment_type = Column(Enum(SegmentType), default=SegmentType.env_variable, nullable=False)
@@ -24,10 +24,10 @@ class CommandSegment(CRUDModel, Base):  # type: ignore
 
     def __repr__(self):
         return '<Segment id={id}, name={name}, type={type}>'.format(
-                id=self.id,
-                name=self.name,
-                type=self.segment_type
-                )                
+            id=self.id,
+            name=self.name,
+            type=self.segment_type
+        )
 
     def check_assertions(self):
         pass

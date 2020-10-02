@@ -266,10 +266,13 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
         new_task = Task(
             host=task['hostname'],
             command=task['command'],
-            # TODO Adjust API spec, optional fields
+#            job_id = task['jobId'],
+            user_id = task['userId'],
+#            place_in_job_sequence = task['placeInSeq'],
+#            pid = task['pid'],
+#            status = task['status'],
             _spawns_at=DateUtils.try_parse_string(task.get('spawnsAt')),
             _terminates_at=DateUtils.try_parse_string(task.get('terminatesAt')))
-        # assert all(task.values()), 'fields cannot be blank or null'
         new_task.save()
         parent_job.add_task(new_task)
     except ValueError:

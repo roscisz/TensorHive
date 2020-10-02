@@ -75,8 +75,8 @@ class Task(CRUDModel, Base):  # type: ignore
         start = - self.number_of_env_vars
         end = self.number_of_params + 1
         for i in range(start, end):
-            link = CommandSegment2Task.query.filter(CommandSegment2Task.index == i, 
-                                                CommandSegment2Task.task_id == self.id).one()
+            link = CommandSegment2Task.query.filter(CommandSegment2Task.index == i,
+                                                    CommandSegment2Task.task_id == self.id).one()
             cmd_segment = CommandSegment.query.filter(CommandSegment.id == link.cmd_segment_id).one()
             if i != start:
                 command += ' '
@@ -86,13 +86,12 @@ class Task(CRUDModel, Base):  # type: ignore
                 command += cmd_segment.name + '=' + link.value
         self.command = command
 
-
     def get_cmd_segment_link(self, cmd_segment: CommandSegment):
         """returns connection between task and its command segment"""
         if cmd_segment not in self.cmd_segments:
             raise Exception('Segment {cmd_segment} is not assigned to task {task}!'
                             .format(cmd_segment=cmd_segment, task=self))
-        link = CommandSegment2Task.query.filter(CommandSegment2Task.cmd_segment_id == cmd_segment.id, 
+        link = CommandSegment2Task.query.filter(CommandSegment2Task.cmd_segment_id == cmd_segment.id,
                                                 CommandSegment2Task.task_id == self.id).one()
         return link
 
@@ -127,8 +126,7 @@ class Task(CRUDModel, Base):  # type: ignore
             else:
                 if (link.index > removed_index):
                     setattr(link, '_index', link.index - 1)
-        self.save() 
-
+        self.save()
 
     @property
     def as_dict(self):

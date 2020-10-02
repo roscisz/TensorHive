@@ -23,7 +23,7 @@ class Job(CRUDModel, Base):  # type: ignore
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(40), unique=True, nullable=False)
     description = Column(Text)
-    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     status = Column(Enum(JobStatus), default=JobStatus.not_running, nullable=False)
     _start_at = Column(DateTime)
     _stop_at = Column(DateTime)
