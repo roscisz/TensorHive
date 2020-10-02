@@ -264,8 +264,7 @@ def business_get_all(user_id: Optional[int], sync_all: Optional[bool]) -> Tuple[
     # TODO Exceptions should never occur, but need to experiment more
     if user_id:
         # Returns [] if such User with such id does not exist (SQLAlchemy behavior)
-#TODO change to job.user_id        tasks = Task.query.filter(Task.user_id == user_id).all()
-        tasks = Task.all()
+        tasks = Task.query.filter(Task.user_id == user_id).all()
     else:
         tasks = Task.all()
 
@@ -278,7 +277,6 @@ def business_get_all(user_id: Optional[int], sync_all: Optional[bool]) -> Tuple[
         results.append(task.as_dict)
     return {'msg': T['all']['success'], 'tasks': results}, 200
 
-
 def business_create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """Creates new Task db record.
     Fields which require to be of datetime type are explicitly converted here.
@@ -287,19 +285,20 @@ def business_create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         new_task = Task(
             host=task['hostname'],
             command=task['command'],
-            # TODO Adjust API spec, optional fields
+#            job_id = task['jobId'],
+            user_id = task['userId'],
+#            place_in_job_sequence = task['placeInSeq'],
+#            pid = task['pid'],
+#            status = task['status'],
             _spawns_at=DateUtils.try_parse_string(task.get('spawnsAt')),
             _terminates_at=DateUtils.try_parse_string(task.get('terminatesAt')))
-        # assert all(task.values()), 'fields cannot be blank or null'
         new_task.save()
     except ValueError:
         # Invalid string format for datetime
         content, status = {'msg': G['bad_request']}, 422
-    except KeyError:
+    except KeyError as e:
         # At least one of required fields was not present
-        content, status = {'msg': G['bad_request']}, 422
-    except AssertionError as e:
-        content, status = {'msg': T['create']['failure']['invalid'].format(reason=e)}, 422
+        content, status = {'msg': G['bad_request'].format(reason=e)}, 422
     except Exception as e:
         log.critical(e)
         content, status = {'msg': G['internal_error']}, 500

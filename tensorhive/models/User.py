@@ -40,7 +40,6 @@ class User(CRUDModel, Base):  # type: ignore
     _jobs = relationship(
         'Job', backref=backref('user', single_parent=True, cascade='all, delete-orphan'), lazy='subquery')
 
-
     min_password_length = 8
 
     def check_assertions(self):

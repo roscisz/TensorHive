@@ -85,6 +85,35 @@ task:
     failure:
       state: Unable to terminate, {reason}
       exit_code: Accepted, but termination operation did not succeed (op. exit_code was not 0)
+jobs:
+  not_found: Job has not been found
+  all:
+    success: Jobs has been successfully fetched
+  get:
+    success: Job has been successfully fetched    
+  create:
+    success: Job has been successfully created
+    failure:
+      invalid: Requirements not met - {reason}
+  update:
+    success: Job has been successfully updated
+    failure:
+      assertions: Unable to update job - {reason}
+  delete:
+    success: Job has been successfully delete
+    failure:
+      assertions: Unable to delete job - {reason}
+  tasks:
+    add:
+      failure: 
+        duplicate: Task is already assigned to job
+        assertions: Unable to add task to job - {reason}
+      success: Task has been assigned to job
+    remove:
+      failure: 
+        not_found: Task is not assigned to job
+        assertions: Unable to remove task from job - {reason}
+      success: Task has been removed from job
 token:
   revoke:
     success: '{token_type} has been revoked'

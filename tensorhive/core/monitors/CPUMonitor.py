@@ -20,6 +20,7 @@ class CPUMonitor(Monitor):
                 # Command executed successfully
                 stdout_lines = list(host_out.stdout)
                 assert stdout_lines, 'stdout is empty!'
+                stdout_lines[0] = stdout_lines[0].replace(',', '.')
                 metrics[uuid]['metrics']['utilization'] = {'unit': '%', 'value': float(stdout_lines[0])}
                 mem = stdout_lines[1].split()
                 metrics[uuid]['metrics']['mem_total'] = {'unit': 'MiB', 'value': int(mem[1])}
