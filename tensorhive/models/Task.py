@@ -19,6 +19,9 @@ class Task(CRUDModel, Base):  # type: ignore
     __tablename__ = 'tasks'
     id = Column(Integer, primary_key=True, autoincrement=True)
     job_id = Column(Integer, ForeignKey('jobs.id', ondelete='CASCADE'))
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
+    user = relationship(
+        'User', backref=backref('tasks', passive_deletes=True, cascade='all, delete, delete-orphan'), lazy='subquery')
     place_in_job_sequence = Column(Integer)
     host = Column(String(40), nullable=False)
     pid = Column(Integer)
@@ -28,10 +31,11 @@ class Task(CRUDModel, Base):  # type: ignore
     _terminates_at = Column(DateTime)
 
     def __repr__(self):
-        return '<Task id={id}, job={job}, place_in_jobseq={place_in_jobseq}, name={host}, command={command}\n' \
+        return '<Task id={id}, job={job}, user={user}, place_in_jobseq={place_in_jobseq}, name={host}, command={command}\n' \
             '\tpid={pid}, status={status}>'.format(
                 id=self.id,
                 job=self.job,
+                user=self.user,
                 place_in_jobseq=self.place_in_job_sequence,
                 host=self.host,
                 command=self.command,
@@ -46,6 +50,7 @@ class Task(CRUDModel, Base):  # type: ignore
         return {
             'id': self.id,
             'jobId': self.job_id,
+            'userId': self.user_id,
             'placeInSeq': self.place_in_job_sequence,
             'hostname': self.host,
             'pid': self.pid,

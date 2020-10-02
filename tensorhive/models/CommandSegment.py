@@ -46,7 +46,7 @@ class CommandSegment2Task(Base):  # type: ignore
     task_id = Column(Integer, ForeignKey('tasks.id', ondelete='CASCADE'), primary_key=True)
     cmd_segment_id = Column(Integer, ForeignKey('command_segments.id', ondelete='CASCADE'), primary_key=True)
     value = Column(String(100))
-    index = Column(Integer, nullable=False)
+    index = Column(Integer, nullable=False) # positive - parameters; negative - env variables
 
     task = relationship('Task',
                                backref=backref('cmd_segment2tasks', cascade='all,delete-orphan'))
