@@ -20,11 +20,13 @@ class Task(CRUDModel, Base):  # type: ignore
     __public__ = ['id', 'user_id', 'hostname', 'pid', 'command', 'spawn_at', 'terminate_at']
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    job_id = Column(Integer, ForeignKey('jobs.id', ondelete='CASCADE'))
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
     user = relationship(
         'User', backref=backref('tasks', passive_deletes=True, cascade='all, delete, delete-orphan'), lazy='subquery')
-    hostname = Column(String(40), nullable=False)
-    pid = Column(Integer, nullable=True)
+    place_in_job_sequence = Column(Integer)
+    host = Column(String(40), nullable=False)
+    pid = Column(Integer)
     status = Column(Enum(TaskStatus), default=TaskStatus.not_running, nullable=False)
     command = Column(String(400), nullable=False)
     _spawns_at = Column(DateTime)
