@@ -24,7 +24,7 @@ class Reservation(CRUDModel, Base):  # type: ignore
     title = Column(String(60), unique=False, nullable=False)
     description = Column(String(200), nullable=True)
     protected_resource_id = Column(String(60), nullable=False)
-    _is_cancelled = Column(Boolean, nullable=True)
+    _is_cancelled = Column('is_cancelled', Boolean, nullable=True)
 
     gpu_util_avg = Column(Integer, nullable=True)
     mem_util_avg = Column(Integer, nullable=True)
