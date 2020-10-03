@@ -69,7 +69,7 @@ def test_it_should_be_impossible_to_create_or_edit_restriction_that_already_expi
 def test_apply_restriction_to_resource(tables, restriction, resource1):
     restriction.apply_to_resource(resource1)
 
-    assert restriction in resource1.get_restrictions()
+    assert restriction in resource1.get_restrictions(include_global=False)
     assert resource1 in restriction.resources
 
 
@@ -78,8 +78,8 @@ def test_global_restriction_applies_to_all_resources(tables, restriction, resour
     restriction.save()
 
     assert len(restriction.resources) == 0
-    assert restriction in resource1.get_restrictions(include_global=True)
-    assert restriction in resource2.get_restrictions(include_global=True)
+    assert restriction in resource1.get_restrictions()
+    assert restriction in resource2.get_restrictions()
 
 
 def test_restriction_without_schedules_is_active_only_when_between_start_and_end_dates(tables):
