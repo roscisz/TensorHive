@@ -40,6 +40,7 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
     _roles = relationship('Role', cascade='all,delete', backref=backref('user'))
     _groups = relationship('Group', secondary='user2group')
     _restrictions = relationship('Restriction', secondary='restriction2assignee')
+    _reservations = relationship('Reservation', cascade='all,delete')
 
     min_password_length = 8
 
@@ -158,3 +159,6 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
             for group in self.groups:
                 restrictions = restrictions + group.get_active_restrictions()
         return list(set(restrictions))
+
+    def get_reservations(self, include_cancelled=False):
+        return self._reservations if include_cancelled else [r for r in self._reservations if not r.is_cancelled]
