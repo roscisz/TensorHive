@@ -119,7 +119,7 @@ def test_restriction_with_dates_passed_as_string_gets_added_successfully(tables)
         is_global=False
     )
     new_restriction.starts_at = '2020-09-29T18:07:44.191Z'
-    new_restriction.ends_at = '2020-09-30T18:07:44.191Z'
+    new_restriction.ends_at = '2120-09-30T18:07:44.191Z'
     new_restriction.save()
 
 
