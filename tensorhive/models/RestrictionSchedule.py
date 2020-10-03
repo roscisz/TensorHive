@@ -68,7 +68,7 @@ class RestrictionSchedule(CRUDModel, Base):  # type: ignore
         if isinstance(days, str):
             self._schedule_days = (''.join(sorted(days)))
         else:
-            self._schedule_days = self.parse_schedule_list(days)
+            self._schedule_days = self.stringify_schedule_list(days)
 
     @property
     def is_active(self):
@@ -96,7 +96,7 @@ class RestrictionSchedule(CRUDModel, Base):  # type: ignore
         return [Weekday(int(day)) for day in sorted(schedule)]
 
     @staticmethod
-    def parse_schedule_list(schedule: List[Weekday]) -> str:
+    def stringify_schedule_list(schedule: List[Weekday]) -> str:
         return ''.join((sorted([str(day.value) for day in schedule])))
 
 
