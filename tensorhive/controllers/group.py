@@ -5,6 +5,7 @@ from flask_jwt_extended import jwt_required
 from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.authorization import admin_required
 from tensorhive.config import API
+from tensorhive.core.utils.reservation_allowed import check_user_reservations
 from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from tensorhive.models.Group import Group
 from tensorhive.models.User import User
@@ -97,7 +98,10 @@ def update(id: GroupId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusC
 def delete(id: GroupId) -> Tuple[Content, HttpStatusCode]:
     try:
         group_to_destroy = Group.get(id)
+        users = group_to_destroy.users
         group_to_destroy.destroy()
+        for user in users:
+            check_user_reservations(user, increase_permissions=False)
     except AssertionError as error_message:
         content, status = {'msg': str(error_message)}, HTTPStatus.FORBIDDEN.value
     except NoResultFound:
@@ -117,6 +121,7 @@ def add_user(group_id: GroupId, user_id: UserId) -> Tuple[Content, HttpStatusCod
         group = Group.get(group_id)
         user = User.get(user_id)
         group.add_user(user)
+        check_user_reservations(user, increase_permissions=True)
     except NoResultFound:
         if group is None:
             content, status = {'msg': GROUP['not_found']}, HTTPStatus.NOT_FOUND.value
@@ -143,6 +148,7 @@ def remove_user(group_id: GroupId, user_id: UserId) -> Tuple[Content, HttpStatus
         group = Group.get(group_id)
         user = User.get(user_id)
         group.remove_user(user)
+        check_user_reservations(user, increase_permissions=False)
     except NoResultFound:
         if group is None:
             content, status = {'msg': GROUP['not_found']}, HTTPStatus.NOT_FOUND.value

@@ -6,6 +6,7 @@ from flask_jwt_extended import jwt_required
 from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.authorization import admin_required
 from tensorhive.config import API
+from tensorhive.core.utils.reservation_allowed import check_user_reservations
 from tensorhive.models.RestrictionSchedule import RestrictionSchedule
 from tensorhive.utils.Weekday import Weekday
 
@@ -98,6 +99,10 @@ def update(id, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
                 'schedule has no {} field'.format(field_name)
             setattr(schedule, field_name, new_value)
         schedule.save()
+        for restriction in schedule.restrictions:
+            for user in restriction.get_all_affected_users():
+                check_user_reservations(user, increase_permissions=True)
+                check_user_reservations(user, increase_permissions=False)
     except NoResultFound:
         content, status = {'msg': SCHEDULE['not_found']}, HTTPStatus.NOT_FOUND.value
     except KeyError:
@@ -119,7 +124,12 @@ def update(id, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
 def delete(id: ScheduleId) -> Tuple[Content, HttpStatusCode]:
     try:
         schedule_to_destroy = RestrictionSchedule.get(id)
+        restrictions = schedule_to_destroy.restrictions
         schedule_to_destroy.destroy()
+        for restriction in restrictions:
+            increase_permissions = len(restriction.schedules) == 0  # if deleted last schedule
+            for user in restriction.get_all_affected_users():
+                check_user_reservations(user, increase_permissions=increase_permissions)
     except AssertionError as error_message:
         content, status = {'msg': str(error_message)}, HTTPStatus.FORBIDDEN.value
     except NoResultFound:

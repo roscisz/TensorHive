@@ -5,6 +5,7 @@ from flask_jwt_extended import jwt_required
 from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.authorization import admin_required
 from tensorhive.config import API
+from tensorhive.core.utils.reservation_allowed import check_user_reservations
 from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from tensorhive.models.Group import Group
 from tensorhive.models.Resource import Resource
@@ -51,13 +52,13 @@ def get_selected(user_id: Optional[UserId], group_id: Optional[GroupId], resourc
         restrictions = []  # type: List[Restriction]
         if user_id is not None:
             user = User.get(user_id)
-            restrictions.extend(user.get_restrictions(include_global=True, include_group=include_user_groups))
+            restrictions.extend(user.get_restrictions(include_group=include_user_groups))
         if group_id is not None:
             group = Group.get(group_id)
-            restrictions.extend(group.get_restrictions(include_global=True))
+            restrictions.extend(group.get_restrictions())
         if resource_id is not None:
             resource = Resource.get(resource_id)
-            restrictions.extend(resource.get_restrictions(include_global=True))
+            restrictions.extend(resource.get_restrictions())
         if schedule_id is not None:
             schedule = RestrictionSchedule.get(schedule_id)
             restrictions.extend(schedule.restrictions)
@@ -141,6 +142,9 @@ def update(id: RestrictionId, newValues: Dict[str, Any]) -> Tuple[Content, HttpS
                 'restriction has no {} field'.format(field_name)
             setattr(restriction, field_name, new_value)
         restriction.save()
+        for user in restriction.get_all_affected_users():
+            check_user_reservations(user, increase_permissions=True)
+            check_user_reservations(user, increase_permissions=False)
     except NoResultFound:
         content, status = {'msg': RESTRICTION['not_found']}, HTTPStatus.NOT_FOUND.value
     except AssertionError as e:
@@ -161,7 +165,10 @@ def update(id: RestrictionId, newValues: Dict[str, Any]) -> Tuple[Content, HttpS
 def delete(id: RestrictionId) -> Tuple[Content, HttpStatusCode]:
     try:
         restriction_to_destroy = Restriction.get(id)
+        users = restriction_to_destroy.get_all_affected_users()
         restriction_to_destroy.destroy()
+        for user in users:
+            check_user_reservations(user, increase_permissions=False)
     except AssertionError as error_message:
         content, status = {'msg': str(error_message)}, HTTPStatus.FORBIDDEN.value
     except NoResultFound:
@@ -181,6 +188,7 @@ def apply_to_user(restriction_id: RestrictionId, user_id: UserId) -> Tuple[Conte
         restriction = Restriction.get(restriction_id)
         user = User.get(user_id)
         restriction.apply_to_user(user)
+        check_user_reservations(user, increase_permissions=True)
     except NoResultFound:
         if restriction is None:
             content, status = {'msg': RESTRICTION['not_found']}, HTTPStatus.NOT_FOUND.value
@@ -209,6 +217,8 @@ def apply_to_group(restriction_id: RestrictionId, group_id: GroupId) -> Tuple[Co
         restriction = Restriction.get(restriction_id)
         group = Group.get(group_id)
         restriction.apply_to_group(group)
+        for user in group.users:
+            check_user_reservations(user, increase_permissions=True)
     except NoResultFound:
         if restriction is None:
             content, status = {'msg': RESTRICTION['not_found']}, HTTPStatus.NOT_FOUND.value
@@ -237,6 +247,8 @@ def apply_to_resource(restriction_id: RestrictionId, resource_uuid: ResourceId) 
         restriction = Restriction.get(restriction_id)
         resource = Resource.get(resource_uuid)
         restriction.apply_to_resource(resource)
+        for user in restriction.get_all_affected_users():
+            check_user_reservations(user, increase_permissions=True)
     except NoResultFound:
         if restriction is None:
             content, status = {'msg': RESTRICTION['not_found']}, HTTPStatus.NOT_FOUND.value
@@ -265,6 +277,9 @@ def add_schedule(restriction_id: RestrictionId, schedule_id: ScheduleId) -> Tupl
         restriction = Restriction.get(restriction_id)
         schedule = RestrictionSchedule.get(schedule_id)
         restriction.add_schedule(schedule)
+        increase_permissions = len(restriction.schedules) > 1  # if added another schedule
+        for user in restriction.get_all_affected_users():
+            check_user_reservations(user, increase_permissions=increase_permissions)
     except NoResultFound:
         if restriction is None:
             content, status = {'msg': RESTRICTION['not_found']}, HTTPStatus.NOT_FOUND.value
@@ -293,6 +308,7 @@ def remove_from_user(restriction_id: RestrictionId, user_id: UserId) -> Tuple[Co
         restriction = Restriction.get(restriction_id)
         user = User.get(user_id)
         restriction.remove_from_user(user)
+        check_user_reservations(user, increase_permissions=False)
     except NoResultFound:
         if restriction is None:
             content, status = {'msg': RESTRICTION['not_found']}, HTTPStatus.NOT_FOUND.value
@@ -321,6 +337,8 @@ def remove_from_group(restriction_id: RestrictionId, group_id: GroupId) -> Tuple
         restriction = Restriction.get(restriction_id)
         group = Group.get(group_id)
         restriction.remove_from_group(group)
+        for user in group.users:
+            check_user_reservations(user, increase_permissions=False)
     except NoResultFound:
         if restriction is None:
             content, status = {'msg': RESTRICTION['not_found']}, HTTPStatus.NOT_FOUND.value
@@ -349,6 +367,8 @@ def remove_from_resource(restriction_id: RestrictionId, resource_uuid: ResourceI
         restriction = Restriction.get(restriction_id)
         resource = Resource.get(resource_uuid)
         restriction.remove_from_resource(resource)
+        for user in restriction.get_all_affected_users():
+            check_user_reservations(user, increase_permissions=False)
     except NoResultFound:
         if restriction is None:
             content, status = {'msg': RESTRICTION['not_found']}, HTTPStatus.NOT_FOUND.value
@@ -378,6 +398,9 @@ def remove_schedule(restriction_id: RestrictionId, schedule_id: ScheduleId) -> T
         restriction = Restriction.get(restriction_id)
         schedule = RestrictionSchedule.get(schedule_id)
         restriction.remove_schedule(schedule)
+        increase_permissions = len(restriction.schedules) == 0  # if removed last schedule
+        for user in restriction.get_all_affected_users():
+            check_user_reservations(user, increase_permissions=increase_permissions)
     except NoResultFound:
         if restriction is None:
             content, status = {'msg': RESTRICTION['not_found']}, HTTPStatus.NOT_FOUND.value

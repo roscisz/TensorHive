@@ -89,7 +89,7 @@ restriction:
       success: Restriction has been removed from resourcce
       failure:
         assertion: Unable to remove restriction from resourcce - {reason}
-        not_found: Resourcce is not affected by restriction
+        not_found: Resource is not affected by restriction
   schedules:
     add:
       success: Schedule has been added to restriction
@@ -131,10 +131,12 @@ reservation:
   create:
     success: Reservation has been successfully created
     failure:
+      forbidden: Cannot create reservation due to lack of permissions
       invalid: Requirements not met - {reason}
   update:
     success: Reservation has been successfully updated
     failure:
+      forbidden: Cannot update reservation due to lack of permissions
       invalid: Requirements not met - {reason}
       assertions: Unable to update reservation - {reason}
   delete:

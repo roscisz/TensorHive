@@ -993,7 +993,7 @@ paths:
           schema:
             type: integer
       responses:
-        201:
+        200:
           description: {{RESPONSES['restriction']['users']['remove']['success']}}
           content:
             application/json:
@@ -1102,7 +1102,7 @@ paths:
           schema:
             type: integer
       responses:
-        201:
+        200:
           description: {{RESPONSES['restriction']['groups']['remove']['success']}}
           content:
             application/json:
@@ -1211,7 +1211,7 @@ paths:
           schema:
             type: string
       responses:
-        201:
+        200:
           description: {{RESPONSES['restriction']['resources']['remove']['success']}}
           content:
             application/json:
@@ -1320,7 +1320,7 @@ paths:
           schema:
             type: integer
       responses:
-        201:
+        200:
           description: {{RESPONSES['restriction']['schedules']['remove']['success']}}
           content:
             application/json:
@@ -1648,6 +1648,8 @@ paths:
           description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['reservation']['create']['failure']['forbidden']}}
         422:
           description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['reservation']['create']['failure']['invalid']}}
         500:
@@ -1692,6 +1694,8 @@ paths:
           description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['reservation']['update']['failure']['forbidden']}}
         404:
           description: {{RESPONSES['reservation']['not_found']}}
         422:
