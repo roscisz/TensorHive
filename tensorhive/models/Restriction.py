@@ -34,9 +34,9 @@ class Restriction(CRUDModel, Base):  # type: ignore
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50))
-    _created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    _starts_at = Column(DateTime, nullable=False)
-    _ends_at = Column(DateTime)
+    _created_at = Column('created_at', DateTime, default=datetime.datetime.utcnow)
+    _starts_at = Column('starts_at', DateTime, nullable=False)
+    _ends_at = Column('ends_at', DateTime)
     is_global = Column(Boolean, nullable=False)
 
     _users = relationship('User', secondary='restriction2assignee')
@@ -74,7 +74,7 @@ class Restriction(CRUDModel, Base):  # type: ignore
     @starts_at.setter
     def starts_at(self, value: str):
         self._starts_at = DateUtils.try_parse_string(value)
-        if not self._starts_at:
+        if self._starts_at is None:
             log.error('Unsupported type (starts_at={})'.format(value))
 
     @ends_at.setter
@@ -84,7 +84,7 @@ class Restriction(CRUDModel, Base):  # type: ignore
     @created_at.setter
     def created_at(self, value: str):
         self._created_at = DateUtils.try_parse_string(value)
-        if not self._created_at:
+        if self._created_at is None:
             log.error('Unsupported type (created_at={})'.format(value))
 
     @hybrid_property
@@ -159,6 +159,14 @@ class Restriction(CRUDModel, Base):  # type: ignore
         self.schedules.remove(schedule)
         self.save()
 
+    def get_all_affected_users(self):
+        """Will return all users affected by this restriction, i.e. users directly assigned to this restriction
+        and members of all groups assigned to this restriction."""
+        affected_users = self.users
+        for group in self.groups:
+            affected_users.extend(group.users)
+        return list(set(affected_users))
+
     @classmethod
     def get_global_restrictions(cls, include_expired=False):
         query = db_session.query(Restriction).filter(Restriction.is_global.is_(True))
@@ -185,9 +193,9 @@ class Restriction(CRUDModel, Base):  # type: ignore
         restriction = {
             'id': self.id,
             'name': self.name,
-            'createdAt': DateUtils.parse_datetime(self.created_at),
-            'startsAt': DateUtils.parse_datetime(self.starts_at),
-            'endsAt': DateUtils.try_parse_datetime(self.ends_at),
+            'createdAt': DateUtils.stringify_datetime(self.created_at),
+            'startsAt': DateUtils.stringify_datetime(self.starts_at),
+            'endsAt': DateUtils.try_stringify_datetime(self.ends_at),
             'isGlobal': self.is_global,
             'schedules': [schedule.as_dict for schedule in self.schedules]
         }

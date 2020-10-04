@@ -18,6 +18,13 @@ def new_user():
 
 
 @pytest.fixture(scope='function')
+def new_user_2():
+    return User(username='AnotherUser',
+                password='TEST PASSWORD',
+                roles=[Role(name='user')])
+
+
+@pytest.fixture(scope='function')
 def new_admin():
     return User(username='justuser',
                 password='TEST PASSWORD',

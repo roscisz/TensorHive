@@ -52,6 +52,6 @@ class Task(CRUDModel, Base):  # type: ignore
             'pid': self.pid,
             'status': self.status.name,
             'command': self.command,
-            'spawnAt': DateUtils.try_parse_datetime(self.spawn_at),
-            'terminateAt': DateUtils.try_parse_datetime(self.terminate_at)
+            'spawnAt': DateUtils.try_stringify_datetime(self.spawn_at),
+            'terminateAt': DateUtils.try_stringify_datetime(self.terminate_at)
         }

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, and_, not_, or_, event
+from sqlalchemy import Column, Boolean, Integer, String, DateTime, ForeignKey, and_, not_, or_, event
 from tensorhive.database import db_session, Base
 from tensorhive.models.CRUDModel import CRUDModel
 from tensorhive.utils.DateUtils import DateUtils
@@ -24,6 +24,7 @@ class Reservation(CRUDModel, Base):  # type: ignore
     title = Column(String(60), unique=False, nullable=False)
     description = Column(String(200), nullable=True)
     protected_resource_id = Column(String(60), nullable=False)
+    _is_cancelled = Column('is_cancelled', Boolean, nullable=True)
 
     gpu_util_avg = Column(Integer, nullable=True)
     mem_util_avg = Column(Integer, nullable=True)
@@ -62,7 +63,7 @@ class Reservation(CRUDModel, Base):  # type: ignore
     @starts_at.setter  # type: ignore
     def starts_at(self, value):
         self._starts_at = DateUtils.try_parse_string(value)
-        if not self._starts_at:
+        if self._starts_at is None:
             log.error('Unsupported type (starts_at={})'.format(value))
 
     @hybrid_property
@@ -72,22 +73,31 @@ class Reservation(CRUDModel, Base):  # type: ignore
     @ends_at.setter  # type: ignore
     def ends_at(self, value):
         self._ends_at = DateUtils.try_parse_string(value)
-        if not self._ends_at:
+        if self._ends_at is None:
             log.error('Unsupported type (ends_at={})'.format(value))
+
+    @hybrid_property
+    def is_cancelled(self):
+        return self._is_cancelled is not None and self._is_cancelled
+
+    @is_cancelled.setter  # type: ignore
+    def is_cancelled(self, value):
+        self._is_cancelled = value
 
     @classmethod
     def current_events(cls):
         '''Returns only those events that should be currently respected by users'''
         current_time = datetime.datetime.utcnow()
-        return cls.query.filter(
+        current_events = cls.query.filter(
             and_(
                 # Events that has already started
                 cls.starts_at <= current_time,
                 # Events before their end
                 current_time <= cls.ends_at)).all()
+        return [c for c in current_events if not c.is_cancelled]
 
     def would_interfere(self):
-        return Reservation.query.filter(
+        conflicting_reservations = Reservation.query.filter(
             # Two events overlap in time domain
             and_(
                 self.starts_at < Reservation.ends_at,
@@ -95,7 +105,8 @@ class Reservation(CRUDModel, Base):  # type: ignore
             ),
             # Case concerns the same resource
         ).filter(Reservation.id != self.id)\
-         .filter(Reservation.protected_resource_id == self.protected_resource_id).first()
+         .filter(Reservation.protected_resource_id == self.protected_resource_id).all()
+        return any(not r.is_cancelled for r in conflicting_reservations)
 
     @classmethod
     def filter_by_uuids_and_time_range(cls, uuids: List[str], start: datetime.datetime, end: datetime.datetime):
@@ -142,7 +153,8 @@ class Reservation(CRUDModel, Base):  # type: ignore
             'userName': self.user.username,
             'gpuUtilAvg': self.gpu_util_avg,
             'memUtilAvg': self.mem_util_avg,
-            'start': DateUtils.parse_datetime(self.starts_at),
-            'end': DateUtils.parse_datetime(self.ends_at),
-            'createdAt': DateUtils.parse_datetime(self.created_at)
+            'start': DateUtils.stringify_datetime(self.starts_at),
+            'end': DateUtils.stringify_datetime(self.ends_at),
+            'createdAt': DateUtils.stringify_datetime(self.created_at),
+            'isCancelled': str(self.is_cancelled)
         }

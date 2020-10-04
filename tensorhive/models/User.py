@@ -40,6 +40,7 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
     _roles = relationship('Role', cascade='all,delete', backref=backref('user'))
     _groups = relationship('Group', secondary='user2group')
     _restrictions = relationship('Restriction', secondary='restriction2assignee')
+    _reservations = relationship('Reservation', cascade='all,delete')
 
     min_password_length = 8
 
@@ -145,18 +146,19 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
     def verify_hash(password, hash):
         return sha256.verify(password, hash)
 
-    def get_restrictions(self, include_expired=False, include_global=False, include_group=False):
-        restrictions = super(User, self).get_restrictions(include_expired=include_expired,
-                                                          include_global=include_global)
+    def get_restrictions(self, include_expired=False, include_group=False):
+        restrictions = super(User, self).get_restrictions(include_expired=include_expired)
         if include_group:
             for group in self.groups:
-                restrictions = restrictions + group.get_restrictions(include_expired=include_expired,
-                                                                     include_global=include_global)
+                restrictions = restrictions + group.get_restrictions(include_expired=include_expired)
         return list(set(restrictions))
 
-    def get_active_restrictions(self, include_global=False, include_group=False):
-        restrictions = super(User, self).get_active_restrictions(include_global=include_global)
+    def get_active_restrictions(self, include_group=False):
+        restrictions = super(User, self).get_active_restrictions()
         if include_group:
             for group in self.groups:
-                restrictions = restrictions + group.get_active_restrictions(include_global=include_global)
+                restrictions = restrictions + group.get_active_restrictions()
         return list(set(restrictions))
+
+    def get_reservations(self, include_cancelled=False):
+        return self._reservations if include_cancelled else [r for r in self._reservations if not r.is_cancelled]
