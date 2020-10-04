@@ -108,7 +108,6 @@ def test_restriction_with_schedules_is_active_only_when_at_least_one_of_its_sche
     restriction.add_schedule(inactive_schedule)
     assert restriction.is_active is False
 
-    print(active_schedule.is_active)
     restriction.add_schedule(active_schedule)
     assert restriction.is_active is True
 

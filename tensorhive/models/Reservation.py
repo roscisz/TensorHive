@@ -88,15 +88,16 @@ class Reservation(CRUDModel, Base):  # type: ignore
     def current_events(cls):
         '''Returns only those events that should be currently respected by users'''
         current_time = datetime.datetime.utcnow()
-        return cls.query.filter(
+        current_events = cls.query.filter(
             and_(
                 # Events that has already started
                 cls.starts_at <= current_time,
                 # Events before their end
                 current_time <= cls.ends_at)).all()
+        return [c for c in current_events if not c.is_cancelled]
 
     def would_interfere(self):
-        return Reservation.query.filter(
+        conflicting_reservations = Reservation.query.filter(
             # Two events overlap in time domain
             and_(
                 self.starts_at < Reservation.ends_at,
@@ -104,7 +105,8 @@ class Reservation(CRUDModel, Base):  # type: ignore
             ),
             # Case concerns the same resource
         ).filter(Reservation.id != self.id)\
-         .filter(Reservation.protected_resource_id == self.protected_resource_id).first()
+         .filter(Reservation.protected_resource_id == self.protected_resource_id).all()
+        return any(not r.is_cancelled for r in conflicting_reservations)
 
     @classmethod
     def filter_by_uuids_and_time_range(cls, uuids: List[str], start: datetime.datetime, end: datetime.datetime):

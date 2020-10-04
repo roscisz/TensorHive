@@ -23,6 +23,7 @@ def new_user_2():
                 password='TEST PASSWORD',
                 roles=[Role(name='user')])
 
+
 @pytest.fixture(scope='function')
 def new_admin():
     return User(username='justuser',
