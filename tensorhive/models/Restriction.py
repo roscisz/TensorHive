@@ -159,6 +159,14 @@ class Restriction(CRUDModel, Base):  # type: ignore
         self.schedules.remove(schedule)
         self.save()
 
+    def get_all_affected_users(self):
+        """Will return all users affected by this restriction, i.e. users directly assigned to this restriction
+        and members of all groups assigned to this restriction."""
+        affected_users = self.users
+        for group in self.groups:
+            affected_users.extend(group.users)
+        return list(set(affected_users))
+
     @classmethod
     def get_global_restrictions(cls, include_expired=False):
         query = db_session.query(Restriction).filter(Restriction.is_global.is_(True))

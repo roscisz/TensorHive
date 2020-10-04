@@ -193,3 +193,19 @@ def test_when_trying_to_remove_restriction_from_resource_that_wasnt_assigned_to_
 
     with pytest.raises(InvalidRequestException):
         restriction.remove_from_resource(resource1)
+
+
+def test_get_all_affected_users_will_return_all_users_affected_by_given_restriction(tables, restriction, new_user_2,
+                                                                                    new_group_with_member):
+    new_group_with_member.save()
+    restriction.apply_to_group(new_group_with_member)
+
+    new_user_2.save()
+    restriction.apply_to_user(new_user_2)
+
+    assert new_user_2 in restriction.users
+    assert new_group_with_member.users[0] not in restriction.users
+
+    all_affected_users = restriction.get_all_affected_users()
+    assert new_user_2 in all_affected_users
+    assert new_group_with_member.users[0] in all_affected_users
