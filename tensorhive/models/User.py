@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship, backref
 from tensorhive.database import db_session
 from tensorhive.models.CRUDModel import CRUDModel
 from tensorhive.models.RestrictionAssignee import RestrictionAssignee
+from tensorhive.utils.DateUtils import DateUtils
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm import validates
 from usernames import is_safe_username
@@ -134,7 +135,7 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
             user = {
                 'id': self.id,
                 'username': self.username,
-                'createdAt': self.created_at.isoformat(),
+                'createdAt': DateUtils.stringify_datetime(self.created_at),
                 'roles': roles,
                 'email': self.email
             }
