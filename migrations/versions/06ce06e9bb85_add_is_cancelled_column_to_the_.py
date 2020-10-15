@@ -17,8 +17,10 @@ depends_on = None
 
 
 def upgrade():
-    op.add_column('reservations', sa.Column('is_cancelled', sa.Boolean(), nullable=True))
+    with op.batch_alter_table('reservations') as batch_op:
+        batch_op.add_column(sa.Column('is_cancelled', sa.Boolean(), nullable=True))
 
 
 def downgrade():
-    op.drop_column('reservations', 'is_cancelled')
+    with op.batch_alter_table('reservations') as batch_op:
+        batch_op.drop_column('is_cancelled')
