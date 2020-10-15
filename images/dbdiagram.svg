@@ -1,0 +1,24 @@
+digraph undefined {
+  rankdir="LR";
+  ranksep="0.8";
+  nodesep="0.6";
+  overlap="false";
+  sep="+16.0";
+  splines="compound";
+  concentrate="true";
+  pad="0.4,0.4";
+  fontname="Helvetica";
+  fontsize="12";
+  label=<<font ><b>TensorHive</b></font>>;
+  node[shape="Mrecord", fontsize="12", fontname="Helvetica", margin="0.07,0.04", penwidth="1.0"];
+  edge[arrowsize="0.8", fontsize="10", style="solid", penwidth="0.9", fontname="Helvetica", labelangle="33", labeldistance="2.0"];
+  alembic_version [label=<<table border="0" cellspacing="0.5"><tr><td align="left" height="24" valign="bottom"><font point-size="13"><b>alembic_version</b></font></td></tr></table>|<table border="0" cellspacing="0.5" width="134"><tr><td align="left">version_num* <font ><b>varchar(32)</b></font></td></tr></table>>];
+  revoked_tokens [label=<<table border="0" cellspacing="0.5"><tr><td align="left" height="24" valign="bottom"><font point-size="13"><b>revoked_tokens</b></font></td></tr></table>|<table border="0" cellspacing="0.5" width="134"><tr><td align="left">id* <font ><b>integer</b></font></td></tr><tr><td align="left">jti <font ><b>varchar(120)</b></font></td></tr></table>>];
+  users [label=<<table border="0" cellspacing="0.5"><tr><td align="left" height="24" valign="bottom"><font point-size="13"><b>users</b></font></td></tr></table>|<table border="0" cellspacing="0.5" width="134"><tr><td align="left">id* <font ><b>integer</b></font></td></tr><tr><td align="left">username <font ><b>varchar(40)</b></font></td></tr><tr><td align="left">created_at <font ><b>datetime</b></font></td></tr><tr><td align="left">_hashed_password <font ><b>varchar(120)</b></font></td></tr><tr><td align="left">email <font ><b>varchar(64)</b></font></td></tr></table>>];
+  roles [label=<<table border="0" cellspacing="0.5"><tr><td align="left" height="24" valign="bottom"><font point-size="13"><b>roles</b></font></td></tr></table>|<table border="0" cellspacing="0.5" width="134"><tr><td align="left">id* <font ><b>integer</b></font></td></tr><tr><td align="left">name <font ><b>varchar(40)</b></font></td></tr><tr><td align="left">user_id <font ><b>integer</b></font></td></tr></table>>];
+  tasks [label=<<table border="0" cellspacing="0.5"><tr><td align="left" height="24" valign="bottom"><font point-size="13"><b>tasks</b></font></td></tr></table>|<table border="0" cellspacing="0.5" width="134"><tr><td align="left">id* <font ><b>integer</b></font></td></tr><tr><td align="left">user_id <font ><b>integer</b></font></td></tr><tr><td align="left">host <font ><b>varchar(40)</b></font></td></tr><tr><td align="left">pid <font ><b>integer</b></font></td></tr><tr><td align="left">status <font ><b>varchar(14)</b></font></td></tr><tr><td align="left">command <font ><b>varchar(400)</b></font></td></tr><tr><td align="left">spawn_at <font ><b>datetime</b></font></td></tr><tr><td align="left">terminate_at <font ><b>datetime</b></font></td></tr></table>>];
+  reservations [label=<<table border="0" cellspacing="0.5"><tr><td align="left" height="24" valign="bottom"><font point-size="13"><b>reservations</b></font></td></tr></table>|<table border="0" cellspacing="0.5" width="134"><tr><td align="left">id* <font ><b>integer</b></font></td></tr><tr><td align="left">user_id <font ><b>integer</b></font></td></tr><tr><td align="left">title <font ><b>varchar(60)</b></font></td></tr><tr><td align="left">description <font ><b>varchar(200)</b></font></td></tr><tr><td align="left">protected_resource_id <font ><b>varchar(60)</b></font></td></tr><tr><td align="left">_starts_at <font ><b>datetime</b></font></td></tr><tr><td align="left">_ends_at <font ><b>datetime</b></font></td></tr><tr><td align="left">created_at <font ><b>datetime</b></font></td></tr><tr><td align="left">gpu_util_avg <font ><b>integer</b></font></td></tr><tr><td align="left">mem_util_avg <font ><b>integer</b></font></td></tr></table>>];
+  roles -> users[];
+  tasks -> users[];
+  reservations -> users[];
+}

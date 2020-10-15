@@ -2,6 +2,9 @@ from __future__ import with_statement
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
+import click
+import os
+import subprocess
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -65,3 +68,7 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
+
+if click.confirm('Would you like to generate a new diagram for this version of the database?', default=False):
+    subprocess.Popen([os.path.join(os.path.dirname(__file__), 'generate_rdb.js'),
+                      config.get_main_option("sqlalchemy.url")], stdout=subprocess.PIPE)
