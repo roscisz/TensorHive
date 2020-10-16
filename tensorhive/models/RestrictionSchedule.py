@@ -1,11 +1,16 @@
 import re
 import datetime
+import logging
 
 from sqlalchemy import Column, Integer, String, Time, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.database import Base
 from tensorhive.models.CRUDModel import CRUDModel
+from tensorhive.utils.Weekday import Weekday
+from typing import List, Union
+
+log = logging.getLogger(__name__)
 
 
 class RestrictionSchedule(CRUDModel, Base):  # type: ignore
@@ -25,11 +30,16 @@ class RestrictionSchedule(CRUDModel, Base):  # type: ignore
     __table_args__ = {'sqlite_autoincrement': True}
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    schedule_days = Column(String(7), nullable=False)
+    _schedule_days = Column('schedule_days', String(7), nullable=False)
     hour_start = Column(Time(), nullable=False)
     hour_end = Column(Time(), nullable=False)
 
     _restrictions = relationship('Restriction', secondary='restriction2schedule')
+
+    def __init__(self, schedule_days: Union[List[Weekday], str], hour_start: datetime.time, hour_end: datetime.time):
+        self.schedule_days = schedule_days
+        self.hour_start = hour_start
+        self.hour_end = hour_end
 
     def __repr__(self):
         return '''<RestrictionSchedule id={id}
@@ -46,8 +56,19 @@ class RestrictionSchedule(CRUDModel, Base):  # type: ignore
         assert self.hour_end > self.hour_start, 'End hour cannot happen before start hour!'
 
     @hybrid_property
+    def schedule_days(self):
+        return self._schedule_days
+
+    @hybrid_property
     def restrictions(self):
         return self._restrictions
+
+    @schedule_days.setter
+    def schedule_days(self, days: Union[List[Weekday], str]):
+        if isinstance(days, str):
+            self._schedule_days = (''.join(sorted(days)))
+        else:
+            self._schedule_days = self.stringify_schedule_list(days)
 
     @property
     def is_active(self):
@@ -65,10 +86,18 @@ class RestrictionSchedule(CRUDModel, Base):  # type: ignore
     def as_dict(self):
         return {
             'id': self.id,
-            'schedule_days': self.schedule_days,
-            'hour_start': self.hour_start,
-            'hour_end': self.hour_end
+            'scheduleDays': [day.to_str() for day in self.parse_schedule_string(self.schedule_days)],
+            'hourStart': self.hour_start.strftime('%H:%M'),
+            'hourEnd': self.hour_end.strftime('%H:%M')
         }
+
+    @staticmethod
+    def parse_schedule_string(schedule: str) -> List[Weekday]:
+        return [Weekday(int(day)) for day in sorted(schedule)]
+
+    @staticmethod
+    def stringify_schedule_list(schedule: List[Weekday]) -> str:
+        return ''.join((sorted([str(day.value) for day in schedule])))
 
 
 class Restriction2Schedule(Base):  # type: ignore

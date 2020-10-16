@@ -5,9 +5,11 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.database import Base
+from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from tensorhive.models.CRUDModel import CRUDModel
-from tensorhive.models.User import User
 from tensorhive.models.RestrictionAssignee import RestrictionAssignee
+from tensorhive.models.User import User
+from tensorhive.utils.DateUtils import DateUtils
 
 log = logging.getLogger(__name__)
 
@@ -34,21 +36,45 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
         return self._users
 
     def add_user(self, user: User):
+        if user in self.users:
+            raise InvalidRequestException('User {user} is already a member of group {group}!'
+                                          .format(user=user, group=self))
         self.users.append(user)
         self.save()
 
     def remove_user(self, user: User):
+        if user not in self.users:
+            raise InvalidRequestException('User {user} is not a member of group {group}!'
+                                          .format(user=user, group=self))
+
         self.users.remove(user)
         self.save()
 
-    @property
+    @hybrid_property
     def as_dict(self):
-        return {
+        """
+        Serializes current instance into dict.
+        :return: Dictionary representing current instance.
+        """
+        return self._as_dict(True)
+
+    @hybrid_property
+    def as_dict_shallow(self):
+        """
+        Serializes current instance into dict. Will not include group's users (to prevent recurrence).
+        :return: Dictionary representing current instance (without users).
+        """
+        return self._as_dict(False)
+
+    def _as_dict(self, include_users):
+        group = {
             'id': self.id,
             'name': self.name,
-            'createdAt': self.created_at.isoformat(),
-            'users': self.users
+            'createdAt': DateUtils.stringify_datetime(self.created_at)
         }
+        if include_users:
+            group['users'] = [user.as_dict_shallow for user in self.users]
+        return group
 
 
 class User2Group(Base):  # type: ignore

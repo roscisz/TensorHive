@@ -1,14 +1,19 @@
 import datetime
+import logging
 
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.database import db_session, Base
+from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
+from tensorhive.utils.DateUtils import DateUtils
 from tensorhive.models.CRUDModel import CRUDModel
 from tensorhive.models.User import User
 from tensorhive.models.Group import Group
 from tensorhive.models.Resource import Resource
 from tensorhive.models.RestrictionSchedule import RestrictionSchedule
+
+log = logging.getLogger(__name__)
 
 
 class Restriction(CRUDModel, Base):  # type: ignore
@@ -29,9 +34,9 @@ class Restriction(CRUDModel, Base):  # type: ignore
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50))
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    starts_at = Column(DateTime, nullable=False)
-    ends_at = Column(DateTime)
+    _created_at = Column('created_at', DateTime, default=datetime.datetime.utcnow)
+    _starts_at = Column('starts_at', DateTime, nullable=False)
+    _ends_at = Column('ends_at', DateTime)
     is_global = Column(Boolean, nullable=False)
 
     _users = relationship('User', secondary='restriction2assignee')
@@ -55,6 +60,34 @@ class Restriction(CRUDModel, Base):  # type: ignore
                                                               ' expired - please do not do that!'
 
     @hybrid_property
+    def starts_at(self):
+        return self._starts_at
+
+    @hybrid_property
+    def ends_at(self):
+        return self._ends_at
+
+    @hybrid_property
+    def created_at(self):
+        return self._created_at
+
+    @starts_at.setter
+    def starts_at(self, value: str):
+        self._starts_at = DateUtils.try_parse_string(value)
+        if self._starts_at is None:
+            log.error('Unsupported type (starts_at={})'.format(value))
+
+    @ends_at.setter
+    def ends_at(self, value: str):
+        self._ends_at = DateUtils.try_parse_string(value)
+
+    @created_at.setter
+    def created_at(self, value: str):
+        self._created_at = DateUtils.try_parse_string(value)
+        if self._created_at is None:
+            log.error('Unsupported type (created_at={})'.format(value))
+
+    @hybrid_property
     def users(self):
         return self._users
 
@@ -71,36 +104,68 @@ class Restriction(CRUDModel, Base):  # type: ignore
         return self._schedules
 
     def apply_to_user(self, user: User):
+        if user in self.users:
+            raise InvalidRequestException('Restriction {restriction} is already being applied to user {user}'
+                                          .format(restriction=self, user=user))
         self.users.append(user)
         self.save()
 
     def remove_from_user(self, user: User):
+        if user not in self.users:
+            raise InvalidRequestException('User {user} is not affected by restriction {restriction}'
+                                          .format(user=user, restriction=self))
         self.users.remove(user)
         self.save()
 
     def apply_to_group(self, group: Group):
+        if group in self.groups:
+            raise InvalidRequestException('Restriction {restriction} is already being applied to group {group}'
+                                          .format(restriction=self, group=group))
         self.groups.append(group)
         self.save()
 
     def remove_from_group(self, group: Group):
+        if group not in self.groups:
+            raise InvalidRequestException('Group {group} is not affected by restriction {restriction}'
+                                          .format(group=group, restriction=self))
         self.groups.remove(group)
         self.save()
 
     def apply_to_resource(self, resource: Resource):
+        if resource in self.resources:
+            raise InvalidRequestException('Restriction {restriction} is already being applied to resource {resource}'
+                                          .format(restriction=self, resource=resource))
         self.resources.append(resource)
         self.save()
 
     def remove_from_resource(self, resource: Resource):
+        if resource not in self.resources:
+            raise InvalidRequestException('Resource {resource} is not affected by restriction {restriction}'
+                                          .format(resource=resource, restriction=self))
         self.resources.remove(resource)
         self.save()
 
     def add_schedule(self, schedule: RestrictionSchedule):
+        if schedule in self.schedules:
+            raise InvalidRequestException('Schedule {schedule} is already being applied to restriction {restriction}'
+                                          .format(schedule=schedule, restriction=self))
         self.schedules.append(schedule)
         self.save()
 
     def remove_schedule(self, schedule: RestrictionSchedule):
+        if schedule not in self.schedules:
+            raise InvalidRequestException('Schedule {schedule} is not assigned to restriction {restriction}'
+                                          .format(schedule=schedule, restriction=self))
         self.schedules.remove(schedule)
         self.save()
+
+    def get_all_affected_users(self):
+        """Will return all users affected by this restriction, i.e. users directly assigned to this restriction
+        and members of all groups assigned to this restriction."""
+        affected_users = self.users
+        for group in self.groups:
+            affected_users.extend(group.users)
+        return list(set(affected_users))
 
     @classmethod
     def get_global_restrictions(cls, include_expired=False):
@@ -124,16 +189,25 @@ class Restriction(CRUDModel, Base):  # type: ignore
         now = datetime.datetime.utcnow()
         return self.ends_at is not None and self.ends_at <= now
 
-    @property
-    def as_dict(self):
-        return {
+    def as_dict(self, include_groups=False, include_users=False, include_resources=False):
+        restriction = {
             'id': self.id,
             'name': self.name,
-            'created_at': self.created_at,
-            'starts_at': self.starts_at,
-            'ends_at': self.ends_at,
-            'is_global': self.is_global
+            'createdAt': DateUtils.stringify_datetime(self.created_at),
+            'startsAt': DateUtils.stringify_datetime(self.starts_at),
+            'endsAt': DateUtils.try_stringify_datetime(self.ends_at),
+            'isGlobal': self.is_global,
+            'schedules': [schedule.as_dict for schedule in self.schedules]
         }
+        if include_groups:
+            restriction['groups'] = [group.as_dict for group in self.groups]
+        if include_users:
+            # using as_dict_shallow as we do not want to include user's groups here, as they are insignificant
+            # considering the scope of the restriction
+            restriction['users'] = [user.as_dict_shallow for user in self.users]
+        if include_resources:
+            restriction['resources'] = [resource.as_dict for resource in self.resources]
+        return restriction
 
 
 class Restriction2Assignee(Base):  # type: ignore

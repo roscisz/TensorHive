@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship, backref
 from tensorhive.database import db_session
 from tensorhive.models.CRUDModel import CRUDModel
 from tensorhive.models.RestrictionAssignee import RestrictionAssignee
+from tensorhive.utils.DateUtils import DateUtils
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm import validates
 from usernames import is_safe_username
@@ -40,6 +41,7 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
     _roles = relationship('Role', cascade='all,delete', backref=backref('user'))
     _groups = relationship('Group', secondary='user2group')
     _restrictions = relationship('Restriction', secondary='restriction2assignee')
+    _reservations = relationship('Reservation', cascade='all,delete')
 
     min_password_length = 8
 
@@ -108,39 +110,56 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
         else:
             return result
 
-    @property
+    @hybrid_property
     def as_dict(self):
-        '''Serializes model instance into dict (which is interpreted as json automatically)'''
+        """
+        Serializes current instance into dict.
+        :return: Dictionary representing current instance.
+        """
+        return self._as_dict(True)
+
+    @hybrid_property
+    def as_dict_shallow(self):
+        """
+        Serializes current instance into dict. Will not include user's groups (to prevent recurrence).
+        :return: Dictionary representing current instance (without groups).
+        """
+        return self._as_dict(False)
+
+    def _as_dict(self, include_groups):
         try:
             roles = self.role_names
         except Exception:
             roles = []
         finally:
-            return {
+            user = {
                 'id': self.id,
                 'username': self.username,
-                'createdAt': self.created_at.isoformat(),
+                'createdAt': DateUtils.stringify_datetime(self.created_at),
                 'roles': roles,
-                'groups': self.groups,
                 'email': self.email
             }
+            if include_groups:
+                user['groups'] = [group.as_dict_shallow for group in self.groups]
+            return user
 
     @staticmethod
     def verify_hash(password, hash):
         return sha256.verify(password, hash)
 
-    def get_restrictions(self, include_expired=False, include_global=False, include_group=False):
-        restrictions = super(User, self).get_restrictions(include_expired=include_expired,
-                                                          include_global=include_global)
+    def get_restrictions(self, include_expired=False, include_group=False):
+        restrictions = super(User, self).get_restrictions(include_expired=include_expired)
         if include_group:
             for group in self.groups:
-                restrictions = restrictions + group.get_restrictions(include_expired=include_expired,
-                                                                     include_global=include_global)
+                restrictions = restrictions + group.get_restrictions(include_expired=include_expired)
         return list(set(restrictions))
 
-    def get_active_restrictions(self, include_global=False, include_group=False):
-        restrictions = super(User, self).get_active_restrictions(include_global=include_global)
+    def get_active_restrictions(self, include_group=False):
+        restrictions = super(User, self).get_active_restrictions()
         if include_group:
             for group in self.groups:
-                restrictions = restrictions + group.get_active_restrictions(include_global=include_global)
+                restrictions = restrictions + group.get_active_restrictions()
         return list(set(restrictions))
+
+    def get_reservations(self, include_cancelled=False):
+        return self._reservations if include_cancelled else [r for r in self._reservations if not r.is_cancelled]
