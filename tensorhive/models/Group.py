@@ -7,8 +7,9 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.database import Base
 from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from tensorhive.models.CRUDModel import CRUDModel
-from tensorhive.models.User import User
 from tensorhive.models.RestrictionAssignee import RestrictionAssignee
+from tensorhive.models.User import User
+from tensorhive.utils.DateUtils import DateUtils
 
 log = logging.getLogger(__name__)
 
@@ -69,7 +70,7 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
         group = {
             'id': self.id,
             'name': self.name,
-            'createdAt': self.created_at.isoformat()
+            'createdAt': DateUtils.stringify_datetime(self.created_at)
         }
         if include_users:
             group['users'] = [user.as_dict_shallow for user in self.users]
