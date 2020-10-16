@@ -25,7 +25,6 @@ class APIServer():
         app.add_api(API.SPEC_FILE,
                     arguments={
                         'title': API.TITLE,
-                        'version': API.VERSION,
                         'url_prefix': API.URL_PREFIX,
                         'RESPONSES': API.RESPONSES
                     },

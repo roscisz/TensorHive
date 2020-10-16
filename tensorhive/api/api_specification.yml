@@ -1,8 +1,8 @@
 openapi: "3.0.3"
 
 info:
-  title: "{{title}} {{version}}"
-  version: "{{version}}"
+  title: "{{title}}"
+  version: "0.5"
 
 servers:
   - url: "/{{url_prefix}}"
