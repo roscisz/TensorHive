@@ -12,94 +12,285 @@
       dismissible
       type="info"
     >
-      User successfully created
+      {{ infoMessage }}
     </v-alert>
-    <v-layout row justify-center>
-      <v-dialog
-        width="500px"
-        v-model="showModal"
-      >
-        <v-card>
-          <v-card-text>
-            <v-btn
-              class="float-right-button"
-              flat
-              icon
-              color="black"
-              @click="showModal=false"
-            >
-              <v-icon>close</v-icon>
-            </v-btn>
-            <span class="headline">Create new user</span>
-          </v-card-text>
-          <v-card-text>
-            <form @submit.prevent="createUser">
-              <v-card-text>
-                Username
-              </v-card-text>
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-user"></i></span>
-                <input
-                  class="form-control"
-                  name="modalUsername"
-                  placeholder="Username"
-                  type="text"
-                  v-model="modalUsername"
-                >
-              </div>
-              Email
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
-                <input
-                  class="form-control"
-                  name="modalEmail"
-                  placeholder="Email"
-                  type="text"
-                  v-model="modalEmail"
-                >
-              </div>
-              Password
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-lock"></i></span>
-                <input
-                  class="form-control"
-                  name="modalPassword"
-                  placeholder="Password"
-                  type="password"
-                  v-model="modalPassword"
-                >
-              </div>
-              Repeat password
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-lock"></i></span>
-                <input
-                  class="form-control"
-                  name="modalPassword2"
-                  placeholder="Password2"
-                  type="password"
-                  v-model="modalPassword2"
-                >
-              </div>
-              <v-alert
-                v-model="modalAlert"
-                dismissible
-                type="error"
-              >
-                {{ errorMessage }}
-              </v-alert>
-              <v-btn
-                color="success"
-                type="submit"
-              >
-                Create
-              </v-btn>
-            </form>
-          </v-card-text>
-        </v-card>
-      </v-dialog>
-    </v-layout>
     <v-dialog
-      v-model="showModalRemove"
+      v-model="showRestrictions"
+      width="850px"
+    >
+    <v-card>
+      <v-card-text>
+        <v-btn
+          class="float-right-button"
+          flat
+          icon
+          color="black"
+          @click="showRestrictions=false"
+        >
+          <v-icon>close</v-icon>
+        </v-btn>
+        <span class="headline">Manage restrictions</span>
+      </v-card-text>
+      <v-data-table
+        :headers="restrictionHeaders"
+        :items="restrictions"
+        item-key="id"
+        class="elevation-1"
+        rows-per-page-text=""
+        :rows-per-page-items="[5]"
+      >
+        <template slot="items" slot-scope="props">
+          <tr>
+            <td>{{ props.item.id }}</td>
+            <td>{{ props.item.name }}</td>
+            <td>{{ printTimespan(props.item.startsAt, props.item.endsAt) }}</td>
+            <td>{{ printSchedule(props.item.schedules) }}</td>
+            <td>
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on, attrs }">
+                  <span v-bind="attrs" v-on="on">{{ props.item.users.length }}</span>
+                </template>
+                <span>{{ printUsernames(props.item.users) }}</span>
+              </v-tooltip>
+            </td>
+            <td>
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on, attrs }">
+                  <span v-bind="attrs" v-on="on">{{ props.item.groups.length }}</span>
+                </template>
+                <span>{{ printNames(props.item.groups) }}</span>
+              </v-tooltip>
+            </td>
+            <td v-if="props.item.isGlobal">All</td>
+            <td v-else>
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on, attrs }">
+                  <span v-bind="attrs" v-on="on">{{ props.item.resources.length }}</span>
+                </template>
+                <span>{{ printNames(props.item.resources) }}</span>
+              </v-tooltip>
+            </td>
+            <td>
+              <v-icon
+                small
+                @click="showRemoveConfirmationDialog(props.item.id)"
+              >
+                delete
+              </v-icon>
+            </td>
+          </tr>
+        </template>
+      </v-data-table>
+      <v-alert
+        v-model="modalAlert"
+        dismissible
+        type="error"
+      >
+        {{ errorMessage }}
+      </v-alert>
+      <v-card-text>
+        <span class="headline">Add restriction</span>
+        <form @submit.prevent="createRestriction">
+          <v-card-text></v-card-text>
+          <div class="input-group">
+            <span class="input-group-addon"><i class="fa fa-info"></i></span>
+            <input
+              class="form-control"
+              name="modalRestrictionName"
+              placeholder="Restriction name"
+              type="text"
+              v-model="modalRestrictionName"
+            >
+          </div>
+          <v-layout>
+          <v-checkbox
+            v-model="globalRestriction"
+            label="Global restriction"
+          >
+          </v-checkbox>
+          <transition name="fade">
+            <v-autocomplete
+              style="width: 70%"
+              v-show="!globalRestriction"
+              v-model="resourcesValue"
+              :items="resources"
+              :multiple=true
+              placeholder="Resources"
+              item-value="id"
+              item-text="name"
+              prepend-icon="fa-server"
+            >
+            </v-autocomplete>
+          </transition>
+          </v-layout>
+          <v-layout align-center justify-start>
+            <v-autocomplete
+              style="width: 50%"
+              v-model="usersValue"
+              :items="users"
+              :multiple=true
+              placeholder="Users"
+              item-value="id"
+              item-text="username"
+              prepend-icon="fa-user"
+            />
+            <v-autocomplete
+              style="width: 50%"
+              v-model="groupsValue"
+              :items="groups"
+              :multiple=true
+              placeholder="Groups"
+              item-value="id"
+              item-text="name"
+              prepend-icon="fa-group"
+            />
+          </v-layout>
+          <v-layout align-center justify-start>
+          <v-menu
+            v-model="startDateMenu"
+            :close-on-content-click="false"
+            :nudge-right="40"
+            lazy
+            transition="none"
+            offset-y
+            full-width
+            min-width="290px"
+          >
+            <template v-slot:activator="{ on }">
+                <v-text-field
+                  v-model="modalStartDate"
+                  placeholder="Start date"
+                  prepend-icon="event"
+                  v-on="on"
+                ></v-text-field>
+            </template>
+            <v-date-picker
+              title="Start date"
+              v-model="modalStartDate"
+              :max="modalEndDate"
+              :allowed-dates="isTodayOrLater"
+              @input="startDateMenu = false"
+            ></v-date-picker>
+          </v-menu>
+          <v-menu
+            v-model="endDateMenu"
+            :close-on-content-click="false"
+            :nudge-right="40"
+            lazy
+            transition="none"
+            offset-y
+            full-width
+            min-width="290px"
+          >
+            <template v-slot:activator="{ on }">
+              <v-text-field
+                v-model="modalEndDate"
+                placeholder="End date"
+                prepend-icon="event"
+                v-on="on"
+              ></v-text-field>
+            </template>
+            <v-date-picker
+              title="End date"
+              v-model="modalEndDate"
+              :min="modalStartDate"
+              :allowed-dates="isTodayOrLater"
+              @input="endDateMenu = false"
+            ></v-date-picker>
+          </v-menu>
+          </v-layout>
+          <v-checkbox
+            label="Add restriction schedule"
+            v-model="addSchedule"
+          >
+          </v-checkbox>
+          <transition name="fade">
+            <v-layout align-center justify-center v-show="addSchedule">
+            <v-menu
+              ref="startMenu"
+              v-model="startTimeMenu"
+              :close-on-content-click="false"
+              :nudge-right="40"
+              :return-value.sync="modalStartTime"
+              lazy
+              transition="none"
+              offset-y
+              full-width
+              max-width="290px"
+              min-width="290px"
+            >
+              <template v-slot:activator="{ on }">
+                <v-text-field
+                  v-model="modalStartTime"
+                  placeholder="Start time"
+                  prepend-icon="access_time"
+                  v-on="on"
+                ></v-text-field>
+              </template>
+              <v-time-picker
+                title="Start time"
+                v-if="startTimeMenu"
+                v-model="modalStartTime"
+                full-width
+                format="24hr"
+                :max="modalEndTime"
+                @click:minute="$refs.startMenu.save(modalStartTime)"
+              ></v-time-picker>
+            </v-menu>
+            <v-menu
+              ref="endMenu"
+              v-model="endTimeMenu"
+              :close-on-content-click="false"
+              :nudge-right="40"
+              :return-value.sync="modalEndTime"
+              lazy
+              transition="none"
+              offset-y
+              full-width
+              max-width="290px"
+              min-width="290px"
+            >
+              <template v-slot:activator="{ on }">
+                <v-text-field
+                  v-model="modalEndTime"
+                  placeholder="End time"
+                  prepend-icon="access_time"
+                  v-on="on"
+                ></v-text-field>
+              </template>
+              <v-time-picker
+                title="End time"
+                v-if="endTimeMenu"
+                v-model="modalEndTime"
+                full-width
+                format="24hr"
+                :min="modalStartTime"
+                @click:minute="$refs.endMenu.save(modalEndTime)"
+              ></v-time-picker>
+              </v-menu>
+              <v-select
+                style="width: 60%"
+                v-model="daysValue"
+                :items="weekdays"
+                placeholder="Weekdays"
+                prepend-icon="event"
+                :multiple=true
+              >
+              </v-select>
+            </v-layout>
+          </transition>
+          <v-btn
+            color="success"
+            type="submit"
+          >
+            Add
+          </v-btn>
+        </form>
+      </v-card-text>
+    </v-card>
+    </v-dialog>
+    <v-dialog
+      v-model="showRemoveRestriction"
       width="400"
     >
       <v-card>
@@ -112,18 +303,18 @@
             flat
             icon
             color="black"
-            @click="showModalRemove= false"
+            @click="showRemoveRestriction=false"
           >
             <v-icon>close</v-icon>
           </v-btn>
-          Do you want to remove this user?
+          Do you want to remove this restriction?
         </v-card-text>
         <v-card-actions>
           <v-layout align-center justify-end>
             <v-btn
               color="success"
               round
-              @click="removeUser()"
+              @click="removeRestriction()"
             >
               Yes
             </v-btn>
@@ -131,136 +322,13 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <div>
-      <div class="text-xs-center pt-2">
-        <v-btn color="primary" @click="showModal=true">Create user</v-btn>
-      </div>
-      <v-dialog v-model="dialog" max-width="500px">
-        <v-card>
-          <v-card-text>
-            <v-btn
-              class="float-right-button"
-              flat
-              icon
-              color="black"
-              @click="dialog = false"
-            >
-              <v-icon>close</v-icon>
-            </v-btn>
-            <v-card-text>
-              Edit user
-            </v-card-text>
-            <v-card-text>
-              Current username: {{currentUser.username}}
-            </v-card-text>
-            <v-card-text>
-              New username
-            </v-card-text>
-            <div class="input-group">
-              <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
-              <input
-                class="form-control"
-                name="modalUsername"
-                placeholder="Username"
-                type="text"
-                v-model="user.username"
-              >
-            </div>
-            <v-card-text>
-              Current email: {{currentUser.email}}
-            </v-card-text>
-            <v-card-text>
-              New email
-            </v-card-text>
-            <div class="input-group">
-              <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
-              <input
-                class="form-control"
-                name="modalEmail"
-                placeholder="Email"
-                type="text"
-                v-model="user.email"
-              >
-            </div>
-            <v-card-text>
-              New password
-            </v-card-text>
-            <div class="input-group">
-              <span class="input-group-addon"><i class="fa fa-lock"></i></span>
-              <input
-                class="form-control"
-                name="modalPassword"
-                placeholder="Password"
-                type="password"
-                v-model="user.password"
-              >
-            </div>
-            <v-card-text>
-              Repeat password
-            </v-card-text>
-            <div class="input-group">
-              <span class="input-group-addon"><i class="fa fa-lock"></i></span>
-              <input
-                class="form-control"
-                name="modalPassword2"
-                placeholder="Password2"
-                type="password"
-                v-model="user.password2"
-              >
-            </div>
-            <v-card-text>
-              Account roles:
-            </v-card-text>
-            <v-card-text>
-              <v-checkbox
-                label="admin"
-                v-model="adminCheckbox"
-              >
-              </v-checkbox>
-            </v-card-text>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" flat @click="updateUser">Edit</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-      <v-data-table
-        :headers="headers"
-        :items="users"
-        :search="search"
-        :pagination.sync="pagination"
-        item-key="id"
-        hide-actions
-        class="elevation-1"
-      >
-        <template slot="items" slot-scope="props">
-          <tr>
-            <td>{{ props.item.id }}</td>
-            <td>{{ props.item.username }}</td>
-            <td>{{ props.item.email }}</td>
-            <td>{{ prettyDate(props.item.createdAt) }}</td>
-            <td>{{ props.item.role }}</td>
-            <td>
-              <v-icon
-                small
-                @click="editUser(props.item)"
-              >
-                edit
-              </v-icon>
-              <v-icon
-                small
-                @click="showConfirmationDialog(props.item.id)"
-              >
-                delete
-              </v-icon>
-            </td>
-          </tr>
-        </template>
-      </v-data-table>
-      <div class="text-xs-center pt-2">
-        <v-pagination v-model="pagination.page" :length="pages"></v-pagination>
-      </div>
+    <div class="text-xs-center pt-2">
+      <v-btn color="primary" @click="showRestrictions=true">Manage restrictions</v-btn>
+      <v-divider></v-divider>
+    </div>
+    <div class="data_table">
+      <UsersInfo class="data_box" @createdUser="userCreatedAlert" @usersList="updateUsers" />
+      <GroupsInfo class="data_box" :usersList="this.users" @createdGroup="groupCreatedAlert" @groupsList="updateGroups"/>
     </div>
   </section>
 </template>
@@ -268,62 +336,61 @@
 <script>
 import api from '../../api'
 import moment from 'moment'
+import GroupsInfo from './users_overview/GroupsInfo.vue'
+import UsersInfo from './users_overview/UsersInfo.vue'
 export default {
+  components: {
+    GroupsInfo,
+    UsersInfo
+  },
   data () {
     return {
-      dialog: false,
-      search: '',
-      pagination: {},
-      selected: [],
-      headers: [
-        { text: 'User id', value: 'id' },
-        { text: 'Username', value: 'username' },
-        { text: 'Email', value: 'email' },
-        { text: 'Created at', value: 'createdAt' },
-        { text: 'Role', value: 'role' },
-        { text: 'Actions', value: 'id' }
-      ],
-      users: [],
-      user: {
-        id: -1,
-        username: '',
-        email: '',
-        password: '',
-        password2: '',
-        roles: []
-      },
-      currentUser: {},
-      time: 1000,
-      alert: false,
       errorMessage: '',
-      userCheckbox: false,
-      adminCheckbox: false,
-      modalUsername: '',
-      modalEmail: '',
-      modalPassword: '',
-      modalPassword2: '',
-      modalAlert: false,
-      showModalRemove: false,
-      userId: -1,
+      infoMessage: '',
+      createdGroup: false,
       created: false,
-      showModal: false
+      alert: false,
+      users: [],
+      usersValue: [],
+      groups: [],
+      groupsValue: [],
+      restrictionHeaders: [
+        { text: 'ID', value: 'id' },
+        { text: 'Name', value: 'name' },
+        { text: 'Timespan', sortable: false },
+        { text: 'Schedule', sortable: false },
+        { text: 'Users', value: 'users', sortable: false },
+        { text: 'Groups', value: 'groups', sortable: false },
+        { text: 'Resources', value: 'resources', sortable: false },
+        { text: 'Actions', sortable: false }
+      ],
+      restrictions: [],
+      restrictionId: -1,
+      addSchedule: false,
+      showRestrictions: false,
+      modalRestrictionName: '',
+      startDateMenu: false,
+      endDateMenu: false,
+      startTimeMenu: false,
+      endTimeMenu: false,
+      modalAlert: false,
+      modalInfo: false,
+      showRemoveRestriction: false,
+      modalStartDate: '',
+      modalEndDate: '',
+      modalStartTime: '',
+      modalEndTime: '',
+      weekdays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+      daysValue: [],
+      globalRestriction: false,
+      resources: [],
+      resourcesValue: []
     }
   },
-
-  computed: {
-    pages () {
-      if (this.pagination.rowsPerPage == null ||
-        this.pagination.totalItems == null
-      ) return 0
-
-      return Math.ceil(this.pagination.totalItems / this.pagination.rowsPerPage)
-    }
-  },
-
   mounted () {
-    this.checkUsers()
+    this.checkResources()
+    this.checkRestrictions()
   },
-
   methods: {
     prettyDate (date) {
       if (date !== null) {
@@ -332,8 +399,37 @@ export default {
         return null
       }
     },
-
-    handleError: function (error) {
+    printTimespan (start, end) {
+      return moment(start).format('ll') + ' - ' + moment(end).format('ll')
+    },
+    printNames (array) {
+      return array.map(a => a.name).join(', ')
+    },
+    printUsernames (array) {
+      return array.map(a => a.username).join(', ')
+    },
+    printSchedule (schedules) {
+      if (schedules.length > 0) {
+        for (const schedule of schedules) {
+          return schedule.hourStart + '-' + schedule.hourEnd + ' ' +
+            schedule.scheduleDays.map(a => a.substring(0, 3)).join(', ')
+        }
+      } else return 'none'
+    },
+    clearForm () {
+      this.modalRestrictionName = ''
+      this.globalRestriction = false
+      this.resourcesValue = false
+      this.addSchedule = false
+      this.usersValue = []
+      this.groupsValue = []
+      this.modalStartDate = ''
+      this.modalEndDate = ''
+      this.modalStartTime = ''
+      this.modalEndTime = ''
+      this.daysValue = []
+    },
+    handleError (error) {
       if (!error.hasOwnProperty('response')) {
         this.errorMessage = error.message
       } else {
@@ -344,140 +440,206 @@ export default {
         }
       }
     },
-
-    createUser () {
-      if (this.modalPassword === this.modalPassword2) {
-        const { modalUsername, modalEmail, modalPassword } = this
+    isTodayOrLater (date) {
+      return moment(date).isSameOrAfter(moment().format(moment.HTML5_FMT.DATE))
+    },
+    groupCreatedAlert () {
+      this.created = true
+      this.infoMessage = 'Group created successfully'
+    },
+    userCreatedAlert () {
+      this.created = true
+      this.infoMessage = 'User created successfully'
+    },
+    updateUsers (value) {
+      this.users = value
+    },
+    updateGroups (value) {
+      this.groups = value
+    },
+    checkRestrictions () {
+      api
+        .request('get', '/restrictions', this.$store.state.accessToken)
+        .then(response => {
+          this.restrictions = response.data
+        })
+        .catch(error => {
+          this.handleError(error)
+          this.modalAlert = true
+        })
+    },
+    addUserToRestriction (restriction, user) {
+      api
+        .request('put', '/restrictions/' + restriction + '/users/' + user, this.$store.state.accessToken)
+        .then(response => {
+          this.checkRestrictions()
+        })
+        .catch(error => {
+          this.handleError(error)
+          this.modalAlert = true
+        })
+    },
+    removeUserFromRestriction (restriction, user) {
+      api
+        .request('delete', '/restrictions/' + restriction + '/users/' + user, this.$store.state.accessToken)
+        .then(response => {
+          this.checkRestrictions()
+        })
+        .catch(error => {
+          this.handleError(error)
+          this.modalAlert = true
+        })
+    },
+    addGroupToRestriction (restriction, group) {
+      api
+        .request('put', '/restrictions/' + restriction + '/groups/' + group, this.$store.state.accessToken)
+        .then(response => {
+          this.checkRestrictions()
+        })
+        .catch(error => {
+          this.handleError(error)
+          this.modalAlert = true
+        })
+    },
+    removeGroupFromRestriction (restriction, group) {
+      api
+        .request('delete', '/restrictions/' + restriction + '/groups/' + group, this.$store.state.accessToken)
+        .then(response => {
+          this.checkRestrictions()
+        })
+        .catch(error => {
+          this.handleError(error)
+          this.modalAlert = true
+        })
+    },
+    addResourceToRestriction (restriction, resource) {
+      api
+        .request('put', '/restrictions/' + restriction + '/resources/' + resource, this.$store.state.accessToken)
+        .then(response => {
+          this.checkRestrictions()
+        })
+        .catch(error => {
+          this.handleError(error)
+          this.modalAlert = true
+        })
+    },
+    removeResourceFromRestriction (restriction, resource) {
+      api
+        .request('delete', '/restrictions/' + restriction + '/resources/' + resource, this.$store.state.accessToken)
+        .then(response => {
+          this.checkRestrictions()
+        })
+        .catch(error => {
+          this.handleError(error)
+          this.modalAlert = true
+        })
+    },
+    createAndAddSchedule (restriction) {
+      const { modalStartTime, modalEndTime, daysValue } = this
+      if (modalStartTime && modalEndTime && daysValue) {
         api
-          .request('post', '/user/create', this.$store.state.accessToken, { 'username': modalUsername, 'email': modalEmail, 'password': modalPassword })
+          .request('post', '/schedules', this.$store.state.accessToken, {
+            'hourStart': modalStartTime,
+            'hourEnd': modalEndTime,
+            'scheduleDays': daysValue
+          })
           .then(response => {
-            this.showModal = false
-            this.created = true
-            this.checkUsers()
+            let scheduleId = response.data.schedule.id
+            this.addScheduleToRestriction(restriction, scheduleId)
+          })
+          .catch(error => {
+            this.handleError(error)
+            this.modalAlert = true
+          })
+      }
+    },
+    addScheduleToRestriction (restriction, schedule) {
+      api
+        .request('put', '/restrictions/' + restriction + '/schedules/' + schedule, this.$store.state.accessToken)
+        .then(response => {
+          this.checkRestrictions()
+        })
+        .catch(error => {
+          this.handleError(error)
+          this.modalAlert = true
+        })
+    },
+    createRestriction () {
+      if (this.modalStartDate && this.modalEndDate) {
+        var formattedStart = moment(this.modalStartDate).startOf('day')
+        var formatedEnd = moment(this.modalEndDate).endOf('day')
+        const { modalRestrictionName, globalRestriction, addSchedule,
+          resourcesValue, usersValue, groupsValue } = this
+        api
+          .request('post', '/restrictions', this.$store.state.accessToken,
+            {
+              'name': modalRestrictionName,
+              'start': formattedStart,
+              'end': formatedEnd,
+              'isGlobal': globalRestriction
+            })
+          .then(response => {
+            let restrictionId = response.data.restriction.id
+            if (resourcesValue.length > 0 && globalRestriction === false) {
+              for (const resource of resourcesValue) {
+                this.addResourceToRestriction(restrictionId, resource)
+              }
+            }
+            if (usersValue.length > 0) {
+              for (const user of usersValue) {
+                this.addUserToRestriction(restrictionId, user)
+              }
+            }
+            if (groupsValue.length > 0) {
+              for (const group of groupsValue) {
+                this.addGroupToRestriction(restrictionId, group)
+              }
+            }
+            if (addSchedule) this.createAndAddSchedule(restrictionId)
+            this.clearForm()
           })
           .catch(error => {
             this.handleError(error)
             this.modalAlert = true
           })
       } else {
-        this.errorMessage = 'Passwords do not match'
+        this.errorMessage = 'Specify start and end date!'
         this.modalAlert = true
       }
     },
-
-    editUser: function (currentUser) {
-      this.dialog = true
-      this.user.id = currentUser.id
-      this.user.username = currentUser.username
-      this.user.email = currentUser.email
-      var admin = false
-      for (var role in currentUser.roles) {
-        if (currentUser.roles[role] === 'admin') {
-          admin = true
-        }
-      }
-      this.adminCheckbox = admin
-      this.currentUser = currentUser
-    },
-
-    updateUser: function () {
-      if (this.user.password === this.user.password2) {
-        if (this.adminCheckbox) {
-          this.user.roles.push('admin')
-        }
-        this.user.roles.push('user')
-        var updatedUser = {
-          id: this.user.id
-        }
-        if (this.user.username !== this.currentUser.username && this.user.username !== '') {
-          updatedUser['username'] = this.user.username
-        }
-        if (this.user.email !== this.currentUser.email && this.user.email !== '') {
-          updatedUser['email'] = this.user.email
-        }
-        if (this.user.password !== '') {
-          updatedUser['password'] = this.user.password
-        }
-        if (this.user.roles.length !== this.currentUser.roles.length) {
-          updatedUser['roles'] = this.user.roles
-        }
-        api
-          .request('put', '/user', this.$store.state.accessToken, updatedUser)
-          .then(response => {
-            this.user = {
-              id: -1,
-              username: '',
-              email: '',
-              password: '',
-              password2: '',
-              roles: []
-            }
-            this.adminCheckbox = false
-            this.userCheckbox = false
-            this.dialog = false
-            this.checkUsers()
-          })
-          .catch(error => {
-            this.pagination = {}
-            this.handleError(error)
-            this.alert = true
-          })
-      } else {
-        this.errorMessage = 'Passwords do not match'
-        this.alert = true
-      }
-    },
-    checkUsers: function () {
+    removeRestriction () {
+      var restrictionId = this.restrictionId
       api
-        .request('get', '/users', this.$store.state.accessToken)
+        .request('delete', '/restrictions/' + restrictionId, this.$store.state.accessToken)
         .then(response => {
-          this.users = response.data
-          for (var user in this.users) {
-            var admin = false
-            for (var role in this.users[user].roles) {
-              if (this.users[user].roles[role] === 'admin') {
-                admin = true
-              }
-            }
-            if (admin) {
-              this.users[user]['role'] = 'admin'
-            } else {
-              this.users[user]['role'] = 'user'
-            }
-          }
-          this.pagination['totalItems'] = this.users.length
-          this.pagination['rowsPerPage'] = 30
-        })
-        .catch(error => {
-          this.pagination = {}
-          this.handleError(error)
-          this.alert = true
-        })
-    },
-
-    showConfirmationDialog (id) {
-      this.userId = id
-      this.showModalRemove = true
-    },
-
-    removeUser: function () {
-      var userId = this.userId
-      api
-        .request('delete', '/user/delete/' + userId, this.$store.state.accessToken)
-        .then(response => {
-          this.showModalRemove = false
-          this.checkUsers()
+          this.showRemoveRestriction = false
+          this.checkRestrictions()
         })
         .catch(error => {
           this.handleError(error)
-          this.alert = true
+          this.modalAlert = true
         })
+    },
+    checkResources () {
+      api
+        .request('get', '/resources', this.$store.state.accessToken)
+        .then(response => {
+          this.resources = response.data
+        })
+        .catch(error => {
+          this.handleError(error)
+          this.modalAlert = true
+        })
+    },
+    showRemoveConfirmationDialog (id) {
+      this.restrictionId = id
+      this.showRemoveRestriction = true
     }
   }
 }
 </script>
 
-<style scoped>
+<style>
 .float-right-button {
   float: right;
 }
@@ -506,5 +668,22 @@ export default {
 .input-group-addon i {
   height: 15px;
   width: 15px;
+}
+
+.data_table{
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.data_box{
+  width: 45vw;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: all .5s;
+}
+
+.fade-enter, .fade-leave-to {
+  opacity: 0;
 }
 </style>
