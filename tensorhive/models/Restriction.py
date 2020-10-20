@@ -12,6 +12,7 @@ from tensorhive.models.User import User
 from tensorhive.models.Group import Group
 from tensorhive.models.Resource import Resource
 from tensorhive.models.RestrictionSchedule import RestrictionSchedule
+from typing import List
 
 log = logging.getLogger(__name__)
 
@@ -136,6 +137,14 @@ class Restriction(CRUDModel, Base):  # type: ignore
             raise InvalidRequestException('Restriction {restriction} is already being applied to resource {resource}'
                                           .format(restriction=self, resource=resource))
         self.resources.append(resource)
+        self.save()
+
+    def apply_to_resources(self, resources: List[Resource]):
+        for resource in resources:
+            if resource in self.resources:
+                # Skip adding resource that was already there
+                continue
+            self.resources.append(resource)
         self.save()
 
     def remove_from_resource(self, resource: Resource):

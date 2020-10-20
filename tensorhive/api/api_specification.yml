@@ -1136,6 +1136,62 @@ paths:
           description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
+  /restrictions/{restriction_id}/resources/hostname/{hostname}:
+    put:
+      tags:
+        - restrictions
+      summary: Apply restriction to all resources with given hostname
+      operationId: tensorhive.controllers.restriction.apply_to_resources_by_hostname
+      parameters:
+        - description: Restriction ID
+          in: path
+          name: restriction_id
+          required: true
+          schema:
+            type: integer
+        - description: Resources hostname
+          in: path
+          name: hostname
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: {{RESPONSES['restriction']['resources']['apply']['success']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['restriction']['resources']['apply']['success']}}
+                  restriction:
+                    $ref: '#/components/schemas/Restriction'
+        400:
+          description: {{RESPONSES['general']['bad_request']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unprivileged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unprivileged']}}
+        404:
+          description: {{RESPONSES['restriction']['not_found']}} or {{RESPONSES['resource']['not_found']}}
+        409:
+          description: {{RESPONSES['restriction']['resources']['apply']['failure']['duplicate']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['restriction']['resources']['apply']['failure']['assertions']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
+      security:
+        - Bearer: []
   /restrictions/{restriction_id}/resources/{resource_uuid}:
     put:
       tags:

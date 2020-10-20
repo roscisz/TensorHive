@@ -271,6 +271,36 @@ def apply_to_resource(restriction_id: RestrictionId, resource_uuid: ResourceId) 
 
 
 @admin_required
+def apply_to_resources_by_hostname(restriction_id: RestrictionId, hostname: str) -> Tuple[Content, HttpStatusCode]:
+    restriction = None
+    try:
+        restriction = Restriction.get(restriction_id)
+        resources = Resource.get_by_hostname(hostname)
+        restriction.apply_to_resources(resources)
+        for user in restriction.get_all_affected_users():
+            ReservationVerifier.update_user_reservations_statuses(user, have_users_permissions_increased=True)
+    except NoResultFound:
+        if restriction is None:
+            content, status = {'msg': RESTRICTION['not_found']}, HTTPStatus.NOT_FOUND.value
+        else:
+            content, status = {'msg': RESOURCE['not_found']}, HTTPStatus.NOT_FOUND.value
+    except InvalidRequestException:
+        content, status = {'msg': RESTRICTION['resources']['apply']['failure']['duplicate']}, HTTPStatus.CONFLICT.value
+    except AssertionError as e:
+        content, status = {'msg': RESTRICTION['resources']['apply']['failure']['assertions'].format(reason=e)}, \
+            HTTPStatus.UNPROCESSABLE_ENTITY.value
+    except Exception as e:
+        log.critical(e)
+        content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
+    else:
+        content, status = {'msg': RESTRICTION['resources']['apply']['success'],
+                           'restriction': restriction.as_dict(include_groups=True, include_users=True,
+                                                              include_resources=True)}, HTTPStatus.OK.value
+    finally:
+        return content, status
+
+
+@admin_required
 def add_schedule(restriction_id: RestrictionId, schedule_id: ScheduleId) -> Tuple[Content, HttpStatusCode]:
     restriction = None
     try:
