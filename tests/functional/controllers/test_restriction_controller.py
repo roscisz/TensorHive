@@ -215,7 +215,7 @@ def test_apply_restriction_to_resources_by_hostname(tables, client, restriction,
     resource1.save()
     resource2.save()
 
-    resp = client.put(ENDPOINT + '/{}/resources/hostname/nasa.gov'.format(restriction.id), headers=HEADERS)
+    resp = client.put(ENDPOINT + '/{}/hosts/nasa.gov'.format(restriction.id), headers=HEADERS)
 
     assert resp.status_code == HTTPStatus.OK
     assert restriction in resource1.get_restrictions()
@@ -225,16 +225,16 @@ def test_apply_restriction_to_resources_by_hostname(tables, client, restriction,
 
 
 # PUT /restrictions/{id}/hosts/{hostname} - no resources with given hostname
-def test_apply_restriction_to_nonexistent_resources_by_hostname(tables, client, restriction, resource1, resource2):
+def test_apply_restriction_to_resources_by_nonexistent_hostname(tables, client, restriction, resource1, resource2):
     restriction.save()
     resource1.hostname = 'spacex.com'
     resource2.hostname = 'spacex.com'
     resource1.save()
     resource2.save()
 
-    resp = client.put(ENDPOINT + '/{}/resources/hostname/nasa.gov'.format(restriction.id), headers=HEADERS)
+    resp = client.put(ENDPOINT + '/{}/hosts/nasa.gov'.format(restriction.id), headers=HEADERS)
 
-    assert resp.status_code == HTTPStatus.OK
+    assert resp.status_code == HTTPStatus.NOT_FOUND
     assert restriction not in resource1.get_restrictions()
     assert restriction not in resource2.get_restrictions()
     assert len(restriction.resources) == 0
@@ -247,7 +247,7 @@ def test_apply_nonexistent_restriction_to_resources_by_hostname(tables, client, 
     resource1.save()
     resource2.save()
 
-    resp = client.put(ENDPOINT + '/777/resources/hostname/nasa.gov', headers=HEADERS)
+    resp = client.put(ENDPOINT + '/777/hosts/nasa.gov', headers=HEADERS)
 
     assert resp.status_code == HTTPStatus.NOT_FOUND
     assert len(resource1.get_restrictions()) == 0

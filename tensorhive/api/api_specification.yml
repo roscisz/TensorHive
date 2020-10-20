@@ -3111,6 +3111,9 @@ components:
         name:
           type: string
           example: GeForce GTX 1060
+        hostname:
+          type: string
+          example: localhost
     GPUAllData:
       type: object
       example:
