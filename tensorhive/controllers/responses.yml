@@ -86,10 +86,19 @@ restriction:
         duplicate: Restriction is already being applied to resource
         assertion: Unable to apply restriction to resource - {reason}
     remove:
-      success: Restriction has been removed from resourcce
+      success: Restriction has been removed from resource
       failure:
-        assertion: Unable to remove restriction from resourcce - {reason}
+        assertion: Unable to remove restriction from resource - {reason}
         not_found: Resource is not affected by restriction
+  hosts:
+    apply:
+      success: Restriction has been applied to all resources with given hostname
+      failure:
+        assertion: Unable to apply restriction to resources with given hostname - {reason}
+    remove:
+      success: Restriction has been removed from all resources with given hostname
+      failure:
+        assertion: Unable to remove restriction from resources with given hostname - {reason}
   schedules:
     add:
       success: Schedule has been added to restriction

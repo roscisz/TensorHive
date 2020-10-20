@@ -22,7 +22,7 @@ def test_create(tables, client):
 
 
 # GET /groups
-def test_get_list_of_groups(tables, client, new_group):
+def test_get_list_of_groups(tables, client):
     resp = client.get(ENDPOINT, headers=HEADERS)
     resp_json = json.loads(resp.data.decode('utf-8'))
 

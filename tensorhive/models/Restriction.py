@@ -154,6 +154,14 @@ class Restriction(CRUDModel, Base):  # type: ignore
         self.resources.remove(resource)
         self.save()
 
+    def remove_from_resources(self, resources: List[Resource]):
+        for resource in resources:
+            if resource not in self.resources:
+                # Skip removing resource that wasn't there
+                continue
+            self.resources.remove(resource)
+        self.save()
+
     def add_schedule(self, schedule: RestrictionSchedule):
         if schedule in self.schedules:
             raise InvalidRequestException('Schedule {schedule} is already being applied to restriction {restriction}'

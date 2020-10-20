@@ -633,8 +633,6 @@ paths:
                     example: {{RESPONSES['group']['users']['add']['success']}}
                   group:
                     $ref: '#/components/schemas/Group'
-        400:
-          description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
@@ -688,8 +686,6 @@ paths:
                     example: {{RESPONSES['group']['users']['remove']['success']}}
                   group:
                     $ref: '#/components/schemas/Group'
-        400:
-          description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
@@ -950,8 +946,6 @@ paths:
                     example: {{RESPONSES['restriction']['users']['apply']['success']}}
                   restriction:
                     $ref: '#/components/schemas/Restriction'
-        400:
-          description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
@@ -1005,8 +999,6 @@ paths:
                     example: {{RESPONSES['restriction']['users']['remove']['success']}}
                   restriction:
                     $ref: '#/components/schemas/Restriction'
-        400:
-          description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
@@ -1059,8 +1051,6 @@ paths:
                     example: {{RESPONSES['restriction']['groups']['apply']['success']}}
                   restriction:
                     $ref: '#/components/schemas/Restriction'
-        400:
-          description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
@@ -1114,8 +1104,6 @@ paths:
                     example: {{RESPONSES['restriction']['groups']['remove']['success']}}
                   restriction:
                     $ref: '#/components/schemas/Restriction'
-        400:
-          description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
@@ -1132,62 +1120,6 @@ paths:
           description: {{RESPONSES['restriction']['not_found']}} or {{RESPONSES['group']['not_found']}} or {{RESPONSES['restriction']['groups']['remove']['failure']['not_found']}}
         422:
           description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['restriction']['groups']['remove']['failure']['assertions']}}
-        500:
-          description: {{RESPONSES['general']['internal_error']}}
-      security:
-        - Bearer: []
-  /restrictions/{restriction_id}/resources/hostname/{hostname}:
-    put:
-      tags:
-        - restrictions
-      summary: Apply restriction to all resources with given hostname
-      operationId: tensorhive.controllers.restriction.apply_to_resources_by_hostname
-      parameters:
-        - description: Restriction ID
-          in: path
-          name: restriction_id
-          required: true
-          schema:
-            type: integer
-        - description: Resources hostname
-          in: path
-          name: hostname
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: {{RESPONSES['restriction']['resources']['apply']['success']}}
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  msg:
-                    type: string
-                    example: {{RESPONSES['restriction']['resources']['apply']['success']}}
-                  restriction:
-                    $ref: '#/components/schemas/Restriction'
-        400:
-          description: {{RESPONSES['general']['bad_request']}}
-        401:
-          description: {{RESPONSES['general']['unauthorized']}}
-        403:
-          description: {{RESPONSES['general']['unprivileged']}}
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  msg:
-                    type: string
-                    example: {{RESPONSES['general']['unprivileged']}}
-        404:
-          description: {{RESPONSES['restriction']['not_found']}} or {{RESPONSES['resource']['not_found']}}
-        409:
-          description: {{RESPONSES['restriction']['resources']['apply']['failure']['duplicate']}}
-        422:
-          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['restriction']['resources']['apply']['failure']['assertions']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:
@@ -1224,8 +1156,6 @@ paths:
                     example: {{RESPONSES['restriction']['resources']['apply']['success']}}
                   restriction:
                     $ref: '#/components/schemas/Restriction'
-        400:
-          description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
@@ -1279,8 +1209,6 @@ paths:
                     example: {{RESPONSES['restriction']['resources']['remove']['success']}}
                   restriction:
                     $ref: '#/components/schemas/Restriction'
-        400:
-          description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
@@ -1297,6 +1225,109 @@ paths:
           description: {{RESPONSES['restriction']['not_found']}} or {{RESPONSES['resource']['not_found']}} or {{RESPONSES['restriction']['resources']['remove']['failure']['not_found']}}
         422:
           description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['restriction']['resources']['remove']['failure']['assertions']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
+      security:
+        - Bearer: []
+  /restrictions/{restriction_id}/hosts/{hostname}:
+    put:
+      tags:
+        - restrictions
+      summary: Apply restriction to all resources with given hostname
+      operationId: tensorhive.controllers.restriction.apply_to_resources_by_hostname
+      parameters:
+        - description: Restriction ID
+          in: path
+          name: restriction_id
+          required: true
+          schema:
+            type: integer
+        - description: Resources hostname
+          in: path
+          name: hostname
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: {{RESPONSES['restriction']['hosts']['apply']['success']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['restriction']['hosts']['apply']['success']}}
+                  restriction:
+                    $ref: '#/components/schemas/Restriction'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unprivileged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unprivileged']}}
+        404:
+          description: {{RESPONSES['restriction']['not_found']}} or {{RESPONSES['nodes']['hostname']['not_found']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['restriction']['hosts']['apply']['failure']['assertions']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
+      security:
+        - Bearer: []
+    delete:
+      tags:
+        - restrictions
+      summary: Remove restriction from all resources with given hostname
+      operationId: tensorhive.controllers.restriction.remove_from_resources_by_hostname
+      parameters:
+        - description: Restriction ID
+          in: path
+          name: restriction_id
+          required: true
+          schema:
+            type: integer
+        - description: Resources hostname
+          in: path
+          name: hostname
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: {{RESPONSES['restriction']['hosts']['remove']['success']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['restriction']['hosts']['remove']['success']}}
+                  restriction:
+                    $ref: '#/components/schemas/Restriction'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unprivileged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unprivileged']}}
+        404:
+          description: {{RESPONSES['restriction']['not_found']}} or {{RESPONSES['nodes']['hostname']['not_found']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['restriction']['hosts']['apply']['failure']['assertions']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:
@@ -1333,8 +1364,6 @@ paths:
                     example: {{RESPONSES['restriction']['schedules']['add']['success']}}
                   restriction:
                     $ref: '#/components/schemas/Restriction'
-        400:
-          description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
@@ -1388,8 +1417,6 @@ paths:
                     example: {{RESPONSES['restriction']['schedules']['remove']['success']}}
                   restriction:
                     $ref: '#/components/schemas/Restriction'
-        400:
-          description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:

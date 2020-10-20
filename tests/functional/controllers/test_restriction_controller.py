@@ -207,7 +207,7 @@ def test_apply_restriction_to_resource(tables, client, restriction, resource1):
     assert resource1 in restriction.resources
 
 
-# PUT /restrictions/{id}/resources/hostname/{hostname}
+# PUT /restrictions/{id}/hosts/{hostname}
 def test_apply_restriction_to_resources_by_hostname(tables, client, restriction, resource1, resource2):
     restriction.save()
     resource1.hostname = 'nasa.gov'
@@ -224,7 +224,7 @@ def test_apply_restriction_to_resources_by_hostname(tables, client, restriction,
     assert resource2 in restriction.resources
 
 
-# PUT /restrictions/{id}/resources/hostname/{hostname} - no resources with given hostname
+# PUT /restrictions/{id}/hosts/{hostname} - no resources with given hostname
 def test_apply_restriction_to_nonexistent_resources_by_hostname(tables, client, restriction, resource1, resource2):
     restriction.save()
     resource1.hostname = 'spacex.com'
@@ -240,7 +240,7 @@ def test_apply_restriction_to_nonexistent_resources_by_hostname(tables, client, 
     assert len(restriction.resources) == 0
 
 
-# PUT /restrictions/{id}/resources/hostname/{hostname}
+# PUT /restrictions/{id}/hosts/{hostname}
 def test_apply_nonexistent_restriction_to_resources_by_hostname(tables, client, resource1, resource2):
     resource1.hostname = 'nasa.gov'
     resource2.hostname = 'nasa.gov'
