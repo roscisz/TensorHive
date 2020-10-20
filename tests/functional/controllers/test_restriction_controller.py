@@ -12,13 +12,16 @@ ENDPOINT = BASE_URI + '/restrictions'
 
 
 # GET /restrictions
-def test_get_all_restrictions(tables, client):
+def test_get_all_restrictions_empty_response(tables, client):
     resp = client.get(ENDPOINT, headers=HEADERS)
     resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
     assert len(resp_json) == 0
 
+
+# GET /restrictions
+def test_get_all_restrictions_with_data(tables, client):
     # Create new restriction and save it to the DB
     start_time = datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
     end_time = start_time + datetime.timedelta(hours=8)

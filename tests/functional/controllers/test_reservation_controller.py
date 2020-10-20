@@ -72,7 +72,6 @@ def test_create_reservation_with_permissions_just_for_a_part_of_it(tables, clien
     restriction.apply_to_resource(resource)
 
     # Try to create reservation for a period just partly covered by the restriction.
-    # Should fail.
     data = {
         'title': 'Test reservation',
         'description': 'Test reservation',
@@ -109,7 +108,6 @@ def test_create_reservation_outside_of_schedule(tables, client, new_user, restri
     restriction.apply_to_resource(resource)
 
     # Try to create reservation for a period just partly covered by the restriction.
-    # Should fail.
     data = {
         'title': 'Test reservation',
         'description': 'Test reservation',
