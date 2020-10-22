@@ -111,6 +111,20 @@ def test_create_restriction(tables, client):
     assert Restriction.get(resp_json['restriction']['id']) is not None
 
 
+# POST /restrictions - another correct way (no end date)
+def test_create_indefinte_retriction(tables, client):
+    data = {
+        'name': 'Test restriction',
+        'start': '2100-01-01T10:00:00.000Z',
+        'isGlobal': False
+    }
+    resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
+    resp_json = json.loads(resp.data.decode('utf-8'))
+
+    assert resp.status_code == HTTPStatus.CREATED
+    assert Restriction.get(resp_json['restriction']['id']) is not None
+
+
 # POST /restrictions - missing data
 def test_create_restriction_missing_data(tables, client):
     data = {
@@ -240,7 +254,7 @@ def test_apply_restriction_to_resources_by_nonexistent_hostname(tables, client, 
     assert len(restriction.resources) == 0
 
 
-# PUT /restrictions/{id}/hosts/{hostname}
+# PUT /restrictions/{id}/hosts/{hostname} - no restriction with given id
 def test_apply_nonexistent_restriction_to_resources_by_hostname(tables, client, resource1, resource2):
     resource1.hostname = 'nasa.gov'
     resource2.hostname = 'nasa.gov'
@@ -252,6 +266,57 @@ def test_apply_nonexistent_restriction_to_resources_by_hostname(tables, client, 
     assert resp.status_code == HTTPStatus.NOT_FOUND
     assert len(resource1.get_restrictions()) == 0
     assert len(resource2.get_restrictions()) == 0
+
+
+# DELETE /restrictions/{id}/hosts/{hostname}
+def test_remove_resources_with_given_hostname_from_restriction(tables, client, restriction, resource1, resource2):
+    resource1.hostname = 'nasa.gov'
+    resource2.hostname = 'spacex.com'
+    resource1.save()
+    resource2.save()
+
+    restriction.apply_to_resource(resource1)
+    restriction.apply_to_resource(resource2)
+
+    resp = client.delete(ENDPOINT + '/{}/hosts/{}'.format(restriction.id, resource1.hostname), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.OK
+    assert resource1 not in restriction.resources
+    assert restriction not in resource1.get_restrictions()
+    assert resource2 in restriction.resources
+    assert restriction in resource2.get_restrictions()
+
+
+# DELETE /restrictions/{id}/hosts/{hostname} - no resources with given hostname
+def test_remove_resources_with_nonexistent_hostname_from_restriction(tables, client, restriction,
+                                                                     resource1, resource2):
+    resource1.hostname = 'nasa.gov'
+    resource2.hostname = 'spacex.com'
+    resource1.save()
+    resource2.save()
+
+    restriction.apply_to_resource(resource1)
+    restriction.apply_to_resource(resource2)
+
+    resp = client.delete(ENDPOINT + '/{}/hosts/jacek.com'.format(restriction.id), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.NOT_FOUND
+    assert resource1 in restriction.resources
+    assert restriction in resource1.get_restrictions()
+    assert resource2 in restriction.resources
+    assert restriction in resource2.get_restrictions()
+
+
+# DELETE /restrictions/{id}/hosts/{hostname} - no restriction with given id
+def test_remove_resources_with_given_hostname_from_nonexistent_restriction(tables, client, resource1, resource2):
+    resource1.hostname = 'nasa.gov'
+    resource2.hostname = 'spacex.com'
+    resource1.save()
+    resource2.save()
+
+    resp = client.delete(ENDPOINT + '/777/hosts/{}'.format(resource1.hostname), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 # PUT /restrictions/{id}/resources/{resource_id} - nonexistent resource
