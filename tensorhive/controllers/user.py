@@ -13,6 +13,7 @@ from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
 from tensorhive.models.RevokedToken import RevokedToken
 from tensorhive.models.Role import Role
 from tensorhive.models.User import User
+from tensorhive.models.Group import Group
 
 log = logging.getLogger(__name__)
 GENERAL = API.RESPONSES['general']
@@ -57,6 +58,10 @@ def do_create(user: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
             roles=[Role(name='user')]
         )
         new_user.save()
+
+        default_group = Group.get_default_group()
+        if default_group is not None:
+            default_group.add_user(new_user)
     except AssertionError as e:
         content = {'msg': USER['create']['failure']['invalid'].format(reason=e)}
         status = 422
