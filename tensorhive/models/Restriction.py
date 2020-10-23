@@ -40,10 +40,10 @@ class Restriction(CRUDModel, Base):  # type: ignore
     _ends_at = Column('ends_at', DateTime)
     is_global = Column(Boolean, nullable=False)
 
-    _users = relationship('User', secondary='restriction2assignee')
-    _groups = relationship('Group', secondary='restriction2assignee')
-    _resources = relationship('Resource', secondary='restriction2resource')
-    _schedules = relationship('RestrictionSchedule', secondary='restriction2schedule')
+    _users = relationship('User', secondary='restriction2assignee', back_populates='_restrictions')
+    _groups = relationship('Group', secondary='restriction2assignee', back_populates='_restrictions')
+    _resources = relationship('Resource', secondary='restriction2resource', back_populates='_restrictions')
+    _schedules = relationship('RestrictionSchedule', secondary='restriction2schedule', back_populates='_restrictions')
 
     def __repr__(self):
         return '''<Restriction id={id}
@@ -236,16 +236,9 @@ class Restriction2Assignee(Base):  # type: ignore
     group_id = Column(Integer, ForeignKey('groups.id', ondelete='CASCADE'))
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
 
-    restriction = relationship('Restriction', backref=backref('restriction2assignee', cascade='all,delete-orphan'))
-    group = relationship('Group', backref=backref('restriction2assignee', cascade='all,delete-orphan'))
-    user = relationship('User', backref=backref('restriction2assignee', cascade='all,delete-orphan'))
-
 
 class Restriction2Resource(Base):  # type: ignore
     __tablename__ = 'restriction2resource'
 
     restriction_id = Column(Integer, ForeignKey('restrictions.id', ondelete='CASCADE'), primary_key=True)
     resource_id = Column(String(64), ForeignKey('resources.id', ondelete='CASCADE'), primary_key=True)
-
-    restriction = relationship('Restriction', backref=backref('restriction2resource', cascade='all,delete-orphan'))
-    resource = relationship('Resource', backref=backref('restriction2resource', cascade='all,delete-orphan'))

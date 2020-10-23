@@ -22,8 +22,9 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
     name = Column(String(40), unique=False, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
-    _users = relationship('User', secondary='user2group')
-    _restrictions = relationship('Restriction', secondary='restriction2assignee')
+    _users = relationship('User', secondary='user2group', back_populates='_groups')
+    _restrictions = relationship('Restriction', secondary='restriction2assignee', back_populates='_groups',
+                                 viewonly=True)
 
     def __repr__(self):
         return '<Group id={id}, name={name}>'.format(id=self.id, name=self.name)
@@ -82,6 +83,3 @@ class User2Group(Base):  # type: ignore
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
     group_id = Column(Integer, ForeignKey('groups.id', ondelete='CASCADE'), primary_key=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow())
-
-    user = relationship('User', backref=backref('user2group', cascade='all,delete-orphan'))
-    group = relationship('Group', backref=backref('user2group', cascade='all,delete-orphan'))
