@@ -37,11 +37,11 @@ group:
       success: User has been added to group
       failure:
         duplicate: User is already member of group
-        assertion: Unable to add user to group - {reason}
+        assertions: Unable to add user to group - {reason}
     remove:
       success: User has been removed from group
       failure:
-        assertion: Unable to remove user from group - {reason}
+        assertions: Unable to remove user from group - {reason}
         not_found: User is not a member of group
   not_found: Group has not been found
   get:
@@ -57,67 +57,70 @@ group:
   delete:
     success: Group deleted successfully
   default:
+    not_found: Default group has not been set
+    get:
+      success: Default group has been successfuly fetched
     set:
-      success: Group set as default
+      success: Group has been set as default
       failure:
-        assertion: Unable to set group as default - {reason}
+        assertions: Unable to set group as default - {reason}
     delete:
       success: Default group has been deleted
       failure:
-        assertion: Unable to delete default group - {reason}
+        assertions: Unable to delete default group - {reason}
 restriction:
   users:
     apply:
       success: Restriction has been applied to user
       failure:
         duplicate: Restriction is already being applied to user
-        assertion: Unable to apply restriction to user - {reason}
+        assertions: Unable to apply restriction to user - {reason}
     remove:
       success: Restriction has been removed from user
       failure:
-        assertion: Unable to remove restriction from user - {reason}
+        assertions: Unable to remove restriction from user - {reason}
         not_found: User is not affected by restriction
   groups:
     apply:
       success: Restriction has been applied to group
       failure:
         duplicate: Restriction is already being applied to group
-        assertion: Unable to apply restriction to group - {reason}
+        assertions: Unable to apply restriction to group - {reason}
     remove:
       success: Restriction has been removed from group
       failure:
-        assertion: Unable to remove restriction from group - {reason}
+        assertions: Unable to remove restriction from group - {reason}
         not_found: Group is not affected by restriction
   resources:
     apply:
       success: Restriction has been applied to resource
       failure:
         duplicate: Restriction is already being applied to resource
-        assertion: Unable to apply restriction to resource - {reason}
+        assertions: Unable to apply restriction to resource - {reason}
     remove:
       success: Restriction has been removed from resource
       failure:
-        assertion: Unable to remove restriction from resource - {reason}
+        assertions: Unable to remove restriction from resource - {reason}
         not_found: Resource is not affected by restriction
   hosts:
     apply:
       success: Restriction has been applied to all resources with given hostname
       failure:
-        assertion: Unable to apply restriction to resources with given hostname - {reason}
+        assertions: Unable to apply restriction to resources with given hostname - {reason}
     remove:
       success: Restriction has been removed from all resources with given hostname
       failure:
-        assertion: Unable to remove restriction from resources with given hostname - {reason}
+        assertions: Unable to remove restriction from resources with given hostname - {reason}
   schedules:
     add:
       success: Schedule has been added to restriction
       failure:
         duplicate: Schedule has already been added to restriction
-        assertion: Unable to add schedule to restriction - {reason}
+        assertions: Unable to add schedule to restriction - {reason}
     remove:
       success: Schedule has been removed from restriction
       failure:
-        assertion: Unable to remove schedule from restriction - {reason}
+        assertions: Unable to remove schedule from restriction - {reason}
         not_found: Schedule is not applied to restriction
   not_found: Restriction has not been found
   create:

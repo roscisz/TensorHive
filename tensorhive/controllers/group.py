@@ -114,6 +114,21 @@ def delete(id: GroupId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
+def get_default_group() -> Tuple[Content, HttpStatusCode]:
+    try:
+        group = Group.get_default_group()
+    except Exception as e:
+        log.critical(e)
+        content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
+    else:
+        if group is None:
+            content, status = {'msg': GROUP['default']['not_found']}, HTTPStatus.NOT_FOUND.value
+        else:
+            content, status = {'msg': GROUP['default']['get']['success'], 'group': group.as_dict}, HTTPStatus.OK.value
+    finally:
+        return content, status
+
+
 @admin_required
 def set_default_group(group_id: GroupId) -> Tuple[Content, HttpStatusCode]:
     try:
