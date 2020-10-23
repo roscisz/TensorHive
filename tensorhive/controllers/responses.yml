@@ -56,6 +56,15 @@ group:
       assertions: Unable to update group - {reason}
   delete:
     success: Group deleted successfully
+  default:
+    set:
+      success: Group set as default
+      failure:
+        assertion: Unable to set group as default - {reason}
+    delete:
+      success: Default group has been deleted
+      failure:
+        assertion: Unable to delete default group - {reason}
 restriction:
   users:
     apply:
