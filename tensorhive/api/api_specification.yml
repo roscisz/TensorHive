@@ -642,8 +642,8 @@ paths:
       tags:
         - groups
       summary: |
-          Set group with given ID as default (default group is the group to which all new users will be added).
-          It will only affect new users.
+          Set group with given ID as default (default group is the group to which all new users will be added
+          on registration). It will only affect new users.
       operationId: tensorhive.controllers.group.set_default_group
       parameters:
         - description: Group ID
@@ -683,7 +683,7 @@ paths:
     delete:
       tags:
         - groups
-      summary: Delete default group. Existing users will be not affected.
+      summary: Mark current default group as non-default. Existing users will be not affected.
       operationId: tensorhive.controllers.group.delete_default_group
       responses:
         200:

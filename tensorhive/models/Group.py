@@ -85,7 +85,7 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
         :raises: MultipleResultsFound if more than one default group is found
         :return: A group that is marked as default or None if no such group exists
         """
-        return Group.query.filter(Group.is_default.is_(True)).one_or_none()
+        return Group.query.filter(Group._is_default.is_(True)).one_or_none()
 
     @classmethod
     def set_default_group(cls, group_id):
@@ -101,7 +101,7 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
             raise e
 
         cls.delete_default_group_if_exists()
-        group.is_default = True
+        group._is_default = True
         return group.save()
 
     @classmethod
@@ -113,7 +113,7 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
         group = cls.get_default_group()
         if group is None:
             return False
-        group.is_default = None
+        group._is_default = None
         group.save()
         return True
 

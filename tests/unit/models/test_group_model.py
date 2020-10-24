@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.models.Group import Group
 from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 
@@ -37,3 +38,60 @@ def test_adding_user_to_a_group_that_he_is_already_in_fails(tables, new_group_wi
 
     with pytest.raises(InvalidRequestException):
         new_group_with_member.add_user(user)
+
+
+def test_marking_group_as_a_default(tables, new_group):
+    new_group.save()
+    Group.set_default_group(new_group.id)
+
+    assert Group.get(new_group.id)._is_default
+    assert new_group == Group.get_default_group()
+
+
+def test_marking_nonexistent_group_as_a_default(tables):
+    with pytest.raises(NoResultFound):
+        Group.set_default_group(777)
+
+
+def test_marking_group_as_a_default_removes_default_status_from_the_old_default_group(tables, new_group):
+    new_group._is_default = True
+    new_group.save()
+
+    new_default_group = Group(name='NewDefaultGroup')
+    new_default_group.save()
+
+    Group.set_default_group(new_default_group.id)
+
+    assert Group.get_default_group() == new_default_group
+    assert new_group._is_default is None
+
+
+def test_get_default_group(tables, new_group):
+    new_group._is_default = True
+    new_group.save()
+
+    assert new_group == Group.get_default_group()
+
+
+def test_get_default_without_default_group(tables, new_group):
+    new_group.save()
+
+    assert Group.get_default_group() is None
+
+
+def test_delete_default_group(tables, new_group):
+    new_group._is_default = True
+    new_group.save()
+
+    result = Group.delete_default_group_if_exists()
+
+    assert result is True
+    assert new_group._is_default is None
+
+
+def test_delete_default_group_without_default_group(tables, new_group):
+    new_group.save()
+
+    result = Group.delete_default_group_if_exists()
+
+    assert result is False

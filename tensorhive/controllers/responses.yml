@@ -57,7 +57,7 @@ group:
   delete:
     success: Group deleted successfully
   default:
-    not_found: Default group has not been set
+    not_found: Default group has not been found
     get:
       success: Default group has been successfuly fetched
     set:
@@ -65,9 +65,9 @@ group:
       failure:
         assertions: Unable to set group as default - {reason}
     delete:
-      success: Default group has been deleted
+      success: From now on no group is marked as default.
       failure:
-        assertions: Unable to delete default group - {reason}
+        assertions: Unable to set default group as non-default - {reason}
 restriction:
   users:
     apply:

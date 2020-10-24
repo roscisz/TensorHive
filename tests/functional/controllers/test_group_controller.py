@@ -5,6 +5,7 @@ from http import HTTPStatus
 import json
 
 ENDPOINT = BASE_URI + '/groups'
+ENDPOINT_DEFAULT_GROUP = BASE_URI + '/default_group'
 
 
 # POST /groups
@@ -166,3 +167,83 @@ def test_remove_user_from_a_nonexistent_group(tables, client, new_user):
     resp = client.delete(ENDPOINT + '/{}/users/{}'.format(nonexistent_group_id, new_user.id), headers=HEADERS)
 
     assert resp.status_code == HTTPStatus.NOT_FOUND
+
+
+# GET /default_group
+def test_get_default_group(tables, client, new_group):
+    new_group.save()
+    Group.set_default_group(new_group.id)
+
+    resp = client.get(ENDPOINT_DEFAULT_GROUP, headers=HEADERS)
+    resp_json = json.loads(resp.data.decode('utf-8'))
+
+    assert resp.status_code == HTTPStatus.OK
+    assert resp_json['group']['id'] == new_group.id
+
+
+# GET /default_group - when default group doesn't exist
+def test_get_default_group_when_no_default_group_exists(tables, client, new_group):
+    new_group.save()
+
+    resp = client.get(ENDPOINT_DEFAULT_GROUP, headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.NOT_FOUND
+
+
+# PUT /default_group?group_id={ID} - no default group currently existing
+def test_set_default_group_when_no_preexisting_default_group_exists(tables, client, new_group):
+    new_group.save()
+
+    resp = client.put(ENDPOINT_DEFAULT_GROUP + '?group_id={}'.format(new_group.id), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.OK
+    assert new_group._is_default
+    assert Group.get_default_group() == new_group
+
+
+# PUT /default_group - default group currently existing
+def test_set_default_group_when_there_is_a_preexisting_default_group(tables, client, new_group):
+    new_group.save()
+    Group.set_default_group(new_group.id)
+
+    another_group = Group(name='AnotherGroup')
+    another_group.save()
+    resp = client.put(ENDPOINT_DEFAULT_GROUP + '?group_id={}'.format(another_group.id), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.OK
+    assert another_group._is_default
+    assert new_group._is_default is None
+    assert Group.get_default_group() == another_group
+
+
+# PUT /default_group - group with specified id doesn't exist
+def test_set_default_group_when_there_is_no_preexisting_default_group(tables, client, new_group):
+    new_group.save()
+
+    resp = client.put(ENDPOINT_DEFAULT_GROUP + '?group_id={}'.format(new_group.id), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.OK
+    assert new_group._is_default
+    assert Group.get_default_group() == new_group
+
+
+# DELETE /default_group
+def test_mark_default_group_as_non_default(tables, client, new_group):
+    new_group.save()
+    Group.set_default_group(new_group.id)
+
+    resp = client.delete(ENDPOINT_DEFAULT_GROUP, headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.OK
+    assert new_group._is_default is None
+    assert Group.get_default_group() is None
+
+
+# DELETE /default_group - when default group doesn't exist
+def test_mark_default_group_as_non_default_when_it_doesnt_exist(tables, client, new_group):
+    new_group.save()
+
+    resp = client.delete(ENDPOINT_DEFAULT_GROUP, headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.OK
+    assert Group.get_default_group() is None
