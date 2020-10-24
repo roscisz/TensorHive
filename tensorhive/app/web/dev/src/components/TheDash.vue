@@ -21,7 +21,7 @@
           <span class="sr-only">Toggle navigation</span>
         </a>
         <div class="version_info">
-          <b>TensorHive</b> v{{version}} <b>API</b> v{{apiVersion}}
+          <b>TensorHive</b> v{{version}}
         </div>
         <v-menu
           class="user_chip"
@@ -103,9 +103,6 @@ export default {
     },
     version () {
       return config.version
-    },
-    apiVersion () {
-      return config.apiVersion
     }
   },
 
