@@ -12,13 +12,16 @@ ENDPOINT = BASE_URI + '/restrictions'
 
 
 # GET /restrictions
-def test_get_all_restrictions(tables, client):
+def test_get_all_restrictions_empty_response(tables, client):
     resp = client.get(ENDPOINT, headers=HEADERS)
     resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
     assert len(resp_json) == 0
 
+
+# GET /restrictions
+def test_get_all_restrictions_with_data(tables, client):
     # Create new restriction and save it to the DB
     start_time = datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
     end_time = start_time + datetime.timedelta(hours=8)
@@ -99,6 +102,20 @@ def test_create_restriction(tables, client):
         'name': 'Test restriction',
         'start': '2100-01-01T10:00:00.000Z',
         'end': '2101-02-01T10:00:00.000Z',
+        'isGlobal': False
+    }
+    resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
+    resp_json = json.loads(resp.data.decode('utf-8'))
+
+    assert resp.status_code == HTTPStatus.CREATED
+    assert Restriction.get(resp_json['restriction']['id']) is not None
+
+
+# POST /restrictions - another correct way (no end date)
+def test_create_indefinte_retriction(tables, client):
+    data = {
+        'name': 'Test restriction',
+        'start': '2100-01-01T10:00:00.000Z',
         'isGlobal': False
     }
     resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
@@ -192,7 +209,7 @@ def test_apply_nonexistent_restriction_to_group(tables, client, new_group):
     assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
-# PUT /restrictions/{id}/resources/{group_id} - apply restriction to resource - correct
+# PUT /restrictions/{id}/resources/{resource_id} - apply restriction to resource - correct
 def test_apply_restriction_to_resource(tables, client, restriction, resource1):
     restriction.save()
     resource1.save()
@@ -204,7 +221,105 @@ def test_apply_restriction_to_resource(tables, client, restriction, resource1):
     assert resource1 in restriction.resources
 
 
-# PUT /restrictions/{id}/resources/{group_id} - nonexistent resource
+# PUT /restrictions/{id}/hosts/{hostname}
+def test_apply_restriction_to_resources_by_hostname(tables, client, restriction, resource1, resource2):
+    restriction.save()
+    resource1.hostname = 'nasa.gov'
+    resource2.hostname = 'nasa.gov'
+    resource1.save()
+    resource2.save()
+
+    resp = client.put(ENDPOINT + '/{}/hosts/nasa.gov'.format(restriction.id), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.OK
+    assert restriction in resource1.get_restrictions()
+    assert restriction in resource2.get_restrictions()
+    assert resource1 in restriction.resources
+    assert resource2 in restriction.resources
+
+
+# PUT /restrictions/{id}/hosts/{hostname} - no resources with given hostname
+def test_apply_restriction_to_resources_by_nonexistent_hostname(tables, client, restriction, resource1, resource2):
+    restriction.save()
+    resource1.hostname = 'spacex.com'
+    resource2.hostname = 'spacex.com'
+    resource1.save()
+    resource2.save()
+
+    resp = client.put(ENDPOINT + '/{}/hosts/nasa.gov'.format(restriction.id), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.NOT_FOUND
+    assert restriction not in resource1.get_restrictions()
+    assert restriction not in resource2.get_restrictions()
+    assert len(restriction.resources) == 0
+
+
+# PUT /restrictions/{id}/hosts/{hostname} - no restriction with given id
+def test_apply_nonexistent_restriction_to_resources_by_hostname(tables, client, resource1, resource2):
+    resource1.hostname = 'nasa.gov'
+    resource2.hostname = 'nasa.gov'
+    resource1.save()
+    resource2.save()
+
+    resp = client.put(ENDPOINT + '/777/hosts/nasa.gov', headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.NOT_FOUND
+    assert len(resource1.get_restrictions()) == 0
+    assert len(resource2.get_restrictions()) == 0
+
+
+# DELETE /restrictions/{id}/hosts/{hostname}
+def test_remove_resources_with_given_hostname_from_restriction(tables, client, restriction, resource1, resource2):
+    resource1.hostname = 'nasa.gov'
+    resource2.hostname = 'spacex.com'
+    resource1.save()
+    resource2.save()
+
+    restriction.apply_to_resource(resource1)
+    restriction.apply_to_resource(resource2)
+
+    resp = client.delete(ENDPOINT + '/{}/hosts/{}'.format(restriction.id, resource1.hostname), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.OK
+    assert resource1 not in restriction.resources
+    assert restriction not in resource1.get_restrictions()
+    assert resource2 in restriction.resources
+    assert restriction in resource2.get_restrictions()
+
+
+# DELETE /restrictions/{id}/hosts/{hostname} - no resources with given hostname
+def test_remove_resources_with_nonexistent_hostname_from_restriction(tables, client, restriction,
+                                                                     resource1, resource2):
+    resource1.hostname = 'nasa.gov'
+    resource2.hostname = 'spacex.com'
+    resource1.save()
+    resource2.save()
+
+    restriction.apply_to_resource(resource1)
+    restriction.apply_to_resource(resource2)
+
+    resp = client.delete(ENDPOINT + '/{}/hosts/jacek.com'.format(restriction.id), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.NOT_FOUND
+    assert resource1 in restriction.resources
+    assert restriction in resource1.get_restrictions()
+    assert resource2 in restriction.resources
+    assert restriction in resource2.get_restrictions()
+
+
+# DELETE /restrictions/{id}/hosts/{hostname} - no restriction with given id
+def test_remove_resources_with_given_hostname_from_nonexistent_restriction(tables, client, resource1, resource2):
+    resource1.hostname = 'nasa.gov'
+    resource2.hostname = 'spacex.com'
+    resource1.save()
+    resource2.save()
+
+    resp = client.delete(ENDPOINT + '/777/hosts/{}'.format(resource1.hostname), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.NOT_FOUND
+
+
+# PUT /restrictions/{id}/resources/{resource_id} - nonexistent resource
 def test_apply_restriction_to_nonexistent_resource(tables, client, restriction):
     restriction.save()
     nonexistent_id = '777'
@@ -214,7 +329,7 @@ def test_apply_restriction_to_nonexistent_resource(tables, client, restriction):
     assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
-# PUT /restrictions/{id}/resources/{group_id} - nonexistent restriction
+# PUT /restrictions/{id}/resources/{resource_id} - nonexistent restriction
 def test_apply_nonexistent_restriction_to_resource(tables, client, resource1):
     resource1.save()
     nonexistent_id = '777'
@@ -224,7 +339,7 @@ def test_apply_nonexistent_restriction_to_resource(tables, client, resource1):
     assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
-# PUT /restrictions/{id}/schedules/{group_id} - apply restriction to schedule - correct
+# PUT /restrictions/{id}/schedules/{schedule_id} - apply restriction to schedule - correct
 def test_apply_restriction_to_schedule(tables, client, restriction, active_schedule):
     restriction.save()
     active_schedule.save()
@@ -236,7 +351,7 @@ def test_apply_restriction_to_schedule(tables, client, restriction, active_sched
     assert active_schedule in restriction.schedules
 
 
-# PUT /restrictions/{id}/schedules/{group_id} - nonexistent schedule
+# PUT /restrictions/{id}/schedules/{schedule_id} - nonexistent schedule
 def test_apply_restriction_to_nonexistent_schedule(tables, client, restriction):
     restriction.save()
     nonexistent_id = '777'
@@ -246,7 +361,7 @@ def test_apply_restriction_to_nonexistent_schedule(tables, client, restriction):
     assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
-# PUT /restrictions/{id}/schedules/{group_id} - nonexistent restriction
+# PUT /restrictions/{id}/schedules/{schedule_id} - nonexistent restriction
 def test_apply_nonexistent_restriction_to_schedule(tables, client, active_schedule):
     active_schedule.save()
     nonexistent_id = '777'
@@ -268,7 +383,7 @@ def test_apply_restriction_to_user(tables, client, restriction, new_user):
     assert new_user in restriction.users
 
 
-# PUT /restrictions/{id}/users/{group_id} - nonexistent user
+# PUT /restrictions/{id}/users/{user_id} - nonexistent user
 def test_apply_restriction_to_nonexistent_user(tables, client, restriction):
     restriction.save()
     nonexistent_id = '777'
@@ -278,7 +393,7 @@ def test_apply_restriction_to_nonexistent_user(tables, client, restriction):
     assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
-# PUT /restrictions/{id}/users/{group_id} - nonexistent restriction
+# PUT /restrictions/{id}/users/{user_id} - nonexistent restriction
 def test_apply_nonexistent_restriction_to_user(tables, client, new_user):
     new_user.save()
     nonexistent_id = '777'

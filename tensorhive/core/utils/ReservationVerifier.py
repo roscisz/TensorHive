@@ -55,7 +55,6 @@ class ReservationVerifier:
         start_date = reservation.starts_at
         end_date = reservation.ends_at
 
-        reservation_allowed = False
         while True:
             start_date_changed = False
             for restriction in restrictions:
@@ -63,19 +62,22 @@ class ReservationVerifier:
                         (restriction.ends_at is None or start_date < restriction.ends_at):
                     schedules = restriction.schedules
                     if not schedules:
-                        start_date = restriction.ends_at
-                        start_date_changed = True
+                        if restriction.ends_at is None:
+                            # If restriction lasts indefinitely, reservation is allowed
+                            return True
+                        else:
+                            start_date = restriction.ends_at
+                            start_date_changed = True
                     else:
                         date = cls.__get_latest_date_allowed_by_schedules(start_date, end_date, schedules)
                         if date > start_date:
                             start_date_changed = True
                             start_date = date
                     if start_date >= end_date:
-                        reservation_allowed = True
-                        break
-            if reservation_allowed or not start_date_changed:
+                        return True
+            if not start_date_changed:
                 break
-        return reservation_allowed
+        return False
 
     @classmethod
     def update_user_reservations_statuses(cls, user, have_users_permissions_increased):

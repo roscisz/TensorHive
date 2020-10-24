@@ -12,6 +12,7 @@ from tensorhive.models.User import User
 from tensorhive.models.Group import Group
 from tensorhive.models.Resource import Resource
 from tensorhive.models.RestrictionSchedule import RestrictionSchedule
+from typing import List
 
 log = logging.getLogger(__name__)
 
@@ -39,10 +40,10 @@ class Restriction(CRUDModel, Base):  # type: ignore
     _ends_at = Column('ends_at', DateTime)
     is_global = Column(Boolean, nullable=False)
 
-    _users = relationship('User', secondary='restriction2assignee')
-    _groups = relationship('Group', secondary='restriction2assignee')
-    _resources = relationship('Resource', secondary='restriction2resource')
-    _schedules = relationship('RestrictionSchedule', secondary='restriction2schedule')
+    _users = relationship('User', secondary='restriction2assignee', back_populates='_restrictions')
+    _groups = relationship('Group', secondary='restriction2assignee', back_populates='_restrictions')
+    _resources = relationship('Resource', secondary='restriction2resource', back_populates='_restrictions')
+    _schedules = relationship('RestrictionSchedule', secondary='restriction2schedule', back_populates='_restrictions')
 
     def __repr__(self):
         return '''<Restriction id={id}
@@ -138,11 +139,27 @@ class Restriction(CRUDModel, Base):  # type: ignore
         self.resources.append(resource)
         self.save()
 
+    def apply_to_resources(self, resources: List[Resource]):
+        for resource in resources:
+            if resource in self.resources:
+                # Skip adding resource that was already there
+                continue
+            self.resources.append(resource)
+        self.save()
+
     def remove_from_resource(self, resource: Resource):
         if resource not in self.resources:
             raise InvalidRequestException('Resource {resource} is not affected by restriction {restriction}'
                                           .format(resource=resource, restriction=self))
         self.resources.remove(resource)
+        self.save()
+
+    def remove_from_resources(self, resources: List[Resource]):
+        for resource in resources:
+            if resource not in self.resources:
+                # Skip removing resource that wasn't there
+                continue
+            self.resources.remove(resource)
         self.save()
 
     def add_schedule(self, schedule: RestrictionSchedule):
@@ -162,7 +179,7 @@ class Restriction(CRUDModel, Base):  # type: ignore
     def get_all_affected_users(self):
         """Will return all users affected by this restriction, i.e. users directly assigned to this restriction
         and members of all groups assigned to this restriction."""
-        affected_users = self.users
+        affected_users = self.users[:]
         for group in self.groups:
             affected_users.extend(group.users)
         return list(set(affected_users))
@@ -219,16 +236,9 @@ class Restriction2Assignee(Base):  # type: ignore
     group_id = Column(Integer, ForeignKey('groups.id', ondelete='CASCADE'))
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
 
-    restriction = relationship('Restriction', backref=backref('restriction2assignee', cascade='all,delete-orphan'))
-    group = relationship('Group', backref=backref('restriction2assignee', cascade='all,delete-orphan'))
-    user = relationship('User', backref=backref('restriction2assignee', cascade='all,delete-orphan'))
-
 
 class Restriction2Resource(Base):  # type: ignore
     __tablename__ = 'restriction2resource'
 
     restriction_id = Column(Integer, ForeignKey('restrictions.id', ondelete='CASCADE'), primary_key=True)
     resource_id = Column(String(64), ForeignKey('resources.id', ondelete='CASCADE'), primary_key=True)
-
-    restriction = relationship('Restriction', backref=backref('restriction2resource', cascade='all,delete-orphan'))
-    resource = relationship('Resource', backref=backref('restriction2resource', cascade='all,delete-orphan'))

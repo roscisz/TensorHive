@@ -1,5 +1,6 @@
 from tensorhive.models.Reservation import Reservation
 from tensorhive.models.Resource import Resource
+from tensorhive.models.Restriction import Restriction
 from tensorhive.models.RestrictionSchedule import RestrictionSchedule
 from fixtures.controllers import API_URI as BASE_URI, HEADERS
 from http import HTTPStatus
@@ -58,6 +59,34 @@ def test_create_reservation_with_proper_permissions(tables, client, new_user, re
     assert Reservation.get(resp_json['reservation']['id']) is not None
 
 
+def test_create_reservation_with_an_indefinite_restriction(tables, client, new_user, restriction):
+    new_user.save()
+
+    # Create an indefinite restriction and assign it to the user
+    restriction.starts_at = '2101-01-01T10:00:00.000Z'
+    restriction.ends_at = None
+    restriction.apply_to_user(new_user)
+
+    # Create a resource and assign it to the restriction
+    resource = Resource(id='0123456789012345678901234567890123456789')
+    resource.save()
+    restriction.apply_to_resource(resource)
+
+    data = {
+        'title': 'Test reservation',
+        'description': 'Test reservation',
+        'resourceId': '0123456789012345678901234567890123456789',
+        'userId': new_user.id,
+        'start': '2101-01-02T10:00:00.000Z',
+        'end': '2101-01-03T12:00:00.000Z'
+    }
+    resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
+    resp_json = json.loads(resp.data.decode('utf-8'))
+
+    assert resp.status_code == HTTPStatus.CREATED
+    assert Reservation.get(resp_json['reservation']['id']) is not None
+
+
 def test_create_reservation_with_permissions_just_for_a_part_of_it(tables, client, new_user, restriction):
     new_user.save()
 
@@ -72,7 +101,6 @@ def test_create_reservation_with_permissions_just_for_a_part_of_it(tables, clien
     restriction.apply_to_resource(resource)
 
     # Try to create reservation for a period just partly covered by the restriction.
-    # Should fail.
     data = {
         'title': 'Test reservation',
         'description': 'Test reservation',
@@ -108,15 +136,14 @@ def test_create_reservation_outside_of_schedule(tables, client, new_user, restri
     resource.save()
     restriction.apply_to_resource(resource)
 
-    # Try to create reservation for a period just partly covered by the restriction.
-    # Should fail.
+    # Try to create reservation for a period not covered by the restriction.
     data = {
         'title': 'Test reservation',
         'description': 'Test reservation',
         'resourceId': '0123456789012345678901234567890123456789',
         'userId': new_user.id,
-        'start': '2101-01-02T09:00:00.000Z',
-        'end': '2101-01-02T10:30:00.000Z'
+        'start': '2101-01-07T09:00:00.000Z',
+        'end': '2101-01-07T10:30:00.000Z'
     }
     resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
 
@@ -161,3 +188,36 @@ def test_after_updating_restriction_reservations_that_are_no_longer_valid_should
 
     assert resp.status_code == HTTPStatus.OK
     assert reservation.is_cancelled is True
+
+
+def test_create_reservation_that_is_covered_by_two_separate_restrictions(tables, client, new_user):
+    r1_start = '2101-01-01T00:00:00.000Z'
+    r1_end = '2101-01-02T00:00:00.000Z'
+    r2_start = '2101-01-02T00:00:00.000Z'
+    r2_end = '2101-01-02T23:59:00.000Z'
+
+    r1 = Restriction(name='FirstRestriction', starts_at=r1_start, ends_at=r1_end, is_global=False)
+    r2 = Restriction(name='SecondRestriction', starts_at=r2_start, ends_at=r2_end, is_global=False)
+
+    new_user.save()
+    r1.apply_to_user(new_user)
+    r2.apply_to_user(new_user)
+
+    resource = Resource(id='0123456789012345678901234567890123456789')
+    resource.save()
+    r1.apply_to_resource(resource)
+    r2.apply_to_resource(resource)
+
+    data = {
+        'title': 'Test reservation',
+        'description': 'Test reservation',
+        'resourceId': '0123456789012345678901234567890123456789',
+        'userId': new_user.id,
+        'start': '2101-01-01T10:00:00.000Z',
+        'end': '2101-01-02T12:00:00.000Z'
+    }
+    resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
+    resp_json = json.loads(resp.data.decode('utf-8'))
+
+    assert resp.status_code == HTTPStatus.CREATED
+    assert Reservation.get(resp_json['reservation']['id']) is not None

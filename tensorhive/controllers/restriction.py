@@ -19,6 +19,7 @@ RESTRICTION = API.RESPONSES['restriction']
 USER = API.RESPONSES['user']
 GROUP = API.RESPONSES['group']
 RESOURCE = API.RESPONSES['resource']
+NODES = API.RESPONSES['nodes']
 SCHEDULE = API.RESPONSES['schedule']
 GENERAL = API.RESPONSES['general']
 
@@ -271,6 +272,37 @@ def apply_to_resource(restriction_id: RestrictionId, resource_uuid: ResourceId) 
 
 
 @admin_required
+def apply_to_resources_by_hostname(restriction_id: RestrictionId, hostname: str) -> Tuple[Content, HttpStatusCode]:
+    restriction = None
+    try:
+        restriction = Restriction.get(restriction_id)
+        resources = Resource.get_by_hostname(hostname)
+        if resources:
+            restriction.apply_to_resources(resources)
+            for user in restriction.get_all_affected_users():
+                ReservationVerifier.update_user_reservations_statuses(user, have_users_permissions_increased=True)
+        else:
+            raise NoResultFound
+    except NoResultFound:
+        if restriction is None:
+            content, status = {'msg': RESTRICTION['not_found']}, HTTPStatus.NOT_FOUND.value
+        else:
+            content, status = {'msg': NODES['hostname']['not_found']}, HTTPStatus.NOT_FOUND.value
+    except AssertionError as e:
+        content, status = {'msg': RESTRICTION['hosts']['apply']['failure']['assertions'].format(reason=e)}, \
+            HTTPStatus.UNPROCESSABLE_ENTITY.value
+    except Exception as e:
+        log.critical(e)
+        content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
+    else:
+        content, status = {'msg': RESTRICTION['hosts']['apply']['success'],
+                           'restriction': restriction.as_dict(include_groups=True, include_users=True,
+                                                              include_resources=True)}, HTTPStatus.OK.value
+    finally:
+        return content, status
+
+
+@admin_required
 def add_schedule(restriction_id: RestrictionId, schedule_id: ScheduleId) -> Tuple[Content, HttpStatusCode]:
     restriction = None
     try:
@@ -385,6 +417,37 @@ def remove_from_resource(restriction_id: RestrictionId, resource_uuid: ResourceI
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
         content, status = {'msg': RESTRICTION['resources']['remove']['success'],
+                           'restriction': restriction.as_dict(include_groups=True, include_users=True,
+                                                              include_resources=True)}, HTTPStatus.OK.value
+    finally:
+        return content, status
+
+
+@admin_required
+def remove_from_resources_by_hostname(restriction_id: RestrictionId, hostname: str) -> Tuple[Content, HttpStatusCode]:
+    restriction = None
+    try:
+        restriction = Restriction.get(restriction_id)
+        resources = Resource.get_by_hostname(hostname)
+        if resources:
+            restriction.remove_from_resources(resources)
+            for user in restriction.get_all_affected_users():
+                ReservationVerifier.update_user_reservations_statuses(user, have_users_permissions_increased=False)
+        else:
+            raise NoResultFound
+    except NoResultFound:
+        if restriction is None:
+            content, status = {'msg': RESTRICTION['not_found']}, HTTPStatus.NOT_FOUND.value
+        else:
+            content, status = {'msg': NODES['hostname']['not_found']}, HTTPStatus.NOT_FOUND.value
+    except AssertionError as e:
+        content, status = {'msg': RESTRICTION['hosts']['remove']['failure']['assertions'].format(reason=e)}, \
+            HTTPStatus.UNPROCESSABLE_ENTITY.value
+    except Exception as e:
+        log.critical(e)
+        content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
+    else:
+        content, status = {'msg': RESTRICTION['hosts']['remove']['success'],
                            'restriction': restriction.as_dict(include_groups=True, include_users=True,
                                                               include_resources=True)}, HTTPStatus.OK.value
     finally:

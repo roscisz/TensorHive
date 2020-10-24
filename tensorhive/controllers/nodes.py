@@ -21,9 +21,16 @@ def get_infrastructure():
                     if gpu_uuid not in id_list:
                         new_resource = Resource(
                             id=gpu_uuid,
-                            name=gpu_metrics.get('name')
+                            name=gpu_metrics.get('name'),
+                            hostname=hostname
                         )
                         new_resource.save()
+                    else:
+                        for resource in resources:
+                            if resource.id == gpu_uuid and resource.hostname != hostname:
+                                resource.hostname = hostname
+                                resource.save()
+                                break
     except Exception:
         # In case of failure just return infrastructure
         pass

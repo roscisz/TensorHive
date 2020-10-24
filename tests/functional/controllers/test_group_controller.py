@@ -29,13 +29,13 @@ def test_get_list_of_groups(tables, client):
     assert resp.status_code == HTTPStatus.OK
     assert len(resp_json) == 0  # no groups added yet
 
-    # Now let's add one group
-    client.post(ENDPOINT, headers=HEADERS, data=json.dumps({'name': 'Test'}))
+
+def test_get_list_of_groups_one_group_returned(tables, client, new_group):
+    new_group.save()
 
     resp = client.get(ENDPOINT, headers=HEADERS)
     resp_json = json.loads(resp.data.decode('utf-8'))
 
-    assert resp.status_code == HTTPStatus.OK
     assert len(resp_json) == 1  # one group added already
 
 
@@ -144,5 +144,25 @@ def test_add_user_to_nonexistent_group(tables, client, new_user):
     nonexistent_group_id = '777'
 
     resp = client.put(ENDPOINT + '/{}/users/{}'.format(nonexistent_group_id, new_user.id), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.NOT_FOUND
+
+
+# DELETE /groups/{id}/users/{id} - nonexistent user id
+def test_remove_nonexistent_user_from_a_group(tables, client, new_group):
+    new_group.save()
+    nonexistent_user_id = '777'
+
+    resp = client.delete(ENDPOINT + '/{}/users/{}'.format(new_group.id, nonexistent_user_id), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.NOT_FOUND
+
+
+# DELETE /groups/{id}/users/{id} - nonexistent group id
+def test_remove_user_from_a_nonexistent_group(tables, client, new_user):
+    new_user.save()
+    nonexistent_group_id = '777'
+
+    resp = client.delete(ENDPOINT + '/{}/users/{}'.format(nonexistent_group_id, new_user.id), headers=HEADERS)
 
     assert resp.status_code == HTTPStatus.NOT_FOUND

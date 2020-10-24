@@ -39,8 +39,9 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
     # Managed via property getters and setters
     _hashed_password = Column(String(120), nullable=False)
     _roles = relationship('Role', cascade='all,delete', backref=backref('user'))
-    _groups = relationship('Group', secondary='user2group')
-    _restrictions = relationship('Restriction', secondary='restriction2assignee')
+    _groups = relationship('Group', secondary='user2group', back_populates='_users', viewonly=True)
+    _restrictions = relationship('Restriction', secondary='restriction2assignee', back_populates='_users',
+                                 viewonly=True)
     _reservations = relationship('Reservation', cascade='all,delete')
 
     min_password_length = 8
