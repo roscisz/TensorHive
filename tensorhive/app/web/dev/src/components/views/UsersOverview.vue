@@ -44,9 +44,16 @@
             <td>{{ props.item.id }}</td>
             <td>{{ props.item.name }}</td>
             <td>{{ printTimespan(props.item.startsAt, props.item.endsAt) }}</td>
-            <td>{{ printSchedule(props.item.schedules) }}</td>
             <td>
-              <v-tooltip bottom>
+              <v-tooltip bottom :disabled="props.item.schedules.length<=1">
+                <template v-slot:activator="{ on, attrs }">
+                  <span v-bind="attrs" v-on="on">{{ printSchedules(props.item.schedules) }}</span>
+                </template>
+                <span>{{ printSchedules(props.item.schedules, all = true) }}</span>
+              </v-tooltip>
+            </td>
+            <td>
+              <v-tooltip bottom :disabled="props.item.users.length===0">
                 <template v-slot:activator="{ on, attrs }">
                   <span v-bind="attrs" v-on="on">{{ props.item.users.length }}</span>
                 </template>
@@ -54,7 +61,7 @@
               </v-tooltip>
             </td>
             <td>
-              <v-tooltip bottom>
+              <v-tooltip bottom :disabled="props.item.groups.length===0">
                 <template v-slot:activator="{ on, attrs }">
                   <span v-bind="attrs" v-on="on">{{ props.item.groups.length }}</span>
                 </template>
@@ -63,7 +70,7 @@
             </td>
             <td v-if="props.item.isGlobal">All</td>
             <td v-else>
-              <v-tooltip bottom>
+              <v-tooltip bottom :disabled="props.item.resources.length===0">
                 <template v-slot:activator="{ on, attrs }">
                   <span v-bind="attrs" v-on="on">{{ props.item.resources.length }}</span>
                 </template>
@@ -199,19 +206,35 @@
             ></v-date-picker>
           </v-menu>
           </v-layout>
-          <v-checkbox
-            label="Add restriction schedule"
-            v-model="addSchedule"
-          >
-          </v-checkbox>
-          <transition name="fade">
-            <v-layout align-center justify-center v-show="addSchedule">
+          <p class="font-weight-medium">
+              Restriction schedules
+              <v-btn
+                icon
+                @click="addSchedule()"
+                :disabled="schedules.length===5"
+                >
+                <v-icon>add</v-icon>
+              </v-btn>
+              <v-btn
+                icon
+                @click="schedules.pop()"
+                :disabled="schedules.length===0"
+                >
+                <v-icon>remove</v-icon>
+              </v-btn>
+          </p>
+          <transition-group name="fade">
+            <v-layout align-center justify-center
+              v-for="(schedule, key, index) in schedules"
+              :key="key"
+              :data-index="index"
+            >
             <v-menu
               ref="startMenu"
-              v-model="startTimeMenu"
+              v-model="schedule.startMenu"
               :close-on-content-click="false"
               :nudge-right="40"
-              :return-value.sync="modalStartTime"
+              :return-value.sync="schedule.start"
               lazy
               transition="none"
               offset-y
@@ -221,7 +244,7 @@
             >
               <template v-slot:activator="{ on }">
                 <v-text-field
-                  v-model="modalStartTime"
+                  v-model="schedule.start"
                   placeholder="Start time"
                   prepend-icon="access_time"
                   v-on="on"
@@ -229,20 +252,20 @@
               </template>
               <v-time-picker
                 title="Start time"
-                v-if="startTimeMenu"
-                v-model="modalStartTime"
+                v-if="schedule.startMenu"
+                v-model="schedule.start"
                 full-width
                 format="24hr"
-                :max="modalEndTime"
-                @click:minute="$refs.startMenu.save(modalStartTime)"
+                :max="schedule.end"
+                @click:minute="$refs.startMenu[key].save(schedule.start)"
               ></v-time-picker>
             </v-menu>
             <v-menu
               ref="endMenu"
-              v-model="endTimeMenu"
+              v-model="schedule.endMenu"
               :close-on-content-click="false"
               :nudge-right="40"
-              :return-value.sync="modalEndTime"
+              :return-value.sync="schedule.end"
               lazy
               transition="none"
               offset-y
@@ -252,7 +275,7 @@
             >
               <template v-slot:activator="{ on }">
                 <v-text-field
-                  v-model="modalEndTime"
+                  v-model="schedule.end"
                   placeholder="End time"
                   prepend-icon="access_time"
                   v-on="on"
@@ -260,17 +283,17 @@
               </template>
               <v-time-picker
                 title="End time"
-                v-if="endTimeMenu"
-                v-model="modalEndTime"
+                v-if="schedule.endMenu"
+                v-model="schedule.end"
                 full-width
                 format="24hr"
-                :min="modalStartTime"
-                @click:minute="$refs.endMenu.save(modalEndTime)"
+                :min="schedule.start"
+                @click:minute="$refs.endMenu[key].save(schedule.end)"
               ></v-time-picker>
               </v-menu>
               <v-select
                 style="width: 60%"
-                v-model="daysValue"
+                v-model="schedule.days"
                 :items="weekdays"
                 placeholder="Weekdays"
                 prepend-icon="event"
@@ -278,12 +301,12 @@
               >
               </v-select>
             </v-layout>
-          </transition>
+            </transition-group>
           <v-btn
             color="success"
             type="submit"
           >
-            Add
+            Add restriction
           </v-btn>
         </form>
       </v-card-text>
@@ -358,30 +381,26 @@ export default {
         { text: 'ID', value: 'id' },
         { text: 'Name', value: 'name' },
         { text: 'Timespan', sortable: false },
-        { text: 'Schedule', sortable: false },
+        { text: 'Schedules', sortable: false },
         { text: 'Users', value: 'users', sortable: false },
         { text: 'Groups', value: 'groups', sortable: false },
         { text: 'Resources', value: 'resources', sortable: false },
         { text: 'Actions', sortable: false }
       ],
+      schedules: [],
       restrictions: [],
       restrictionId: -1,
-      addSchedule: false,
       showRestrictions: false,
       modalRestrictionName: '',
       startDateMenu: false,
       endDateMenu: false,
-      startTimeMenu: false,
-      endTimeMenu: false,
       modalAlert: false,
-      modalInfo: false,
       showRemoveRestriction: false,
       modalStartDate: '',
       modalEndDate: '',
       modalStartTime: '',
       modalEndTime: '',
       weekdays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-      daysValue: [],
       globalRestriction: false,
       resources: [],
       resourcesValue: []
@@ -400,34 +419,36 @@ export default {
       }
     },
     printTimespan (start, end) {
-      return moment(start).format('ll') + ' - ' + moment(end).format('ll')
+      return moment(start).format('ll') + ' - \n' + moment(end).format('ll')
     },
     printNames (array) {
-      return array.map(a => a.name).join(', ')
+      return array.map(a => a.name).join(' \n')
     },
     printUsernames (array) {
-      return array.map(a => a.username).join(', ')
+      return array.map(a => a.username).join(' \n')
     },
-    printSchedule (schedules) {
-      if (schedules.length > 0) {
+    printSchedules (schedules, all = false) {
+      if (schedules.length === 0) return 'none'
+      else if (schedules.length === 1 || all) {
+        var returnString = ''
         for (const schedule of schedules) {
-          return schedule.hourStart + '-' + schedule.hourEnd + ' ' +
-            schedule.scheduleDays.map(a => a.substring(0, 3)).join(', ')
+          returnString = returnString + schedule.hourStart + '-' + schedule.hourEnd + ' ' +
+            schedule.scheduleDays.map(a => a.substring(0, 3)).join(', ') + '\n'
         }
-      } else return 'none'
+        return returnString
+      } else return schedules.length
     },
     clearForm () {
       this.modalRestrictionName = ''
       this.globalRestriction = false
       this.resourcesValue = false
-      this.addSchedule = false
       this.usersValue = []
       this.groupsValue = []
       this.modalStartDate = ''
       this.modalEndDate = ''
       this.modalStartTime = ''
       this.modalEndTime = ''
-      this.daysValue = []
+      this.schedules = []
     },
     handleError (error) {
       if (!error.hasOwnProperty('response')) {
@@ -439,6 +460,19 @@ export default {
           this.errorMessage = error.response.data.msg
         }
       }
+    },
+    scheduleBlueprint () {
+      return {
+        start: '',
+        end: '',
+        days: [],
+        startMenu: false,
+        endMenu: false
+      }
+    },
+    addSchedule () {
+      const schedule = this.scheduleBlueprint
+      this.schedules.push(schedule())
     },
     isTodayOrLater (date) {
       return moment(date).isSameOrAfter(moment().format(moment.HTML5_FMT.DATE))
@@ -534,24 +568,21 @@ export default {
           this.modalAlert = true
         })
     },
-    createAndAddSchedule (restriction) {
-      const { modalStartTime, modalEndTime, daysValue } = this
-      if (modalStartTime && modalEndTime && daysValue) {
-        api
-          .request('post', '/schedules', this.$store.state.accessToken, {
-            'hourStart': modalStartTime,
-            'hourEnd': modalEndTime,
-            'scheduleDays': daysValue
-          })
-          .then(response => {
-            let scheduleId = response.data.schedule.id
-            this.addScheduleToRestriction(restriction, scheduleId)
-          })
-          .catch(error => {
-            this.handleError(error)
-            this.modalAlert = true
-          })
-      }
+    createAndAddSchedule (restriction, schedule) {
+      api
+        .request('post', '/schedules', this.$store.state.accessToken, {
+          'hourStart': schedule.start,
+          'hourEnd': schedule.end,
+          'scheduleDays': schedule.days
+        })
+        .then(response => {
+          let scheduleId = response.data.schedule.id
+          this.addScheduleToRestriction(restriction, scheduleId)
+        })
+        .catch(error => {
+          this.handleError(error)
+          this.modalAlert = true
+        })
     },
     addScheduleToRestriction (restriction, schedule) {
       api
@@ -568,7 +599,7 @@ export default {
       if (this.modalStartDate && this.modalEndDate) {
         var formattedStart = moment(this.modalStartDate).startOf('day')
         var formatedEnd = moment(this.modalEndDate).endOf('day')
-        const { modalRestrictionName, globalRestriction, addSchedule,
+        const { modalRestrictionName, globalRestriction, schedules,
           resourcesValue, usersValue, groupsValue } = this
         api
           .request('post', '/restrictions', this.$store.state.accessToken,
@@ -595,7 +626,13 @@ export default {
                 this.addGroupToRestriction(restrictionId, group)
               }
             }
-            if (addSchedule) this.createAndAddSchedule(restrictionId)
+            if (schedules.length > 0) {
+              for (const schedule of schedules) {
+                if (schedule.start && schedule.end && schedule.days) {
+                  this.createAndAddSchedule(restrictionId, schedule)
+                }
+              }
+            }
             this.clearForm()
           })
           .catch(error => {
@@ -640,6 +677,10 @@ export default {
 </script>
 
 <style>
+span {
+  white-space: pre-wrap;
+}
+
 .float-right-button {
   float: right;
 }

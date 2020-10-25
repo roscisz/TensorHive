@@ -180,7 +180,7 @@
             <td>{{ props.item.name }}</td>
             <td>{{ prettyDate(props.item.createdAt) }}</td>
             <td>
-              <v-tooltip bottom>
+              <v-tooltip bottom :disabled="props.item.users.length===0">
                 <template v-slot:activator="{ on, attrs }">
                   <span v-bind="attrs" v-on="on">{{ props.item.users.length }}</span>
                 </template>
