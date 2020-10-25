@@ -66,6 +66,7 @@ task:
     success: Task has been successfully created
     failure:
       invalid: Requirements not met - {reason}
+      duplicate: Unable to create task - {reason}
   delete:
     success: Task has been successfully deleted
     failure:
@@ -85,7 +86,7 @@ task:
     failure:
       state: Unable to terminate, {reason}
       exit_code: Accepted, but termination operation did not succeed (op. exit_code was not 0)
-jobs:
+job:
   not_found: Job has not been found
   all:
     success: Jobs has been successfully fetched
@@ -95,6 +96,7 @@ jobs:
     success: Job has been successfully created
     failure:
       invalid: Requirements not met - {reason}
+      duplicate: Unable to create job - {reason}
   update:
     success: Job has been successfully updated
     failure:
