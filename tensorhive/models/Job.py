@@ -81,19 +81,6 @@ class Job(CRUDModel, Base):  # type: ignore
     def end_at(self):
         return self._end_at
 
-    @start_at.setter
-    def start_at(self, value: str):
-        self._start_at = DateUtils.try_parse_string(value)
-        if not self._start_at:
-            log.error('Unsupported type (start_at={})'.format(value))
-
-    @end_at.setter
-    def end_at(self, value: str):
-        self._end_at = DateUtils.try_parse_string(value)
-        if not self._end_at:
-            log.error('Unsupported type (end_at={})'.format(value))
-
-
     @property
     def as_dict(self):
         return {

@@ -66,6 +66,10 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
     def jobs(self):
         return self._jobs
 
+    @hybrid_property
+    def number_of_jobs(self):
+        return len(self._jobs)
+
     @roles.setter  # type: ignore
     def roles(self, new_roles):
         self._roles = new_roles
