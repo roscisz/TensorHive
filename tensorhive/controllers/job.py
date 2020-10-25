@@ -163,8 +163,8 @@ def add_task(job_id: JobId, task_id: TaskId) -> Tuple[Content, HttpStatusCode]:
             content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
         else:
             content, status = {'msg': TASK['not_found']}, HTTPStatus.NOT_FOUND.value
-    except InvalidRequestException:
-        content, status = {'msg': JOB['tasks']['add']['failure']['duplicate']}, HTTPStatus.CONFLICT.value
+    except InvalidRequestException as e:
+        content, status = {'msg': JOB['tasks']['add']['failure']['duplicate'].format(reason=e)}, HTTPStatus.CONFLICT.value
     except AssertionError as e:
         content, status = {'msg': JOB['tasks']['add']['failure']['assertions'].format(reason=e)}, \
             HTTPStatus.UNPROCESSABLE_ENTITY.value
@@ -189,8 +189,8 @@ def remove_task(ob_id: JobId, task_id: TaskId) -> Tuple[Content, HttpStatusCode]
             content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
         else:
             content, status = {'msg': TASK['not_found']}, HTTPStatus.NOT_FOUND.value
-    except InvalidRequestException:
-        content, status = {'msg': JOB['tasks']['remove']['failure']['not_found']}, HTTPStatus.NOT_FOUND.value
+    except InvalidRequestException as e:
+        content, status = {'msg': JOB['tasks']['remove']['failure']['not_found'].format(reason=e)}, HTTPStatus.NOT_FOUND.value
     except AssertionError as e:
         content, status = {'msg': JOB['tasks']['remove']['failure']['assertions'].format(reason=e)}, \
             HTTPStatus.UNPROCESSABLE_ENTITY.value
