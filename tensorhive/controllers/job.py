@@ -42,7 +42,7 @@ def get_by_id(id: JobId) -> Tuple[Content, HttpStatusCode]:
     finally:
         return content, status
 
-#TODO ADD SYNCHRONIZATION
+#TODO ADD SYNCHRONIZATION ?? 
 @jwt_required
 def get_all(userId: Optional[int]) -> Tuple[Content, HttpStatusCode]:
     user_id = userId
@@ -70,7 +70,7 @@ def get_all(userId: Optional[int]) -> Tuple[Content, HttpStatusCode]:
     finally:
         return content, status
 
-#TODO how relationship with user, assertions
+#TODO assertions
 @jwt_required
 def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     try:
