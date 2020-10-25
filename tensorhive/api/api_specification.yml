@@ -520,12 +520,12 @@ paths:
               $ref: '#/components/schemas/GroupUpdateForm'
               x-body-name: newValues
       parameters:
-          - description: Group ID
-            in: path
-            name: id
-            required: true
-            schema:
-              type: integer
+        - description: Group ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
       responses:
         200:
           description: {{RESPONSES['group']['update']['success']}}
@@ -597,6 +597,116 @@ paths:
           description: {{RESPONSES['group']['not_found']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
+      security:
+        - Bearer: []
+  /default_group:
+    get:
+      tags:
+        - groups
+      summary: Get default group.
+      operationId: tensorhive.controllers.group.get_default_group
+      responses:
+        200:
+          description: {{RESPONSES['general']['success']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['group']['default']['get']['success']}}
+                  group:
+                    $ref: '#/components/schemas/Group'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unprivileged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unprivileged']}}
+        404:
+          description: {{RESPONSES['group']['default']['not_found']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
+      security:
+        - Bearer: []
+    put:
+      tags:
+        - groups
+      summary: |
+          Set group with given ID as default (default group is the group to which all new users will be added
+          on registration). It will only affect new users.
+      operationId: tensorhive.controllers.group.set_default_group
+      parameters:
+        - description: Group ID
+          in: query
+          name: group_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: {{RESPONSES['group']['default']['set']['success']}}
+          content:
+            application/json:
+              schema:
+                example:
+                  msg: {{RESPONSES['group']['default']['set']['success']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unprivileged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unprivileged']}}
+        404:
+          description: {{RESPONSES['group']['not_found']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['group']['default']['set']['failure']['assertions']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
+      security:
+        - Bearer: []
+    delete:
+      tags:
+        - groups
+      summary: Mark current default group as non-default. Existing users will be not affected.
+      operationId: tensorhive.controllers.group.delete_default_group
+      responses:
+        200:
+          description: {{RESPONSES['group']['default']['delete']['success']}}
+          content:
+            application/json:
+              schema:
+                example:
+                  msg: {{RESPONSES['group']['default']['delete']['success']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unprivileged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unprivileged']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['group']['default']['delete']['failure']['assertions']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:
@@ -825,7 +935,7 @@ paths:
       summary: Update existing restriction
       operationId: tensorhive.controllers.restriction.update
       requestBody:
-        description: Restriction object with fields to overwrite.
+        description: Restriction object with fields to overwrite (end field is nullable string).
         required: true
         content:
           application/json:
@@ -2946,6 +3056,7 @@ components:
         end:
           type: string
           format: date-time
+          nullable: true
         isGlobal:
           type: boolean
           example: false
