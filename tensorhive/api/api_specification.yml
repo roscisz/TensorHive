@@ -1474,8 +1474,10 @@ paths:
                     example: {{RESPONSES['general']['unprivileged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
-        - Bearer: []
+        - Bearer: []    
     post:
       tags:
         - schedules
@@ -1502,10 +1504,6 @@ paths:
                     example: {{RESPONSES['schedule']['create']['success']}}
                   schedule:
                     $ref: '#/components/schemas/Schedule'
-        400:
-          description: {{RESPONSES['general']['bad_request']}}
-        401:
-          description: {{RESPONSES['general']['unauthorized']}}
         403:
           description: {{RESPONSES['general']['unprivileged']}}
           content:
@@ -1518,6 +1516,96 @@ paths:
                     example: {{RESPONSES['general']['unprivileged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['schedule']['create']['failure']['invalid']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
+      security:
+        - Bearer: []
+  /jobs:
+    get:
+      tags: 
+        - jobs
+      operationId: tensorhive.controllers.job.get_all
+      summary: Query jobs
+      description: Fetches either all or only those owned by the user.
+      parameters:
+        - description: User ID (optional)
+          in: query
+          name: userId
+          type: integer
+          required: false
+          default: null
+          x-nullable: true
+      responses:
+        200:
+          description: {{RESPONSES['job']['all']['success']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['job']['all']['success']}}
+              jobs:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobToDisplay'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['unpriviliged']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}        
+      security:
+        - Bearer: []
+    post:
+      tags: 
+        - jobs
+      summary: Create new job
+      operationId: tensorhive.controllers.job.create
+      parameters:
+        - description: |
+            Job object
+            * start time field is nullable string
+            * end time field is nullable string
+          in: body
+          name: job
+          required: true
+          schema:
+            $ref: '#/components/schemas/JobForm'
+      responses:
+        201:
+          description: {{RESPONSES['job']['create']['success']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['job']['create']['success']}}
+              task:
+                $ref: '#/components/schemas/JobToDisplay'
+        400:
+          description: {{RESPONSES['general']['bad_request']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['unpriviliged']}}
+        409:
+          description: {{RESPONSES['job']['create']['failure']['duplicate']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['job']['create']['failure']['invalid']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:
@@ -1661,6 +1749,97 @@ paths:
           description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
+  /jobs/{id}:
+    get:
+      tags: 
+        - jobs
+      operationId: tensorhive.controllers.jobs.get
+      summary: Get job by ID
+      description: Fetches specific job by ID
+      parameters:
+        - description: Job ID
+          in: path
+          name: id
+          type: integer
+          required: true
+      responses:
+        200:
+          description: {{RESPONSES['job']['get']['success']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['job']['get']['success']}}
+              task:
+                $ref: '#/components/schemas/JobToDisplay'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['unpriviliged']}}
+        404:
+          description: {{RESPONSES['job']['not_found']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['job']['not_found']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
+      security:
+        - Bearer: []
+  /jobs/{job_id}/tasks/{task_id}:
+    put:
+      tags:
+        - jobs
+      summary: Add task to job
+      operationId: tensorhive.controllers.job.add_task
+      parameters:
+        - description: Job ID
+          in: path
+          name: job_id
+          required: true
+          schema:
+            type: integer
+        - description: Task ID
+          in: path
+          name: task_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: {{RESPONSES['job']['tasks']['add']['success']}}
+            example: {{RESPONSES['job']['tasks']['add']['success']}}
+                  restriction:
+                    $ref: '#/components/schemas/JobToDisplay'
+        403:
+          description: {{RESPONSES['general']['unpriviliged']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['unpriviliged']}}
+        404:
+          description: {{RESPONSES['job']['not_found']}} or {{RESPONSES['task']['not_found']}}
+        409:
+          description: {{RESPONSES['job']['tasks']['add']['failure']['duplicate']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['job']['tasks']['add']['failure']['assertions']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
+      security:
+        - Bearer: []      
   /reservations:
     get:
       tags:
@@ -2758,7 +2937,7 @@ components:
           type: integer
           format: int64
           example: 1
-        userId:
+        jobId:
           type: integer
           example: 1
         command:
@@ -2784,11 +2963,11 @@ components:
     TaskForm:
       type: object
       required:
-        - userId
+        - jobId
         - command
         - hostname
       properties:
-        userId:
+        jobId:
           type: integer
           example: 1
         command:
@@ -2824,6 +3003,55 @@ components:
           format: date-time
           nullable: true
           example: 2019-05-08T13:00:00.066Z (or null!)
+    JobForm:
+      type: object
+      required:
+        - name
+        - userId
+      properties:
+        name:
+          type: string
+          example: Classifier training
+        description:
+          type: string
+          example: Job which goal is to run classifier training.
+        userId:
+          type: integer
+          example: 1
+        startAt:
+          type: string
+          format: date-time
+          nullable: true
+        endAt:
+          type: string
+          format: date-time
+          nullable: true
+    JobToDisplay:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        userId:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Classifier training
+        description:
+          type: string
+          example: Job which goal is to run classifier training.
+        startAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: 2019-05-08T12:00:00.066Z (or null!)
+        endAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: 2019-05-08T13:00:00.066Z (or null!)      
     Group:
       type: object
       required:
