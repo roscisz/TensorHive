@@ -209,12 +209,12 @@ jobs:
   tasks:
     add:
       failure: 
-        duplicate: Task is already assigned to job
+        duplicate: Unable to add task to job - {reason}
         assertions: Unable to add task to job - {reason}
       success: Task has been assigned to job
     remove:
       failure: 
-        not_found: Task is not assigned to job
+        not_found: Unable to remove task from job - {reason}
         assertions: Unable to remove task from job - {reason}
       success: Task has been removed from job
 token:

@@ -1,4 +1,5 @@
 from tensorhive.models.Task import Task, TaskStatus
+from tensorhive.models.CommandSegment import CommandSegment, CommandSegment2Task, SegmentType
 from tensorhive.models.User import User
 from tensorhive.core import task_nursery
 from tensorhive.utils.DateUtils import DateUtils
@@ -253,6 +254,14 @@ def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
+# Controllers and business logic merged
+
+# TODO add command segment
+
+# Controllers and business logic merged
+
+# TODO delete command segment
+
 # Business logic
 
 
@@ -288,11 +297,63 @@ def business_create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         new_task = Task(
             host=task['hostname'],
             command=task['command'],
-            # TODO Adjust API spec, optional fields
-            spawn_at=DateUtils.try_parse_string(task.get('spawnAt')),
-            terminate_at=DateUtils.try_parse_string(task.get('terminateAt')))
-        # assert all(task.values()), 'fields cannot be blank or null'
-        new_task.save()
+#            job_id = task['jobId'],
+            user_id=task['userId'],
+#            place_in_job_sequence = task['placeInSeq'],
+#            pid = task['pid'],
+#            status = task['status'],
+            _spawns_at=DateUtils.try_parse_string(task.get('spawnsAt')),
+            _terminates_at=DateUtils.try_parse_string(task.get('terminatesAt')))
+        command_segments = new_task.command.split()
+        if_envs = True
+        if_eqsign_found = False
+        if_parameter_value_expected = False
+        actual_command = ''
+        for segment in command_segments:
+            for x in segment:
+                if x == '=':
+                    if_eqsign_found = True
+                    break
+            if if_eqsign_found == False:
+                if_envs = False
+            if_eqsign_found = False 
+            splitted_segment = segment.split('=')            
+            if if_envs:
+                segment_type=SegmentType.env_variable
+            elif segment[0] == '-':
+                segment_type=SegmentType.parameter
+                if splitted_segment[1] == None:
+                    splitted_segment[1] = ''
+                    if_parameter_value_expected = True
+            elif if_parameter_value_expected == True:
+                #TODO save value
+                if_parameter_value_expected = False
+                continue
+            else:
+                actual_command += segment + ' '
+                continue
+            new_segment = CommandSegment.query.filter(CommandSegment.segment_type == segment_type,
+                                        CommandSegment.name == splitted_segment[0]).first()
+            if (new_segment == None):
+                new_segment = CommandSegment(
+                        name=splitted_segment[0],
+                        _segment_type=segment_type)
+            new_task.add_cmd_segment(new_segment)
+            link = CommandSegment2Task.query.filter(CommandSegment2Task.cmd_segment_id == new_segment.id, 
+                                                CommandSegment2Task.task_id == new_task.id).one()
+            setattr(link, '_value', splitted_segment[1]) 
+        new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.actual_command,
+                                        CommandSegment.name == '').first()
+        if (new_segment == None):
+            new_segment = CommandSegment(
+                name='',
+                _segment_type=SegmentType.actual_command)
+        new_task.add_cmd_segment(new_segment)
+        link = CommandSegment2Task.query.filter(CommandSegment2Task.cmd_segment_id == new_segment.id, 
+                                                CommandSegment2Task.task_id == new_task.id).one()
+        setattr(link, '_index', 0)
+        setattr(link, '_value', actual_command)
+        new_task.save()        
     except ValueError:
         # Invalid string format for datetime
         content, status = {'msg': GENERAL['bad_request']}, 422
