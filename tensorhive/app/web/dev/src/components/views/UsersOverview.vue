@@ -43,13 +43,20 @@
           <tr>
             <td>{{ props.item.id }}</td>
             <td>{{ props.item.name }}</td>
-            <td>{{ printTimespan(props.item.startsAt, props.item.endsAt) }}</td>
+            <td>
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on, attrs }">
+                  <span v-bind="attrs" v-on="on">{{ printTimespan(props.item.startsAt, props.item.endsAt) }}</span>
+                </template>
+                <span>{{ printTimespan(props.item.startsAt, props.item.endsAt, full=true) }}</span>
+              </v-tooltip>
+            </td>
             <td>
               <v-tooltip bottom :disabled="props.item.schedules.length<=1">
                 <template v-slot:activator="{ on, attrs }">
                   <span v-bind="attrs" v-on="on">{{ printSchedules(props.item.schedules) }}</span>
                 </template>
-                <span>{{ printSchedules(props.item.schedules, all = true) }}</span>
+                <span>{{ printSchedules(props.item.schedules, all=true) }}</span>
               </v-tooltip>
             </td>
             <td>
@@ -98,7 +105,7 @@
       <v-card-text>
         <span class="headline">Add restriction</span>
         <form @submit.prevent="createRestriction">
-          <v-card-text></v-card-text>
+          <v-divider></v-divider>
           <div class="input-group">
             <span class="input-group-addon"><i class="fa fa-info"></i></span>
             <input
@@ -110,15 +117,8 @@
             >
           </div>
           <v-layout>
-          <v-checkbox
-            v-model="globalRestriction"
-            label="Global restriction"
-          >
-          </v-checkbox>
-          <transition name="fade">
+          <v-flex xs6>
             <v-autocomplete
-              style="width: 70%"
-              v-show="!globalRestriction"
               v-model="resourcesValue"
               :items="resources"
               :multiple=true
@@ -126,11 +126,19 @@
               item-value="id"
               item-text="name"
               prepend-icon="fa-server"
+              :disabled="globalRestriction"
             >
             </v-autocomplete>
-          </transition>
+          </v-flex>
+          <v-flex>
+            <v-checkbox
+              v-model="globalRestriction"
+              label="Global restriction"
+            >
+            </v-checkbox>
+          </v-flex>
           </v-layout>
-          <v-layout align-center justify-start>
+          <v-layout>
             <v-autocomplete
               style="width: 50%"
               v-model="usersValue"
@@ -152,7 +160,8 @@
               prepend-icon="fa-group"
             />
           </v-layout>
-          <v-layout align-center justify-start>
+          <v-layout>
+          <v-flex xs3>
           <v-menu
             v-model="startDateMenu"
             :close-on-content-click="false"
@@ -179,6 +188,43 @@
               @input="startDateMenu = false"
             ></v-date-picker>
           </v-menu>
+          </v-flex>
+          <v-flex xs3>
+          <v-menu
+              ref="startMenu"
+              v-model="startTimeMenu"
+              :close-on-content-click="false"
+              :nudge-right="40"
+              :return-value.sync="modalStartTime"
+              lazy
+              transition="none"
+              offset-y
+              full-width
+              max-width="290px"
+              min-width="290px"
+            >
+              <template v-slot:activator="{ on }">
+                <v-text-field
+                  v-model="modalStartTime"
+                  placeholder="Start time"
+                  prepend-icon="access_time"
+                  v-on="on"
+                ></v-text-field>
+              </template>
+              <v-time-picker
+                title="Start time"
+                v-if="startTimeMenu"
+                v-model="modalStartTime"
+                full-width
+                format="24hr"
+                :max="getMaxTime()"
+                @click:minute="$refs.startMenu.save(modalStartTime)"
+              ></v-time-picker>
+            </v-menu>
+            </v-flex>
+          </v-layout>
+          <v-layout>
+          <v-flex xs3>
           <v-menu
             v-model="endDateMenu"
             :close-on-content-click="false"
@@ -195,6 +241,7 @@
                 placeholder="End date"
                 prepend-icon="event"
                 v-on="on"
+                :disabled="infiniteRestriction"
               ></v-text-field>
             </template>
             <v-date-picker
@@ -203,9 +250,52 @@
               :min="modalStartDate"
               :allowed-dates="isTodayOrLater"
               @input="endDateMenu = false"
-            ></v-date-picker>
+            >
+            </v-date-picker>
           </v-menu>
-          </v-layout>
+          </v-flex>
+          <v-flex xs3>
+          <v-menu
+              ref="endMenu"
+              v-model="endTimeMenu"
+              :close-on-content-click="false"
+              :nudge-right="40"
+              :return-value.sync="modalEndTime"
+              lazy
+              transition="none"
+              offset-y
+              full-width
+              max-width="290px"
+              min-width="290px"
+            >
+              <template v-slot:activator="{ on }">
+                <v-text-field
+                  v-model="modalEndTime"
+                  placeholder="End time"
+                  prepend-icon="access_time"
+                  v-on="on"
+                  :disabled="infiniteRestriction"
+                ></v-text-field>
+              </template>
+              <v-time-picker
+                title="End time"
+                v-if="endTimeMenu"
+                v-model="modalEndTime"
+                full-width
+                format="24hr"
+                :min="getMinTime()"
+                @click:minute="$refs.endMenu.save(modalEndTime)"
+              ></v-time-picker>
+              </v-menu>
+              </v-flex>
+              <v-flex xs3>
+                <v-checkbox
+                  label="No end date"
+                  v-model="infiniteRestriction"
+                  >
+                </v-checkbox>
+              </v-flex>
+              </v-layout>
           <p class="font-weight-medium">
               Restriction schedules
               <v-btn
@@ -390,10 +480,13 @@ export default {
       schedules: [],
       restrictions: [],
       restrictionId: -1,
+      infiniteRestriction: false,
       showRestrictions: false,
       modalRestrictionName: '',
       startDateMenu: false,
       endDateMenu: false,
+      startTimeMenu: false,
+      endTimeMenu: false,
       modalAlert: false,
       showRemoveRestriction: false,
       modalStartDate: '',
@@ -418,8 +511,20 @@ export default {
         return null
       }
     },
-    printTimespan (start, end) {
-      return moment(start).format('ll') + ' - \n' + moment(end).format('ll')
+    getMaxTime () {
+      if (this.modalStartDate === this.modalEndDate) {
+        return this.modalEndTime
+      } else return ''
+    },
+    getMinTime () {
+      if (this.modalStartDate === this.modalEndDate) {
+        return this.modalStartTime
+      } else return ''
+    },
+    printTimespan (start, end, full = false) {
+      if (full) {
+        return 'start: ' + moment.utc(start).format('LLL') + '\nend: ' + moment.utc(end).format('LLL')
+      } else return moment.utc(start).format('ll') + ' -\n' + moment.utc(end).format('ll')
     },
     printNames (array) {
       return array.map(a => a.name).join(' \n')
@@ -441,7 +546,7 @@ export default {
     clearForm () {
       this.modalRestrictionName = ''
       this.globalRestriction = false
-      this.resourcesValue = false
+      this.resourcesValue = []
       this.usersValue = []
       this.groupsValue = []
       this.modalStartDate = ''
@@ -449,6 +554,7 @@ export default {
       this.modalStartTime = ''
       this.modalEndTime = ''
       this.schedules = []
+      this.infiniteRestriction = false
     },
     handleError (error) {
       if (!error.hasOwnProperty('response')) {
@@ -596,9 +702,13 @@ export default {
         })
     },
     createRestriction () {
-      if (this.modalStartDate && this.modalEndDate) {
-        var formattedStart = moment(this.modalStartDate).startOf('day')
-        var formatedEnd = moment(this.modalEndDate).endOf('day')
+      if (this.modalStartDate && this.modalStartTime &&
+          ((this.modalEndDate && this.modalEndTime) || this.infiniteRestriction)) {
+        var formattedStart = moment.utc(this.modalStartDate + 'T' + this.modalStartTime)
+        var formattedEnd = null
+        if (!this.infiniteRestriction) {
+          formattedEnd = moment.utc(this.modalEndDate + 'T' + this.modalEndTime)
+        }
         const { modalRestrictionName, globalRestriction, schedules,
           resourcesValue, usersValue, groupsValue } = this
         api
@@ -606,7 +716,7 @@ export default {
             {
               'name': modalRestrictionName,
               'start': formattedStart,
-              'end': formatedEnd,
+              'end': formattedEnd,
               'isGlobal': globalRestriction
             })
           .then(response => {
@@ -633,6 +743,7 @@ export default {
                 }
               }
             }
+            this.checkRestrictions()
             this.clearForm()
           })
           .catch(error => {
@@ -640,7 +751,7 @@ export default {
             this.modalAlert = true
           })
       } else {
-        this.errorMessage = 'Specify start and end date!'
+        this.errorMessage = 'Specify start and end date and time!'
         this.modalAlert = true
       }
     },
