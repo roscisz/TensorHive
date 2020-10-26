@@ -1217,6 +1217,8 @@ paths:
                     example: {{RESPONSES['restriction']['resources']['remove']['success']}}
                   restriction:
                     $ref: '#/components/schemas/Restriction'
+        400:
+          description: {{RESPONSES['general']['bad_request']}}
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
@@ -1243,7 +1245,7 @@ paths:
         - restrictions
       summary: Apply restriction to all resources with given hostname
       operationId: tensorhive.controllers.restriction.apply_to_resources_by_hostname
-      parameters:
+        parameters:
         - description: Restriction ID
           in: path
           name: restriction_id
@@ -1753,7 +1755,7 @@ paths:
     get:
       tags: 
         - jobs
-      operationId: tensorhive.controllers.jobs.get
+      operationId: tensorhive.controllers.job.get_by_id
       summary: Get job by ID
       description: Fetches specific job by ID
       parameters:
