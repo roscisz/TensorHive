@@ -30,6 +30,9 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
     def __repr__(self):
         return '<Group id={id}, name={name}>'.format(id=self.id, name=self.name)
 
+    def check_assertions(self):
+        pass
+
     @hybrid_property
     def users(self):
         return self._users
@@ -87,7 +90,6 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
     @classmethod
     def get_default_groups(cls):
         """
-        :raises: MultipleResultsFound if more than one default group is found
         :return: List of groups that are marked as default.
         """
         return Group.query.filter(Group._is_default.is_(True)).all()
