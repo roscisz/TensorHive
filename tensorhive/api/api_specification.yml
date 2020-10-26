@@ -1220,7 +1220,7 @@ paths:
               msg:
                 type: string
                 example: {{RESPONSES['job']['create']['success']}}
-              task:
+              job:
                 $ref: '#/definitions/JobToDisplay'
         400:
           description: {{RESPONSES['general']['bad_request']}}
@@ -1246,7 +1246,7 @@ paths:
     get:
       tags: 
         - jobs
-      operationId: tensorhive.controllers.jobs.get
+      operationId: tensorhive.controllers.job.get_by_id
       summary: Get job by ID
       description: Fetches specific job by ID
       parameters:
@@ -1264,7 +1264,7 @@ paths:
               msg:
                 type: string
                 example: {{RESPONSES['job']['get']['success']}}
-              task:
+              job:
                 $ref: '#/definitions/JobToDisplay'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
@@ -1294,60 +1294,6 @@ paths:
               msg:
                 type: string
                 example: {{RESPONSES['general']['internal_error']}}
-      security:
-        - Bearer: []
-  /jobs/{job_id}/tasks/{task_id}:
-    put:
-      tags:
-        - jobs
-      summary: Add task to job
-      operationId: tensorhive.controllers.job.add_task
-      parameters:
-        - description: Job ID
-          in: path
-          name: job_id
-          required: true
-          schema:
-            type: integer
-        - description: Task ID
-          in: path
-          name: task_id
-          required: true
-          schema:
-            type: integer
-      responses:
-        200:
-          description: {{RESPONSES['job']['tasks']['add']['success']}}
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  msg:
-                    type: string
-                    example: {{RESPONSES['job']['tasks']['add']['success']}}
-                  restriction:
-                    $ref: '#/definitions/JobToDisplay'
-        401:
-          description: {{RESPONSES['general']['unauthorized']}}
-        403:
-          description: {{RESPONSES['general']['unprivileged']}}
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  msg:
-                    type: string
-                    example: {{RESPONSES['general']['unprivileged']}}
-        404:
-          description: {{RESPONSES['job']['not_found']}} or {{RESPONSES['task']['not_found']}}
-        409:
-          description: {{RESPONSES['job']['tasks']['add']['failure']['duplicate']}}
-        422:
-          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['job']['tasks']['add']['failure']['assertions']}}
-        500:
-          description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
 definitions:
