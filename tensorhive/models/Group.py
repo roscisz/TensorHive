@@ -22,7 +22,7 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(40), unique=False, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    _is_default = Column('is_default', Boolean, nullable=True, unique=True)  # Should be True or None, never False
+    _is_default = Column('is_default', Boolean)
 
     _users = relationship('User', secondary='user2group')
     _restrictions = relationship('Restriction', secondary='restriction2assignee')
@@ -30,13 +30,17 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
     def __repr__(self):
         return '<Group id={id}, name={name}>'.format(id=self.id, name=self.name)
 
-    def check_assertions(self):
-        assert self._is_default is None or self._is_default is True, 'is_default should be either set to True for' \
-                                                                     'the default group or None for the rest'
-
     @hybrid_property
     def users(self):
         return self._users
+
+    @hybrid_property
+    def is_default(self):
+        return self._is_default if self._is_default is not None else False
+
+    @is_default.setter
+    def is_default(self, value):
+        self._is_default = value
 
     def add_user(self, user: User):
         if user in self.users:
@@ -73,49 +77,20 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
         group = {
             'id': self.id,
             'name': self.name,
-            'createdAt': DateUtils.stringify_datetime(self.created_at)
+            'createdAt': DateUtils.stringify_datetime(self.created_at),
+            'isDefault': self.is_default
         }
         if include_users:
             group['users'] = [user.as_dict_shallow for user in self.users]
         return group
 
     @classmethod
-    def get_default_group(cls):
+    def get_default_groups(cls):
         """
         :raises: MultipleResultsFound if more than one default group is found
-        :return: A group that is marked as default or None if no such group exists
+        :return: List of groups that are marked as default.
         """
-        return Group.query.filter(Group._is_default.is_(True)).one_or_none()
-
-    @classmethod
-    def set_default_group(cls, group_id):
-        """
-        Sets the group with id = group_id as a default group.
-        Will also unmark the existing default group as the default.
-        :raises: NoResultFound if group with given id doesn't exist.
-        :return: The default group.
-        """
-        try:
-            group = Group.get(group_id)
-        except NoResultFound as e:
-            raise e
-
-        cls.delete_default_group_if_exists()
-        group._is_default = True
-        return group.save()
-
-    @classmethod
-    def delete_default_group_if_exists(cls):
-        """
-        Will mark the default group as non-default. If no such group exists, no action will be taken.
-        :return: True if group was marked as non-default, False if no default group was found.
-        """
-        group = cls.get_default_group()
-        if group is None:
-            return False
-        group._is_default = None
-        group.save()
-        return True
+        return Group.query.filter(Group._is_default.is_(True)).all()
 
 
 class User2Group(Base):  # type: ignore
