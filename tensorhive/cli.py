@@ -1,6 +1,7 @@
 import click
 from tensorhive.core.utils.colors import orange, green
 from tensorhive.core.utils.exceptions import ConfigurationException
+from datetime import datetime
 import tensorhive
 import logging
 import sys
@@ -142,12 +143,14 @@ def init():
     from inspect import cleandoc
     from tensorhive.database import init_db
     from tensorhive.models.User import User
+    from tensorhive.models.Group import Group
+    from tensorhive.models.Restriction import Restriction
     logging.basicConfig(level=logging.INFO, format='%(message)-79s')
 
     # Exposed host
-    if click.confirm('[1/3] Do you want TensorHive to be accessible to other users in your network?'):
+    if click.confirm('[1/4] Do you want TensorHive to be accessible to other users in your network?'):
         host = click.prompt(
-            '[1/3] What is the public hostname/address of this node (which is visible by all end users)?')
+            '[1/4] What is the public hostname/address of this node (which is visible by all end users)?')
     else:
         host = '0.0.0.0'
     main_config.set('api', 'url_hostname', host)
@@ -158,14 +161,45 @@ def init():
     # First user account
     init_db()
     if User.query.count() == 0:
-        if click.confirm('[2/3] ' + orange('Database has no users.') + ' Would you like to create an account now?',
+        if click.confirm('[2/4] ' + orange('Database has no users.') + ' Would you like to create an account now?',
                          default=True):
             AccountCreator().run_prompt()
     else:
         click.echo('[•] There are some users in the database already, skipping...')
 
+    # Add default restriction, group
+    if Restriction.query.count() == 0:
+        if click.confirm('[3/4] ' + orange('There are no restrictions specified') + ' - that means, that by default '
+                         'users will not have access to any resources. Would you like me to create a default '
+                         'restriction together with a default group now? (All users would have access to every '
+                         'resource)', default=True):
+            default_group = Group(name='Default group')
+            default_group._is_default = True
+            default_group.save()
+
+            default_restriction = Restriction(name='Default Restriction', starts_at=datetime.utcnow(),
+                                              is_global=True)
+            default_restriction.apply_to_group(default_group)
+
+            click.echo('[3/4] Created a default group: "Default Group" and a restriction "Default Restriction" '
+                       'allowing access to every resource at any time.')
+
+            if click.confirm('[3/4] By default all new users will be added to that group. Would you like to add there '
+                             'already existing users?'):
+                users = User.all()
+                for usr in users:
+                    default_group.add_user(usr)
+                click.echo('[3/4] {} users have been added to the default group'.format(len(users)))
+            else:
+                click.echo('[•] OK, will not add any users.')
+        else:
+            click.echo('[•] OK - not creating any restrictions. Please remember that you need to define restrictions'
+                       ' in order for users to be able to access the resources.')
+    else:
+        click.echo('[•] There are some restrictions in the database already, skipping...')
+
     # Edit configs
-    click.echo('[3/3] ' + green('Done ✔!') + ' Now you just need to adjust these configs to your needs:\n')
+    click.echo('[4/4] ' + green('Done ✔!') + ' Now you just need to adjust these configs to your needs:\n')
     click.echo(cleandoc('''
         (required) {hosts}
         (optional) {main}
