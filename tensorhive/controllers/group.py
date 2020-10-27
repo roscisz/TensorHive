@@ -23,9 +23,13 @@ UserId = int
 
 
 @jwt_required
-def get() -> Tuple[List[Any], HttpStatusCode]:
+def get(only_default: bool = False) -> Tuple[List[Any], HttpStatusCode]:
+    if only_default:
+        groups = Group.get_default_groups()
+    else:
+        groups = Group.all()
     return [
-        group.as_dict for group in Group.all()
+        group.as_dict for group in groups
     ], HTTPStatus.OK.value
 
 
@@ -49,7 +53,8 @@ def get_by_id(id: GroupId) -> Tuple[Content, HttpStatusCode]:
 def create(group: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     try:
         new_group = Group(
-            name=group['name']
+            name=group['name'],
+            is_default=group['isDefault'] if 'isDefault' in group else False
         )
         new_group.save()
     except AssertionError as e:
@@ -68,15 +73,23 @@ def create(group: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
+def to_db_column() -> Dict[str, str]:
+    return {
+        'name': 'name',
+        'isDefault': 'is_default',
+    }
+
+
 @admin_required
 def update(id: GroupId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     new_values = newValues
-    allowed_fields = {'name'}
+    allowed_fields = {'name', 'isDefault'}
     try:
         assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
         group = Group.get(id)
 
         for field_name, new_value in new_values.items():
+            field_name = to_db_column().get(field_name)
             assert hasattr(group, field_name), 'group has no {} field'.format(field_name)
             setattr(group, field_name, new_value)
         group.save()

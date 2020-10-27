@@ -60,9 +60,9 @@ def do_create(user: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         new_user.save()
 
         try:
-            default_group = Group.get_default_group()
-            if default_group is not None:
-                default_group.add_user(new_user)
+            default_groups = Group.get_default_groups()
+            for group in default_groups:
+                group.add_user(new_user)
         except Exception:
             log.warning("User has been created, but not added to default group.")
     except AssertionError as e:

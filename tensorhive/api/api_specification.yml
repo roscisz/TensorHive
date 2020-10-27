@@ -389,8 +389,16 @@ paths:
     get:
       tags:
         - groups
-      summary: Get all groups
+      summary: Get all or default groups
       operationId: tensorhive.controllers.group.get
+      parameters:
+        - description: If set to false get all groups if true then only default groups
+          in: query
+          name: only_default
+          required: false
+          schema:
+            type: boolean
+            default: false
       responses:
         200:
           description: {{RESPONSES['general']['success']}}
@@ -597,116 +605,6 @@ paths:
           description: {{RESPONSES['group']['not_found']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
-        500:
-          description: {{RESPONSES['general']['internal_error']}}
-      security:
-        - Bearer: []
-  /default_group:
-    get:
-      tags:
-        - groups
-      summary: Get default group.
-      operationId: tensorhive.controllers.group.get_default_group
-      responses:
-        200:
-          description: {{RESPONSES['general']['success']}}
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  msg:
-                    type: string
-                    example: {{RESPONSES['group']['default']['get']['success']}}
-                  group:
-                    $ref: '#/components/schemas/Group'
-        401:
-          description: {{RESPONSES['general']['unauthorized']}}
-        403:
-          description: {{RESPONSES['general']['unprivileged']}}
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  msg:
-                    type: string
-                    example: {{RESPONSES['general']['unprivileged']}}
-        404:
-          description: {{RESPONSES['group']['default']['not_found']}}
-        500:
-          description: {{RESPONSES['general']['internal_error']}}
-      security:
-        - Bearer: []
-    put:
-      tags:
-        - groups
-      summary: |
-          Set group with given ID as default (default group is the group to which all new users will be added
-          on registration). It will only affect new users.
-      operationId: tensorhive.controllers.group.set_default_group
-      parameters:
-        - description: Group ID
-          in: query
-          name: group_id
-          required: true
-          schema:
-            type: integer
-      responses:
-        200:
-          description: {{RESPONSES['group']['default']['set']['success']}}
-          content:
-            application/json:
-              schema:
-                example:
-                  msg: {{RESPONSES['group']['default']['set']['success']}}
-        401:
-          description: {{RESPONSES['general']['unauthorized']}}
-        403:
-          description: {{RESPONSES['general']['unprivileged']}}
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  msg:
-                    type: string
-                    example: {{RESPONSES['general']['unprivileged']}}
-        404:
-          description: {{RESPONSES['group']['not_found']}}
-        422:
-          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['group']['default']['set']['failure']['assertions']}}
-        500:
-          description: {{RESPONSES['general']['internal_error']}}
-      security:
-        - Bearer: []
-    delete:
-      tags:
-        - groups
-      summary: Mark current default group as non-default. Existing users will be not affected.
-      operationId: tensorhive.controllers.group.delete_default_group
-      responses:
-        200:
-          description: {{RESPONSES['group']['default']['delete']['success']}}
-          content:
-            application/json:
-              schema:
-                example:
-                  msg: {{RESPONSES['group']['default']['delete']['success']}}
-        401:
-          description: {{RESPONSES['general']['unauthorized']}}
-        403:
-          description: {{RESPONSES['general']['unprivileged']}}
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  msg:
-                    type: string
-                    example: {{RESPONSES['general']['unprivileged']}}
-        422:
-          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['group']['default']['delete']['failure']['assertions']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:
@@ -2930,6 +2828,7 @@ components:
       type: object
       required:
         - name
+        - isDefault
         - users
       properties:
         id:
@@ -2940,6 +2839,9 @@ components:
         name:
           type: string
           example: Example group
+        isDefault:
+          type: boolean
+          default: false
         createdAt:
           type: string
           format: date-time
@@ -2952,6 +2854,7 @@ components:
       type: object
       required:
         - name
+        - isDefault
       properties:
         id:
           type: integer
@@ -2961,6 +2864,9 @@ components:
         name:
           type: string
           example: Example group
+        isDefault:
+          type: boolean
+          default: false
         createdAt:
           type: string
           format: date-time
@@ -2973,12 +2879,18 @@ components:
         name:
           type: string
           example: Example group
+        isDefault:
+          type: boolean
+          default: false
     GroupUpdateForm:
       type: object
       properties:
         name:
           type: string
           example: Example group
+        isDefault:
+          type: boolean
+          default: false
     Restriction:
       type: object
       required:
