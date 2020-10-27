@@ -34,12 +34,12 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
         pass
 
     @hybrid_property
-    def users(self):
-        return self._users
-
-    @hybrid_property
     def is_default(self):
         return self._is_default if self._is_default is not None else False
+
+    @hybrid_property
+    def users(self):
+        return self._users
 
     @is_default.setter
     def is_default(self, value):

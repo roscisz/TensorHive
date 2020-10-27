@@ -54,7 +54,7 @@ def create(group: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     try:
         new_group = Group(
             name=group['name'],
-            is_default=group['isDefault']
+            is_default=group['isDefault'] if 'isDefault' in group else False
         )
         new_group.save()
     except AssertionError as e:

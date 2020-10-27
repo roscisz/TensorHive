@@ -395,7 +395,7 @@ paths:
         - description: If set to false get all groups if true then only default groups
           in: query
           name: only_default
-          required: true
+          required: false
           schema:
             type: boolean
             default: false
@@ -2875,7 +2875,6 @@ components:
       type: object
       required:
         - name
-        - isDefault
       properties:
         name:
           type: string

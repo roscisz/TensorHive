@@ -5,7 +5,6 @@ from http import HTTPStatus
 import json
 
 ENDPOINT = BASE_URI + '/groups'
-ENDPOINT_DEFAULT_GROUP = BASE_URI + '/default_group'
 
 
 # POST /groups
@@ -169,81 +168,50 @@ def test_remove_user_from_a_nonexistent_group(tables, client, new_user):
     assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
-# GET /default_group
-def test_get_default_group(tables, client, new_group):
+# GET /groups?only_default=true - one default group
+def test_get_default_groups(tables, client, new_group):
+    new_group.is_default = True
     new_group.save()
-    Group.set_default_group(new_group.id)
 
-    resp = client.get(ENDPOINT_DEFAULT_GROUP, headers=HEADERS)
+    another_group = Group(name='Not a default group')
+    another_group.save()
+
+    resp = client.get(ENDPOINT + '?only_default=true', headers=HEADERS)
     resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
-    assert resp_json['group']['id'] == new_group.id
+    assert len(resp_json) == 1
+    assert resp_json[0]['id'] == new_group.id
 
 
-# GET /default_group - when default group doesn't exist
-def test_get_default_group_when_no_default_group_exists(tables, client, new_group):
+# GET /groups?only_default=true - when default group doesn't exist
+def test_get_default_groups_when_no_default_group_exists(tables, client, new_group):
     new_group.save()
 
-    resp = client.get(ENDPOINT_DEFAULT_GROUP, headers=HEADERS)
-
-    assert resp.status_code == HTTPStatus.NOT_FOUND
-
-
-# PUT /default_group?group_id={ID} - no default group currently existing
-def test_set_default_group_when_no_preexisting_default_group_exists(tables, client, new_group):
-    new_group.save()
-
-    resp = client.put(ENDPOINT_DEFAULT_GROUP + '?group_id={}'.format(new_group.id), headers=HEADERS)
+    resp = client.get(ENDPOINT + '?only_default=true', headers=HEADERS)
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
-    assert new_group._is_default
-    assert Group.get_default_group() == new_group
+    assert len(resp_json) == 0
 
 
-# PUT /default_group - default group currently existing
-def test_set_default_group_when_there_is_a_preexisting_default_group(tables, client, new_group):
-    new_group.save()
-    Group.set_default_group(new_group.id)
-
-    another_group = Group(name='AnotherGroup')
-    another_group.save()
-    resp = client.put(ENDPOINT_DEFAULT_GROUP + '?group_id={}'.format(another_group.id), headers=HEADERS)
-
-    assert resp.status_code == HTTPStatus.OK
-    assert another_group._is_default
-    assert new_group._is_default is None
-    assert Group.get_default_group() == another_group
-
-
-# PUT /default_group - group with specified id doesn't exist
-def test_set_default_group_when_there_is_no_preexisting_default_group(tables, client, new_group):
+# PUT /groups/{id}
+def test_set_group_as_a_default(tables, client, new_group):
     new_group.save()
 
-    resp = client.put(ENDPOINT_DEFAULT_GROUP + '?group_id={}'.format(new_group.id), headers=HEADERS)
+    resp = client.put(ENDPOINT + '/{}'.format(new_group.id), data=json.dumps({'isDefault': True}), headers=HEADERS)
 
     assert resp.status_code == HTTPStatus.OK
-    assert new_group._is_default
-    assert Group.get_default_group() == new_group
+    assert Group.get(new_group.id).is_default
 
 
-# DELETE /default_group
+# PUT /groups/{id}
 def test_mark_default_group_as_non_default(tables, client, new_group):
-    new_group.save()
-    Group.set_default_group(new_group.id)
-
-    resp = client.delete(ENDPOINT_DEFAULT_GROUP, headers=HEADERS)
-
-    assert resp.status_code == HTTPStatus.OK
-    assert new_group._is_default is None
-    assert Group.get_default_group() is None
-
-
-# DELETE /default_group - when default group doesn't exist
-def test_mark_default_group_as_non_default_when_it_doesnt_exist(tables, client, new_group):
+    new_group.is_default = True
     new_group.save()
 
-    resp = client.delete(ENDPOINT_DEFAULT_GROUP, headers=HEADERS)
+    resp = client.put(ENDPOINT + '/{}'.format(new_group.id), data=json.dumps({'isDefault': False}),
+                      headers=HEADERS)
 
     assert resp.status_code == HTTPStatus.OK
-    assert Group.get_default_group() is None
+    assert Group.get(new_group.id).is_default is False
