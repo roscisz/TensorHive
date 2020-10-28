@@ -158,18 +158,11 @@ def init():
         main_config.write(main_config_file)
     click.echo(green('[⚙] TensorHive will be accessible via: {}'.format(host)))
 
-    # First user account
     init_db()
-    if User.query.count() == 0:
-        if click.confirm('[2/4] ' + orange('Database has no users.') + ' Would you like to create an account now?',
-                         default=True):
-            AccountCreator().run_prompt()
-    else:
-        click.echo('[•] There are some users in the database already, skipping...')
 
     # Add default restriction, group
     if Restriction.query.count() == 0:
-        if click.confirm('[3/4] ' + orange('There are no permissions specified') + ' - that means, that by default '
+        if click.confirm('[2/4] ' + orange('There are no permissions specified') + ' - that means, that by default '
                          'users will not have access to any resources. Would you like me to create a default '
                          'permission together with a default group now? (All users would have access to every '
                          'resource)', default=True):
@@ -181,22 +174,22 @@ def init():
                                               is_global=True)
             default_restriction.apply_to_group(default_group)
 
-            click.echo('[3/4] Created a default group: {} and a restriction {}'.format(default_group.name, default_restriction.name)
+            click.echo('[2/4] Created a default group: {} and a permission {}'
+                       .format(default_group.name, default_restriction.name) +
                        'allowing access to every resource at any time.')
-
-            if click.confirm('[3/4] By default all new users will be added to that group. Would you like to add there '
-                             'already existing users?'):
-                users = User.all()
-                for usr in users:
-                    default_group.add_user(usr)
-                click.echo('[3/4] {} users have been added to the default group'.format(len(users)))
-            else:
-                click.echo('[•] OK, will not add any users.')
         else:
-            click.echo('[•] OK - not creating any restrictions. Please remember that you need to define restrictions'
+            click.echo('[•] OK - not creating any permissions. Please remember that you need to define permissions'
                        ' in order for users to be able to access the resources.')
     else:
-        click.echo('[•] There are some restrictions in the database already, skipping...')
+        click.echo('[•] There are some permissions in the database already, skipping...')
+
+    # First user account
+    if User.query.count() == 0:
+        if click.confirm('[3/4] ' + orange('Database has no users.') + ' Would you like to create an account now?',
+                         default=True):
+            AccountCreator().run_prompt()
+    else:
+        click.echo('[•] There are some users in the database already, skipping...')
 
     # Edit configs
     click.echo('[4/4] ' + green('Done ✔!') + ' Now you just need to adjust these configs to your needs:\n')
