@@ -169,19 +169,19 @@ def init():
 
     # Add default restriction, group
     if Restriction.query.count() == 0:
-        if click.confirm('[3/4] ' + orange('There are no restrictions specified') + ' - that means, that by default '
+        if click.confirm('[3/4] ' + orange('There are no permissions specified') + ' - that means, that by default '
                          'users will not have access to any resources. Would you like me to create a default '
-                         'restriction together with a default group now? (All users would have access to every '
+                         'permission together with a default group now? (All users would have access to every '
                          'resource)', default=True):
-            default_group = Group(name='Default group')
+            default_group = Group(name='users')
             default_group._is_default = True
             default_group.save()
 
-            default_restriction = Restriction(name='Default Restriction', starts_at=datetime.utcnow(),
+            default_restriction = Restriction(name='can always use everything', starts_at=datetime.utcnow(),
                                               is_global=True)
             default_restriction.apply_to_group(default_group)
 
-            click.echo('[3/4] Created a default group: "Default Group" and a restriction "Default Restriction" '
+            click.echo('[3/4] Created a default group: {} and a restriction {}'.format(default_group.name, default_restriction.name)
                        'allowing access to every resource at any time.')
 
             if click.confirm('[3/4] By default all new users will be added to that group. Would you like to add there '
