@@ -300,17 +300,11 @@
               Restriction schedules
               <v-btn
                 icon
+                color="blue-grey lighten-5"
                 @click="addSchedule()"
                 :disabled="schedules.length===5"
                 >
                 <v-icon>add</v-icon>
-              </v-btn>
-              <v-btn
-                icon
-                @click="schedules.pop()"
-                :disabled="schedules.length===0"
-                >
-                <v-icon>remove</v-icon>
               </v-btn>
           </p>
           <transition-group name="fade">
@@ -382,7 +376,7 @@
               ></v-time-picker>
               </v-menu>
               <v-select
-                style="width: 60%"
+                style="width: 50%"
                 v-model="schedule.days"
                 :items="weekdays"
                 placeholder="Weekdays"
@@ -390,6 +384,13 @@
                 :multiple=true
               >
               </v-select>
+              <v-btn
+                icon
+                color="blue-grey lighten-5"
+                @click="deleteSchedule(key)"
+                >
+                <v-icon>remove</v-icon>
+              </v-btn>
             </v-layout>
             </transition-group>
           <v-btn
@@ -579,6 +580,9 @@ export default {
     addSchedule () {
       const schedule = this.scheduleBlueprint
       this.schedules.push(schedule())
+    },
+    deleteSchedule (scheduleKey) {
+      this.schedules.splice(scheduleKey, 1)
     },
     isTodayOrLater (date) {
       return moment(date).isSameOrAfter(moment().format(moment.HTML5_FMT.DATE))
