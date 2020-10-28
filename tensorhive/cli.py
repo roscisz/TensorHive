@@ -175,8 +175,8 @@ def init():
             default_restriction.apply_to_group(default_group)
 
             click.echo('[2/4] Created a default group: {} and a permission {}'
-                       .format(default_group.name, default_restriction.name) +
-                       'allowing access to every resource at any time.')
+                       .format(default_group.name, default_restriction.name) + 'allowing access to every resource '
+                       'at any time.')
         else:
             click.echo('[•] OK - not creating any permissions. Please remember that you need to define permissions'
                        ' in order for users to be able to access the resources.')
