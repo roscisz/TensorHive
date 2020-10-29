@@ -15,6 +15,14 @@ def test_restriction_creation(tables):
     assert new_restriction.id is not None
 
 
+def test_indefinite_restriction_creation(tables):
+    starts_at = datetime.utcnow() + timedelta(minutes=5)
+    new_restriction = Restriction(name='TestRestriction', starts_at=starts_at, is_global=False)
+    new_restriction.save()
+
+    assert new_restriction.id is not None
+
+
 def test_get_global_restrictions_returns_them(tables):
     starts_at = datetime.utcnow() + timedelta(minutes=5)
     duration = timedelta(hours=12)

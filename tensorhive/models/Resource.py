@@ -13,8 +13,10 @@ class Resource(CRUDModel, RestrictionAssignee):  # type: ignore
     __tablename__ = 'resources'
     id = Column(String(64), primary_key=True)
     name = Column(String(40), nullable=True)
+    hostname = Column(String(64), nullable=True)
 
-    _restrictions = relationship('Restriction', secondary='restriction2resource')
+    _restrictions = relationship('Restriction', secondary='restriction2resource', back_populates='_resources',
+                                 viewonly=True)
 
     def __repr__(self):
         return '<Resource id={id}, name={name}>'.format(id=self.id, name=self.name)
@@ -52,9 +54,14 @@ class Resource(CRUDModel, RestrictionAssignee):  # type: ignore
     def get_by_name(cls, resource_name):
         return db_session.query(Resource).filter(Resource.name == resource_name).all()
 
+    @classmethod
+    def get_by_hostname(cls, hostname):
+        return db_session.query(Resource).filter(Resource.hostname == hostname).all()
+
     @property
     def as_dict(self):
         return {
             'id': self.id,
-            'name': self.name
+            'name': self.name,
+            'hostname': self.hostname
         }

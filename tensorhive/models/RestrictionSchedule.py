@@ -34,7 +34,8 @@ class RestrictionSchedule(CRUDModel, Base):  # type: ignore
     hour_start = Column(Time(), nullable=False)
     hour_end = Column(Time(), nullable=False)
 
-    _restrictions = relationship('Restriction', secondary='restriction2schedule')
+    _restrictions = relationship('Restriction', secondary='restriction2schedule', back_populates='_schedules',
+                                 viewonly=True)
 
     def __init__(self, schedule_days: Union[List[Weekday], str], hour_start: datetime.time, hour_end: datetime.time):
         self.schedule_days = schedule_days
@@ -106,8 +107,3 @@ class Restriction2Schedule(Base):  # type: ignore
 
     restriction_id = Column(Integer, ForeignKey('restrictions.id', ondelete='CASCADE'), primary_key=True)
     schedule_id = Column(Integer, ForeignKey('restriction_schedules.id', ondelete='CASCADE'), primary_key=True)
-
-    restriction = relationship('Restriction',
-                               backref=backref('restriction2schedule', cascade='all,delete-orphan'))
-    schedule = relationship('RestrictionSchedule',
-                            backref=backref('restriction2schedule', cascade='all,delete-orphan'))

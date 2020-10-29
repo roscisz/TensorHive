@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.models.Group import Group
 from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 
@@ -37,3 +38,37 @@ def test_adding_user_to_a_group_that_he_is_already_in_fails(tables, new_group_wi
 
     with pytest.raises(InvalidRequestException):
         new_group_with_member.add_user(user)
+
+
+def test_marking_group_as_a_default(tables, new_group):
+    new_group.is_default = True
+    new_group.save()
+
+    assert Group.get(new_group.id).is_default
+    assert new_group in Group.get_default_groups()
+
+
+def test_get_default_group(tables, new_group):
+    new_group.is_default = True
+    new_group.save()
+
+    assert new_group in Group.get_default_groups()
+
+
+def test_get_default_without_default_group(tables, new_group):
+    new_group.save()
+
+    assert len(Group.get_default_groups()) == 0
+
+
+def test_more_than_one_default_group(tables, new_group):
+    new_group.is_default = True
+    new_group.save()
+
+    another_group = Group(name='AnotherGroup')
+    another_group.is_default = True
+    another_group.save()
+
+    defaults = Group.get_default_groups()
+    assert new_group in defaults
+    assert another_group in defaults
