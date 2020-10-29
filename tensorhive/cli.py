@@ -174,7 +174,7 @@ def init():
                                               is_global=True)
             default_restriction.apply_to_group(default_group)
 
-            click.echo('[2/4] Created a default group: {} and a permission {}'
+            click.echo('[2/4] Created a default group: {} and a permission "{}" '
                        .format(default_group.name, default_restriction.name) + 'allowing access to every resource '
                        'at any time.')
         else:
