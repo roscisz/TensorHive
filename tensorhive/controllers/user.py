@@ -35,6 +35,7 @@ def get() -> Tuple[List[Any], HttpStatusCode]:
         user.as_dict(include_private=include_private) for user in User.all()
     ], 200
 
+
 @jwt_required
 def get_by_id(id: UserId) -> Tuple[Content, HttpStatusCode]:
     try:
