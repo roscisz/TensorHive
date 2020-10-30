@@ -64,3 +64,18 @@ class CRUDModel:
     @classmethod
     def all(cls):
         return db_session.query(cls).all()
+
+    def as_dict(self, include_private=False):
+        """
+        Serializes current instance into dict.
+        :param include_private: flag determining if private data should be included (True for superuser calls)
+        :return: Dictionary representing current instance.
+        """
+        attributes = getattr(self, "__public__")
+
+        print(attributes)
+
+        if include_private:
+            attributes = attributes + getattr(self, '__private__')
+
+        return dict((c, getattr(self, c)) for c in attributes)

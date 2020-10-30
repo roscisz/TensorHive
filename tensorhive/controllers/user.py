@@ -2,7 +2,7 @@ import logging
 import socket
 from typing import Any, Dict, List, Tuple, Union
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, get_raw_jwt
-from flask_jwt_extended import jwt_refresh_token_required, jwt_required
+from flask_jwt_extended import jwt_refresh_token_required, jwt_required, get_jwt_claims
 from paramiko.client import SSHClient, WarningPolicy
 from paramiko.ssh_exception import AuthenticationException, BadHostKeyException, SSHException
 from sqlalchemy.exc import IntegrityError
@@ -28,10 +28,12 @@ UserId = int
 
 @jwt_required
 def get() -> Tuple[List[Any], HttpStatusCode]:
-    return [
-        user.as_dict for user in User.all()
-    ], 200
+    claims = get_jwt_claims()
+    include_private = 'admin' in claims['roles']
 
+    return [
+        user.as_dict(include_private=include_private) for user in User.all()
+    ], 200
 
 @jwt_required
 def get_by_id(id: UserId) -> Tuple[Content, HttpStatusCode]:
@@ -44,7 +46,11 @@ def get_by_id(id: UserId) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, 500
     else:
-        content, status = {'msg': USER['get']['success'], 'user': user.as_dict}, 200
+        current_user_id = get_jwt_identity()
+        claims = get_jwt_claims()
+        include_private = 'admin' in claims['roles'] or id == current_user_id
+
+        content, status = {'msg': USER['get']['success'], 'user': user.as_dict(include_private=include_private)}, 200
     finally:
         return content, status
 
@@ -77,13 +83,14 @@ def do_create(user: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     else:
         content = {
             'msg': USER['create']['success'],
-            'user': new_user.as_dict
+            'user': new_user.as_dict()
         }
         status = 201
     finally:
         return content, status
 
 
+@jwt_required
 @admin_required
 def create(newUser: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     return do_create(newUser)
@@ -115,8 +122,8 @@ def authorized_keys_entry() -> str:
     return 'ssh-rsa {} tensorhive@{}'.format(key, APP_SERVER.HOST)
 
 
-@admin_required
 @jwt_required
+@admin_required
 def update(newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     user = newValues
     print('REQ', user)
@@ -141,7 +148,7 @@ def update(newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
             content = {'msg': GENERAL['internal_error']}
             status = 500
         else:
-            content = {'msg': USER['update']['success'], 'reservation': found_user.as_dict}
+            content = {'msg': USER['update']['success'], 'reservation': found_user.as_dict()}
             status = 201
     else:
         content = {'msg': GENERAL['bad_request']}
@@ -150,6 +157,7 @@ def update(newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     return content, status
 
 
+@jwt_required
 @admin_required
 def delete(id: UserId) -> Tuple[Content, HttpStatusCode]:
     try:

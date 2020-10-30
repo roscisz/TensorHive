@@ -85,7 +85,7 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
             'isDefault': self.is_default
         }
         if include_users:
-            group['users'] = [user.as_dict_shallow for user in self.users]
+            group['users'] = [user.as_dict(include_groups=False) for user in self.users]
         return group
 
     @classmethod

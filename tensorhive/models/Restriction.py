@@ -221,7 +221,7 @@ class Restriction(CRUDModel, Base):  # type: ignore
         if include_users:
             # using as_dict_shallow as we do not want to include user's groups here, as they are insignificant
             # considering the scope of the restriction
-            restriction['users'] = [user.as_dict_shallow for user in self.users]
+            restriction['users'] = [user.as_dict(include_groups=False) for user in self.users]
         if include_resources:
             restriction['resources'] = [resource.as_dict for resource in self.resources]
         return restriction
