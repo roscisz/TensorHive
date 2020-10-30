@@ -130,7 +130,7 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
         finally:
             user['roles'] = roles
             if include_groups:
-                user['groups'] = [group.as_dict_shallow for group in self.groups]
+                user['groups'] = [group.as_dict(include_users=False) for group in self.groups]
             return user
 
     @staticmethod

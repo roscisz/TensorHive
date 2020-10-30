@@ -217,7 +217,7 @@ class Restriction(CRUDModel, Base):  # type: ignore
             'schedules': [schedule.as_dict for schedule in self.schedules]
         }
         if include_groups:
-            restriction['groups'] = [group.as_dict for group in self.groups]
+            restriction['groups'] = [group.as_dict(include_users=False) for group in self.groups]
         if include_users:
             # using as_dict_shallow as we do not want to include user's groups here, as they are insignificant
             # considering the scope of the restriction
