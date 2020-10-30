@@ -1,6 +1,7 @@
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from tensorhive.database import db_session, Base
+from stringcase import camelcase
 import logging
 log = logging.getLogger(__name__)
 
@@ -73,9 +74,7 @@ class CRUDModel:
         """
         attributes = getattr(self, "__public__")
 
-        print(attributes)
-
         if include_private:
             attributes = attributes + getattr(self, '__private__')
 
-        return dict((c, getattr(self, c)) for c in attributes)
+        return dict((camelcase(c), getattr(self, c)) for c in attributes)
