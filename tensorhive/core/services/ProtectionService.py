@@ -172,8 +172,8 @@ class ProtectionService(Service):
             node_processes = self.node_gpu_processes(hostname)
             reserved_gpu_process_owners = self.gpu_users(node_processes, uuid)
 
-            is_unpriviliged = lambda sess: sess['USER'] in reserved_gpu_process_owners
-            intruder_ttys = [sess for sess in node_sessions if is_unpriviliged(sess)]
+            is_unprivileged = lambda sess: sess['USER'] in reserved_gpu_process_owners
+            intruder_ttys = [sess for sess in node_sessions if is_unprivileged(sess)]
 
             try:
                 # Priviliged user can be ignored on this list
@@ -181,10 +181,10 @@ class ProtectionService(Service):
             except ValueError:
                 pass
             finally:
-                unpriviliged_gpu_process_owners = reserved_gpu_process_owners
+                unprivileged_gpu_process_owners = reserved_gpu_process_owners
 
             # 3. Execute protection handlers
-            for intruder in unpriviliged_gpu_process_owners:
+            for intruder in unprivileged_gpu_process_owners:
                 violation_data = {
                     'INTRUDER_USERNAME': intruder,
                     'RESERVATION_OWNER_USERNAME': username,
