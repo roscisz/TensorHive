@@ -56,19 +56,19 @@ class CommandSegment2Task(Base):  # type: ignore
     _index = Column(Integer) # , nullable=False positive - parameters; negative - env variables; 0 - actual command
 
     @hybrid_property
-    def value(self):
-        return self._value
-
-    @hybrid_property
     def index(self):
         return self._index
 
-    @index.setter
-    def index(self, value: Integer):
-        self._index = index
-        if self._index is None:
-            log.error('Unsupported type (index={})'.format(index))
+#    @index.setter
+#    def index(self, value: Integer):
+#        self._index = value
+#        if self._index is None:
+#            log.error('Unsupported type (index={})'.format(value))
 
-    @value.setter
-    def value(self, value: String):
-        self._value = value
+    @hybrid_property
+    def value(self):
+        return self._value
+
+#    @value.setter
+#    def value(self, str_value: String):
+#        self._value = str_value
