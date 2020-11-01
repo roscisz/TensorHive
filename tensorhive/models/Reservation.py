@@ -121,8 +121,8 @@ class Reservation(CRUDModel, Base):  # type: ignore
         assert isinstance(end, datetime.datetime), assertion_failed_msg
 
         uuid_filter = cls.protected_resource_id.in_(uuids)
-        after_start_filter = cls.starts_at <= end
-        before_end_filter = start <= cls.ends_at
+        after_start_filter = cls._starts_at <= end
+        before_end_filter = start <= cls._ends_at
         matching_conditions = and_(uuid_filter, after_start_filter, before_end_filter)
         return cls.query.filter(matching_conditions).all()
 

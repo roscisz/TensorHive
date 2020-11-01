@@ -79,14 +79,14 @@ class Task(CRUDModel, Base):  # type: ignore
 
     def add_cmd_segment(self, cmd_segment: CommandSegment):
         if cmd_segment in self.cmd_segments:
-            raise InvalidRequestException('Segment {cmd_segment} is already assigned to task {task}!'
+            raise Exception('Segment {cmd_segment} is already assigned to task {task}!'
                                           .format(cmd_segment=cmd_segment, task=self))
         self.cmd_segments.append(cmd_segment)
         self.save()
 
     def remove_cmd_segment(self, cmd_segment: CommandSegment):
         if cmd_segment not in self.cmd_segments:
-            raise InvalidRequestException('Segment {cmd_segment} is not assigned to task {task}!'
+            raise Exception('Segment {cmd_segment} is not assigned to task {task}!'
                                           .format(cmd_segment=cmd_segment, task=self))
 
         self.cmd_segments.remove(cmd_segment)

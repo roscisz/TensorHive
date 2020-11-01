@@ -1773,7 +1773,7 @@ paths:
               msg:
                 type: string
                 example: {{RESPONSES['job']['get']['success']}}
-              task:
+              job:
                 $ref: '#/components/schemas/JobToDisplay'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
@@ -1821,17 +1821,24 @@ paths:
       responses:
         200:
           description: {{RESPONSES['job']['tasks']['add']['success']}}
-            example: {{RESPONSES['job']['tasks']['add']['success']}}
-                  restriction:
-                    $ref: '#/components/schemas/JobToDisplay'
-        403:
-          description: {{RESPONSES['general']['unpriviliged']}}
           schema:
             type: object
             properties:
               msg:
                 type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
+                example: {{RESPONSES['job']['tasks']['add']['success']}}
+              job:
+                $ref: '#/components/schemas/JobToDisplay'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['job']['tasks']['add']['failure']['assertions']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['job']['tasks']['add']['failure']['assertions']}}
         404:
           description: {{RESPONSES['job']['not_found']}} or {{RESPONSES['task']['not_found']}}
         409:
@@ -2837,6 +2844,12 @@ paths:
           description: {{RESPONSES['general']['auth_error']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
 components:
