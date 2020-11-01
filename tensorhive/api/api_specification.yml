@@ -1856,7 +1856,56 @@ paths:
             properties:
               msg:
                 type: string
-                example: {{RESPONSES['general']['internal_error']}}
+                example: {{RESPONSES['general']['internal_error']}}   
+      security:
+        - Bearer: []
+  /jobs/{job_id}/tasks/{task_id}:
+    put:
+      tags:
+        - jobs
+      summary: Add task to job
+      operationId: tensorhive.controllers.job.add_task
+      description: Adds specific task to specific job      
+      parameters:
+        - description: Job ID
+          in: path
+          name: job_id
+          required: true
+          type: integer
+        - description: Task ID
+          in: path
+          name: task_id
+          required: true
+          type: integer
+      responses:
+        200:
+          description: {{RESPONSES['job']['tasks']['add']['success']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['job']['tasks']['add']['success']}}
+              job:
+                $ref: '#/definitions/JobToDisplay'
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        403:
+          description: {{RESPONSES['job']['tasks']['add']['failure']['assertions']}}
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: {{RESPONSES['job']['tasks']['add']['failure']['assertions']}}
+        404:
+          description: {{RESPONSES['job']['not_found']}} or {{RESPONSES['task']['not_found']}}
+        409:
+          description: {{RESPONSES['job']['tasks']['add']['failure']['duplicate']}}
+        422:
+          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['job']['tasks']['add']['failure']['assertions']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
     delete:

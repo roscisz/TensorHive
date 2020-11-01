@@ -77,9 +77,9 @@ def test_add_task_to_job(tables, client, new_job, new_task):
     assert new_job == new_task.job
     assert new_task in new_job.tasks
 
+<<<<<<< HEAD
 # DELETE /jobs/{id}/tasks/{id}
 def test_remove_task_from_job(tables, client, new_job, new_task):
-    new_job.save()
     new_task.save()
     new_job.add_task(new_task)
 
@@ -161,3 +161,6 @@ def test_update_task(tables, client, new_job, new_task):
     assert resp.status_code == HTTPStatus.OK
     assert resp_json['task']['hostname'] == 'remotehost'
     assert resp_json['task']['command'] == 'ENV= python command.py --rank=3'
+=======
+# GET /jobs
+def test_get_all_jobs(tables, client, new_job):
