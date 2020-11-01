@@ -107,7 +107,7 @@ def get_stdout(host: Hostname, output: pssh.output.HostOutput) -> Optional[str]:
             raise host_result.exception
         return '\n'.join(list(host_result.stdout))
     except KeyError:
-        log.error('Could not unwrap HostOutput object for'.format(host))
+        log.error('Could not unwrap HostOutput object for {}'.format(host))
         raise
     except (TypeError, ):
         log.warning('Could not extract stdout for {}: {}'.format(host, output))

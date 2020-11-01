@@ -3,11 +3,14 @@ import pytest
 
 @pytest.yield_fixture(scope='function')
 def tables():
-    from tensorhive.database import Base, engine
+    from tensorhive.database import Base, engine, db_session
     from tensorhive.models.User import User
     from tensorhive.models.Reservation import Reservation
     from tensorhive.models.Role import Role
     from tensorhive.models.RevokedToken import RevokedToken
+    from tensorhive.models.Job import Job
+    from tensorhive.models.Task import Task
     Base.metadata.create_all(engine)
+    db_session.remove()  # that makes sure we won't be holding on to any cached entities between test cases
     yield
     Base.metadata.drop_all(engine)

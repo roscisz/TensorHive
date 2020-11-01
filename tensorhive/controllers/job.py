@@ -7,6 +7,7 @@ from tensorhive.config import API
 #from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from tensorhive.models.Job import Job
 from tensorhive.models.Task import Task
+from tensorhive.utils.DateUtils import DateUtils
 
 log = logging.getLogger(__name__)
 JOB = API.RESPONSES['job']
@@ -77,10 +78,7 @@ def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         new_job = Job(
             name=job['name'],
             description=job['description'],
-            user_id=job['userId'],
-            status=job['status'],
-            _start_at=DateUtils.try_parse_string(job.get('startAt')),
-            _end_at=DateUtils.try_parse_string(job.get('endAt'))
+            user_id=job['userId']
             )
         new_job.save()
     except ValueError:
@@ -156,18 +154,18 @@ def add_task(job_id: JobId, task_id: TaskId) -> Tuple[Content, HttpStatusCode]:
     try:
         job = Job.get(job_id)
         task = Task.get(task_id)
-        assert job.get('userId') == get_jwt_identity(), 'Not an owner'
+        assert job.user_id == get_jwt_identity(), 'Not an owner'
         job.add_task(task)
     except NoResultFound:
         if job is None:
             content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
         else:
             content, status = {'msg': TASK['not_found']}, HTTPStatus.NOT_FOUND.value
-#    except InvalidRequestException as e:
-#        content, status = {'msg': JOB['tasks']['add']['failure']['duplicate'].format(reason=e)}, HTTPStatus.CONFLICT.value
+    except InvalidRequestException as e:
+        content, status = {'msg': JOB['tasks']['add']['failure']['duplicate'].format(reason=e)}, HTTPStatus.CONFLICT.value
     except AssertionError as e:
         content, status = {'msg': JOB['tasks']['add']['failure']['assertions'].format(reason=e)}, \
-            HTTPStatus.UNPROCESSABLE_ENTITY.value
+            HTTPStatus.FORBIDDEN.value
     except Exception as e:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
@@ -177,7 +175,7 @@ def add_task(job_id: JobId, task_id: TaskId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 @jwt_required
-def remove_task(ob_id: JobId, task_id: TaskId) -> Tuple[Content, HttpStatusCode]:
+def remove_task(job_id: JobId, task_id: TaskId) -> Tuple[Content, HttpStatusCode]:
     job = None
     try:
         job = Job.get(job_id)
@@ -189,11 +187,11 @@ def remove_task(ob_id: JobId, task_id: TaskId) -> Tuple[Content, HttpStatusCode]
             content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
         else:
             content, status = {'msg': TASK['not_found']}, HTTPStatus.NOT_FOUND.value
-#    except InvalidRequestException as e:
-#        content, status = {'msg': JOB['tasks']['remove']['failure']['not_found'].format(reason=e)}, HTTPStatus.NOT_FOUND.value
+    except InvalidRequestException as e:
+        content, status = {'msg': JOB['tasks']['remove']['failure']['not_found'].format(reason=e)}, HTTPStatus.NOT_FOUND.value
     except AssertionError as e:
         content, status = {'msg': JOB['tasks']['remove']['failure']['assertions'].format(reason=e)}, \
-            HTTPStatus.UNPROCESSABLE_ENTITY.value
+            HTTPStatus.FORBIDDEN.value
     except Exception as e:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
