@@ -91,7 +91,6 @@ def do_create(user: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-@jwt_required
 @admin_required
 def create(newUser: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     return do_create(newUser)
@@ -123,7 +122,6 @@ def authorized_keys_entry() -> str:
     return 'ssh-rsa {} tensorhive@{}'.format(key, APP_SERVER.HOST)
 
 
-@jwt_required
 @admin_required
 def update(newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     user = newValues
@@ -158,7 +156,6 @@ def update(newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     return content, status
 
 
-@jwt_required
 @admin_required
 def delete(id: UserId) -> Tuple[Content, HttpStatusCode]:
     try:
