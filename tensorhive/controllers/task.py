@@ -1,5 +1,6 @@
 from tensorhive.models.Task import Task, TaskStatus
 from tensorhive.models.User import User
+from tensorhive.models.Job import Job
 from tensorhive.core import task_nursery, ssh
 from tensorhive.utils.DateUtils import DateUtils
 from tensorhive.core.task_nursery import SpawnError, ExitCodeError
@@ -246,35 +247,62 @@ def business_get_all(job_id: JobId, sync_all: Optional[bool]) -> Tuple[Content, 
 def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpStatusCode]:
     """ Creates new Task db record under the given parent job.
     
-    Command argument is divided into segments to make editing easier.
-    Main dividing procedure assumptions: 
-    1) Environmental variables are placed first in the command and they contain "=" sign
-        - if_envs,
-        - if_eq_sign
-    2) After that actual command (path) is given and it contains no "=" sign
-        - actual_command
-    3) Following actual command parameters are given and they start by at least one "-" sign
-        - if segment[0] == '-'
-    3a) Parameters may contain value
-    3b) Value is given after "=" sign or after space character
-        - if_parameter_value_expected
-
-    After each cycle new segment is stored if the information about it is complete.
-    If not values are stored till it is complete, and then it is added (e.g. actual_command) 
+    Command is divided into segments to make editing easier.
     """
     try:
         new_task = Task(
             host=task['hostname'],
-            command=task['command'],
-#            job_id = task['jobId'],
-            user_id = task['userId'],
-#            place_in_job_sequence = task['placeInSeq'],
-#            pid = task['pid'],
-#            status = task['status'],
-            _spawns_at=DateUtils.try_parse_string(task.get('spawnsAt')),
-            _terminates_at=DateUtils.try_parse_string(task.get('terminatesAt')))
+            command=task['command'])
+        # parent job
+        parent_job = Job.query.filter(Job.id == job_id).one()
+        # split command
+        command_segments = new_task.command.split()
+        if_envs = True
+        if_eqsign_found = False
+        if_parameter_value_expected = False
+        actual_command = ''
+        for segment in command_segments:
+            for x in segment:
+                if x == '=':
+                    if_eqsign_found = True
+                    break
+            if if_eqsign_found == False:
+                if_envs = False
+            if_eqsign_found = False             
+            if if_envs:
+                splitted_segment = segment.split('=')
+                segment_type=SegmentType.env_variable
+            elif segment[0] == '-':
+                splitted_segment = segment.split('=')
+                segment_type=SegmentType.parameter
+                if len(splitted_segment) == 1:
+                    splitted_segment.append('')
+                    if_parameter_value_expected = True
+            elif if_parameter_value_expected == True:
+                splitted_segment[1] = segment
+                if_parameter_value_expected = False
+            else:
+                actual_command += segment + ' '
+                continue
+
+            if if_parameter_value_expected == False:
+                new_segment = CommandSegment.query.filter(CommandSegment.segment_type == segment_type,
+                                            CommandSegment.name == splitted_segment[0]).first()
+                if (new_segment == None):
+                    new_segment = CommandSegment(
+                            name=splitted_segment[0],
+                            _segment_type=segment_type)
+                new_task.add_cmd_segment(new_segment, splitted_segment[1])
+                
+        new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.actual_command,
+                                        CommandSegment.name == '').first()
+        if (new_segment == None):
+            new_segment = CommandSegment(
+                name='',
+                _segment_type=SegmentType.actual_command)
+        new_task.add_cmd_segment(new_segment, actual_command[:-1])
         new_task.save()
-        parent_job.add_task(new_task)
+        parent_job.add_task(new_task)        
     except ValueError:
         # Invalid string format for datetime
         content, status = {'msg': GENERAL['bad_request']}, 422
@@ -309,6 +337,7 @@ def business_get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 
 
 # TODO What if task is already running: allow for updating command, hostname, etc.?
+# TODO Allow editing commands by segments
 def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """Updates certain fields of a Task db record, including command field."""
     try:
@@ -317,13 +346,11 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
             if key == 'hostname':
                 # API client is allowed to use more verbose name here (hostname <=> host)
                 field_name = 'host'
-            if field_name in {'spawnsAt', 'terminatesAt'}:
-                field_name = field_name.replace('At', '_at')
-                new_value = DateUtils.try_parse_string(new_value)
-            else:
-                # Check that every other field matches
-                assert hasattr(task, field_name), 'task has no {} column'.format(field_name)
-            setattr(task, field_name, new_value)
+                setattr(task, field_name, new_value)
+                
+#            if field_name in {'spawnsAt', 'terminatesAt'}:
+#                field_name = field_name.replace('At', '_at')
+#                new_value = DateUtils.try_parse_string(new_value)
         task.save()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404

@@ -70,22 +70,6 @@ class Task(CRUDModel, Base):  # type: ignore
                 return actual_command
         return ''
 
-    def update_command(self):
-        command = ''
-        start = - self.number_of_env_vars
-        end = self.number_of_params + 1
-        for i in range(start, end):
-            link = CommandSegment2Task.query.filter(CommandSegment2Task.index == i,
-                                                    CommandSegment2Task.task_id == self.id).one()
-            cmd_segment = CommandSegment.query.filter(CommandSegment.id == link.cmd_segment_id).one()
-            if i != start:
-                command += ' '
-            if cmd_segment.segment_type == SegmentType.actual_command:
-                command += cmd_segment.name + link.value
-            else:
-                command += cmd_segment.name + '=' + link.value
-        self.command = command
-
     def get_cmd_segment_link(self, cmd_segment: CommandSegment):
         """returns connection between task and its command segment"""
         if cmd_segment not in self.cmd_segments:

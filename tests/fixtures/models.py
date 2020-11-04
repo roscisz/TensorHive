@@ -191,9 +191,4 @@ def new_job():
 @pytest.fixture(scope='function')
 def new_task():
     return Task(command='python command.py --batch_size 32',
-                host='localhost')
-
-@pytest.fixture(scope='function')
-def new_task_2():
-    return Task(command='python command2.py --batch_size 16',
-                host='remotehost')
+                host='hostname')

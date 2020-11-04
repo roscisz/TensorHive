@@ -29,7 +29,7 @@ class Job(CRUDModel, Base):  # type: ignore
     _stop_at = Column(DateTime)
 
     _tasks = relationship(
-        'Task', backref=backref('job', single_parent=True), lazy='subquery')
+        'Task', backref=backref('job', single_parent=True, cascade='all, delete'), lazy='subquery')
 
 
     def __repr__(self):
