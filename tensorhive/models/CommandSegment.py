@@ -21,6 +21,7 @@ class CommandSegment(CRUDModel, Base):  # type: ignore
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), nullable=False)
     _segment_type = Column(Enum(SegmentType), default=SegmentType.env_variable, nullable=False)
+    _tasks = relationship('Task', secondary='cmd_segment2task', back_populates='_cmd_segments')
 
     def __repr__(self):
         return '<Segment id={id}, name={name}, type={type}>'.format(
@@ -29,23 +30,16 @@ class CommandSegment(CRUDModel, Base):  # type: ignore
                 type=self.segment_type
                 )                
 
-
     def check_assertions(self):
         pass
 
     @hybrid_property
     def segment_type(self):
         return self._segment_type
-"""
-    @property
-    def as_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'type': 'env_var'
-#TODO segment_type parsing
-        }
-"""
+
+    @hybrid_property
+    def tasks(self):
+        return self._tasks
 
 class CommandSegment2Task(Base):  # type: ignore
     __tablename__ = 'cmd_segment2task'
@@ -53,22 +47,12 @@ class CommandSegment2Task(Base):  # type: ignore
     task_id = Column(Integer, ForeignKey('tasks.id', ondelete='CASCADE'), primary_key=True)
     cmd_segment_id = Column(Integer, ForeignKey('command_segments.id', ondelete='CASCADE'), primary_key=True)
     _value = Column(String(100))
-    _index = Column(Integer) # , nullable=False positive - parameters; negative - env variables; 0 - actual command
+    _index = Column(Integer) # positive - parameters; negative - env variables; 0 - actual command
 
     @hybrid_property
     def index(self):
         return self._index
 
-#    @index.setter
-#    def index(self, value: Integer):
-#        self._index = value
-#        if self._index is None:
-#            log.error('Unsupported type (index={})'.format(value))
-
     @hybrid_property
     def value(self):
         return self._value
-
-#    @value.setter
-#    def value(self, str_value: String):
-#        self._value = str_value

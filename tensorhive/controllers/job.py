@@ -4,7 +4,6 @@ from typing import Any, Dict, List, Tuple, Optional
 from flask_jwt_extended import jwt_required, get_jwt_claims, get_jwt_identity
 from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.config import API
-#from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from tensorhive.models.Job import Job
 from tensorhive.models.Task import Task
 from tensorhive.utils.DateUtils import DateUtils
@@ -43,7 +42,7 @@ def get_by_id(id: JobId) -> Tuple[Content, HttpStatusCode]:
     finally:
         return content, status
 
-#TODO ADD SYNCHRONIZATION ?? 
+#TODO May want to add synchronization
 @jwt_required
 def get_all(userId: Optional[int]) -> Tuple[Content, HttpStatusCode]:
     user_id = userId
@@ -71,16 +70,18 @@ def get_all(userId: Optional[int]) -> Tuple[Content, HttpStatusCode]:
     finally:
         return content, status
 
-#TODO assertions
 @jwt_required
 def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     try:
+        assert job['userId'] == get_jwt_identity()
         new_job = Job(
             name=job['name'],
             description=job['description'],
             user_id=job['userId']
             )
         new_job.save()
+    except AssertionError:
+        content, status = {'msg': GENERAL['unpriviliged']}, HTTPStatus.FORBIDDEN.value
     except ValueError:
         # Invalid string format for datetime
         content, status = {'msg': GENERAL['bad_request']}, HTTPStatus.UNPROCESSABLE_ENTITY.value
@@ -104,7 +105,7 @@ def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
 @jwt_required
 def update(id: JobId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     new_values = newValues
-    allowed_fields = {'name', 'description', 'status', 'startAt', 'endAt'}
+    allowed_fields = {'name', 'description'}
     try:
         job = Job.get(id)
         assert job.user_id == get_jwt_identity(), 'Not an owner'
@@ -180,7 +181,7 @@ def remove_task(job_id: JobId, task_id: TaskId) -> Tuple[Content, HttpStatusCode
     try:
         job = Job.get(job_id)
         task = Task.get(task_id)
-        assert job.get('userId') == get_jwt_identity(), 'Not an owner'
+        assert job.user_id == get_jwt_identity(), 'Not an owner'
         job.remove_task(task)
     except NoResultFound:
         if job is None:

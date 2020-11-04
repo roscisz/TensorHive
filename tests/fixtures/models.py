@@ -61,4 +61,3 @@ def new_job():
 def new_task():
     return Task(command='python command.py --batch_size 32',
                 host='hostname')
-#                user_id=1)

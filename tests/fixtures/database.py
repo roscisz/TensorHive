@@ -10,6 +10,7 @@ def tables():
     from tensorhive.models.RevokedToken import RevokedToken
     from tensorhive.models.Job import Job
     from tensorhive.models.Task import Task
+    from tensorhive.models.CommandSegment import CommandSegment2Task, CommandSegment
     Base.metadata.create_all(engine)
     db_session.remove()  # that makes sure we won't be holding on to any cached entities between test cases
     yield
