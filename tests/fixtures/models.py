@@ -122,6 +122,8 @@ def inactive_schedule():
     schedule = RestrictionSchedule(schedule_days=schedule_expression, hour_start=start_time, hour_end=end_time)
     schedule.save()
     return schedule
+
+@pytest.fixture(scope='function')
 def new_job():
     return Job(name='job_name',
                 description='testDescription',
@@ -131,4 +133,3 @@ def new_job():
 def new_task():
     return Task(command='python command.py --batch_size 32',
                 host='hostname')
-#                user_id=1)
