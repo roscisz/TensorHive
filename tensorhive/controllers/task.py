@@ -1,6 +1,7 @@
 from tensorhive.models.Task import Task, TaskStatus
 from tensorhive.models.CommandSegment import CommandSegment, CommandSegment2Task, SegmentType
 from tensorhive.models.User import User
+from tensorhive.models.Job import Job
 from tensorhive.core import task_nursery
 from tensorhive.utils.DateUtils import DateUtils
 from tensorhive.core.task_nursery import SpawnError, ExitCodeError
@@ -37,6 +38,7 @@ Connexion has this feature under the hood but it does not always work as it shou
 Content = Dict[str, Any]
 HttpStatusCode = int
 TaskId = int
+JobId = int
 
 
 def synchronize(task_id: TaskId) -> None:
@@ -116,16 +118,17 @@ def synchronize_task_record(func: Callable) -> Callable:
 # Controllers
 # POST /tasks
 @jwt_required
-def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
+def create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpStatusCode]:
     try:
         # User is not allowed to create task for someone else
-        assert task.get('userId') == get_jwt_identity()
+        job = Job.query.filter(Job.id == job_id).one()
+        assert job.user_id == get_jwt_identity()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:
         content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
-        content, status = business_create(task)
+        content, status = business_create(task, job_id)
     finally:
         return content, status
 
@@ -135,7 +138,8 @@ def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
 def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
-        assert get_jwt_identity() == task.user_id or is_admin()
+        parent_job = Job.get(task.job_id)
+        assert get_jwt_identity() == parent_job.user_id or is_admin()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:
@@ -146,24 +150,19 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-#  GET /tasks?userId=X?syncAll=1
+#  GET jobs/{job_id}/tasks?syncAll=1
 @jwt_required
-def get_all(userId: Optional[int], syncAll: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
-    user_id, sync_all = userId, syncAll
+def get_all(job_id: JobId, syncAll: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
+    sync_all = syncAll
     try:
-        if user_id:
-            # Owner or admin can fetch
-            assert get_jwt_identity() == user_id or is_admin()
-        else:
-            # Only admin can fetch all
-            assert is_admin()
-
+        job = Job.query.filter(Job.id == job_id).one()
+        assert get_jwt_identity() == job.user_id or is_admin()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:
         content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
-        content, status = business_get_all(user_id, sync_all)
+        content, status = business_get_all(job_id, sync_all)
     finally:
         return content, status
 
@@ -173,7 +172,8 @@ def get_all(userId: Optional[int], syncAll: Optional[bool]) -> Tuple[Content, Ht
 def update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
-        assert task.user_id == get_jwt_identity(), 'Not an owner'
+        parent_job = Job.get(task.job_id)
+        assert parent_job.user_id == get_jwt_identity(), 'Not an owner'
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:
@@ -189,7 +189,8 @@ def update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCo
 def destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
-        assert task.user_id == get_jwt_identity(), 'Not an owner'
+        parent_job = Job.get(task.job_id)
+        assert parent_job.user_id == get_jwt_identity(), 'Not an owner'
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:
@@ -205,7 +206,8 @@ def destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
-        assert task.user_id == get_jwt_identity(), 'Not an owner'
+        parent_job = Job.get(task.job_id)
+        assert parent_job.user_id == get_jwt_identity(), 'Not an owner'
     except NoResultFound as e:
         log.error(e)
         content, status = {'msg': TASK['not_found']}, 404
@@ -222,7 +224,8 @@ def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 def terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
-        assert get_jwt_identity() == task.user_id or is_admin()
+        parent_job = Job.get(task.job_id)
+        assert get_jwt_identity() == parent_job.user_id or is_admin()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:
@@ -238,7 +241,8 @@ def terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[Content, H
 def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
-        assert get_jwt_identity() == task.user_id or is_admin()
+        parent_job = Job.get(task.job_id)
+        assert get_jwt_identity() == parent_job.user_id or is_admin()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:
@@ -249,30 +253,17 @@ def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-# Controllers and business logic merged
-
-# TODO add command segment
-
-# Controllers and business logic merged
-
-# TODO delete command segment
-
 # Business logic
 
 
-def business_get_all(user_id: Optional[int], sync_all: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
-    """Fetches either all Task records or only those in relation with specific user.
+def business_get_all(job_id: JobId, sync_all: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
+    """Fetches all Task records within specific job.
     Allows for synchronizing state of each Task out-of-the-box.
 
     In typical scenario API client would want to get all records without sync and
     then run sync each records individually.
     """
-    # TODO Exceptions should never occur, but need to experiment more
-    if user_id:
-        # Returns [] if such User with such id does not exist (SQLAlchemy behavior)
-        tasks = Task.all()
-    else:
-        tasks = Task.all()
+    tasks = Task.query.filter(Task.job_id == job_id).all()
 
     # Wanted to decouple syncing from dict conversion with 2 oneliners (using list comprehension),
     # but this code is O(n) instead of O(2n)
@@ -284,22 +275,18 @@ def business_get_all(user_id: Optional[int], sync_all: Optional[bool]) -> Tuple[
     return {'msg': TASK['all']['success'], 'tasks': results}, 200
 
 
-def business_create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
-    """Creates new Task db record.
-    Fields which require to be of datetime type are explicitly converted here.
+def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpStatusCode]:
+    """ Creates new Task db record under the given parent job.
+
+    Command is divided into segments to make editing easier.
     """
     try:
         new_task = Task(
-            user_id=task['userId'],
-            hostname=task['hostname'],
-            command=task['command'],
-#            job_id = task['jobId'],
-            user_id=task['userId'],
-#            place_in_job_sequence = task['placeInSeq'],
-#            pid = task['pid'],
-#            status = task['status'],
-            _spawns_at=DateUtils.try_parse_string(task.get('spawnsAt')),
-            _terminates_at=DateUtils.try_parse_string(task.get('terminatesAt')))
+            host=task['hostname'],
+            command=task['command'])
+        # parent job
+        parent_job = Job.query.filter(Job.id == job_id).one()
+        # split command
         command_segments = new_task.command.split()
         if_envs = True
         if_eqsign_found = False
@@ -310,46 +297,43 @@ def business_create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
                 if x == '=':
                     if_eqsign_found = True
                     break
-            if if_eqsign_found == False:
+            if if_eqsign_found is False:
                 if_envs = False
-            if_eqsign_found = False 
-            splitted_segment = segment.split('=')            
+            if_eqsign_found = False
             if if_envs:
-                segment_type=SegmentType.env_variable
+                splitted_segment = segment.split('=')
+                segment_type = SegmentType.env_variable
             elif segment[0] == '-':
-                segment_type=SegmentType.parameter
-                if splitted_segment[1] == None:
-                    splitted_segment[1] = ''
+                splitted_segment = segment.split('=')
+                segment_type = SegmentType.parameter
+                if len(splitted_segment) == 1:
+                    splitted_segment.append('')
                     if_parameter_value_expected = True
-            elif if_parameter_value_expected == True:
-                #TODO save value
+            elif if_parameter_value_expected is True:
+                splitted_segment[1] = segment
                 if_parameter_value_expected = False
-                continue
             else:
                 actual_command += segment + ' '
                 continue
-            new_segment = CommandSegment.query.filter(CommandSegment.segment_type == segment_type,
-                                        CommandSegment.name == splitted_segment[0]).first()
-            if (new_segment == None):
-                new_segment = CommandSegment(
+
+            if if_parameter_value_expected is False:
+                new_segment = CommandSegment.query.filter(CommandSegment.segment_type == segment_type,
+                                                            CommandSegment.name == splitted_segment[0]).first()
+                if (new_segment is None):
+                    new_segment = CommandSegment(
                         name=splitted_segment[0],
                         _segment_type=segment_type)
-            new_task.add_cmd_segment(new_segment)
-            link = CommandSegment2Task.query.filter(CommandSegment2Task.cmd_segment_id == new_segment.id, 
-                                                CommandSegment2Task.task_id == new_task.id).one()
-            setattr(link, '_value', splitted_segment[1]) 
+                new_task.add_cmd_segment(new_segment, splitted_segment[1])
+
         new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.actual_command,
-                                        CommandSegment.name == '').first()
-        if (new_segment == None):
+                                                    CommandSegment.name == '').first()
+        if (new_segment is None):
             new_segment = CommandSegment(
                 name='',
                 _segment_type=SegmentType.actual_command)
-        new_task.add_cmd_segment(new_segment)
-        link = CommandSegment2Task.query.filter(CommandSegment2Task.cmd_segment_id == new_segment.id, 
-                                                CommandSegment2Task.task_id == new_task.id).one()
-        setattr(link, '_index', 0)
-        setattr(link, '_value', actual_command)
-        new_task.save()        
+        new_task.add_cmd_segment(new_segment, actual_command[:-1])
+        new_task.save()
+        parent_job.add_task(new_task)
     except ValueError:
         # Invalid string format for datetime
         content, status = {'msg': GENERAL['bad_request']}, 422
@@ -384,19 +368,19 @@ def business_get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 
 
 # TODO What if task is already running: allow for updating command, hostname, etc.?
+# TODO Allow editing commands by segments
 def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
-    """Updates certain fields of a Task db record, see `allowed_fields`."""
-    allowed_fields = {'command', 'hostname', 'spawnsAt', 'terminatesAt'}
+    """Updates certain fields of a Task db record, see `allowed_fields`.
+    """
+    allowed_fields = {'hostname'}
     try:
         assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
         task = Task.get(id)
         for field_name, new_value in new_values.items():
-            if field_name in {'spawnAt', 'terminateAt'}:
-                new_value = DateUtils.try_parse_string(new_value)
-            field_name = snakecase(field_name)
-            # Check that every field matches
-            assert (field_name is not None) and hasattr(task, field_name), 'task has no {} field'.format(field_name)
-            setattr(task, field_name, new_value)
+            if field_name == 'hostname':
+                # API client is allowed to use more verbose name here (hostname <=> host)
+                field_name = 'host'
+                setattr(task, field_name, new_value)
         task.save()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
@@ -419,8 +403,12 @@ def business_destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     """Deletes a Task db record. Requires terminating task manually in advance."""
     try:
         task = Task.get(id)
+        cmd_segments = task.cmd_segments
         assert task.status is not TaskStatus.running, 'must be terminated first'
         task.destroy()
+        for segment in cmd_segments:
+            if len(segment.tasks) == 0:
+                segment.destroy()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except AssertionError as e:

@@ -29,18 +29,16 @@ class Job(CRUDModel, Base):  # type: ignore
     _end_at = Column(DateTime)
 
     _tasks = relationship(
-        'Task', backref=backref('job', single_parent=True, cascade='all, delete-orphan'), lazy='subquery')
+        'Task', backref=backref('job', single_parent=True, cascade='all, delete'), lazy='subquery')
 
 
     def __repr__(self):
-        return '<Job id={id}, name={name}, description={description}, user={user_id}, status={status}, start_at={start_at}, end_at={end_at}>'.format(
+        return '<Job id={id}, name={name}, description={description}, user={user_id}, status={status}>'.format(
                 id=self.id,
                 name=self.name,
                 description=self.description,
                 user_id=self.user_id,
-                status=self.status.name,               
-                start_at=self.start_at,
-                end_at=self.end_at)
+                status=self.status.name)
 
     def check_assertions(self):
         if self.end_at is not None and self.start_at is not None:
