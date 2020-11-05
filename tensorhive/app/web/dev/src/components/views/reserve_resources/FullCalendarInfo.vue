@@ -532,6 +532,9 @@ export default {
 
     close: function () {
       this.$emit('close')
+      this.updateCard = false
+      this.cancelCard = false
+      this.tasksCard = false
     },
 
     cancelReservation: function () {
