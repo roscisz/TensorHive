@@ -3,14 +3,12 @@ import logging
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.database import Base
 from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from tensorhive.models.CRUDModel import CRUDModel
 from tensorhive.models.RestrictionAssignee import RestrictionAssignee
 from tensorhive.models.User import User
-from tensorhive.utils.DateUtils import DateUtils
 
 log = logging.getLogger(__name__)
 
@@ -62,13 +60,14 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
         self.users.remove(user)
         self.save()
 
-    def as_dict(self, include_users=True):
+    def as_dict(self, include_private=False, include_users=True):
         """
         Serializes current instance into dict. Will not include group's users (to prevent recurrence).
+        :param include_private: passed to CRUDModel as_dict
         :param include_users: flag that determines if users should be included (False to prevent recurrence)
         :return: Dictionary representing current instance (without users).
         """
-        group = super(Group, self).as_dict(include_private=False)
+        group = super(Group, self).as_dict(include_private=include_private)
         if include_users:
             group['users'] = [user.as_dict(include_groups=False) for user in self.users]
         return group
