@@ -72,6 +72,23 @@ class Task(CRUDModel, Base):  # type: ignore
                 return actual_command
         return ''
 
+    def update_command(self):
+        command = ''
+        start = - self.number_of_env_vars
+        end = self.number_of_params + 1
+        for i in range(start, end):
+            link = CommandSegment2Task.query.filter(CommandSegment2Task.index == i, 
+                                                CommandSegment2Task.task_id == self.id).one()
+            cmd_segment = CommandSegment.query.filter(CommandSegment.id == link.cmd_segment_id).one()
+            if i != start:
+                command += ' '
+            if cmd_segment.segment_type == SegmentType.actual_command:
+                command += cmd_segment.name + link.value
+            else:
+                command += cmd_segment.name + '=' + link.value
+        self.command = command
+
+
     def get_cmd_segment_link(self, cmd_segment: CommandSegment):
         """returns connection between task and its command segment"""
         if cmd_segment not in self.cmd_segments:
@@ -100,12 +117,12 @@ class Task(CRUDModel, Base):  # type: ignore
         if cmd_segment not in self.cmd_segments:
             raise Exception('Segment {cmd_segment} is not assigned to task {task}!'
                             .format(cmd_segment=cmd_segment, task=self))
-        link = get_cmd_segment_link(cmd_segment)
+        link = self.get_cmd_segment_link(cmd_segment)
         removed_index = link.index
         self.cmd_segments.remove(cmd_segment)
 
         for segment in self.cmd_segments:
-            link = get_cmd_segment_link(segment)
+            link = self.get_cmd_segment_link(segment)
             if (cmd_segment.segment_type == SegmentType.env_variable):
                 if (link.index < removed_index):
                     setattr(link, '_index', link.index + 1)

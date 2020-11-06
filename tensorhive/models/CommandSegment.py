@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Enum, ForeignKey
-from tensorhive.database import Base
+from tensorhive.database import Base, db_session
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.models.CRUDModel import CRUDModel
@@ -40,6 +40,22 @@ class CommandSegment(CRUDModel, Base):  # type: ignore
     @hybrid_property
     def tasks(self):
         return self._tasks
+
+    @classmethod
+    def find_by_name(cls, name):
+        try:
+            result = db_session.query(cls).filter_by(name=name).one()
+        except MultipleResultsFound:
+            # Theoretically cannot happen because of model built-in constraints
+            msg = 'Multiple command segments with identical names has been found!'
+            log.critical(msg)
+            raise MultipleResultsFound(msg)
+        except NoResultFound:
+            msg = 'There is no command segment with name={}!'.format(name)
+            log.warning(msg)
+            raise NoResultFound(msg)
+        else:
+            return result
 
 class CommandSegment2Task(Base):  # type: ignore
     __tablename__ = 'cmd_segment2task'

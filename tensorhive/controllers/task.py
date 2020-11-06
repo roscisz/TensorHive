@@ -386,15 +386,23 @@ def to_db_column() -> Dict[str, str]:
 def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """Updates certain fields of a Task db record, see `allowed_fields`.
     """
-    allowed_fields = {'hostname'}
     try:
-        assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
         task = Task.get(id)
-        for field_name, new_value in new_values.items():
-            if field_name == 'hostname':
+        for key, value in new_values.items():
+            if key == 'hostname':
                 # API client is allowed to use more verbose name here (hostname <=> host)
-                field_name = 'host'
-                setattr(task, field_name, new_value)
+                key = 'host'
+                setattr(task, key, value)
+            elif key.startswith('cmd_segment'):
+                segment = value
+                cmd_segment = CommandSegment.get(2)
+                cmd_segment = CommandSegment.find_by_name(segment['name'])
+                if (segment['mode'] == 'remove'):
+                    task.remove_cmd_segment(cmd_segment)
+                elif (segment['mode'] == 'update'):
+                    link = task.get_cmd_segment_link(cmd_segment)
+                    setattr(link, '_value', segment['value'])
+        task.update_command()        
         task.save()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
