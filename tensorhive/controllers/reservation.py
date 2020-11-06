@@ -77,6 +77,8 @@ def create(reservation: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
             ends_at=reservation['end']
         )
 
+        assert __is_admin_or_reservation_owner(new_reservation), GENERAL['unprivileged']
+
         user = User.get(get_jwt_identity())
         if ReservationVerifier.is_reservation_allowed(user, new_reservation):
             new_reservation.save()
@@ -125,6 +127,8 @@ def update(id: ReservationId, newValues: Dict[str, Any]) -> Tuple[Content, HttpS
                 'reservation has no {} field'.format(field_name)
             setattr(reservation, field_name, new_value)
 
+        assert __is_admin_or_reservation_owner(reservation), GENERAL['unprivileged']
+
         user = User.get(get_jwt_identity())
         if ReservationVerifier.is_reservation_allowed(user, reservation):
             reservation.save()
@@ -145,16 +149,11 @@ def update(id: ReservationId, newValues: Dict[str, Any]) -> Tuple[Content, HttpS
 @jwt_required
 def delete(id: ReservationId) -> Tuple[Content, HttpStatusCode]:
     try:
-        current_user_id = get_jwt_identity()
-        claims = get_jwt_claims()
-
         # Fetch the reservation
         reservation_to_destroy = Reservation.get(id)
 
         # Must be privileged
-        is_admin = 'admin' in claims['roles']
-        is_owner = reservation_to_destroy.user_id == current_user_id
-        assert is_owner or is_admin, GENERAL['unprivileged']
+        assert __is_admin_or_reservation_owner(reservation_to_destroy), GENERAL['unprivileged']
 
         # Destroy
         reservation_to_destroy.destroy()
@@ -169,3 +168,7 @@ def delete(id: ReservationId) -> Tuple[Content, HttpStatusCode]:
         content, status = {'msg': RESERVATION['delete']['success']}, 200
     finally:
         return content, status
+
+
+def __is_admin_or_reservation_owner(reservation: Reservation) -> bool:
+    return 'admin' in get_jwt_claims()['roles'] or reservation.user_id == get_jwt_identity()

@@ -9,6 +9,7 @@ HEADERS = {'Authorization': 'Bearer XXX', 'Content-Type': 'application/json'}
 
 patch('tensorhive.authorization.admin_required', lambda x: x).start()
 patch('flask_jwt_extended.get_jwt_identity', lambda: '1').start()
+patch('flask_jwt_extended.get_jwt_claims', lambda: {'roles': ['admin', 'user']}).start()
 patch('flask_jwt_extended.view_decorators.verify_jwt_in_request', lambda: None).start()
 
 
