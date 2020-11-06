@@ -2100,15 +2100,6 @@ paths:
           description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
-
-
-
-
-
-
-
-
-
   /reservations:
     get:
       tags:
@@ -3259,22 +3250,24 @@ components:
     TaskUpdateForm:
       type: object
       properties:
-        command:
-          type: string
-          example: CUDA_VISIBLE_DEVICES=0 train.py --worker-id=2
         hostname:
           type: string
           example: localhost
-        spawnAt:
-          type: string
-          format: date-time
-          nullable: true
-          example: 2019-05-08T12:00:00.066Z (or null!)
-        terminateAt:
-          type: string
-          format: date-time
-          nullable: true
-          example: 2019-05-08T13:00:00.066Z (or null!)
+      additionalProperties:            
+        type: object
+        properties:
+          name:
+            type: string
+            example: ENV
+          mode:
+            type: string
+            example: remove
+          value:
+            type: string
+            example: 1
+          index:
+            type: string
+            example: -1
     JobForm:
       type: object
       required:
