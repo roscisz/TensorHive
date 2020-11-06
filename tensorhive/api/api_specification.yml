@@ -1628,6 +1628,21 @@ definitions:
       hostname:
         type: string
         example: localhost
+    additionalProperties:        
+      type: object
+      properties:
+        name:
+          type: string
+          example: ENV
+        mode:
+          type: string
+          example: remove
+        value:
+          type: string
+          example: 1
+        index:
+          type: string
+          example: -1
   JobUpdateForm:
     type: object
     properties:

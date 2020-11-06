@@ -287,9 +287,8 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
         new_task = Task(
             host=task['hostname'],
             command=task['command'])
-        #parent job
         parent_job = Job.query.filter(Job.id == job_id).one()
-        #split command
+        #split command to segments
         command_segments = new_task.command.split()
         if_envs = True
         if_eqsign_found = False
@@ -373,16 +372,23 @@ def business_get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """Updates certain fields of a Task db record, see `allowed_fields`.
     """
-    allowed_fields = {'hostname'}
     try:
-        assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
         task = Task.get(id)
-        for field_name, new_value in new_values.items():
-            if field_name == 'hostname':
+        for key, value in new_values.items():
+            if key == 'hostname':
                 # API client is allowed to use more verbose name here (hostname <=> host)
-                field_name = 'host'
-                setattr(task, field_name, new_value)
-                
+                key = 'host'
+                setattr(task, key, value)
+            elif key.startswith('cmd_segment'):
+                segment = value
+                cmd_segment = CommandSegment.get(2)
+                cmd_segment = CommandSegment.find_by_name(segment['name'])
+                if (segment['mode'] == 'remove'):
+                    task.remove_cmd_segment(cmd_segment)
+                elif (segment['mode'] == 'update'):
+                    link = task.get_cmd_segment_link(cmd_segment)
+                    setattr(link, '_value', segment['value'])
+        task.update_command()        
 #            if field_name in {'spawnsAt', 'terminatesAt'}:
 #                field_name = field_name.replace('At', '_at')
 #                new_value = DateUtils.try_parse_string(new_value)
@@ -398,7 +404,7 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
         log.critical(e)
         content, status = {'msg': G['internal_error']}, 500
     else:
-        content, status = {'msg': T['update']['success'], 'task': task.as_dict}, 201
+        content, status = {'msg': T['update']['success'], 'task': task.as_dict}, 200
     finally:
         return content, status
 
