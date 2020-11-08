@@ -9,6 +9,7 @@ from tensorhive.config import API
 from tensorhive.core.utils.ReservationVerifier import ReservationVerifier
 from tensorhive.models.RestrictionSchedule import RestrictionSchedule
 from tensorhive.utils.Weekday import Weekday
+from stringcase import snakecase
 
 log = logging.getLogger(__name__)
 SCHEDULE = API.RESPONSES['schedule']
@@ -73,14 +74,6 @@ def create(schedule: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-def to_db_column() -> Dict[str, str]:
-    return {
-        'scheduleDays': 'schedule_days',
-        'hourStart': 'hour_start',
-        'hourEnd': 'hour_end'
-    }
-
-
 @admin_required
 def update(id, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     new_values = newValues
@@ -94,7 +87,7 @@ def update(id, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
                 new_value = [Weekday[day] for day in new_value]
             if field_name in ['hourStart', 'hourEnd']:
                 new_value = datetime.strptime(new_value, "%H:%M").time()
-            field_name = to_db_column().get(field_name)
+            field_name = snakecase(field_name)
             assert (field_name is not None) and hasattr(schedule, field_name), \
                 'schedule has no {} field'.format(field_name)
             setattr(schedule, field_name, new_value)

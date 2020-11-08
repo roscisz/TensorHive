@@ -10,6 +10,7 @@ from tensorhive.config import API
 from functools import wraps
 from typing import Optional, Callable, Any, Dict, Tuple
 from datetime import datetime, timedelta
+from stringcase import snakecase
 import logging
 
 log = logging.getLogger(__name__)
@@ -63,9 +64,9 @@ def synchronize(task_id: TaskId) -> None:
     log.debug('Syncing Task {}...'.format(task_id))
     try:
         task = Task.get(task_id)
-        assert task.host, 'hostname is empty'
+        assert task.hostname, 'hostname is empty'
         assert task.user, 'user does not exist'
-        active_sessions_pids = task_nursery.running(host=task.host, user=task.user.username)
+        active_sessions_pids = task_nursery.running(host=task.hostname, user=task.user.username)
     except NoResultFound:
         # This exception must be handled within try/except block when using Task.get()
         # In other words, methods decorated with @synchronize_task_record must handle this case by themselves!
@@ -276,7 +277,7 @@ def business_get_all(user_id: Optional[int], sync_all: Optional[bool]) -> Tuple[
     for task in tasks:
         if sync_all:
             synchronize(task.id)
-        results.append(task.as_dict)
+        results.append(task.as_dict())
     return {'msg': TASK['all']['success'], 'tasks': results}, 200
 
 
@@ -287,7 +288,7 @@ def business_create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     try:
         new_task = Task(
             user_id=task['userId'],
-            host=task['hostname'],
+            hostname=task['hostname'],
             command=task['command'],
             # TODO Adjust API spec, optional fields
             spawn_at=DateUtils.try_parse_string(task.get('spawnAt')),
@@ -306,7 +307,7 @@ def business_create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, 500
     else:
-        content, status = {'msg': TASK['create']['success'], 'task': new_task.as_dict}, 201
+        content, status = {'msg': TASK['create']['success'], 'task': new_task.as_dict()}, 201
     finally:
         return content, status
 
@@ -322,18 +323,9 @@ def business_get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, 500
     else:
-        content, status = {'msg': TASK['get']['success'], 'task': task.as_dict}, 200
+        content, status = {'msg': TASK['get']['success'], 'task': task.as_dict()}, 200
     finally:
         return content, status
-
-
-def to_db_column() -> Dict[str, str]:
-    return {
-        'command': 'command',
-        'hostname': 'host',
-        'spawnAt': 'spawn_at',
-        'terminateAt': 'terminate_at'
-    }
 
 
 # TODO What if task is already running: allow for updating command, hostname, etc.?
@@ -346,7 +338,7 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
         for field_name, new_value in new_values.items():
             if field_name in {'spawnAt', 'terminateAt'}:
                 new_value = DateUtils.try_parse_string(new_value)
-            field_name = to_db_column().get(field_name)
+            field_name = snakecase(field_name)
             # Check that every field matches
             assert (field_name is not None) and hasattr(task, field_name), 'task has no {} field'.format(field_name)
             setattr(task, field_name, new_value)
@@ -362,7 +354,7 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, 500
     else:
-        content, status = {'msg': TASK['update']['success'], 'task': task.as_dict}, 201
+        content, status = {'msg': TASK['update']['success'], 'task': task.as_dict()}, 201
     finally:
         return content, status
 
@@ -423,10 +415,10 @@ def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 
         assert task.status is not TaskStatus.running, 'task is already running'
         assert task.command, 'command is empty'
-        assert task.host, 'hostname is empty'
+        assert task.hostname, 'hostname is empty'
         assert task.user, 'user does not exist'
 
-        pid = task_nursery.spawn(task.command, task.host, task.user.username, name_appendix=str(task.id))
+        pid = task_nursery.spawn(task.command, task.hostname, task.user.username, name_appendix=str(task.id))
         task.pid = pid
         task.status = TaskStatus.running
 
@@ -470,7 +462,7 @@ def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[C
         # True -> interrupt (allows output to be flushed into log file)
         # None -> terminate (works almost every time, but losing output that could be produced before closing)
         # False -> kill (similar to above, but success is almost guaranteed)
-        exit_code = task_nursery.terminate(task.pid, task.host, task.user.username, gracefully=gracefully)
+        exit_code = task_nursery.terminate(task.pid, task.hostname, task.user.username, gracefully=gracefully)
 
         if exit_code != 0:
             raise ExitCodeError('operation exit code is not 0')
@@ -517,9 +509,9 @@ def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
     """
     try:
         task = Task.get(id)
-        assert task.host, 'hostname is empty'
+        assert task.hostname, 'hostname is empty'
         assert task.user, 'user does not exist'
-        output_gen, log_path = task_nursery.fetch_log(task.host, task.user.username, task.id, tail)
+        output_gen, log_path = task_nursery.fetch_log(task.hostname, task.user.username, task.id, tail)
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except ExitCodeError as e:

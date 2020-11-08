@@ -182,7 +182,7 @@ def test_after_updating_restriction_reservations_that_are_no_longer_valid_should
 
     # Update the restriction to make the reservation invalid
     data = {
-        'start': '2101-01-04T09:00:00.000Z'
+        'startsAt': '2101-01-04T09:00:00.000Z'
     }
     resp = client.put(BASE_URI + '/restrictions/' + str(reservation.id), headers=HEADERS, data=json.dumps(data))
 

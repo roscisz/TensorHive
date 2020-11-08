@@ -154,11 +154,11 @@ class ProtectionService(Service):
         current_reservations = Reservation.current_events()
 
         # FIXME DEBUG ONLY
-        log.debug(json.dumps([r.as_dict for r in current_reservations], indent=4))
+        log.debug(json.dumps([r.as_dict() for r in current_reservations], indent=4))
 
         for reservation in current_reservations:
             # 1. Extract reservation info
-            uuid = reservation.protected_resource_id
+            uuid = reservation.resource_id
             hostname = self.find_hostname(uuid)
             user = User.get(reservation.user_id)
             username = user.username
@@ -189,7 +189,7 @@ class ProtectionService(Service):
                     'INTRUDER_USERNAME': intruder,
                     'RESERVATION_OWNER_USERNAME': username,
                     'RESERVATION_OWNER_EMAIL': user.email,
-                    'RESERVATION_END': utc2local(reservation.ends_at),
+                    'RESERVATION_END': utc2local(reservation.end),
                     'UUID': uuid,
                     'GPU_NAME': self.gpu_attr(hostname, uuid, attribute='name'),
                     'GPU_ID': self.gpu_attr(hostname, uuid, attribute='index'),

@@ -7,6 +7,7 @@ from tensorhive.core.utils.ReservationVerifier import ReservationVerifier
 from tensorhive.models.Reservation import Reservation
 from tensorhive.models.User import User
 from tensorhive.utils.DateUtils import DateUtils
+from stringcase import snakecase
 
 log = logging.getLogger(__name__)
 RESERVATION = API.RESPONSES['reservation']
@@ -21,7 +22,7 @@ ResourceId = str
 
 def get_all() -> Tuple[List[Any], HttpStatusCode]:
     return [
-        reservation.as_dict for reservation in Reservation.all()
+        reservation.as_dict() for reservation in Reservation.all()
     ], 200
 
 
@@ -36,12 +37,12 @@ def get_selected(resources_ids: Optional[List[ResourceId]] = None, start: Option
             ends_as_datetime = DateUtils.parse_string(end)
             matches = list(Reservation.filter_by_uuids_and_time_range(
                 resources_ids, start_as_datetime, ends_as_datetime))
-            matches = [match.as_dict for match in matches]
+            matches = [match.as_dict() for match in matches]
         except (ValueError, AssertionError) as reason:
             content = {'msg': '{}. {}'.format(GENERAL['bad_request'], reason)}
             status = 400
-        except Exception:
-            content = {'msg': GENERAL['internal_error']}
+        except Exception as e:
+            content = {'msg': GENERAL['internal_error'] + str(e)}
             status = 500
         else:
             content = matches  # type: ignore
@@ -71,10 +72,10 @@ def create(reservation: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         new_reservation = Reservation(
             title=reservation['title'],
             description=reservation['description'],
-            protected_resource_id=reservation['resourceId'],
+            resource_id=reservation['resourceId'],
             user_id=reservation['userId'],
-            starts_at=reservation['start'],
-            ends_at=reservation['end']
+            start=reservation['start'],
+            end=reservation['end']
         )
 
         assert __is_admin_or_reservation_owner(new_reservation), GENERAL['unprivileged']
@@ -84,7 +85,7 @@ def create(reservation: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
             new_reservation.save()
             content = {
                 'msg': RESERVATION['create']['success'],
-                'reservation': new_reservation.as_dict
+                'reservation': new_reservation.as_dict()
             }
             status = 201
         else:
@@ -96,21 +97,12 @@ def create(reservation: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     except AssertionError as e:
         content = {'msg': RESERVATION['create']['failure']['invalid'].format(reason=e)}
         status = 422
-    except Exception:
-        content = {'msg': GENERAL['internal_error']}
+    except Exception as e:
+        print(e)
+        content = {'msg': GENERAL['internal_error'] + str(e)}
         status = 500
     finally:
         return content, status
-
-
-def to_db_column() -> Dict[str, str]:
-    return {
-        'title': 'title',
-        'description': 'description',
-        'resourceId': 'protected_resource_id',
-        'start': 'starts_at',
-        'end': 'ends_at',
-    }
 
 
 @jwt_required
@@ -122,7 +114,7 @@ def update(id: ReservationId, newValues: Dict[str, Any]) -> Tuple[Content, HttpS
         reservation = Reservation.get(id)
 
         for field_name, new_value in new_values.items():
-            field_name = to_db_column().get(field_name)
+            field_name = snakecase(field_name)
             assert (field_name is not None) and hasattr(reservation, field_name), \
                 'reservation has no {} field'.format(field_name)
             setattr(reservation, field_name, new_value)
@@ -132,7 +124,7 @@ def update(id: ReservationId, newValues: Dict[str, Any]) -> Tuple[Content, HttpS
         user = User.get(get_jwt_identity())
         if ReservationVerifier.is_reservation_allowed(user, reservation):
             reservation.save()
-            content, status = {'msg': RESERVATION['update']['success'], 'reservation': reservation.as_dict}, 201
+            content, status = {'msg': RESERVATION['update']['success'], 'reservation': reservation.as_dict()}, 201
         else:
             content, status = {'msg': RESERVATION['update']['failure']['forbidden']}, 403
     except NoResultFound:
@@ -141,7 +133,7 @@ def update(id: ReservationId, newValues: Dict[str, Any]) -> Tuple[Content, HttpS
         content, status = {'msg': RESERVATION['update']['failure']['assertions'].format(reason=e)}, 422
     except Exception as e:
         log.critical(e)
-        content, status = {'msg': GENERAL['internal_error']}, 500
+        content, status = {'msg': GENERAL['internal_error'] + str(e)}, 500
     finally:
         return content, status
 

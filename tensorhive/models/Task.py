@@ -17,11 +17,13 @@ class TaskStatus(enum.Enum):
 
 class Task(CRUDModel, Base):  # type: ignore
     __tablename__ = 'tasks'
+    __public__ = ['id', 'user_id', 'hostname', 'pid', 'command', 'spawn_at', 'terminate_at']
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
     user = relationship(
         'User', backref=backref('tasks', passive_deletes=True, cascade='all, delete, delete-orphan'), lazy='subquery')
-    host = Column(String(40), nullable=False)
+    hostname = Column(String(40), nullable=False)
     pid = Column(Integer, nullable=True)
     status = Column(Enum(TaskStatus), default=TaskStatus.not_running, nullable=False)
     command = Column(String(400), nullable=False)
@@ -29,11 +31,11 @@ class Task(CRUDModel, Base):  # type: ignore
     terminate_at = Column(DateTime, nullable=True)
 
     def __repr__(self):
-        return '<Task id={id}, user={user}, name={host}, command={command}\n' \
+        return '<Task id={id}, user={user}, name={hostname}, command={command}\n' \
             '\tpid={pid}, status={status}, spawn_at={spawn_at}, terminate_at={terminate_at}>'.format(
                 id=self.id,
                 user=self.user,
-                host=self.host,
+                hostname=self.hostname,
                 command=self.command,
                 pid=self.pid,
                 status=self.status.name,
@@ -43,15 +45,7 @@ class Task(CRUDModel, Base):  # type: ignore
     def check_assertions(self):
         pass
 
-    @property
-    def as_dict(self):
-        return {
-            'id': self.id,
-            'userId': self.user_id,
-            'hostname': self.host,
-            'pid': self.pid,
-            'status': self.status.name,
-            'command': self.command,
-            'spawnAt': DateUtils.try_stringify_datetime(self.spawn_at),
-            'terminateAt': DateUtils.try_stringify_datetime(self.terminate_at)
-        }
+    def as_dict(self, include_private):
+        ret = super(Task, self).as_dict(include_private=include_private)
+        ret['status'] = self.status.name
+        return ret

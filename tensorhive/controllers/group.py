@@ -9,6 +9,7 @@ from tensorhive.core.utils.ReservationVerifier import ReservationVerifier
 from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from tensorhive.models.Group import Group
 from tensorhive.models.User import User
+from stringcase import snakecase
 
 log = logging.getLogger(__name__)
 GROUP = API.RESPONSES['group']
@@ -73,13 +74,6 @@ def create(group: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-def to_db_column() -> Dict[str, str]:
-    return {
-        'name': 'name',
-        'isDefault': 'is_default',
-    }
-
-
 @admin_required
 def update(id: GroupId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     new_values = newValues
@@ -89,7 +83,7 @@ def update(id: GroupId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusC
         group = Group.get(id)
 
         for field_name, new_value in new_values.items():
-            field_name = to_db_column().get(field_name)
+            field_name = snakecase(field_name)
             assert hasattr(group, field_name), 'group has no {} field'.format(field_name)
             setattr(group, field_name, new_value)
         group.save()

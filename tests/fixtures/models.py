@@ -41,9 +41,9 @@ def new_reservation(new_user):
         user_id=new_user.id,
         title='TEST TITLE',
         description='TEST_DESCRIPTION',
-        protected_resource_id='0123456789012345678901234567890123456789',
-        starts_at=now,
-        ends_at=now + duration,
+        resource_id='0123456789012345678901234567890123456789',
+        start=now,
+        end=now + duration,
     )
 
 
@@ -58,9 +58,9 @@ def new_reservation_2(new_user, new_admin):
         user_id=new_admin.id,
         title='TEST TITLE',
         description='TEST_DESCRIPTION',
-        protected_resource_id='0123456789012345678901234567890123456789',
-        starts_at=now,
-        ends_at=now + duration,
+        resource_id='0123456789012345678901234567890123456789',
+        start=now,
+        end=now + duration,
     )
 
 

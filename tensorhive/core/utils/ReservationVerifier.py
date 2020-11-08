@@ -43,7 +43,7 @@ class ReservationVerifier:
         :return: True if reservation is allowed, False otherwise
         """
         try:
-            resource = Resource.get(reservation.protected_resource_id)
+            resource = Resource.get(reservation.resource_id)
         except NoResultFound:
             return False
 
@@ -52,8 +52,8 @@ class ReservationVerifier:
         restrictions = [r for r in user_restrictions if r.is_global or resource in r.resources]
 
         # time interval required to create restriction
-        start_date = reservation.starts_at
-        end_date = reservation.ends_at
+        start_date = reservation.start
+        end_date = reservation.end
 
         while True:
             start_date_changed = False
