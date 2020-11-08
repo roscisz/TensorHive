@@ -11,6 +11,8 @@ class Resource(CRUDModel, RestrictionAssignee):  # type: ignore
     a custom user-friendly name that may be specified to improve legibility.
     """
     __tablename__ = 'resources'
+    __public__ = ['id', 'name', 'hostname']
+
     id = Column(String(64), primary_key=True)
     name = Column(String(40), nullable=True)
     hostname = Column(String(64), nullable=True)
@@ -57,11 +59,3 @@ class Resource(CRUDModel, RestrictionAssignee):  # type: ignore
     @classmethod
     def get_by_hostname(cls, hostname):
         return db_session.query(Resource).filter(Resource.hostname == hostname).all()
-
-    @property
-    def as_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'hostname': self.hostname
-        }

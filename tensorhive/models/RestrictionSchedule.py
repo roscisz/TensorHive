@@ -28,6 +28,7 @@ class RestrictionSchedule(CRUDModel, Base):  # type: ignore
     """
     __tablename__ = 'restriction_schedules'
     __table_args__ = {'sqlite_autoincrement': True}
+    __public__ = ['id']
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     _schedule_days = Column('schedule_days', String(7), nullable=False)
@@ -83,14 +84,12 @@ class RestrictionSchedule(CRUDModel, Base):  # type: ignore
         regex_match = re.fullmatch('[1-7]{1,7}', schedule_expression) is not None
         return regex_match and not has_repeating_characters
 
-    @property
-    def as_dict(self):
-        return {
-            'id': self.id,
-            'scheduleDays': [day.to_str() for day in self.parse_schedule_string(self.schedule_days)],
-            'hourStart': self.hour_start.strftime('%H:%M'),
-            'hourEnd': self.hour_end.strftime('%H:%M')
-        }
+    def as_dict(self, include_private=False):
+        ret = super(RestrictionSchedule, self).as_dict(include_private=include_private)
+        ret['scheduleDays'] = [day.to_str() for day in self.parse_schedule_string(self.schedule_days)],
+        ret['hourStart'] = self.hour_start.strftime('%H:%M'),
+        ret['hourEnd'] = self.hour_end.strftime('%H:%M')
+        return ret
 
     @staticmethod
     def parse_schedule_string(schedule: str) -> List[Weekday]:

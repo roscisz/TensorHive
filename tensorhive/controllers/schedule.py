@@ -24,7 +24,7 @@ ScheduleId = int
 @jwt_required
 def get() -> Tuple[List[Any], HttpStatusCode]:
     return [
-        schedule.as_dict for schedule in RestrictionSchedule.all()
+        schedule.as_dict() for schedule in RestrictionSchedule.all()
     ], HTTPStatus.OK.value
 
 
@@ -39,7 +39,7 @@ def get_by_id(id: ScheduleId) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
-        content, status = {'msg': SCHEDULE['get']['success'], 'schedule': schedule.as_dict}, HTTPStatus.OK.value
+        content, status = {'msg': SCHEDULE['get']['success'], 'schedule': schedule.as_dict()}, HTTPStatus.OK.value
     finally:
         return content, status
 
@@ -67,7 +67,7 @@ def create(schedule: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     else:
         content = {
             'msg': SCHEDULE['create']['success'],
-            'schedule': new_schedule.as_dict
+            'schedule': new_schedule.as_dict()
         }
         status = HTTPStatus.CREATED.value
     finally:
@@ -108,7 +108,7 @@ def update(id, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
-        content, status = {'msg': SCHEDULE['update']['success'], 'schedule': schedule.as_dict}, HTTPStatus.OK.value
+        content, status = {'msg': SCHEDULE['update']['success'], 'schedule': schedule.as_dict()}, HTTPStatus.OK.value
     finally:
         return content, status
 

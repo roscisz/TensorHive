@@ -45,7 +45,7 @@ class Task(CRUDModel, Base):  # type: ignore
     def check_assertions(self):
         pass
 
-    def as_dict(self, include_private):
+    def as_dict(self, include_private=None):
         ret = super(Task, self).as_dict(include_private=include_private)
         ret['status'] = self.status.name
         return ret
