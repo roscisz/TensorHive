@@ -155,7 +155,7 @@ def test_update_restriction_incorrect_data(tables, client, restriction):
     old_start_date = restriction.starts_at
     old_end_date = restriction.ends_at
     data = {
-        'startsAt': '2200-01-01T10:00:00.000Z',    # start date is after the end date, this request shouldn't be accepted
+        'startsAt': '2200-01-01T10:00:00.000Z',  # start date is after the end date, this request shouldn't be accepted
         'endsAt': '2199-02-01T10:00:00.000Z',
     }
     resp = client.put(ENDPOINT + '/' + str(restriction.id), headers=HEADERS, data=json.dumps(data))
