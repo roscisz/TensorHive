@@ -2698,9 +2698,6 @@ components:
         username:
           type: string
           example: foobar
-        email:
-          type: string
-          example: foo@bar.com
         createdAt:
           type: string
           format: date-time
