@@ -86,8 +86,8 @@ class RestrictionSchedule(CRUDModel, Base):  # type: ignore
 
     def as_dict(self, include_private=False):
         ret = super(RestrictionSchedule, self).as_dict(include_private=include_private)
-        ret['scheduleDays'] = [day.to_str() for day in self.parse_schedule_string(self.schedule_days)],
-        ret['hourStart'] = self.hour_start.strftime('%H:%M'),
+        ret['scheduleDays'] = [day.to_str() for day in self.parse_schedule_string(self.schedule_days)]
+        ret['hourStart'] = self.hour_start.strftime('%H:%M')
         ret['hourEnd'] = self.hour_end.strftime('%H:%M')
         return ret
 

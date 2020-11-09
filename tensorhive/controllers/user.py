@@ -84,7 +84,7 @@ def do_create(user: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     else:
         content = {
             'msg': USER['create']['success'],
-            'user': new_user.as_dict()
+            'user': new_user.as_dict(include_private=True)
         }
         status = 201
     finally:
@@ -147,7 +147,7 @@ def update(newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
             content = {'msg': GENERAL['internal_error']}
             status = 500
         else:
-            content = {'msg': USER['update']['success'], 'reservation': found_user.as_dict()}
+            content = {'msg': USER['update']['success'], 'reservation': found_user.as_dict(include_private=True)}
             status = 201
     else:
         content = {'msg': GENERAL['bad_request']}
