@@ -202,7 +202,7 @@ Features
 - [ ] Migrate all features from web app that don't require GUI (so no charts)
 
 #### API
-- [x] OpenAPI 2.0 specification with Swagger UI
+- [x] OpenAPI specification with Swagger UI
 - [x] User authentication via JWT
 
 
