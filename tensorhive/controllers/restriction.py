@@ -100,9 +100,9 @@ def create(restriction: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     try:
         new_restriction = Restriction(
             name=restriction.get('name'),
-            starts_at=restriction['start'],
+            starts_at=restriction['startsAt'],
             is_global=restriction['isGlobal'],
-            ends_at=DateUtils.try_parse_string(restriction.get('end'))
+            ends_at=DateUtils.try_parse_string(restriction.get('endsAt'))
         )
         new_restriction.save()
     except AssertionError as e:

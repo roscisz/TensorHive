@@ -100,8 +100,8 @@ def test_get_schedule_restrictions(tables, client, active_schedule, restriction)
 def test_create_restriction(tables, client):
     data = {
         'name': 'Test restriction',
-        'start': '2100-01-01T10:00:00.000Z',
-        'end': '2101-02-01T10:00:00.000Z',
+        'startsAt': '2100-01-01T10:00:00.000Z',
+        'endsAt': '2101-02-01T10:00:00.000Z',
         'isGlobal': False
     }
     resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
@@ -115,7 +115,7 @@ def test_create_restriction(tables, client):
 def test_create_indefinte_retriction(tables, client):
     data = {
         'name': 'Test restriction',
-        'start': '2100-01-01T10:00:00.000Z',
+        'startsAt': '2100-01-01T10:00:00.000Z',
         'isGlobal': False
     }
     resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
@@ -129,7 +129,7 @@ def test_create_indefinte_retriction(tables, client):
 def test_create_restriction_missing_data(tables, client):
     data = {
         'name': 'Test restriction',
-        'end': '2101-02-01T10:00:00.000Z',
+        'endsAt': '2101-02-01T10:00:00.000Z',
         'isGlobal': False
     }
     resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
@@ -155,8 +155,8 @@ def test_update_restriction_incorrect_data(tables, client, restriction):
     old_start_date = restriction.starts_at
     old_end_date = restriction.ends_at
     data = {
-        'start': '2200-01-01T10:00:00.000Z',    # start date is after the end date, this request shouldn't be accepted
-        'end': '2199-02-01T10:00:00.000Z',
+        'startsAt': '2200-01-01T10:00:00.000Z',    # start date is after the end date, this request shouldn't be accepted
+        'endsAt': '2199-02-01T10:00:00.000Z',
     }
     resp = client.put(ENDPOINT + '/' + str(restriction.id), headers=HEADERS, data=json.dumps(data))
 
