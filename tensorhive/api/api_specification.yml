@@ -2941,16 +2941,16 @@ components:
     RestrictionForm:
       type: object
       required:
-        - start
+        - startsAt
         - isGlobal
       properties:
         name:
           type: string
           example: Example restriction
-        start:
+        startsAt:
           type: string
           format: date-time
-        end:
+        endsAt:
           type: string
           format: date-time
         isGlobal:
@@ -2962,10 +2962,10 @@ components:
         name:
           type: string
           example: Example restriction
-        start:
+        startsAt:
           type: string
           format: date-time
-        end:
+        endsAt:
           type: string
           format: date-time
           nullable: true
