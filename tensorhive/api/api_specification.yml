@@ -3036,6 +3036,7 @@ components:
         - memUtilAvg
         - start
         - end
+        - isCancelled
       properties:
         id:
           type: integer
@@ -3073,6 +3074,9 @@ components:
         end:
           type: string
           format: date-time
+        isCancelled:
+          type: boolean
+          example: false
     ReservationForm:
       type: object
       required:

@@ -72,8 +72,6 @@ class CRUDModel:
     def _serialize(self, field):
         if type(field) == datetime.datetime:
             return DateUtils.stringify_datetime(field)
-        elif type(field) == bool:
-            return str(field)
         else:
             return field
 
