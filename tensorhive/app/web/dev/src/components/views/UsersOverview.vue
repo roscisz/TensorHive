@@ -16,7 +16,7 @@
     </v-alert>
     <v-dialog
       v-model="showRestrictions"
-      width="850px"
+      width="875px"
     >
     <v-card>
       <v-card-text>
@@ -550,8 +550,12 @@ export default {
     },
     printTimespan (start, end, full = false) {
       if (full) {
-        return 'start: ' + moment.utc(start).format('LLL') + '\nend: ' + moment.utc(end).format('LLL')
-      } else return moment.utc(start).format('ll') + ' -\n' + moment.utc(end).format('ll')
+        return 'start: ' + moment.utc(start).format('ll HH:mm') + '\nend: ' + moment.utc(end).format('ll HH:mm')
+      } else {
+        var returnString = moment.utc(start).format('DD-MM-YYYY') + ' -\n' + moment.utc(end).format('DD-MM-YYYY')
+        if (moment.utc(end).isSameOrBefore(moment.utc())) returnString = returnString + '\n(expired)'
+        return returnString
+      }
     },
     printNames (array) {
       return array.map(a => a.name).join(' \n')
@@ -564,8 +568,9 @@ export default {
       else if (schedules.length === 1 || all) {
         var returnString = ''
         for (const schedule of schedules) {
-          returnString = returnString + schedule.hourStart + '-' + schedule.hourEnd + ' ' +
-            schedule.scheduleDays.map(a => a.substring(0, 3)).join(', ') + '\n'
+          returnString = returnString + schedule.hourStart + '-' + schedule.hourEnd + ' '
+          if (schedules.length === 1) returnString = returnString + '\n'
+          returnString = returnString + schedule.scheduleDays.map(a => a.substring(0, 3)).join(', ') + '\n'
         }
         return returnString
       } else return schedules.length
@@ -966,7 +971,7 @@ export default {
 
 <style>
 span {
-  white-space: pre-wrap;
+  white-space: pre;
 }
 
 .float-right-button {
