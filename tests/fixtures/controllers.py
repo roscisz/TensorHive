@@ -13,7 +13,7 @@ patch('flask_jwt_extended.get_jwt_claims', lambda: {'roles': ['admin', 'user']})
 patch('flask_jwt_extended.view_decorators.verify_jwt_in_request', lambda: None).start()
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def client():
     app = connexion.FlaskApp(__name__)
     app.add_api('../../tensorhive/api/' + API.SPEC_FILE,
