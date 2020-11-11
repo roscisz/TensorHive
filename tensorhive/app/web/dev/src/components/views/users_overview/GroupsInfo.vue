@@ -327,7 +327,6 @@ export default {
       var oldGroup = this.currentGroup
       var newGroup = this.group
       if (newGroup.name !== oldGroup.name && newGroup.name !== '') {
-        console.log('changing name')
         api
           .request('put', '/groups/' + newGroup.id, this.$store.state.accessToken, {'name': newGroup.name})
           .then(response => {
