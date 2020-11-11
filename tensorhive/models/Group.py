@@ -1,8 +1,9 @@
 import datetime
 import logging
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.database import Base
 from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
@@ -21,6 +22,7 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(40), unique=False, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    _is_default = Column('is_default', Boolean)
 
     _users = relationship('User', secondary='user2group', back_populates='_groups')
     _restrictions = relationship('Restriction', secondary='restriction2assignee', back_populates='_groups',
@@ -33,8 +35,16 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
         pass
 
     @hybrid_property
+    def is_default(self):
+        return self._is_default if self._is_default is not None else False
+
+    @hybrid_property
     def users(self):
         return self._users
+
+    @is_default.setter
+    def is_default(self, value):
+        self._is_default = value
 
     def add_user(self, user: User):
         if user in self.users:
@@ -71,11 +81,19 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
         group = {
             'id': self.id,
             'name': self.name,
-            'createdAt': DateUtils.stringify_datetime(self.created_at)
+            'createdAt': DateUtils.stringify_datetime(self.created_at),
+            'isDefault': self.is_default
         }
         if include_users:
             group['users'] = [user.as_dict_shallow for user in self.users]
         return group
+
+    @classmethod
+    def get_default_groups(cls):
+        """
+        :return: List of groups that are marked as default.
+        """
+        return Group.query.filter(Group._is_default.is_(True)).all()
 
 
 class User2Group(Base):  # type: ignore

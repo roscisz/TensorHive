@@ -389,8 +389,16 @@ paths:
     get:
       tags:
         - groups
-      summary: Get all groups
+      summary: Get all or default groups
       operationId: tensorhive.controllers.group.get
+      parameters:
+        - description: If set to false get all groups if true then only default groups
+          in: query
+          name: only_default
+          required: false
+          schema:
+            type: boolean
+            default: false
       responses:
         200:
           description: {{RESPONSES['general']['success']}}
@@ -520,12 +528,12 @@ paths:
               $ref: '#/components/schemas/GroupUpdateForm'
               x-body-name: newValues
       parameters:
-          - description: Group ID
-            in: path
-            name: id
-            required: true
-            schema:
-              type: integer
+        - description: Group ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
       responses:
         200:
           description: {{RESPONSES['group']['update']['success']}}
@@ -825,7 +833,7 @@ paths:
       summary: Update existing restriction
       operationId: tensorhive.controllers.restriction.update
       requestBody:
-        description: Restriction object with fields to overwrite.
+        description: Restriction object with fields to overwrite (end field is nullable string).
         required: true
         content:
           application/json:
@@ -2820,6 +2828,7 @@ components:
       type: object
       required:
         - name
+        - isDefault
         - users
       properties:
         id:
@@ -2830,6 +2839,9 @@ components:
         name:
           type: string
           example: Example group
+        isDefault:
+          type: boolean
+          default: false
         createdAt:
           type: string
           format: date-time
@@ -2842,6 +2854,7 @@ components:
       type: object
       required:
         - name
+        - isDefault
       properties:
         id:
           type: integer
@@ -2851,6 +2864,9 @@ components:
         name:
           type: string
           example: Example group
+        isDefault:
+          type: boolean
+          default: false
         createdAt:
           type: string
           format: date-time
@@ -2863,12 +2879,18 @@ components:
         name:
           type: string
           example: Example group
+        isDefault:
+          type: boolean
+          default: false
     GroupUpdateForm:
       type: object
       properties:
         name:
           type: string
           example: Example group
+        isDefault:
+          type: boolean
+          default: false
     Restriction:
       type: object
       required:
@@ -2946,6 +2968,7 @@ components:
         end:
           type: string
           format: date-time
+          nullable: true
         isGlobal:
           type: boolean
           example: false

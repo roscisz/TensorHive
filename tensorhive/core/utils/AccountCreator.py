@@ -1,6 +1,7 @@
 import click
 
 from tensorhive.database import init_db
+from tensorhive.models.Group import Group
 from tensorhive.models.Role import Role
 from tensorhive.models.User import User
 
@@ -23,6 +24,7 @@ class AccountCreator:
         self._ask_for_password()
         self._ask_for_role()
         self._create_user()
+        self._add_to_default_groups()
 
     def _create_user(self):
         try:
@@ -95,3 +97,11 @@ class AccountCreator:
             raise
         except Exception:
             click.echo('Unknown error - could not assign role.')
+
+    def _add_to_default_groups(self):
+        groups = Group.get_default_groups()
+        for group in groups:
+            group.add_user(self.new_user)
+
+        if len(groups) > 0:
+            click.echo('Account added to the existing default groups')

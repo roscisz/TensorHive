@@ -23,9 +23,13 @@ UserId = int
 
 
 @jwt_required
-def get() -> Tuple[List[Any], HttpStatusCode]:
+def get(only_default: bool = False) -> Tuple[List[Any], HttpStatusCode]:
+    if only_default:
+        groups = Group.get_default_groups()
+    else:
+        groups = Group.all()
     return [
-        group.as_dict for group in Group.all()
+        group.as_dict for group in groups
     ], HTTPStatus.OK.value
 
 
@@ -49,7 +53,8 @@ def get_by_id(id: GroupId) -> Tuple[Content, HttpStatusCode]:
 def create(group: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     try:
         new_group = Group(
-            name=group['name']
+            name=group['name'],
+            is_default=group['isDefault'] if 'isDefault' in group else False
         )
         new_group.save()
     except AssertionError as e:
@@ -68,15 +73,23 @@ def create(group: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
+def to_db_column() -> Dict[str, str]:
+    return {
+        'name': 'name',
+        'isDefault': 'is_default',
+    }
+
+
 @admin_required
 def update(id: GroupId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     new_values = newValues
-    allowed_fields = {'name'}
+    allowed_fields = {'name', 'isDefault'}
     try:
         assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
         group = Group.get(id)
 
         for field_name, new_value in new_values.items():
+            field_name = to_db_column().get(field_name)
             assert hasattr(group, field_name), 'group has no {} field'.format(field_name)
             setattr(group, field_name, new_value)
         group.save()
@@ -110,6 +123,52 @@ def delete(id: GroupId) -> Tuple[Content, HttpStatusCode]:
         content, status = {'msg': GENERAL['internal_error'] + str(e)}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
         content, status = {'msg': GROUP['delete']['success']}, HTTPStatus.OK.value
+    finally:
+        return content, status
+
+
+def get_default_group() -> Tuple[Content, HttpStatusCode]:
+    try:
+        group = Group.get_default_group()
+    except Exception as e:
+        log.critical(e)
+        content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
+    else:
+        if group is None:
+            content, status = {'msg': GROUP['default']['not_found']}, HTTPStatus.NOT_FOUND.value
+        else:
+            content, status = {'msg': GROUP['default']['get']['success'], 'group': group.as_dict}, HTTPStatus.OK.value
+    finally:
+        return content, status
+
+
+@admin_required
+def set_default_group(group_id: GroupId) -> Tuple[Content, HttpStatusCode]:
+    try:
+        Group.set_default_group(group_id)
+    except NoResultFound:
+        content, status = {'msg': GROUP['not_found']}, HTTPStatus.NOT_FOUND.value
+    except AssertionError as e:
+        content, status = {'msg': GROUP['default']['set']['failure']['assertions'].format(reason=e)}, \
+            HTTPStatus.UNPROCESSABLE_ENTITY.value
+    else:
+        content, status = {'msg': GROUP['default']['set']['success']}, HTTPStatus.OK.value
+    finally:
+        return content, status
+
+
+@admin_required
+def delete_default_group() -> Tuple[Content, HttpStatusCode]:
+    try:
+        Group.delete_default_group_if_exists()
+    except AssertionError as e:
+        content, status = {'msg': GROUP['default']['delete']['failure']['assertions'].format(reason=e)}, \
+            HTTPStatus.UNPROCESSABLE_ENTITY.value
+    except Exception as e:
+        log.critical(e)
+        content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
+    else:
+        content, status = {'msg': GROUP['default']['delete']['success']}, HTTPStatus.OK.value
     finally:
         return content, status
 
