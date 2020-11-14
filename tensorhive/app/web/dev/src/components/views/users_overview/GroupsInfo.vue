@@ -39,6 +39,11 @@
                   v-model="modalGroupName"
                 >
               </div>
+              <v-checkbox
+                v-model="defaultGroup"
+                label="Default group"
+              >
+              </v-checkbox>
               <v-card-text>
               Group members
               </v-card-text>
@@ -99,6 +104,11 @@
                   type="text"
                 >
           </div>
+          <v-checkbox
+                v-model="group.isDefault"
+                label="Default group"
+              >
+          </v-checkbox>
           <v-card-text>
               Edit group members
           </v-card-text>
@@ -177,7 +187,7 @@
         <template slot="items" slot-scope="props">
           <tr>
             <td>{{ props.item.id }}</td>
-            <td>{{ props.item.name }}</td>
+            <td><span>{{ printGroupName(props.item) }}</span></td>
             <td>{{ prettyDate(props.item.createdAt) }}</td>
             <td>
               <v-tooltip bottom :disabled="props.item.users.length===0">
@@ -219,6 +229,11 @@ export default {
   props: {
     usersList: Array
   },
+  watch: {
+    usersList: function () {
+      this.checkGroups()
+    }
+  },
   data () {
     return {
       pagination: {},
@@ -230,11 +245,7 @@ export default {
         { text: 'Actions', sortable: false }
       ],
       groups: [],
-      group: {
-        id: -1,
-        name: '',
-        users: []
-      },
+      group: {},
       usersValue: [],
       showModalCreateGroup: false,
       showModalRemoveGroup: false,
@@ -245,7 +256,8 @@ export default {
       currentGroup: {},
       errorMessage: '',
       modalAlert: false,
-      alert: false
+      alert: false,
+      defaultGroup: false
     }
   },
   created () {
@@ -271,6 +283,18 @@ export default {
     clearForm () {
       this.usersValue = []
       this.modalGroupName = ''
+      this.defaultGroup = false
+      this.group = {
+        id: -1,
+        name: '',
+        users: [],
+        isDefault: false
+      }
+    },
+    printGroupName (group) {
+      var returnString = group.name
+      if (group.isDefault) returnString = returnString + '\n(default)'
+      return returnString
     },
     addUserToGroup (group, user) {
       api
@@ -297,9 +321,13 @@ export default {
     },
 
     createGroup () {
-      const { modalGroupName, usersValue } = this
+      const { modalGroupName, usersValue, defaultGroup } = this
       api
-        .request('post', '/groups', this.$store.state.accessToken, {'name': modalGroupName})
+        .request('post', '/groups', this.$store.state.accessToken,
+          {
+            'name': modalGroupName,
+            'isDefault': defaultGroup
+          })
         .then(response => {
           let groupId = response.data.group.id
           for (const user of usersValue) {
@@ -308,6 +336,7 @@ export default {
           this.showModalCreateGroup = false
           this.sendCreated()
           this.clearForm()
+          this.checkGroups()
         })
         .catch(error => {
           this.handleError(error)
@@ -320,15 +349,21 @@ export default {
       this.group.id = currentGroup.id
       this.group.name = currentGroup.name
       this.group.users = currentGroup.users
+      this.group.isDefault = currentGroup.isDefault
       this.currentGroup = currentGroup
     },
 
     updateGroup: function () {
       var oldGroup = this.currentGroup
       var newGroup = this.group
-      if (newGroup.name !== oldGroup.name && newGroup.name !== '') {
+      if ((newGroup.name !== oldGroup.name && newGroup.name !== '') ||
+        oldGroup.isDefault !== newGroup.isDefault) {
         api
-          .request('put', '/groups/' + newGroup.id, this.$store.state.accessToken, {'name': newGroup.name})
+          .request('put', '/groups/' + newGroup.id, this.$store.state.accessToken,
+            {
+              'name': newGroup.name,
+              'isDefault': newGroup.isDefault
+            })
           .then(response => {
             this.checkGroups()
           })
@@ -351,11 +386,7 @@ export default {
       }
 
       this.showModalEditGroup = false
-      this.group = {
-        id: -1,
-        name: '',
-        users: []
-      }
+      this.clearForm()
       this.checkGroups()
     },
 
