@@ -30,6 +30,15 @@
           <v-icon>close</v-icon>
         </v-btn>
         <span class="headline">Manage restrictions</span>
+        <v-tooltip right>
+          <template v-slot:activator="{ on }">
+            <v-icon v-on="on">info</v-icon>
+          </template>
+          <v-card-text>
+            Users or groups can only reserve a specific resource<br />
+            if they are affected by a restriction that allows it.
+          </v-card-text>
+        </v-tooltip>
       </v-card-text>
       <v-data-table
         :headers="restrictionHeaders"
