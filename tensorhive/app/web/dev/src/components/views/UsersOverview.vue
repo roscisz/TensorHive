@@ -559,10 +559,10 @@ export default {
     },
     printTimespan (start, end, full = false) {
       if (full) {
-        return 'start: ' + moment.utc(start).format('ll HH:mm') + '\nend: ' + moment.utc(end).format('ll HH:mm')
+        return 'start: ' + moment(start).format('ll HH:mm') + '\nend: ' + moment(end).format('ll HH:mm')
       } else {
-        var returnString = moment.utc(start).format('DD-MM-YYYY') + ' -\n' + moment.utc(end).format('DD-MM-YYYY')
-        if (moment.utc(end).isSameOrBefore(moment.utc())) returnString = returnString + '\n(expired)'
+        var returnString = moment(start).format('DD-MM-YYYY') + ' -\n' + moment(end).format('DD-MM-YYYY')
+        if (moment(end).isSameOrBefore(moment())) returnString = returnString + '\n(expired)'
         return returnString
       }
     },
@@ -793,10 +793,10 @@ export default {
       if (this.editMode) this.updateRestriction()
       else if (this.modalStartDate && this.modalStartTime &&
           ((this.modalEndDate && this.modalEndTime) || this.infiniteRestriction)) {
-        var formattedStart = moment.utc(this.modalStartDate + 'T' + this.modalStartTime)
+        var formattedStart = moment(this.modalStartDate + 'T' + this.modalStartTime).toISOString()
         var formattedEnd = null
         if (!this.infiniteRestriction) {
-          formattedEnd = moment.utc(this.modalEndDate + 'T' + this.modalEndTime)
+          formattedEnd = moment(this.modalEndDate + 'T' + this.modalEndTime).toISOString()
         }
         const { modalRestrictionName, globalRestriction, tempSchedules,
           resourcesValue, usersValue, groupsValue } = this
@@ -874,10 +874,10 @@ export default {
     updateRestriction () {
       if (this.modalStartDate && this.modalStartTime &&
           ((this.modalEndDate && this.modalEndTime) || this.infiniteRestriction)) {
-        var formattedStart = moment.utc(this.modalStartDate + 'T' + this.modalStartTime)
+        var formattedStart = moment(this.modalStartDate + 'T' + this.modalStartTime).toISOString()
         var formattedEnd = null
         if (!this.infiniteRestriction) {
-          formattedEnd = moment.utc(this.modalEndDate + 'T' + this.modalEndTime)
+          formattedEnd = moment(this.modalEndDate + 'T' + this.modalEndTime).toISOString()
         }
         const { modalRestrictionName, globalRestriction, currentRestriction,
           usersValue, groupsValue, resourcesValue, tempSchedules } = this
