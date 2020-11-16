@@ -1,9 +1,12 @@
 from unittest.mock import patch
 from tensorhive.config import API
 from functools import wraps
-import tensorhive.controllers.group as group
 
-CONTROLLER_MODULES = [group]
+import tensorhive.controllers.group as group
+import tensorhive.controllers.reservation as reservation
+import tensorhive.controllers.restriction as restriction
+
+CONTROLLER_MODULES = [group, reservation, restriction]
 
 G = API.RESPONSES['general']
 
