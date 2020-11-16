@@ -66,7 +66,8 @@ export default {
       endDate: null,
       resourcesCheckboxes: [],
       refreshTasks: false,
-      parsedNodeNames: []
+      parsedNodeNames: [],
+      restrictionEvents: []
     }
   },
 
@@ -131,6 +132,7 @@ export default {
         this.resourcesCheckboxes[i] = obj
       }
       this.addResourcesHeader()
+      this.addUserRestrictions()
     },
 
     addResourcesHeader: function () {
@@ -231,6 +233,70 @@ export default {
         .catch(error => {
           this.$emit('handleError', error)
         })
+    },
+
+    addUserRestrictions () {
+      api
+        .request('get', '/restrictions?user_id=' + this.$store.state.id + '&include_user_groups=true', this.$store.state.accessToken)
+        .then(response => {
+          this.createRestrictionEvents(response.data)
+        })
+        .catch(error => {
+          this.$emit('handleError', error)
+        })
+    },
+
+    createRestrictionEvents (restrictions) {
+      var start = _.cloneDeep(this.calendar.fullCalendar('getView').start)
+      var end = _.cloneDeep(this.calendar.fullCalendar('getView').end)
+      this.restrictionEvents = []
+      for (const restriction of restrictions) {
+        if (restriction.schedules.length === 0) {
+          this.showRestrictionResourcesEvents(restriction, start, end, restriction.startsAt, restriction.endsAt)
+        } else {
+          for (const schedule of restriction.schedules) {
+            for (const day of schedule.scheduleDays) {
+              var date = this.findDateForWeekday(start, day)
+              var eventStart = date + ' ' + schedule.hourStart
+              var eventEnd = date + ' ' + schedule.hourEnd
+              this.showRestrictionResourcesEvents(restriction, start, end, eventStart, eventEnd)
+            }
+          }
+        }
+      }
+    },
+
+    showRestrictionResourcesEvents (restriction, calendarStart, calendarEnd, eventStart, eventEnd) {
+      var restrictionEvent = {
+        start: '',
+        end: '',
+        isGlobal: false,
+        resourceId: '',
+        groupId: 'restriction',
+        rendering: 'background'
+      }
+      var resourceCount = 0
+      if (restriction.isGlobal) resourceCount = 1
+      else resourceCount = restriction.resources.length
+      for (var j = 0; j < resourceCount; j++) {
+        if (moment(calendarStart).isSameOrBefore(restriction.endsAt) &&
+        moment(calendarEnd).isSameOrAfter(restriction.startsAt)) {
+          restrictionEvent.start = eventStart
+          restrictionEvent.end = eventEnd
+          restrictionEvent.isGlobal = restriction.isGlobal
+          if (!restriction.isGlobal) restrictionEvent.resourceId = restriction.resources[j].id
+          this.restrictionEvents.push(restrictionEvent)
+          this.calendar.fullCalendar('renderEvent', restrictionEvent)
+        }
+      }
+    },
+
+    findDateForWeekday (startDate, weekday) {
+      var date = moment(startDate)
+      while (date.format('dddd') !== weekday) {
+        date = date.add(1, 'days')
+      }
+      return date.format('YYYY-MM-DD')
     }
   },
 
@@ -278,7 +344,7 @@ export default {
         if (self.selectedResources.length > 6) {
           $(element).css('color', 'rgba(0, 0, 0, 0)')
         }
-        if (!event.allDay) {
+        if (!event.allDay && event.groupId !== 'restriction') {
           api
             .request('get', '/users/' + event.userId, self.$store.state.accessToken)
             .then(response => {
@@ -290,46 +356,54 @@ export default {
         }
       },
       eventAfterRender: function (event, element, view) {
-        var columnIndex
-        var resourceIndex
-        var resourceNodeName
-        for (var i = 0; i < self.selectedResources.length; i++) {
-          if (self.selectedResources[i].uuid === event.resourceId) {
-            columnIndex = i
-            resourceIndex = self.selectedResources[i].index
-            resourceNodeName = self.selectedResources[i].nodeName
+        if (event.groupId !== 'restriction' || (event.groupId === 'restriction' && !event.isGlobal)) {
+          var columnIndex
+          var resourceIndex
+          var resourceNodeName
+          for (var i = 0; i < self.selectedResources.length; i++) {
+            if (self.selectedResources[i].uuid === event.resourceId) {
+              columnIndex = i
+              resourceIndex = self.selectedResources[i].index
+              resourceNodeName = self.selectedResources[i].nodeName
+            }
           }
-        }
-        var hoursWidth = 42
-        var scrollWidth = 16
-        var width = view.el[0].clientWidth
-        var dayWidth = (width - scrollWidth - hoursWidth) / 7
-        var eventSlotWidth = dayWidth / self.selectedResources.length
-        var eventWidth = (Math.round(eventSlotWidth - 1)).toString() + 'px'
-        $(element).css('width', eventWidth)
-        if (columnIndex !== 0) {
-          var margin = (Math.round(columnIndex * (eventSlotWidth)) - 2).toString() + 'px'
-          $(element).css('margin-left', margin)
-        } else {
-          if (event.allDay) {
-            $(element).css('margin-left', '1px')
+          var hoursWidth = 42
+          var scrollWidth = 16
+          var width = view.el[0].clientWidth
+          var dayWidth = (width - scrollWidth - hoursWidth) / 7
+          var eventSlotWidth = dayWidth / self.selectedResources.length
+          var eventWidth
+          if (event.groupId !== 'restriction') eventWidth = (Math.round(eventSlotWidth - 1)).toString() + 'px'
+          else eventWidth = (Math.round(eventSlotWidth) + 1).toString() + 'px'
+          $(element).css('width', eventWidth)
+          if (columnIndex !== 0) {
+            var margin
+            if (event.groupId !== 'restriction') margin = (Math.round(columnIndex * (eventSlotWidth)) - 2).toString() + 'px'
+            else margin = (Math.round(columnIndex * (eventSlotWidth)) + 1).toString() + 'px'
+            $(element).css('margin-left', margin)
           } else {
-            $(element).css('margin-left', '-2px')
+            if (event.allDay) {
+              $(element).css('margin-left', '1px')
+            } else if (event.groupId !== 'restriction') {
+              $(element).css('margin-left', '-2px')
+            }
           }
-        }
-        if (event.allDay) {
-          if (columnIndex) {
-            $(element).css('margin-top', '-36px')
+          if (event.allDay) {
+            if (columnIndex) {
+              $(element).css('margin-top', '-36px')
+            }
+            $(element).css('height', 17 * 2)
           }
-          $(element).css('height', 17 * 2)
-        }
-        var c = self.setColor(resourceIndex, resourceNodeName)
-        if (event.userId === self.$store.state.id) {
-          c = '#15C02C' // user specified color: green
-        }
-        if (event.color !== c) {
-          event.color = c
-          self.calendar.fullCalendar('updateEvent', event)
+          if (event.groupId !== 'restriction') {
+            var c = self.setColor(resourceIndex, resourceNodeName)
+            if (event.userId === self.$store.state.id) {
+              c = '#15C02C' // user specified color: green
+            }
+            if (event.color !== c) {
+              event.color = c
+              self.calendar.fullCalendar('updateEvent', event)
+            }
+          }
         }
       },
 
@@ -341,7 +415,7 @@ export default {
           var events = self.calendar.fullCalendar('clientEvents')
           var id
           for (i = 0; i < events.length; i++) {
-            if (!events[i].allDay) {
+            if (!events[i].allDay && events[i].groupId !== 'restriction') {
               if (events[i].end > startDate && events[i].start < endDate) {
                 for (var j = 0; j < self.selectedResources.length; j++) {
                   if (self.selectedResources[j].uuid === events[i].resourceId) {
