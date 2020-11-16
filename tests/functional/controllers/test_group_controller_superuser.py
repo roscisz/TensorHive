@@ -4,17 +4,16 @@ from http import HTTPStatus
 from importlib import reload
 import json
 import auth_patcher
-import tensorhive.controllers.group as sut
 
-from functools import wraps
 
 ENDPOINT = BASE_URI + '/groups'
 
 
-def setup_module(module):
+def setup_module(_):
     auth_patch = auth_patcher.get_patch(superuser=True)
     auth_patch.start()
-    reload(sut)
+    for module in auth_patcher.CONTROLLER_MODULES:
+        reload(module)
     auth_patch.stop()
 
 

@@ -1,6 +1,9 @@
 from unittest.mock import patch
 from tensorhive.config import API
 from functools import wraps
+import tensorhive.controllers.group as group
+
+CONTROLLER_MODULES = [group]
 
 G = API.RESPONSES['general']
 

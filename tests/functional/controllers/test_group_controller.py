@@ -9,10 +9,11 @@ import tensorhive.controllers.group as sut
 ENDPOINT = BASE_URI + '/groups'
 
 
-def setup_module(module):
+def setup_module(_):
     auth_patch = auth_patcher.get_patch(superuser=False)
     auth_patch.start()
-    reload(sut)
+    for module in auth_patcher.CONTROLLER_MODULES:
+        reload(module)
     auth_patch.stop()
 
 
@@ -84,7 +85,7 @@ def test_mark_default_group_as_non_default_unprivileged(tables, client, new_grou
                       headers=HEADERS)
 
     assert resp.status_code == HTTPStatus.FORBIDDEN
-    
+
 
 # GET /groups
 def test_get_list_of_groups(tables, client):
