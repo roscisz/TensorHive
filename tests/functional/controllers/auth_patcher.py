@@ -5,8 +5,9 @@ from functools import wraps
 import tensorhive.controllers.group as group
 import tensorhive.controllers.reservation as reservation
 import tensorhive.controllers.restriction as restriction
+import tensorhive.controllers.schedule as schedule
 
-CONTROLLER_MODULES = [group, reservation, restriction]
+CONTROLLER_MODULES = [group, reservation, restriction, schedule]
 
 G = API.RESPONSES['general']
 
