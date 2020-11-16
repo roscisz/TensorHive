@@ -19,7 +19,7 @@ def setup_module(module):
 
 
 # POST /groups
-def test_create(tables, client):
+def test_create_group(tables, client):
     group_name = 'TestGroup'
     data = {'name': group_name}
 
@@ -74,6 +74,7 @@ def test_delete_group_that_doesnt_exist(tables, client):
     resp = client.delete(ENDPOINT + '/' + non_existent_id, headers=HEADERS)
 
     assert resp.status_code == HTTPStatus.NOT_FOUND
+
 
 # PUT /groups/{id}/users/{id}
 def test_add_user_to_a_group(tables, client, new_group, new_user):

@@ -17,7 +17,7 @@ def setup_module(module):
 
 
 # POST /groups
-def test_create_unprivileged(tables, client):
+def test_create_group_unprivileged(tables, client):
     group_name = 'TestGroup'
     data = {'name': group_name}
 
@@ -25,6 +25,66 @@ def test_create_unprivileged(tables, client):
 
     assert resp.status_code == HTTPStatus.FORBIDDEN
 
+
+# PUT /groups/{id}
+def test_update_group_unprivileged(tables, client, new_group):
+    new_group.save()
+
+    new_group_name = new_group.name + '111'
+    resp = client.put(ENDPOINT + '/' + str(new_group.id), headers=HEADERS, data=json.dumps({'name': new_group_name}))
+    resp_json = json.loads(resp.data.decode('utf-8'))
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+
+
+# DELETE /groups/{id}
+def test_delete_group_unprivileged(tables, client, new_group):
+    new_group.save()
+
+    resp = client.delete(ENDPOINT + '/' + str(new_group.id), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+
+
+# PUT /groups/{id}/users/{id}
+def test_add_user_to_a_group_unprivileged(tables, client, new_group, new_user):
+    new_group.save()
+    new_user.save()
+
+    resp = client.put(ENDPOINT + '/{}/users/{}'.format(new_group.id, new_user.id), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+
+
+# DELETE /groups/{id}/users/{id}
+def test_remove_user_from_a_group_unprivileged(tables, client, new_group_with_member):
+    new_group_with_member.save()
+    user = new_group_with_member.users[0]
+
+    resp = client.delete(ENDPOINT + '/{}/users/{}'.format(new_group_with_member.id, user.id), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+
+
+# PUT /groups/{id}
+def test_set_group_as_a_default_unprivileged(tables, client, new_group):
+    new_group.save()
+
+    resp = client.put(ENDPOINT + '/{}'.format(new_group.id), data=json.dumps({'isDefault': True}), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+
+
+# PUT /groups/{id}
+def test_mark_default_group_as_non_default_unprivileged(tables, client, new_group):
+    new_group.is_default = True
+    new_group.save()
+
+    resp = client.put(ENDPOINT + '/{}'.format(new_group.id), data=json.dumps({'isDefault': False}),
+                      headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+    
 
 # GET /groups
 def test_get_list_of_groups(tables, client):
