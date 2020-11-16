@@ -6,8 +6,9 @@ import tensorhive.controllers.group as group
 import tensorhive.controllers.reservation as reservation
 import tensorhive.controllers.restriction as restriction
 import tensorhive.controllers.schedule as schedule
+import tensorhive.controllers.user as user
 
-CONTROLLER_MODULES = [group, reservation, restriction, schedule]
+CONTROLLER_MODULES = [group, reservation, restriction, schedule, user]
 
 G = API.RESPONSES['general']
 
