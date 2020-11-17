@@ -135,5 +135,3 @@ def test_update_schedule_with_invalid_start_and_end_hours(tables, client, active
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert active_schedule.hour_start == datetime.time(8, 0, 0)
     assert active_schedule.hour_end == datetime.time(10, 0, 0)
-
-

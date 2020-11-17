@@ -31,7 +31,6 @@ def test_create_schedule_unprivileged(tables, client):
         'scheduleDays': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
     }
     resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
-    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.FORBIDDEN
 

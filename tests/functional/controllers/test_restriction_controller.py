@@ -117,7 +117,6 @@ def test_create_restriction_unprivileged(tables, client):
         'isGlobal': False
     }
     resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
-    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.FORBIDDEN
 

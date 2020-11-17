@@ -80,7 +80,6 @@ def test_delete_active_reservation(tables, client, active_reservation, permissiv
     permissive_restriction.save()
     active_reservation.save()
 
-    new_reservation_title = active_reservation.title + '111'
     resp = client.delete(ENDPOINT + '/' + str(active_reservation.id), headers=HEADERS)
 
     assert resp.status_code == HTTPStatus.OK

@@ -35,7 +35,6 @@ def test_update_group_unprivileged(tables, client, new_group):
 
     new_group_name = new_group.name + '111'
     resp = client.put(ENDPOINT + '/' + str(new_group.id), headers=HEADERS, data=json.dumps({'name': new_group_name}))
-    resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.FORBIDDEN
 

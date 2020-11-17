@@ -63,6 +63,7 @@ def test_create_restriction_missing_data(tables, client):
 
     assert resp.status_code == HTTPStatus.BAD_REQUEST
 
+
 # PUT /restrictions/{id} - update existing restriction - correct
 def test_update_restriction(tables, client, restriction):
     restriction.save()
@@ -102,6 +103,7 @@ def test_update_nonexistent_restriction(tables, client):
     resp = client.put(ENDPOINT + '/' + nonexistent_id, headers=HEADERS, data=json.dumps(data))
 
     assert resp.status_code == HTTPStatus.NOT_FOUND
+
 
 # PUT /restrictions/{id}/groups/{group_id} - apply restriction to group - correct
 def test_apply_restriction_to_group(tables, client, restriction, new_group):
@@ -191,6 +193,7 @@ def test_apply_nonexistent_restriction_to_resources_by_hostname(tables, client, 
     assert resp.status_code == HTTPStatus.NOT_FOUND
     assert len(resource1.get_restrictions()) == 0
     assert len(resource2.get_restrictions()) == 0
+
 
 # DELETE /restrictions/{id}/hosts/{hostname}
 def test_remove_resources_with_given_hostname_from_restriction(tables, client, restriction, resource1, resource2):

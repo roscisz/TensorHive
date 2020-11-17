@@ -242,7 +242,7 @@ def test_update_active_reservation_start_forbidden(tables, client, active_reserv
 
     new_reservation_start = active_reservation.start + timedelta(hours=1)
     resp = client.put(ENDPOINT + '/' + str(active_reservation.id), headers=HEADERS,
-                      data=json.dumps({'start':  DateUtils.stringify_datetime_to_api_format(new_reservation_start)}))
+                      data=json.dumps({'start': DateUtils.stringify_datetime_to_api_format(new_reservation_start)}))
 
     assert resp.status_code == HTTPStatus.FORBIDDEN
 
@@ -262,7 +262,6 @@ def test_delete_active_reservation_forbidden(tables, client, active_reservation,
     permissive_restriction.save()
     active_reservation.save()
 
-    new_reservation_title = active_reservation.title + '111'
     resp = client.delete(ENDPOINT + '/' + str(active_reservation.id), headers=HEADERS)
 
     assert resp.status_code == HTTPStatus.FORBIDDEN
