@@ -243,6 +243,7 @@
                 full-width
                 format="24hr"
                 :max="getMaxTime()"
+                :allowed-minutes="m => m % 5 === 0"
                 @click:minute="$refs.startTimeMenu.save(modalStartTime)"
               ></v-time-picker>
             </v-menu>
@@ -309,6 +310,7 @@
                 full-width
                 format="24hr"
                 :min="getMinTime()"
+                :allowed-minutes="m => m % 5 === 0"
                 @click:minute="$refs.endTimeMenu.save(modalEndTime)"
               ></v-time-picker>
               </v-menu>
@@ -366,6 +368,7 @@
                 full-width
                 format="24hr"
                 :max="schedule.hourEnd"
+                :allowed-minutes="m => m % 5 === 0"
                 @click:minute="$refs.startMenu[key].save(schedule.hourStart)"
               ></v-time-picker>
             </v-menu>
@@ -397,6 +400,7 @@
                 full-width
                 format="24hr"
                 :min="schedule.hourStart"
+                :allowed-minutes="m => m % 5 === 0"
                 @click:minute="$refs.endMenu[key].save(schedule.hourEnd)"
               ></v-time-picker>
               </v-menu>
