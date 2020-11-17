@@ -60,3 +60,29 @@ def test_after_updating_restriction_reservations_that_are_no_longer_valid_should
 
     assert resp.status_code == HTTPStatus.OK
     assert reservation.is_cancelled is True
+
+
+def test_update_past_reservation(tables, client, past_reservation, permissive_restriction):
+    permissive_restriction.save()
+    past_reservation.save()
+
+    new_reservation_title = past_reservation.title + '111'
+    resp = client.put(ENDPOINT + '/' + str(past_reservation.id), headers=HEADERS,
+                      data=json.dumps({'title': new_reservation_title}))
+    resp_json = json.loads(resp.data.decode('utf-8'))
+
+    assert resp.status_code == HTTPStatus.CREATED
+    assert resp_json['reservation']['title'] == new_reservation_title
+    assert Reservation.get(past_reservation.id).title == new_reservation_title
+
+
+def test_delete_active_reservation(tables, client, active_reservation, permissive_restriction):
+    permissive_restriction.save()
+    active_reservation.save()
+
+    new_reservation_title = active_reservation.title + '111'
+    resp = client.delete(ENDPOINT + '/' + str(active_reservation.id), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.OK
+    with pytest.raises(NoResultFound):
+        Reservation.get(active_reservation.id)

@@ -32,7 +32,7 @@ def new_admin():
 
 
 @pytest.fixture(scope='function')
-def new_reservation(new_user):
+def new_reservation(new_user, resource1):
     new_user.save()
     now = datetime.datetime.utcnow()
     duration = timedelta(minutes=60)
@@ -41,14 +41,14 @@ def new_reservation(new_user):
         user_id=new_user.id,
         title='TEST TITLE',
         description='TEST_DESCRIPTION',
-        resource_id='0123456789012345678901234567890123456789',
+        resource_id=resource1.id,
         start=now,
         end=now + duration,
     )
 
 
 @pytest.fixture(scope='function')
-def new_reservation_2(new_user, new_admin):
+def new_reservation_2(new_user, new_admin, resource1):
     new_user.save()
     new_admin.save()
     now = datetime.datetime.utcnow()
@@ -58,9 +58,57 @@ def new_reservation_2(new_user, new_admin):
         user_id=new_admin.id,
         title='TEST TITLE',
         description='TEST_DESCRIPTION',
-        resource_id='0123456789012345678901234567890123456789',
+        resource_id=resource1.id,
         start=now,
         end=now + duration,
+    )
+
+
+@pytest.fixture(scope='function')
+def past_reservation(new_user, resource1):
+    new_user.save()
+    start = datetime.datetime.utcnow() - timedelta(hours=5)
+    duration = timedelta(minutes=60)
+
+    return Reservation(
+        user_id=new_user.id,
+        title='TEST TITLE',
+        description='TEST_DESCRIPTION',
+        resource_id=resource1.id,
+        start=start,
+        end=start + duration,
+    )
+
+
+@pytest.fixture(scope='function')
+def active_reservation(new_user, resource1):
+    new_user.save()
+    start = datetime.datetime.utcnow() - timedelta(hours=5)
+    duration = timedelta(hours=10)
+
+    return Reservation(
+        user_id=new_user.id,
+        title='TEST TITLE',
+        description='TEST_DESCRIPTION',
+        resource_id=resource1.id,
+        start=start,
+        end=start + duration,
+    )
+
+
+@pytest.fixture(scope='function')
+def future_reservation(new_user, resource1):
+    new_user.save()
+    start = datetime.datetime.utcnow() + timedelta(hours=5)
+    duration = timedelta(hours=10)
+
+    return Reservation(
+        user_id=new_user.id,
+        title='TEST TITLE',
+        description='TEST_DESCRIPTION',
+        resource_id=resource1.id,
+        start=start,
+        end=start + duration,
     )
 
 
@@ -79,14 +127,15 @@ def new_group_with_member(new_user):
 
 @pytest.fixture(scope='function')
 def resource1():
-    resource = Resource(id='34943e60-0acd-4c31-b96e-02f88cc156f3')
+    resource = Resource(id='GPU-d38d4de3-85ee-e837-3d87-e8e2faeb6a63')
+
     resource.save()
     return resource
 
 
 @pytest.fixture(scope='function')
 def resource2():
-    resource = Resource(id='d5c501b1-8fbc-4dc2-9153-5f06af785336', name='Custom name')
+    resource = Resource(id='GPU-d38d4de3-85ee-e837-3d87-e8e2faeb6a64', name='Custom name')
     resource.save()
     return resource
 
@@ -96,6 +145,16 @@ def restriction():
     start_time = datetime.datetime.utcnow() + timedelta(minutes=5)
     end_time = start_time + timedelta(hours=8)
     restriction = Restriction(name='TestRestriction', starts_at=start_time, ends_at=end_time, is_global=False)
+    restriction.save()
+    return restriction
+
+
+@pytest.fixture(scope='function')
+def permissive_restriction(new_user):
+    start_time = datetime.datetime.utcnow() - timedelta(days=10)
+    end_time = None
+    restriction = Restriction(name='PermissiveRestriction', starts_at=start_time, ends_at=end_time, is_global=True)
+    restriction.apply_to_user(new_user)
     restriction.save()
     return restriction
 

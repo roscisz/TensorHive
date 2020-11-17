@@ -6,7 +6,8 @@ from fixtures.controllers import API_URI as BASE_URI, HEADERS
 from http import HTTPStatus
 from importlib import reload
 import auth_patcher
-import tensorhive.controllers.reservation as sut
+from datetime import timedelta
+from tensorhive.utils.DateUtils import DateUtils
 
 import datetime
 import json
@@ -24,7 +25,7 @@ def setup_module(_):
         auth_patch.stop()
 
 
-def test_create_reservation_without_permissions(tables, client, new_user):
+def test_create_reservation_unprivileged(tables, client, new_user):
     new_user.save()
 
     # A user by default does not have any access policies assigned to him, so he shouldn't
@@ -42,7 +43,7 @@ def test_create_reservation_without_permissions(tables, client, new_user):
     assert resp.status_code == HTTPStatus.FORBIDDEN
 
 
-def test_create_reservation_with_proper_permissions(tables, client, new_user, restriction):
+def test_create_reservation(tables, client, new_user, restriction):
     new_user.save()
 
     # Create a restriction and assign it to the user
@@ -194,3 +195,74 @@ def test_create_reservation_that_is_covered_by_two_separate_restrictions(tables,
 
     assert resp.status_code == HTTPStatus.CREATED
     assert Reservation.get(resp_json['reservation']['id']) is not None
+
+
+def test_update_reservation(tables, client, future_reservation, permissive_restriction):
+    permissive_restriction.save()
+    future_reservation.save()
+
+    new_reservation_title = future_reservation.title + '111'
+    resp = client.put(ENDPOINT + '/' + str(future_reservation.id), headers=HEADERS,
+                      data=json.dumps({'title': new_reservation_title}))
+    resp_json = json.loads(resp.data.decode('utf-8'))
+
+    assert resp.status_code == HTTPStatus.CREATED
+    assert resp_json['reservation']['title'] == new_reservation_title
+    assert Reservation.get(future_reservation.id).title == new_reservation_title
+
+
+def test_update_reservation_unprivileged(tables, client, new_reservation_2, permissive_restriction):
+    permissive_restriction.save()
+    new_reservation_2.save()
+
+    new_reservation_title = new_reservation_2.title + '111'
+    resp = client.put(ENDPOINT + '/' + str(new_reservation_2.id), headers=HEADERS,
+                      data=json.dumps({'title': new_reservation_title}))
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_update_future_reservation_start(tables, client, future_reservation, permissive_restriction):
+    permissive_restriction.save()
+    future_reservation.save()
+
+    new_reservation_start = future_reservation.start + timedelta(hours=1)
+    resp = client.put(ENDPOINT + '/' + str(future_reservation.id), headers=HEADERS,
+                      data=json.dumps({'start': DateUtils.stringify_datetime_to_api_format(new_reservation_start)}))
+    resp_json = json.loads(resp.data.decode('utf-8'))
+
+    assert resp.status_code == HTTPStatus.CREATED
+    assert resp_json['reservation']['start'] == DateUtils.stringify_datetime(new_reservation_start)
+    assert Reservation.get(future_reservation.id).start == new_reservation_start
+
+
+def test_update_active_reservation_start_forbidden(tables, client, active_reservation, permissive_restriction):
+    permissive_restriction.save()
+    active_reservation.save()
+
+    new_reservation_start = active_reservation.start + timedelta(hours=1)
+    resp = client.put(ENDPOINT + '/' + str(active_reservation.id), headers=HEADERS,
+                      data=json.dumps({'start':  DateUtils.stringify_datetime_to_api_format(new_reservation_start)}))
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_update_past_reservation_forbidden(tables, client, past_reservation, permissive_restriction):
+    permissive_restriction.save()
+    past_reservation.save()
+
+    new_reservation_title = past_reservation.title + '111'
+    resp = client.put(ENDPOINT + '/' + str(past_reservation.id), headers=HEADERS,
+                      data=json.dumps({'title': new_reservation_title}))
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_delete_active_reservation_forbidden(tables, client, active_reservation, permissive_restriction):
+    permissive_restriction.save()
+    active_reservation.save()
+
+    new_reservation_title = active_reservation.title + '111'
+    resp = client.delete(ENDPOINT + '/' + str(active_reservation.id), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
