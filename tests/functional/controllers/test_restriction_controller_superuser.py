@@ -14,11 +14,14 @@ ENDPOINT = BASE_URI + '/restrictions'
 
 
 def setup_module(_):
-    auth_patch = auth_patcher.get_patch(superuser=True)
-    auth_patch.start()
+    auth_patches = auth_patcher.get_patches(superuser=True)
+    for auth_patch in auth_patches:
+        auth_patch.start()
     for module in auth_patcher.CONTROLLER_MODULES:
         reload(module)
-    auth_patch.stop()
+    for auth_patch in auth_patches:
+        auth_patch.stop()
+
 
 # POST /restrictions - correct way
 def test_create_restriction(tables, client):

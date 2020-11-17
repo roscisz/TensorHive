@@ -13,7 +13,7 @@ CONTROLLER_MODULES = [group, reservation, restriction, schedule, user]
 G = API.RESPONSES['general']
 
 
-def get_patch(superuser=False):
+def get_patches(superuser=False):
     def always_unprivileged(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
@@ -22,6 +22,8 @@ def get_patch(superuser=False):
         return wrapper
 
     if superuser:
-        return patch('tensorhive.authorization.admin_required', lambda x: x)
+        return [patch('tensorhive.authorization.admin_required', lambda x: x),
+                patch('flask_jwt_extended.get_jwt_claims', lambda: {'roles': ['admin', 'user']})]
     else:
-        return patch('tensorhive.authorization.admin_required', lambda x: always_unprivileged(x))
+        return [patch('tensorhive.authorization.admin_required', lambda x: always_unprivileged(x)),
+                patch('flask_jwt_extended.get_jwt_claims', lambda: {'roles': ['user']})]

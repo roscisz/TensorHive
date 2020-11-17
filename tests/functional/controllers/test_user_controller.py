@@ -11,11 +11,13 @@ ENDPOINT = BASE_URI + '/user'
 
 
 def setup_module(_):
-    auth_patch = auth_patcher.get_patch(superuser=False)
-    auth_patch.start()
+    auth_patches = auth_patcher.get_patches(superuser=False)
+    for auth_patch in auth_patches:
+        auth_patch.start()
     for module in auth_patcher.CONTROLLER_MODULES:
         reload(module)
-    auth_patch.stop()
+    for auth_patch in auth_patches:
+        auth_patch.stop()
 
 
 # POST /user/create - forbidden
