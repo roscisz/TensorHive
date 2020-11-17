@@ -251,6 +251,7 @@ export default {
       var end = _.cloneDeep(this.calendar.fullCalendar('getView').end)
       this.restrictionEvents = []
       for (const restriction of restrictions) {
+        if (!restriction.endsAt) restriction.endsAt = end
         if (restriction.schedules.length === 0) {
           this.showRestrictionResourcesEvents(restriction, start, end, restriction.startsAt, restriction.endsAt)
         } else {

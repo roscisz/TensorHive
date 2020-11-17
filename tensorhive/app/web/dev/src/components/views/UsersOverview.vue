@@ -558,10 +558,13 @@ export default {
       } else return ''
     },
     printTimespan (start, end, full = false) {
+      var formattedEnd = 'no end date'
       if (full) {
-        return 'start: ' + moment(start).format('ll HH:mm') + '\nend: ' + moment(end).format('ll HH:mm')
+        if (moment(end).isValid()) formattedEnd = moment(end).format('ll HH:mm')
+        return 'start: ' + moment(start).format('ll HH:mm') + '\nend: ' + formattedEnd
       } else {
-        var returnString = moment(start).format('DD-MM-YYYY') + ' -\n' + moment(end).format('DD-MM-YYYY')
+        if (moment(end).isValid()) formattedEnd = moment(end).format('DD-MM-YYYY')
+        var returnString = moment(start).format('DD-MM-YYYY') + ' -\n' + formattedEnd
         if (moment(end).isSameOrBefore(moment())) returnString = returnString + '\n(expired)'
         return returnString
       }
@@ -794,20 +797,19 @@ export default {
       else if (this.modalStartDate && this.modalStartTime &&
           ((this.modalEndDate && this.modalEndTime) || this.infiniteRestriction)) {
         var formattedStart = moment(this.modalStartDate + 'T' + this.modalStartTime).toISOString()
-        var formattedEnd = null
-        if (!this.infiniteRestriction) {
-          formattedEnd = moment(this.modalEndDate + 'T' + this.modalEndTime).toISOString()
+        var restrictionToCreate = {
+          name: this.modalRestrictionName,
+          start: formattedStart,
+          isGlobal: this.globalRestriction
         }
-        const { modalRestrictionName, globalRestriction, tempSchedules,
-          resourcesValue, usersValue, groupsValue } = this
+        if (!this.infiniteRestriction) {
+          var formattedEnd = moment(this.modalEndDate + 'T' + this.modalEndTime).toISOString()
+          restrictionToCreate.end = formattedEnd
+        }
+        const { globalRestriction, tempSchedules, resourcesValue, usersValue, groupsValue } = this
         api
           .request('post', '/restrictions', this.$store.state.accessToken,
-            {
-              'name': modalRestrictionName,
-              'start': formattedStart,
-              'end': formattedEnd,
-              'isGlobal': globalRestriction
-            })
+            restrictionToCreate)
           .then(response => {
             let restrictionId = response.data.restriction.id
             if (resourcesValue.length > 0 && globalRestriction === false) {
@@ -856,6 +858,7 @@ export default {
         })
     },
     editRestriction (currentRestriction) {
+      this.clearForm()
       this.editMode = true
       this.restrictionId = currentRestriction.id
       this.modalRestrictionName = currentRestriction.name
@@ -865,9 +868,14 @@ export default {
       this.groupsValue = currentRestriction.groups
       this.modalStartDate = moment(currentRestriction.startsAt).format(moment.HTML5_FMT.DATE)
       this.modalStartTime = moment(currentRestriction.startsAt).format(moment.HTML5_FMT.TIME)
-      this.modalEndDate = moment(currentRestriction.endsAt).format(moment.HTML5_FMT.DATE)
-      if (!this.modalEndDate) this.infiniteRestriction = true
-      else this.modalEndTime = moment(currentRestriction.endsAt).format(moment.HTML5_FMT.TIME)
+      if (currentRestriction.endsAt) {
+        this.modalEndDate = moment(currentRestriction.endsAt).format(moment.HTML5_FMT.DATE)
+        this.modalEndTime = moment(currentRestriction.endsAt).format(moment.HTML5_FMT.TIME)
+      } else {
+        this.infiniteRestriction = true
+        this.modalEndDate = ''
+        this.modalEndTime = ''
+      }
       this.copySchedules(currentRestriction.schedules)
       this.currentRestriction = currentRestriction
     },
