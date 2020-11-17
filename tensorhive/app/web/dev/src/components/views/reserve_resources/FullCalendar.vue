@@ -259,7 +259,15 @@ export default {
               var date = this.findDateForWeekday(start, day)
               var eventStart = date + ' ' + schedule.hourStart
               var eventEnd = date + ' ' + schedule.hourEnd
-              this.showRestrictionResourcesEvents(restriction, start, end, eventStart, eventEnd)
+
+              if (moment(date).isSameOrAfter(moment(restriction.startsAt).startOf('day')) &&
+              moment(date).isSameOrBefore(moment(restriction.endsAt).endOf('day')) &&
+              moment(eventStart).isSameOrBefore(moment(restriction.endsAt)) &&
+              moment(eventEnd).isSameOrAfter(restriction.startsAt)) {
+                if (moment(eventStart).isBefore(restriction.startsAt)) eventStart = restriction.startsAt
+                if (moment(eventEnd).isAfter(restriction.endsAt)) eventEnd = restriction.endsAt
+                this.showRestrictionResourcesEvents(restriction, start, end, eventStart, eventEnd)
+              }
             }
           }
         }
@@ -273,7 +281,8 @@ export default {
         isGlobal: false,
         resourceId: '',
         groupId: 'restriction',
-        rendering: 'background'
+        rendering: 'background',
+        backgroundColor: '#bdf2ae'
       }
       var resourceCount = 0
       if (restriction.isGlobal) resourceCount = 1
