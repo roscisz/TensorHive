@@ -128,7 +128,7 @@
             <input
               class="form-control"
               name="modalRestrictionName"
-              placeholder="Restriction name"
+              placeholder="Permission name"
               type="text"
               v-model="modalRestrictionName"
             >
