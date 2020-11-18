@@ -134,7 +134,46 @@
             >
           </div>
           <v-layout>
-          <v-flex xs6>
+            <v-flex xs6>
+              <v-autocomplete
+                v-model="usersValue"
+                :items="users"
+                :multiple=true
+                placeholder="Users"
+                item-value="id"
+                item-text="username"
+                prepend-icon="fa-user"
+                return-object
+              />
+            </v-flex>
+            <v-flex xs6>
+              <v-autocomplete
+                v-model="groupsValue"
+                :items="groups"
+                :multiple=true
+                placeholder="Groups"
+                item-value="id"
+                item-text="name"
+                prepend-icon="fa-group"
+                return-object
+              />
+            </v-flex>
+          </v-layout>
+          <v-layout>
+          <v-flex xs4>
+            <v-autocomplete
+              v-model="hostsValue"
+              :items="hosts"
+              :multiple=true
+              placeholder="Hostnames"
+              item-text="hostname"
+              prepend-icon="fa-server"
+              return-object
+              :disabled="globalRestriction"
+            >
+            </v-autocomplete>
+          </v-flex>
+          <v-flex xs4>
             <v-autocomplete
               v-model="resourcesValue"
               :items="resources"
@@ -162,31 +201,7 @@
           </v-flex>
           </v-layout>
           <v-layout>
-            <v-autocomplete
-              style="width: 50%"
-              v-model="usersValue"
-              :items="users"
-              :multiple=true
-              placeholder="Users"
-              item-value="id"
-              item-text="username"
-              prepend-icon="fa-user"
-              return-object
-            />
-            <v-autocomplete
-              style="width: 50%"
-              v-model="groupsValue"
-              :items="groups"
-              :multiple=true
-              placeholder="Groups"
-              item-value="id"
-              item-text="name"
-              prepend-icon="fa-group"
-              return-object
-            />
-          </v-layout>
-          <v-layout>
-          <v-flex xs3>
+          <v-flex xs4>
           <v-menu
             v-model="startDateMenu"
             :close-on-content-click="false"
@@ -214,7 +229,7 @@
             ></v-date-picker>
           </v-menu>
           </v-flex>
-          <v-flex xs3>
+          <v-flex xs4>
           <v-menu
               ref="startTimeMenu"
               v-model="startTimeMenu"
@@ -250,7 +265,7 @@
             </v-flex>
           </v-layout>
           <v-layout>
-          <v-flex xs3>
+          <v-flex xs4>
           <v-menu
             v-model="endDateMenu"
             :close-on-content-click="false"
@@ -280,7 +295,7 @@
             </v-date-picker>
           </v-menu>
           </v-flex>
-          <v-flex xs3>
+          <v-flex xs4>
           <v-menu
               ref="endTimeMenu"
               v-model="endTimeMenu"
@@ -494,6 +509,25 @@ export default {
     GroupsInfo,
     UsersInfo
   },
+  watch: {
+    resourcesValue: function () {
+      if (this.triggerResourcesWatcher) {
+        this.selectedResourcesChanged()
+      } else this.triggerResourcesWatcher = true
+    },
+    hostsValue: function (after, before) {
+      if (this.triggerHostsWatcher) {
+        var host
+        if (before.length > after.length) {
+          host = before.filter(x => !after.includes(x))
+          this.unselectHostResources(host[0])
+        } else if (before.length < after.length) {
+          host = after.filter(x => !before.includes(x))
+          this.selectHostResources(host[0])
+        }
+      } else this.triggerHostsWatcher = true
+    }
+  },
   data () {
     return {
       errorMessage: '',
@@ -535,8 +569,12 @@ export default {
       globalRestriction: false,
       resources: [],
       resourcesValue: [],
+      hosts: [],
+      hostsValue: [],
       editMode: false,
-      currentRestriction: {}
+      currentRestriction: {},
+      triggerResourcesWatcher: true,
+      triggerHostsWatcher: true
     }
   },
   mounted () {
@@ -590,6 +628,35 @@ export default {
         }
         return returnString
       } else return schedules.length
+    },
+    selectHostResources (host) {
+      for (const resource of host.resources) {
+        if (!this.resourcesValue.some(r => r.id === resource.id)) {
+          this.triggerResourcesWatcher = false
+          this.resourcesValue.push(resource)
+        }
+      }
+    },
+    unselectHostResources (host) {
+      for (const resource of host.resources) {
+        if (this.resourcesValue.some(r => r.id === resource.id)) {
+          this.triggerResourcesWatcher = false
+          this.resourcesValue = this.resourcesValue.filter(r => r.id !== resource.id)
+        }
+      }
+    },
+    selectedResourcesChanged () {
+      for (const host of this.hosts) {
+        if (host.resources.every(r => this.resourcesValue.some(r2 => r2.id === r.id)) &&
+        !this.hostsValue.some(h => h.hostname === host.hostname)) {
+          this.triggerHostsWatcher = false
+          this.hostsValue.push(host)
+        } else if (!host.resources.every(r => this.resourcesValue.some(r2 => r2.id === r.id)) &&
+        this.hostsValue.some(h => h.hostname === host.hostname)) {
+          this.triggerHostsWatcher = false
+          this.hostsValue = this.hostsValue.filter(h => h.hostname !== host.hostname)
+        }
+      }
     },
     clearForm () {
       this.modalRestrictionName = ''
@@ -867,7 +934,7 @@ export default {
       this.restrictionId = currentRestriction.id
       this.modalRestrictionName = currentRestriction.name
       this.globalRestriction = currentRestriction.isGlobal
-      if (!this.globalRestriction) this.resourcesValue = currentRestriction.resources
+      if (!this.globalRestriction) this.resourcesValue = currentRestriction.resources.slice()
       this.usersValue = currentRestriction.users
       this.groupsValue = currentRestriction.groups
       this.modalStartDate = moment(currentRestriction.startsAt).format(moment.HTML5_FMT.DATE)
@@ -976,11 +1043,28 @@ export default {
         .request('get', '/resources', this.$store.state.accessToken)
         .then(response => {
           this.resources = response.data
+          this.populateHosts()
         })
         .catch(error => {
           this.handleError(error)
           this.modalAlert = true
         })
+    },
+    populateHosts () {
+      for (const resource of this.resources) {
+        var host = this.hosts.find(h => h.hostname === resource.hostname)
+        if (host) {
+          host.resources.push(resource)
+        } else {
+          var newHost = {
+            hostname: '',
+            resources: []
+          }
+          newHost.hostname = resource.hostname
+          newHost.resources.push(resource)
+          this.hosts.push(newHost)
+        }
+      }
     },
     showRemoveConfirmationDialog (id) {
       this.restrictionId = id
