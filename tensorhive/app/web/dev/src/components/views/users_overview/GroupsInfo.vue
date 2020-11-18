@@ -55,7 +55,23 @@
                 item-text="username"
                 item-value="id"
                 prepend-icon="fa-group"
+                return-object
+              >
+              <v-list-tile
+                slot="prepend-item"
+                ripple
+                @click="selectAllUsers()"
+              >
+              <v-list-tile-action>
+                <v-icon>{{ selectAllIcon }}</v-icon>
+              </v-list-tile-action>
+                <v-list-tile-title>Select all users</v-list-tile-title>
+              </v-list-tile>
+              <v-divider
+                slot="prepend-item"
+                class="mt-2"
               />
+              </v-autocomplete>
               <v-alert
                 v-model="modalAlert"
                 dismissible
@@ -113,7 +129,7 @@
               Edit group members
           </v-card-text>
           <v-autocomplete
-              v-model="group.users"
+              v-model="usersValue"
               :items="usersList"
               :multiple=true
               placeholder="Username"
@@ -121,7 +137,22 @@
               item-text="username"
               prepend-icon="fa-group"
               return-object
-            />
+            >
+              <v-list-tile
+                slot="prepend-item"
+                ripple
+                @click="selectAllUsers()"
+              >
+              <v-list-tile-action>
+                <v-icon>{{ selectAllIcon }}</v-icon>
+              </v-list-tile-action>
+                <v-list-tile-title>Select all users</v-list-tile-title>
+              </v-list-tile>
+              <v-divider
+                slot="prepend-item"
+                class="mt-2"
+              />
+          </v-autocomplete>
           <v-alert
             v-model="modalAlert"
             dismissible
@@ -276,6 +307,11 @@ export default {
 
     numGroups () {
       return this.groups.length
+    },
+
+    selectAllIcon () {
+      if (this.usersValue.length === this.usersList.length) return 'fa-minus-square'
+      else return 'fa-plus-square'
     }
   },
 
@@ -291,11 +327,24 @@ export default {
         isDefault: false
       }
     },
+
     printGroupName (group) {
       var returnString = group.name
       if (group.isDefault) returnString = returnString + '\n(default)'
       return returnString
     },
+
+    selectAllUsers () {
+      this.$nextTick(() => {
+        if (this.usersValue.length === this.usersList.length) {
+          this.usersValue = []
+        } else {
+          this.usersValue = []
+          this.usersList.forEach(u => this.usersValue.push(u))
+        }
+      })
+    },
+
     addUserToGroup (group, user) {
       api
         .request('put', '/groups/' + group + '/users/' + user, this.$store.state.accessToken)
@@ -331,7 +380,7 @@ export default {
         .then(response => {
           let groupId = response.data.group.id
           for (const user of usersValue) {
-            this.addUserToGroup(groupId, user)
+            this.addUserToGroup(groupId, user.id)
           }
           this.showModalCreateGroup = false
           this.sendCreated()
@@ -351,9 +400,11 @@ export default {
       this.group.users = currentGroup.users
       this.group.isDefault = currentGroup.isDefault
       this.currentGroup = currentGroup
+      this.usersValue = this.group.users
     },
 
     updateGroup: function () {
+      this.group.users = this.usersValue
       var oldGroup = this.currentGroup
       var newGroup = this.group
       if ((newGroup.name !== oldGroup.name && newGroup.name !== '') ||
