@@ -358,10 +358,10 @@ export default {
           api
             .request('get', '/users/' + event.userId, self.$store.state.accessToken)
             .then(response => {
-              element.find('.fc-title').prepend((response.data.username).bold().big().italics() + '<br/>')
+              element.find('.fc-title').prepend((response.data.user.username).bold().big().italics() + '<br/>')
             })
             .catch(error => {
-              this.$emit('handleError', error)
+              self.$emit('handleError', error)
             })
         }
       },
