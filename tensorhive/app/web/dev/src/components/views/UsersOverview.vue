@@ -1111,7 +1111,6 @@ span {
 
 .data_table{
   display: flex;
-  flex-wrap: wrap;
 }
 
 .data_box{
