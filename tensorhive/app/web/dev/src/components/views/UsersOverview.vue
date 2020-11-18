@@ -29,14 +29,14 @@
         >
           <v-icon>close</v-icon>
         </v-btn>
-        <span class="headline">Manage restrictions</span>
+        <span class="headline">Manage permissions</span>
         <v-tooltip right>
           <template v-slot:activator="{ on }">
             <v-icon v-on="on">info</v-icon>
           </template>
           <v-card-text>
-            Users or groups can only reserve a specific resource<br />
-            if they are affected by a restriction that allows it.
+            Users can only reserve a specific resource if they<br />
+            are affected by a permission that allows it.
           </v-card-text>
         </v-tooltip>
       </v-card-text>
@@ -118,8 +118,8 @@
         {{ errorMessage }}
       </v-alert>
       <v-card-text>
-        <span v-if="editMode" class="headline">Edit restriction</span>
-        <span v-else class="headline">Add restriction</span>
+        <span v-if="editMode" class="headline">Edit permission</span>
+        <span v-else class="headline">Add permission</span>
         <v-btn small v-if="editMode" @click="clearForm">Cancel editing</v-btn>
         <form @submit.prevent="createRestriction">
           <v-divider></v-divider>
@@ -192,11 +192,11 @@
               <template v-slot:activator="{ on, attrs }">
                 <v-checkbox  v-bind="attrs" v-on="on"
                 v-model="globalRestriction"
-                label="Global restriction"
+                label="Global"
               >
               </v-checkbox>
               </template>
-              <span>Global restriction applies to all available resources</span>
+              <span>Global permission applies to all available resources</span>
             </v-tooltip>
           </v-flex>
           </v-layout>
@@ -339,7 +339,7 @@
               </v-flex>
               </v-layout>
           <p class="font-weight-medium">
-              Restriction schedules
+              Permission schedules
               <v-btn
                 icon
                 color="blue-grey lighten-5"
@@ -442,14 +442,14 @@
             color="primary"
             type="submit"
           >
-            Edit restriction
+            Edit permission
           </v-btn>
           <v-btn
             v-else
             color="success"
             type="submit"
           >
-            Add restriction
+            Add permission
           </v-btn>
         </form>
       </v-card-text>
@@ -473,7 +473,7 @@
           >
             <v-icon>close</v-icon>
           </v-btn>
-          Do you want to remove this restriction?
+          Do you want to remove this permission?
         </v-card-text>
         <v-card-actions>
           <v-layout align-center justify-end>
@@ -489,7 +489,7 @@
       </v-card>
     </v-dialog>
     <div class="text-xs-center pt-2">
-      <v-btn color="primary" @click="showRestrictions=true">Manage restrictions</v-btn>
+      <v-btn color="primary" @click="showRestrictions=true">Manage permissions</v-btn>
       <v-divider></v-divider>
     </div>
     <div class="data_table">
