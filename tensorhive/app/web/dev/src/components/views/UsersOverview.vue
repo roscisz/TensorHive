@@ -55,17 +55,17 @@
             <td>
               <v-tooltip bottom>
                 <template v-slot:activator="{ on, attrs }">
-                  <span v-bind="attrs" v-on="on">{{ printTimespan(props.item.startsAt, props.item.endsAt) }}</span>
+                  <span class="white-space" v-bind="attrs" v-on="on">{{ printTimespan(props.item.startsAt, props.item.endsAt) }}</span>
                 </template>
-                <span>{{ printTimespan(props.item.startsAt, props.item.endsAt, full=true) }}</span>
+                <span class="white-space">{{ printTimespan(props.item.startsAt, props.item.endsAt, full=true) }}</span>
               </v-tooltip>
             </td>
             <td>
               <v-tooltip bottom :disabled="props.item.schedules.length<=1">
                 <template v-slot:activator="{ on, attrs }">
-                  <span v-bind="attrs" v-on="on">{{ printSchedules(props.item.schedules) }}</span>
+                  <span class="white-space" v-bind="attrs" v-on="on">{{ printSchedules(props.item.schedules) }}</span>
                 </template>
-                <span>{{ printSchedules(props.item.schedules, all=true) }}</span>
+                <span class="white-space">{{ printSchedules(props.item.schedules, all=true) }}</span>
               </v-tooltip>
             </td>
             <td>
@@ -73,7 +73,7 @@
                 <template v-slot:activator="{ on, attrs }">
                   <span v-bind="attrs" v-on="on">{{ props.item.users.length }}</span>
                 </template>
-                <span>{{ printUsernames(props.item.users) }}</span>
+                <span class="white-space">{{ printUsernames(props.item.users) }}</span>
               </v-tooltip>
             </td>
             <td>
@@ -81,7 +81,7 @@
                 <template v-slot:activator="{ on, attrs }">
                   <span v-bind="attrs" v-on="on">{{ props.item.groups.length }}</span>
                 </template>
-                <span>{{ printNames(props.item.groups) }}</span>
+                <span class="white-space">{{ printNames(props.item.groups) }}</span>
               </v-tooltip>
             </td>
             <td v-if="props.item.isGlobal">All</td>
@@ -90,7 +90,7 @@
                 <template v-slot:activator="{ on, attrs }">
                   <span v-bind="attrs" v-on="on">{{ props.item.resources.length }}</span>
                 </template>
-                <span>{{ printNames(props.item.resources) }}</span>
+                <span class="white-space">{{ printNames(props.item.resources) }}</span>
               </v-tooltip>
             </td>
             <td>
@@ -1075,7 +1075,7 @@ export default {
 </script>
 
 <style>
-span {
+.white-space {
   white-space: pre;
 }
 

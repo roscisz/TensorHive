@@ -218,14 +218,14 @@
         <template slot="items" slot-scope="props">
           <tr>
             <td>{{ props.item.id }}</td>
-            <td><span>{{ printGroupName(props.item) }}</span></td>
+            <td><span class="white-space">{{ printGroupName(props.item) }}</span></td>
             <td>{{ prettyDate(props.item.createdAt) }}</td>
             <td>
               <v-tooltip bottom :disabled="props.item.users.length===0">
                 <template v-slot:activator="{ on, attrs }">
                   <span v-bind="attrs" v-on="on">{{ props.item.users.length }}</span>
                 </template>
-                <span>{{ printUsernames(props.item.users) }}</span>
+                <span class="white-space">{{ printUsernames(props.item.users) }}</span>
               </v-tooltip>
             </td>
             <td>
