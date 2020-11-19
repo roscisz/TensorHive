@@ -38,7 +38,7 @@ class User(CRUDModel, Base):  # type: ignore
     _hashed_password = Column(String(120), nullable=False)
     _roles = relationship('Role', cascade='all,delete', backref=backref('user'))
     _jobs = relationship(
-        'Job', backref=backref('user', single_parent=True, cascade='all, delete-orphan'), lazy='subquery')
+        'Job', backref=backref('user', single_parent=True), lazy='subquery')
 
     min_password_length = 8
 

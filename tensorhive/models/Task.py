@@ -4,7 +4,6 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.models.CRUDModel import CRUDModel
 from tensorhive.models.CommandSegment import SegmentType, CommandSegment, CommandSegment2Task
-from tensorhive.utils.DateUtils import DateUtils
 import enum
 import logging
 log = logging.getLogger(__name__)
@@ -25,11 +24,7 @@ class Task(CRUDModel, Base):  # type: ignore
     pid = Column(Integer)
     status = Column(Enum(TaskStatus), default=TaskStatus.not_running, nullable=False)
     command = Column(String(400), nullable=False)
-    _spawns_at = Column(DateTime)
-    _terminates_at = Column(DateTime)
     _cmd_segments = relationship('CommandSegment', secondary='cmd_segment2task', back_populates='_tasks')
-
-# TODO write tests for cascade CommandSegment delete when Task is deleted
 
     def __repr__(self):
         return '<Task id={id}, jobId={job_id}, name={host}, command={command}\n' \
@@ -131,15 +126,7 @@ class Task(CRUDModel, Base):  # type: ignore
                 if (link.index > removed_index):
                     setattr(link, '_index', link.index - 1)
         self.save() 
-    
 
-    @hybrid_property
-    def spawns_at(self):
-        return self._spawns_at
-
-    @hybrid_property
-    def terminates_at(self):
-        return self._terminates_at
 
     @property
     def as_dict(self):
@@ -149,7 +136,5 @@ class Task(CRUDModel, Base):  # type: ignore
             'hostname': self.host,
             'pid': self.pid,
             'status': self.status.name,
-            'command': self.command,
-            'spawnsAt': DateUtils.try_parse_datetime(self._spawns_at),
-            'terminatesAt': DateUtils.try_parse_datetime(self._terminates_at)
+            'command': self.command
          }

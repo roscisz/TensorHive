@@ -105,6 +105,16 @@ job:
     success: Job has been successfully delete
     failure:
       assertions: Unable to delete job - {reason}
+  execute:
+    success: Job has been succesfully execute
+    failure:
+      state: Unable to execute job - {reason}
+      tasks: Unable to execute job - {reason}
+  stop:
+    success: Job has been succesfully stopped
+    failure:
+      state: Unable to stop job - {reason}
+      tasks: Unable to stop job - {reason}
   tasks:
     add:
       failure: 
