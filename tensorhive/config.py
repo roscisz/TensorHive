@@ -243,8 +243,8 @@ class USAGE_LOGGING_SERVICE:
     LOG_CLEANUP_ACTION = config.getint(section, 'log_cleanup_action', fallback=2)
 
 
-class TASK_SCHEDULING_SERVICE:
-    section = 'task_scheduling_service'
+class JOB_SCHEDULING_SERVICE:
+    section = 'job_scheduling_service'
     ENABLED = config.getboolean(section, 'enabled', fallback=True)
     UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=30.0)
     STOP_TERMINATION_ATTEMPTS_AFTER = config.getfloat(section, 'stop_termination_attempts_after_mins', fallback=5.0)

@@ -4,7 +4,7 @@ from tensorhive.database import Base
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.models.CRUDModel import CRUDModel
-from tensorhive.models.Task import Task
+from tensorhive.models.Task import Task, TaskStatus
 from tensorhive.utils.DateUtils import DateUtils
 from typing import Optional, Union
 import enum
@@ -26,10 +26,10 @@ class Job(CRUDModel, Base):  # type: ignore
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
     status = Column(Enum(JobStatus), default=JobStatus.not_running, nullable=False)
     _start_at = Column(DateTime)
-    _end_at = Column(DateTime)
+    _stop_at = Column(DateTime)
 
     _tasks = relationship(
-        'Task', backref=backref('job', single_parent=True, cascade='all, delete'), lazy='subquery')
+        'Task', backref=backref('job', single_parent=True), lazy='subquery')
 
 
     def __repr__(self):
@@ -41,12 +41,12 @@ class Job(CRUDModel, Base):  # type: ignore
                 status=self.status.name)
 
     def check_assertions(self):
-        if self.end_at is not None and self.start_at is not None:
-            assert self.end_at >= self.start_at, 'Time of the end must happen after the start!'
-            assert self.end_at > datetime.datetime.utcnow(), 'You are trying to edit time of the job that has already ended'
+        if self.stop_at is not None and self.start_at is not None:
+            assert self.stop_at >= self.start_at, 'Time of the end must happen after the start!'
+            assert self.stop_at > datetime.datetime.utcnow(), 'You are trying to edit time of the job that is already in the past'
         
-        if self.end_at is not None:
-            assert self.start_at is not None, 'If end time of the job is known, start time has to be known too'
+        if self.stop_at is not None:
+            assert self.start_at is not None, 'If stop time of the job is known, start time has to be known too'
 
     @hybrid_property
     def tasks(self):
@@ -67,8 +67,21 @@ class Job(CRUDModel, Base):  # type: ignore
         if task not in self.tasks:
             raise Exception('Task {task} is not assigned to job {job}!'
                                           .format(task=task, job=self))
-
         self.tasks.remove(task)
+        self.save()
+
+    def synchronize_status(self, status: TaskStatus):
+        """ Job status is synchronized on every change of one of its tasks status
+        """
+        for task in self.tasks:
+            if task.status is not status:
+                return
+        if status is TaskStatus.unsynchronized:
+            self.status = JobStatus.unsynchronized
+        if status is TaskStatus.not_running:
+            self.status = JobStatus.not_running
+        if status is TaskStatus.terminated:
+            self.status = JobStatus.terminated
         self.save()
 
     @hybrid_property
@@ -76,8 +89,8 @@ class Job(CRUDModel, Base):  # type: ignore
         return self._start_at
     
     @hybrid_property
-    def end_at(self):
-        return self._end_at
+    def stop_at(self):
+        return self._stop_at
 
     @property
     def as_dict(self):
@@ -88,5 +101,5 @@ class Job(CRUDModel, Base):  # type: ignore
             'userId': self.user_id,
             'status': self.status.name,
             'startAt': DateUtils.try_parse_datetime(self.start_at),
-            'endAt': DateUtils.try_parse_datetime(self.end_at)
+            'stopAt': DateUtils.try_parse_datetime(self.stop_at)
         }

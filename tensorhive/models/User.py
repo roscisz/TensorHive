@@ -44,7 +44,7 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
                                  viewonly=True)
     _reservations = relationship('Reservation', cascade='all,delete')
     _jobs = relationship(
-        'Job', backref=backref('user', single_parent=True, cascade='all, delete-orphan'), lazy='subquery')
+        'Job', backref=backref('user', single_parent=True), lazy='subquery')
 
     min_password_length = 8
 

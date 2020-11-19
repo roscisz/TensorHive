@@ -89,6 +89,18 @@ def test_remove_task_from_job(tables, client, new_job, new_task):
     assert new_task.job == None
     assert len(new_job.tasks) == 0
 
+# GET /jobs/{id}/execute
+def test_execute_job(tables, client, new_job, new_user, new_task):
+    new_user.save()
+    new_job.save()
+    new_task.save()
+    new_job.add_task(new_task)
+
+    resp = client.get(ENDPOINT + '/{}/execute'.format(new_job.id), headers=HEADERS)
+    resp_json = json.loads(resp.data.decode('utf-8'))
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY # spawning tasks unsuccessful beacuse of test environment (synchronization)
+    assert resp_json['not_spawned_list'] == [1] # id of a task that didn't spawn successfully
+
 # POST /jobs/{job_id}/tasks
 def test_create_task(tables, client, new_job):
     new_job.save()
@@ -106,7 +118,8 @@ def test_create_task(tables, client, new_job):
     assert Task.get(int(resp_json['task']['id'])).number_of_params == 2
 
 # DELETE /tasks/{id}
-def test_delete_task(tables, client, new_job):
+def test_delete_task(tables, client, new_job, new_user):
+    new_user.save()
     new_job.save()
     data1 = {'command': 'ENV= python command.py --batch_size 32 --rank=2',
             'hostname' : 'localhost'}
@@ -122,6 +135,7 @@ def test_delete_task(tables, client, new_job):
 
     assert resp.status_code == HTTPStatus.OK
     assert len(Task.all()) == 1
+    assert len(Job.all()) == 1    
     assert len(CommandSegment.all()) == 3 # checks if segments from deleted task are deleted by cascade
 
 # PUT /tasks/{id}
