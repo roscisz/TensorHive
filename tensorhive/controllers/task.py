@@ -3,7 +3,6 @@ from tensorhive.models.CommandSegment import CommandSegment, CommandSegment2Task
 from tensorhive.models.User import User
 from tensorhive.models.Job import Job
 from tensorhive.core import task_nursery
-from tensorhive.utils.DateUtils import DateUtils
 from tensorhive.core.task_nursery import SpawnError, ExitCodeError
 from pssh.exceptions import ConnectionErrorException, AuthenticationException, UnknownHostException
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt_claims
@@ -57,13 +56,16 @@ def synchronize(task_id: TaskId) -> None:
     -----------------------------------------------
     running             => terminated
     unsynchronized      => not_running
+
+    On every state transition job status is synchronized too
     """
     log.debug('Syncing Task {}...'.format(task_id))
     try:
         task = Task.get(task_id)
-        assert task.hostname, 'hostname is empty'
-        assert task.user, 'user does not exist'
-        active_sessions_pids = task_nursery.running(host=task.hostname, user=task.user.username)
+        parent_job = Job.get(task.job_id)
+        assert task.host, 'hostname is empty'
+        assert parent_job.user, 'user does not exist'
+        active_sessions_pids = task_nursery.running(host=task.host, user=parent_job.user.username)
     except NoResultFound:
         # This exception must be handled within try/except block when using Task.get()
         # In other words, methods decorated with @synchronize_task_record must handle this case by themselves!
@@ -76,6 +78,7 @@ def synchronize(task_id: TaskId) -> None:
         log.debug('Task {} status was: {}'.format(task_id, task.status.name))
         task.status = TaskStatus.unsynchronized
         task.save()
+        parent_job.synchronize_status(task.status)
         log.debug('Task {} is now: {}'.format(task_id, task.status.name))
     else:
         log.debug('[BEFORE SYNC] Task {} status was: {}'.format(task_id, task.status.name))
@@ -89,6 +92,7 @@ def synchronize(task_id: TaskId) -> None:
                 log.debug(change_status_msg.format(id=task_id, curr_status=task.status.name))
             task.pid = None
             task.save()
+            parent_job.synchronize_status(task.status)
 
 
 def synchronize_task_record(func: Callable) -> Callable:
@@ -116,7 +120,7 @@ def synchronize_task_record(func: Callable) -> Callable:
 
 
 # Controllers
-# POST /tasks
+# POST jobs/{job_id}/tasks
 @jwt_required
 def create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpStatusCode]:
     try:
@@ -201,41 +205,6 @@ def destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-# GET /tasks/{id}/spawn
-@jwt_required
-def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
-    try:
-        task = Task.get(id)
-        parent_job = Job.get(task.job_id)
-        assert parent_job.user_id == get_jwt_identity(), 'Not an owner'
-    except NoResultFound as e:
-        log.error(e)
-        content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError:
-        content, status = {'msg': GENERAL['unprivileged']}, 403
-    else:
-        content, status = business_spawn(id)
-    finally:
-        return content, status
-
-
-# GET /tasks/{id}/terminate
-@jwt_required
-def terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[Content, HttpStatusCode]:
-    try:
-        task = Task.get(id)
-        parent_job = Job.get(task.job_id)
-        assert get_jwt_identity() == parent_job.user_id or is_admin()
-    except NoResultFound:
-        content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError:
-        content, status = {'msg': GENERAL['unprivileged']}, 403
-    else:
-        content, status = business_terminate(id, gracefully)
-    finally:
-        return content, status
-
-
 # GET /tasks/{id}/log
 @jwt_required
 def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
@@ -277,16 +246,28 @@ def business_get_all(job_id: JobId, sync_all: Optional[bool]) -> Tuple[Content, 
 
 def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpStatusCode]:
     """ Creates new Task db record under the given parent job.
+    
+    Command argument is divided into segments to make editing easier.
+    Main dividing procedure assumptions: 
+    1) Environmental variables are placed first in the command and they contain "=" sign
+        - if_envs,
+        - if_eq_sign
+    2) After that actual command (path) is given and it contains no "=" sign
+        - actual_command
+    3) Following actual command parameters are given and they start by at least one "-" sign
+        - if segment[0] == '-'
+    3a) Parameters may contain value
+    3b) Value is given after "=" sign or after space character
+        - if_parameter_value_expected
 
-    Command is divided into segments to make editing easier.
+    After each cycle new segment is stored if the information about it is complete.
+    If not values are stored till it is complete, and then it is added (e.g. actual_command) 
     """
     try:
         new_task = Task(
             host=task['hostname'],
             command=task['command'])
-        # parent job
         parent_job = Job.query.filter(Job.id == job_id).one()
-        # split command
         command_segments = new_task.command.split()
         if_envs = True
         if_eqsign_found = False
@@ -368,10 +349,8 @@ def business_get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 
 
 # TODO What if task is already running: allow for updating command, hostname, etc.?
-# TODO Allow editing commands by segments
 def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
-    """Updates certain fields of a Task db record, see `allowed_fields`.
-    """
+    """Updates certain fields of a Task db record, including command field."""
     try:
         task = Task.get(id)
         for key, value in new_values.items():
@@ -381,8 +360,8 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
                 setattr(task, key, value)
             elif key.startswith('cmd_segment'):
                 segment = value
-                cmd_segment = CommandSegment.get(2)
                 cmd_segment = CommandSegment.find_by_name(segment['name'])
+                assert cmd_segment is not None, 'Invalid command segment name' 
                 if (segment['mode'] == 'remove'):
                     task.remove_cmd_segment(cmd_segment)
                 elif (segment['mode'] == 'update'):
@@ -408,7 +387,11 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
 
 @synchronize_task_record
 def business_destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
-    """Deletes a Task db record. Requires terminating task manually in advance."""
+    """Deletes a Task db record. Requires terminating task manually in advance.
+    
+    All of the m-n relationship links (task-cmd_segment) are deleted too
+    Have to delete unwanted command segments (no task attached) manually
+    """
     try:
         task = Task.get(id)
         cmd_segments = task.cmd_segments
@@ -463,19 +446,15 @@ def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     """
     try:
         task = Task.get(id)
-
+        parent_job = Job.get(task.job_id)
         assert task.status is not TaskStatus.running, 'task is already running'
         assert task.command, 'command is empty'
-        assert task.hostname, 'hostname is empty'
-        assert task.user, 'user does not exist'
+        assert task.host, 'hostname is empty'
+        assert parent_job.user, 'user does not exist'
 
-        pid = task_nursery.spawn(task.command, task.hostname, task.user.username, name_appendix=str(task.id))
+        pid = task_nursery.spawn(task.command, task.host, parent_job.user.username, name_appendix=str(task.id))
         task.pid = pid
         task.status = TaskStatus.running
-
-        # If task was scheduled to terminate and user just
-        # spawned that task manually, scheduler should still
-        # continue to watch and terminate the task automatically.
         task.save()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
@@ -508,12 +487,13 @@ def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[C
         task = Task.get(id)
         assert task.status is TaskStatus.running, 'only running tasks can be terminated'
         assert task.pid, 'task has no pid assigned'  # It means there's inconsistency
+        parent_job = Job.get(task.job_id)
 
         # gracefully:
         # True -> interrupt (allows output to be flushed into log file)
         # None -> terminate (works almost every time, but losing output that could be produced before closing)
         # False -> kill (similar to above, but success is almost guaranteed)
-        exit_code = task_nursery.terminate(task.pid, task.hostname, task.user.username, gracefully=gracefully)
+        exit_code = task_nursery.terminate(task.pid, task.host, parent_job.user.username, gracefully=gracefully)
 
         if exit_code != 0:
             raise ExitCodeError('operation exit code is not 0')
@@ -524,13 +504,7 @@ def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[C
         # task.pid = None
         # task.status = TaskStatus.terminated
 
-        # Task was scheduled to spawn automatically
-        # but user decided to terminate it manually
-        # scheduler should not spawn the task by itself then
-        if task.spawn_at:
-            # So this task should not be spawned automatically anymore
-            task.spawn_at = None
-            task.save()
+        task.save()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except AssertionError as e:

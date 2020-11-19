@@ -7,7 +7,7 @@ from tensorhive.core.services.Service import Service
 from typing import List, Dict
 from tensorhive.core.utils.decorators import override
 from tensorhive.config import (SSH, MONITORING_SERVICE, PROTECTION_SERVICE, USAGE_LOGGING_SERVICE,
-                               TASK_SCHEDULING_SERVICE)
+                               JOB_SCHEDULING_SERVICE)
 from tensorhive.api.APIServer import APIServer
 from tensorhive.core.utils.StoppableThread import StoppableThread
 from tensorhive.core.utils.exceptions import ConfigurationException
@@ -17,7 +17,7 @@ from tensorhive.core.monitors.CPUMonitor import CPUMonitor
 from tensorhive.core.services.MonitoringService import MonitoringService
 from tensorhive.core.services.ProtectionService import ProtectionService
 from tensorhive.core.services.UsageLoggingService import UsageLoggingService
-from tensorhive.core.services.TaskSchedulingService import TaskSchedulingService
+from tensorhive.core.services.JobSchedulingService import JobSchedulingService
 from tensorhive.core.violation_handlers.ProtectionHandler import ProtectionHandler
 from tensorhive.core.violation_handlers.MessageSendingBehaviour import MessageSendingBehaviour
 from tensorhive.core.violation_handlers.EmailSendingBehaviour import EmailSendingBehaviour
@@ -90,11 +90,11 @@ class TensorHiveManager(metaclass=Singleton):
         if USAGE_LOGGING_SERVICE.ENABLED:
             usage_logging_service = UsageLoggingService(interval=USAGE_LOGGING_SERVICE.UPDATE_INTERVAL)
             services.append(usage_logging_service)
-        if TASK_SCHEDULING_SERVICE:
-            task_scheduling_service = TaskSchedulingService(
-                interval=TASK_SCHEDULING_SERVICE.UPDATE_INTERVAL,
-                stop_attempts_after=TASK_SCHEDULING_SERVICE.STOP_TERMINATION_ATTEMPTS_AFTER)
-            services.append(task_scheduling_service)
+        if JOB_SCHEDULING_SERVICE.ENABLED:
+            job_scheduling_service = JobSchedulingService(
+                interval=JOB_SCHEDULING_SERVICE.UPDATE_INTERVAL,
+                stop_attempts_after=JOB_SCHEDULING_SERVICE.STOP_TERMINATION_ATTEMPTS_AFTER)
+            services.append(job_scheduling_service)
         return services
 
     def configure_services_from_config(self):
