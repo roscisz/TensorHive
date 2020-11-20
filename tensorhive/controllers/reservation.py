@@ -129,8 +129,8 @@ def update(id: ReservationId, newValues: Dict[str, Any]) -> Tuple[Content, HttpS
             setattr(reservation, field_name, new_value)
 
         user = User.get(get_jwt_identity())
-        if not ReservationVerifier.is_reservation_allowed(user, reservation) or not \
-                (is_admin() or __is_reservation_owner(reservation)):
+        if not (is_admin() or __is_reservation_owner(reservation)) or not \
+                ReservationVerifier.is_reservation_allowed(user, reservation):
             raise ForbiddenReservationException()
 
         reservation.save()
