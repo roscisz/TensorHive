@@ -135,3 +135,22 @@ def test_update_schedule_with_invalid_start_and_end_hours(tables, client, active
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert active_schedule.hour_start == datetime.time(8, 0, 0)
     assert active_schedule.hour_end == datetime.time(10, 0, 0)
+
+
+# GET /schedules
+def test_get_list_of_schedules_superuser(tables, client):
+    resp = client.get(ENDPOINT, headers=HEADERS)
+    resp_json = json.loads(resp.data.decode('utf-8'))
+
+    assert resp.status_code == HTTPStatus.OK
+    assert len(resp_json) == 0
+
+    resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps({'hourStart': '8:00', 'hourEnd': '16:00',
+                                                                   'scheduleDays': ['Monday']}))
+    assert resp.status_code == HTTPStatus.CREATED
+
+    resp = client.get(ENDPOINT, headers=HEADERS)
+    resp_json = json.loads(resp.data.decode('utf-8'))
+
+    assert resp.status_code == HTTPStatus.OK
+    assert len(resp_json) == 1

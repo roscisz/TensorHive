@@ -36,16 +36,8 @@ def test_create_schedule_unprivileged(tables, client):
 
 
 # GET /schedules
-def test_get_list_of_schedules(tables, client):
-    resp = client.get(ENDPOINT, headers=HEADERS)
-    resp_json = json.loads(resp.data.decode('utf-8'))
-
-    assert resp.status_code == HTTPStatus.OK
-    assert len(resp_json) == 0
-
-    client.post(ENDPOINT, headers=HEADERS, data=json.dumps({'hourStart': '8:00', 'hourEnd': '16:00',
-                                                            'scheduleDays': ['Monday']}))
-    assert resp.status_code == HTTPStatus.OK
+def test_get_list_of_schedules(tables, client, active_schedule):
+    active_schedule.save()
 
     resp = client.get(ENDPOINT, headers=HEADERS)
     resp_json = json.loads(resp.data.decode('utf-8'))
