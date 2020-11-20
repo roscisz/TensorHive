@@ -80,8 +80,8 @@ def create(reservation: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         )
 
         user = User.get(get_jwt_identity())
-        if ReservationVerifier.is_reservation_allowed(user, new_reservation) \
-                and (__is_admin() or __is_reservation_owner(new_reservation)):
+        if (__is_admin() or __is_reservation_owner(new_reservation)) \
+                and ReservationVerifier.is_reservation_allowed(user, new_reservation):
             new_reservation.save()
             content = {
                 'msg': RESERVATION['create']['success'],
