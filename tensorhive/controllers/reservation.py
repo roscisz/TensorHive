@@ -8,6 +8,7 @@ from tensorhive.models.Reservation import Reservation
 from tensorhive.models.User import User
 from tensorhive.utils.DateUtils import DateUtils
 from stringcase import snakecase
+from tensorhive.exceptions.ForbiddenReservationException import ForbiddenReservationException
 import datetime
 
 log = logging.getLogger(__name__)
@@ -80,7 +81,7 @@ def create(reservation: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         )
 
         user = User.get(get_jwt_identity())
-        if (__is_admin() or __is_reservation_owner(new_reservation)) \
+        if (is_admin() or __is_reservation_owner(new_reservation)) \
                 and ReservationVerifier.is_reservation_allowed(user, new_reservation):
             new_reservation.save()
             content = {
@@ -112,12 +113,14 @@ def update(id: ReservationId, newValues: Dict[str, Any]) -> Tuple[Content, HttpS
     try:
         reservation = Reservation.get(id)
 
-        assert reservation.end > datetime.datetime.utcnow() or __is_admin(), 'reservation already finished'
+        if reservation.end < datetime.datetime.utcnow() and not is_admin():
+            raise ForbiddenReservationException('reservation already finished')
 
-        if reservation.start > datetime.datetime.utcnow() or __is_admin():
+        if reservation.start > datetime.datetime.utcnow() or is_admin():
             allowed_fields.add('start')
 
-        assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
+        if not set(new_values.keys()).issubset(allowed_fields):
+            raise ForbiddenReservationException('invalid field is present')
 
         for field_name, new_value in new_values.items():
             field_name = snakecase(field_name)
@@ -126,16 +129,18 @@ def update(id: ReservationId, newValues: Dict[str, Any]) -> Tuple[Content, HttpS
             setattr(reservation, field_name, new_value)
 
         user = User.get(get_jwt_identity())
-        if ReservationVerifier.is_reservation_allowed(user, reservation) \
-                and __is_admin() or __is_reservation_owner(reservation):
-            reservation.save()
-            content, status = {'msg': RESERVATION['update']['success'], 'reservation': reservation.as_dict()}, 201
-        else:
-            content, status = {'msg': RESERVATION['update']['failure']['forbidden']}, 403
+        if not ReservationVerifier.is_reservation_allowed(user, reservation) or not \
+                (is_admin() or __is_reservation_owner(reservation)):
+            raise ForbiddenReservationException()
+
+        reservation.save()
+        content, status = {'msg': RESERVATION['update']['success'], 'reservation': reservation.as_dict()}, 201
+    except ForbiddenReservationException as fre:
+        content, status = {'msg': RESERVATION['update']['failure']['forbidden'] + str(fre)}, 403
     except NoResultFound:
         content, status = {'msg': RESERVATION['not_found']}, 404
     except AssertionError as e:
-        content, status = {'msg': RESERVATION['update']['failure']['assertions'].format(reason=e)}, 403
+        content, status = {'msg': RESERVATION['update']['failure']['assertions'].format(reason=e)}, 422
     except Exception as e:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error'] + str(e)}, 500
@@ -146,14 +151,11 @@ def update(id: ReservationId, newValues: Dict[str, Any]) -> Tuple[Content, HttpS
 @jwt_required
 def delete(id: ReservationId) -> Tuple[Content, HttpStatusCode]:
     try:
-        # Fetch the reservation
         reservation_to_destroy = Reservation.get(id)
 
-        # Must be privileged
         assert (reservation_to_destroy.start > datetime.datetime.utcnow() and __is_reservation_owner(
-            reservation_to_destroy)) or __is_admin(), GENERAL['unprivileged']
+            reservation_to_destroy)) or is_admin(), GENERAL['unprivileged']
 
-        # Destroy
         reservation_to_destroy.destroy()
     except AssertionError as error_message:
         content, status = {'msg': str(error_message)}, 403
@@ -168,9 +170,9 @@ def delete(id: ReservationId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-def __is_admin() -> bool:
-    return 'admin' in get_jwt_claims()['roles']
-
-
 def __is_reservation_owner(reservation: Reservation) -> bool:
     return reservation.user_id == get_jwt_identity()
+
+
+def is_admin() -> bool:
+    return 'admin' in get_jwt_claims()['roles']
