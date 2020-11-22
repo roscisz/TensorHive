@@ -250,9 +250,9 @@ def business_get_all(job_id: JobId, sync_all: Optional[bool]) -> Tuple[Content, 
 
 def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpStatusCode]:
     """ Creates new Task db record under the given parent job.
-    
+
     Command argument is divided into segments to make editing easier.
-    Main dividing procedure assumptions: 
+    Main dividing procedure assumptions:
     1) Environmental variables are placed first in the command and they contain "=" sign
         - if_envs,
         - if_eq_sign
@@ -303,7 +303,7 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
 
             if if_parameter_value_expected is False:
                 new_segment = CommandSegment.query.filter(CommandSegment.segment_type == segment_type,
-                                                            CommandSegment.name == splitted_segment[0]).first()
+                                                          CommandSegment.name == splitted_segment[0]).first()
                 if (new_segment is None):
                     new_segment = CommandSegment(
                         name=splitted_segment[0],
@@ -311,7 +311,7 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
                 new_task.add_cmd_segment(new_segment, splitted_segment[1])
 
         new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.actual_command,
-                                                    CommandSegment.name == '').first()
+                                                  CommandSegment.name == '').first()
         if (new_segment is None):
             new_segment = CommandSegment(
                 name='',
@@ -374,13 +374,13 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
             elif key.startswith('cmd_segment'):
                 segment = value
                 cmd_segment = CommandSegment.find_by_name(segment['name'])
-                assert cmd_segment is not None, 'Invalid command segment name' 
+                assert cmd_segment is not None, 'Invalid command segment name'
                 if (segment['mode'] == 'remove'):
                     task.remove_cmd_segment(cmd_segment)
                 elif (segment['mode'] == 'update'):
                     link = task.get_cmd_segment_link(cmd_segment)
                     setattr(link, '_value', segment['value'])
-        task.update_command()        
+        task.update_command()
         task.save()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
@@ -401,7 +401,7 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
 @synchronize_task_record
 def business_destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     """Deletes a Task db record. Requires terminating task manually in advance.
-    
+
     All of the m-n relationship links (task-cmd_segment) are deleted too
     Have to delete unwanted command segments (no task attached) manually
     """

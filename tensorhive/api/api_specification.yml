@@ -1933,7 +1933,7 @@ paths:
                 type: string
                 example: {{RESPONSES['job']['execute']['success']}}
               job:
-                $ref: '#/definitions/JobToDisplay'
+                $ref: '#/components/schemas/JobToDisplay'
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
           schema:
@@ -2014,7 +2014,7 @@ paths:
                 type: string
                 example: {{RESPONSES['job']['stop']['success']}}
               job:
-                $ref: '#/definitions/JobToDisplay'
+                $ref: '#/components/schemas/JobToDisplay'
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
           schema:
