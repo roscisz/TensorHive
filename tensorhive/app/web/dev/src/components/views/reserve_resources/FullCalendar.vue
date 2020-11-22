@@ -296,7 +296,11 @@ export default {
           restrictionEvent.isGlobal = restriction.isGlobal
           if (!restriction.isGlobal) restrictionEvent.resourceId = restriction.resources[j].id
           this.restrictionEvents.push(restrictionEvent)
-          this.calendar.fullCalendar('renderEvent', restrictionEvent)
+
+          if (this.selectedResources.some(r => r.uuid === restrictionEvent.resourceId) ||
+          restrictionEvent.isGlobal) {
+            this.calendar.fullCalendar('renderEvent', restrictionEvent)
+          }
         }
       }
     },
