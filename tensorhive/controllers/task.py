@@ -39,7 +39,6 @@ TaskId = int
 JobId = int
 
 
-# TODO May want to move to utils
 def is_admin():
     claims = get_jwt_claims()
     return 'admin' in claims['roles']

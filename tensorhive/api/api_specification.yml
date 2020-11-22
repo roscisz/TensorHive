@@ -1245,7 +1245,7 @@ paths:
         - restrictions
       summary: Apply restriction to all resources with given hostname
       operationId: tensorhive.controllers.restriction.apply_to_resources_by_hostname
-        parameters:
+      parameters:
         - description: Restriction ID
           in: path
           name: restriction_id

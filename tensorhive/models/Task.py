@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Enum, DateTime
 from tensorhive.database import Base
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, backref
 from tensorhive.models.CRUDModel import CRUDModel
 from tensorhive.models.CommandSegment import SegmentType, CommandSegment, CommandSegment2Task
