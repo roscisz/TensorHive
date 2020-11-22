@@ -7,7 +7,8 @@ from tensorhive.config import API
 from tensorhive.models.Job import Job, JobStatus
 from tensorhive.models.Task import Task
 from tensorhive.utils.DateUtils import DateUtils
-from tensorhive.controllers.task import business_spawn
+from tensorhive.controllers.task import business_spawn, business_terminate
+from tensorhive.exceptions import InvalidRequestException
 
 log = logging.getLogger(__name__)
 JOB = API.RESPONSES['job']
@@ -21,12 +22,10 @@ TaskId = int
 JobId = int
 
 
-# TODO May want to move to utils
 def is_admin():
     claims = get_jwt_claims()
     return 'admin' in claims['roles']
 
-# TODO Should add synchronization, preferably on task status changes
 
 # GET /jobs/{id}
 @jwt_required
