@@ -265,7 +265,7 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
         - if_parameter_value_expected
 
     After each cycle new segment is stored if the information about it is complete.
-    If not values are stored till it is complete, and then it is added (e.g. actual_command) 
+    If not values are stored till it is complete, and then it is added (e.g. actual_command)
     """
     try:
         new_task = Task(

@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Enum, ForeignKey
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from tensorhive.database import Base, db_session
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -17,7 +18,7 @@ class SegmentType(enum.Enum):
 
 class CommandSegment(CRUDModel, Base):  # type: ignore
     __tablename__ = 'command_segments'
-    
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), nullable=False)
     _segment_type = Column(Enum(SegmentType), default=SegmentType.env_variable, nullable=False)
@@ -25,10 +26,9 @@ class CommandSegment(CRUDModel, Base):  # type: ignore
 
     def __repr__(self):
         return '<Segment id={id}, name={name}, type={type}>'.format(
-                id=self.id,
-                name=self.name,
-                type=self.segment_type
-                )                
+            id=self.id,
+            name=self.name,
+            type=self.segment_type)
 
     def check_assertions(self):
         pass
@@ -57,13 +57,14 @@ class CommandSegment(CRUDModel, Base):  # type: ignore
         else:
             return result
 
+
 class CommandSegment2Task(Base):  # type: ignore
     __tablename__ = 'cmd_segment2task'
 
     task_id = Column(Integer, ForeignKey('tasks.id', ondelete='CASCADE'), primary_key=True)
     cmd_segment_id = Column(Integer, ForeignKey('command_segments.id', ondelete='CASCADE'), primary_key=True)
     _value = Column(String(100))
-    _index = Column(Integer) # positive - parameters; negative - env variables; 0 - actual command
+    _index = Column(Integer)  # positive - parameters; negative - env variables; 0 - actual command
 
     @hybrid_property
     def index(self):

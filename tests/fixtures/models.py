@@ -1,5 +1,4 @@
 import pytest
-import datetime
 from tensorhive.models.Reservation import Reservation
 from tensorhive.models.Restriction import Restriction
 from tensorhive.models.RestrictionSchedule import RestrictionSchedule
@@ -7,7 +6,6 @@ from tensorhive.models.User import User
 from tensorhive.models.Group import Group
 from tensorhive.models.Resource import Resource
 from tensorhive.models.Role import Role
-from datetime import timedelta
 from tensorhive.models.Job import Job
 from tensorhive.models.Task import Task
 from datetime import datetime, timedelta
@@ -123,16 +121,19 @@ def inactive_schedule():
     schedule.save()
     return schedule
 
+
 @pytest.fixture(scope='function')
 def new_job():
     return Job(name='job_name',
-                description='testDescription',
-                user_id=1)
+               description='testDescription',
+               user_id=1)
+
 
 @pytest.fixture(scope='function')
 def new_task():
     return Task(command='python command.py --batch_size 32',
                 host='localhost')
+
 
 @pytest.fixture(scope='function')
 def new_task_2():

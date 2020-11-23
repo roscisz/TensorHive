@@ -126,7 +126,6 @@ class Task(CRUDModel, Base):  # type: ignore
                     setattr(link, '_index', link.index - 1)
         self.save()
 
-
     @property
     def as_dict(self):
         return {
@@ -136,4 +135,4 @@ class Task(CRUDModel, Base):  # type: ignore
             'pid': self.pid,
             'status': self.status.name,
             'command': self.command
-         }
+            }

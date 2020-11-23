@@ -37,7 +37,7 @@ def get_by_id(id: JobId) -> Tuple[Content, HttpStatusCode]:
     except NoResultFound as e:
         log.warning(e)
         content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
-    except AssertionError as e:
+    except AssertionError:
         content, status = {'msg': GENERAL['unpriviliged']}, HTTPStatus.FORBIDDEN.value
     except Exception as e:
         log.critical(e)
@@ -64,7 +64,7 @@ def get_all(userId: Optional[int]) -> Tuple[Content, HttpStatusCode]:
             jobs = Job.all()
     except NoResultFound:
         content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
-    except AssertionError as e:
+    except AssertionError:
         content, status = {'msg': GENERAL['unpriviliged']}, HTTPStatus.FORBIDDEN.value
     except Exception as e:
         log.critical(e)
@@ -144,8 +144,8 @@ def update(id: JobId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCod
 # DELETE /jobs/{id}
 @jwt_required
 def delete(id: JobId) -> Tuple[Content, HttpStatusCode]:
-    """Deletes a Job db record. 
-    
+    """Deletes a Job db record.
+
     If running, requires stopping job manually in advance."""
     try:
         job = Job.get(id)
@@ -158,7 +158,7 @@ def delete(id: JobId) -> Tuple[Content, HttpStatusCode]:
     except NoResultFound:
         content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
     except Exception as e:
-        log.critical(e)        
+        log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
         content, status = {'msg': JOB['delete']['success']}, HTTPStatus.OK.value
@@ -276,8 +276,8 @@ def business_execute(id: JobId) -> Tuple[Content, HttpStatusCode]:
             content, status = {'msg': JOB['execute']['failure']['state'].format(reason=e)}, \
                 HTTPStatus.CONFLICT.value
         else:
-            content, status = {'msg': JOB['execute']['failure']['tasks'].format(reason=e), 'not_spawned_list': not_spawned_tasks}, \
-                HTTPStatus.UNPROCESSABLE_ENTITY.value
+            content, status = {'msg': JOB['execute']['failure']['tasks'].format(reason=e), \
+                'not_spawned_list': not_spawned_tasks}, HTTPStatus.UNPROCESSABLE_ENTITY.value
     except Exception as e:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
@@ -295,7 +295,7 @@ def stop(id: JobId, gracefully: Optional[bool] = True) -> Tuple[Content, HttpSta
         job = Job.get(id)
         assert get_jwt_identity() == job.user_id or is_admin()
         assert job.status is JobStatus.running, 'Only running jobs can be stopped'
-    except NoResultFound as e:
+    except NoResultFound:
         content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
     except AssertionError as e:
         if 'Only running jobs can be stopped' in e.args[0]:

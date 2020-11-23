@@ -58,7 +58,7 @@ class JobSchedulingService(Service):
 
     def stop_scheduled(self, now: datetime):
         """Triggers `stop` on database records that should not be running.
-        After that `terminate` is trigerred on all of task database records in 
+        After that `terminate` is trigerred on all of task database records in
         relationship with the job.
 
         It will stop trying after `self.stop_attempts_after` because it means that one or more

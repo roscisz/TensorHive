@@ -11,11 +11,13 @@ import enum
 import logging
 log = logging.getLogger(__name__)
 
+
 class JobStatus(enum.Enum):
     not_running = 1
     running = 2
     terminated = 3
     unsynchronized = 4
+
 
 class Job(CRUDModel, Base):  # type: ignore
     __tablename__ = 'jobs'
@@ -31,20 +33,19 @@ class Job(CRUDModel, Base):  # type: ignore
     _tasks = relationship(
         'Task', backref=backref('job', single_parent=True), lazy='subquery')
 
-
     def __repr__(self):
         return '<Job id={id}, name={name}, description={description}, user={user_id}, status={status}>'.format(
-                id=self.id,
-                name=self.name,
-                description=self.description,
-                user_id=self.user_id,
-                status=self.status.name)
+            id=self.id,
+            name=self.name,
+            description=self.description,
+            user_id=self.user_id,
+            status=self.status.name)
 
     def check_assertions(self):
         if self.stop_at is not None and self.start_at is not None:
             assert self.stop_at >= self.start_at, 'Time of the end must happen after the start!'
-            assert self.stop_at > datetime.datetime.utcnow(), 'You are trying to edit time of the job that is already in the past'
-        
+            assert self.stop_at > datetime.datetime.utcnow(), 'Trying to edit time of the job from the past'
+
         if self.stop_at is not None:
             assert self.start_at is not None, 'If stop time of the job is known, start time has to be known too'
 
@@ -59,14 +60,14 @@ class Job(CRUDModel, Base):  # type: ignore
     def add_task(self, task: Task):
         if task in self.tasks:
             raise Exception('Task {task} is already assigned to job {job}!'
-                                          .format(task=task, job=self))
+                            .format(task=task, job=self))
         self.tasks.append(task)
         self.save()
 
     def remove_task(self, task: Task):
         if task not in self.tasks:
             raise Exception('Task {task} is not assigned to job {job}!'
-                                          .format(task=task, job=self))
+                            .format(task=task, job=self))
         self.tasks.remove(task)
         self.save()
 
@@ -87,7 +88,7 @@ class Job(CRUDModel, Base):  # type: ignore
     @hybrid_property
     def start_at(self):
         return self._start_at
-    
+
     @hybrid_property
     def stop_at(self):
         return self._stop_at
