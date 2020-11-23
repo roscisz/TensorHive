@@ -69,6 +69,7 @@ def test_get_tasks_from_job(tables, client, new_job, new_task):
     assert resp.status_code == HTTPStatus.OK
     assert len(resp_json['tasks']) == 1
 
+
 # PUT /jobs/{id}/tasks/{id}
 def test_add_task_to_job(tables, client, new_job, new_task):
     new_job.save()
@@ -79,6 +80,7 @@ def test_add_task_to_job(tables, client, new_job, new_task):
     assert resp.status_code == HTTPStatus.OK
     assert new_job == new_task.job
     assert new_task in new_job.tasks
+
 
 # DELETE /jobs/{id}/tasks/{id}
 def test_remove_task_from_job(tables, client, new_job, new_task):
@@ -92,6 +94,7 @@ def test_remove_task_from_job(tables, client, new_job, new_task):
     assert new_task.job is None
     assert len(new_job.tasks) == 0
 
+
 # GET /jobs/{id}/execute
 def test_execute_job(tables, client, new_job, new_user, new_task):
     new_user.save()
@@ -103,6 +106,7 @@ def test_execute_job(tables, client, new_job, new_user, new_task):
     resp_json = json.loads(resp.data.decode('utf-8'))
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY  # spawning unsuccessful because of test env (sync)
     assert resp_json['not_spawned_list'] == [1]  # id of a task that didn't spawn successfully
+
 
 # POST /jobs/{job_id}/tasks
 def test_create_task(tables, client, new_job):
@@ -119,6 +123,7 @@ def test_create_task(tables, client, new_job):
     assert resp_json['task']['jobId'] == new_job.id
     assert len(new_job.tasks) == 1
     assert Task.get(int(resp_json['task']['id'])).number_of_params == 2
+
 
 # DELETE /tasks/{id}
 def test_delete_task(tables, client, new_job, new_user):
@@ -141,16 +146,16 @@ def test_delete_task(tables, client, new_job, new_user):
     assert len(Job.all()) == 1
     assert len(CommandSegment.all()) == 3  # checks if segments from deleted task are deleted by cascade
 
+
 # PUT /tasks/{id}
 def test_update_task(tables, client, new_job, new_task):
     new_job.save()
     data_to_update = {'hostname': 'remotehost',
-            'cmd_segment_1': {'name': '--batch_size',
-                              'mode': 'remove'},
-            'cmd_segment_2': {'name': '--rank',
-                              'mode': 'update',
-                              'value': '3'},                
-    }
+                      'cmd_segment_1': {'name': '--batch_size',
+                                        'mode': 'remove'},
+                      'cmd_segment_2': {'name': '--rank',
+                                        'mode': 'update',
+                                        'value': '3'}}
 
     data_to_post = {'command': 'ENV= python command.py --batch_size 32 --rank=1',
                     'hostname': 'localhost'}
@@ -158,7 +163,7 @@ def test_update_task(tables, client, new_job, new_task):
     resp = client.post(ENDPOINT + '/{}/tasks'.format(new_job.id), headers=HEADERS, data=json.dumps(data_to_post))
     resp_json = json.loads(resp.data.decode('utf-8'))
 
-    resp = client.put(BASE_URI + '/tasks/{}'.format(resp_json['task']['id']),\
+    resp = client.put(BASE_URI + '/tasks/{}'.format(resp_json['task']['id']),
                       headers=HEADERS, data=json.dumps(data_to_update))
     resp_json = json.loads(resp.data.decode('utf-8'))
 

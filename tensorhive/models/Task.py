@@ -135,4 +135,4 @@ class Task(CRUDModel, Base):  # type: ignore
             'pid': self.pid,
             'status': self.status.name,
             'command': self.command
-            }
+        }

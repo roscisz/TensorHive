@@ -276,8 +276,8 @@ def business_execute(id: JobId) -> Tuple[Content, HttpStatusCode]:
             content, status = {'msg': JOB['execute']['failure']['state'].format(reason=e)}, \
                 HTTPStatus.CONFLICT.value
         else:
-            content, status = {'msg': JOB['execute']['failure']['tasks'].format(reason=e), \
-                'not_spawned_list': not_spawned_tasks}, HTTPStatus.UNPROCESSABLE_ENTITY.value
+            content, status = {'msg': JOB['execute']['failure']['tasks'].format(reason=e),
+                               'not_spawned_list': not_spawned_tasks}, HTTPStatus.UNPROCESSABLE_ENTITY.value
     except Exception as e:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
