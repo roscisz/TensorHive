@@ -610,13 +610,7 @@ if __name__ == '__main__':
         '''))
         action = input('> ')
         if action == '1':
-            now = datetime.utcnow()
-            if input('Want schedule spawn: now+20s, terminate: now+40s? (y/n) > ') == 'y':
-                offset = timedelta(seconds=20)
-                content, status = business_create(
-                    dict(userId=1, hostname=host, command=cmd, spawnAt=now + offset, terminateAt=now + 2 * offset))
-            else:
-                content, status = business_create(dict(userId=1, hostname=host, command=cmd))
+            content, status = business_create(dict(hostname=host, command=cmd), job_id=1)
             print(content, status)
             print()
             print('Created with ID: ', content.get('task').get('id'))
@@ -677,7 +671,7 @@ if __name__ == '__main__':
             user = User(password='`123`123', email=random_email, username=random_username)
             user.save()
             for _ in range(3):
-                content, status = business_create(dict(userId=user.id, hostname=host, command=cmd))
+                content, status = business_create(dict(hostname=host, command=cmd), job_id=1)
                 print(content, status)
             print(user)
         elif action == '9':

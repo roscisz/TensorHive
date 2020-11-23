@@ -8,7 +8,7 @@ from tensorhive.models.Job import Job, JobStatus
 from tensorhive.models.Task import Task
 from tensorhive.utils.DateUtils import DateUtils
 from tensorhive.controllers.task import business_spawn, business_terminate
-from tensorhive.exceptions import InvalidRequestException
+from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 
 log = logging.getLogger(__name__)
 JOB = API.RESPONSES['job']
