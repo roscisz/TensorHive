@@ -99,7 +99,9 @@ export default {
             }
             self.reservationId = -1
           }
-          callback(response.data)
+          var reservationsEvents = response.data.filter(
+            r => r.userId === self.$store.state.id || r.isCancelled === 'False')
+          callback(reservationsEvents)
         })
         .catch(error => {
           this.$emit('handleError', error)
