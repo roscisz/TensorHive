@@ -1694,7 +1694,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1702,7 +1702,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
         500:
@@ -1743,7 +1743,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1751,7 +1751,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         409:
           description: {{RESPONSES['job']['create']['failure']['duplicate']}}
         422:
@@ -1789,7 +1789,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1797,7 +1797,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['job']['not_found']}}
           content:
@@ -1851,7 +1851,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1859,7 +1859,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['job']['not_found']}}
           content:
@@ -1910,7 +1910,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1918,7 +1918,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['job']['not_found']}}
           content:
@@ -1970,7 +1970,7 @@ paths:
                   job:
                     $ref: '#/components/schemas/JobToDisplay'
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -1978,7 +1978,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['job']['not_found']}}
           content:
@@ -2058,7 +2058,7 @@ paths:
                   job:
                     $ref: '#/components/schemas/JobToDisplay'
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -2066,7 +2066,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         404:
           description: {{RESPONSES['job']['not_found']}}
           content:
@@ -2149,7 +2149,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -2157,7 +2157,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
       security:
@@ -2201,7 +2201,7 @@ paths:
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
-          description: {{RESPONSES['general']['unpriviliged']}}
+          description: {{RESPONSES['general']['unprivileged']}}
           content:
             application/json:
               schema:
@@ -2209,7 +2209,7 @@ paths:
                 properties:
                   msg:
                     type: string
-                    example: {{RESPONSES['general']['unpriviliged']}}
+                    example: {{RESPONSES['general']['unprivileged']}}
         409:
           description: {{RESPONSES['task']['create']['failure']['duplicate']}}
         422:
