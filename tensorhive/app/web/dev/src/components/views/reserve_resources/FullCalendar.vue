@@ -59,7 +59,8 @@ export default {
         description: '',
         resourceId: '',
         start: new Date(),
-        end: new Date()
+        end: new Date(),
+        isCancelled: false
       },
       reservationId: -1,
       startDate: null,
@@ -359,6 +360,9 @@ export default {
           $(element).css('color', 'rgba(0, 0, 0, 0)')
         }
         if (!event.allDay && event.groupId !== 'restriction') {
+          if (event.isCancelled === 'True') {
+            element.find('.fc-title').append('<br/>' + ('(cancelled)').big().italics())
+          }
           api
             .request('get', '/users/' + event.userId, self.$store.state.accessToken)
             .then(response => {
@@ -409,9 +413,13 @@ export default {
             $(element).css('height', 17 * 2)
           }
           if (event.groupId !== 'restriction') {
-            var c = self.setColor(resourceIndex, resourceNodeName)
-            if (event.userId === self.$store.state.id) {
-              c = '#15C02C' // user specified color: green
+            var c
+            if (event.isCancelled === 'True') c = '#B5B7BA' // light gray
+            else {
+              c = self.setColor(resourceIndex, resourceNodeName)
+              if (event.userId === self.$store.state.id) {
+                c = '#15C02C' // user specified color: green
+              }
             }
             if (event.color !== c) {
               event.color = c
