@@ -124,7 +124,7 @@ def synchronize_task_record(func: Callable) -> Callable:
 
 
 # Controllers
-# POST jobs/{job_id}/tasks
+# POST /jobs/{job_id}/tasks
 @jwt_required
 def create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpStatusCode]:
     try:
@@ -158,12 +158,13 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-#  GET jobs/{job_id}/tasks?syncAll=1
+#  GET /tasks?job_id=1?syncAll=1
 @jwt_required
-def get_all(job_id: JobId, syncAll: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
+def get_all(job_id: Optional[JobId], syncAll: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
     sync_all = syncAll
     try:
-        job = Job.query.filter(Job.id == job_id).one()
+        if job_id is not None:
+            job = Job.query.filter(Job.id == job_id).one()
         assert get_jwt_identity() == job.user_id or is_admin()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
@@ -229,14 +230,18 @@ def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
 # Business logic
 
 
-def business_get_all(job_id: JobId, sync_all: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
-    """Fetches all Task records within specific job.
+def business_get_all(job_id: Optional[JobId], sync_all: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
+    """Fetches all Task records or those within specific job.
     Allows for synchronizing state of each Task out-of-the-box.
 
     In typical scenario API client would want to get all records without sync and
     then run sync each records individually.
     """
-    tasks = Task.query.filter(Task.job_id == job_id).all()
+
+    if job_id is not None:
+        tasks = Task.query.filter(Task.job_id == job_id).all()
+    else:
+        tasks = Task.all()
 
     # Wanted to decouple syncing from dict conversion with 2 oneliners (using list comprehension),
     # but this code is O(n) instead of O(2n)
