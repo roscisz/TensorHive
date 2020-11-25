@@ -13,6 +13,7 @@ from tensorhive.models.Restriction import Restriction
 from tensorhive.models.RestrictionSchedule import RestrictionSchedule
 from tensorhive.models.User import User
 from tensorhive.utils.DateUtils import DateUtils
+from stringcase import snakecase
 
 log = logging.getLogger(__name__)
 RESTRICTION = API.RESPONSES['restriction']
@@ -99,9 +100,9 @@ def create(restriction: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     try:
         new_restriction = Restriction(
             name=restriction.get('name'),
-            starts_at=restriction['start'],
+            starts_at=restriction['startsAt'],
             is_global=restriction['isGlobal'],
-            ends_at=DateUtils.try_parse_string(restriction.get('end'))
+            ends_at=DateUtils.try_parse_string(restriction.get('endsAt'))
         )
         new_restriction.save()
     except AssertionError as e:
@@ -120,25 +121,16 @@ def create(restriction: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-def to_db_column() -> Dict[str, str]:
-    return {
-        'name': 'name',
-        'start': 'starts_at',
-        'end': 'ends_at',
-        'isGlobal': 'is_global'
-    }
-
-
 @admin_required
 def update(id: RestrictionId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     new_values = newValues
-    allowed_fields = {'name', 'start', 'end', 'isGlobal'}
+    allowed_fields = {'name', 'startsAt', 'endsAt', 'isGlobal'}
     try:
         assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
         restriction = Restriction.get(id)
 
         for field_name, new_value in new_values.items():
-            field_name = to_db_column().get(field_name)
+            field_name = snakecase(field_name)
             assert (field_name is not None) and hasattr(restriction, field_name), \
                 'restriction has no {} field'.format(field_name)
             setattr(restriction, field_name, new_value)

@@ -32,6 +32,7 @@ class Restriction(CRUDModel, Base):  # type: ignore
     """
     __tablename__ = 'restrictions'
     __table_args__ = {'sqlite_autoincrement': True}
+    __public__ = ['id', 'name', 'created_at', 'starts_at', 'ends_at', 'is_global']
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50))
@@ -206,25 +207,18 @@ class Restriction(CRUDModel, Base):  # type: ignore
         now = datetime.datetime.utcnow()
         return self.ends_at is not None and self.ends_at <= now
 
-    def as_dict(self, include_groups=False, include_users=False, include_resources=False):
-        restriction = {
-            'id': self.id,
-            'name': self.name,
-            'createdAt': DateUtils.stringify_datetime(self.created_at),
-            'startsAt': DateUtils.stringify_datetime(self.starts_at),
-            'endsAt': DateUtils.try_stringify_datetime(self.ends_at),
-            'isGlobal': self.is_global,
-            'schedules': [schedule.as_dict for schedule in self.schedules]
-        }
+    def as_dict(self, include_groups=False, include_users=False, include_resources=False, include_private=False):
+        ret = super(Restriction, self).as_dict(include_private=include_private)
+        ret['schedules'] = [schedule.as_dict() for schedule in self.schedules]
+
         if include_groups:
-            restriction['groups'] = [group.as_dict for group in self.groups]
+            ret['groups'] = [group.as_dict(include_users=False) for group in self.groups]
         if include_users:
-            # using as_dict_shallow as we do not want to include user's groups here, as they are insignificant
-            # considering the scope of the restriction
-            restriction['users'] = [user.as_dict_shallow for user in self.users]
+            # do not include user's groups, as they are insignificant considering the scope of the restriction
+            ret['users'] = [user.as_dict(include_groups=False) for user in self.users]
         if include_resources:
-            restriction['resources'] = [resource.as_dict for resource in self.resources]
-        return restriction
+            ret['resources'] = [resource.as_dict() for resource in self.resources]
+        return ret
 
 
 class Restriction2Assignee(Base):  # type: ignore

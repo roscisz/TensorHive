@@ -21,7 +21,7 @@ ResourceUUID = int
 def get() -> Tuple[List[Any], HttpStatusCode]:
     get_infrastructure()  # Save new GPUs in database
     return [
-        resource.as_dict for resource in Resource.all()
+        resource.as_dict() for resource in Resource.all()
     ], HTTPStatus.OK.value
 
 
@@ -37,6 +37,6 @@ def get_by_id(uuid: ResourceUUID) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
-        content, status = {'msg': RESOURCE['get']['success'], 'resource': resource.as_dict}, HTTPStatus.OK.value
+        content, status = {'msg': RESOURCE['get']['success'], 'resource': resource.as_dict()}, HTTPStatus.OK.value
     finally:
         return content, status

@@ -14,26 +14,26 @@ def test_interfering_reservation_cannot_be_saved(tables, new_reservation, new_re
 
     with pytest.raises(AssertionError):
         # | A    A |
-        new_reservation_2.starts_at = new_reservation.starts_at + offset
-        new_reservation_2.ends_at = new_reservation.ends_at - offset
+        new_reservation_2.start = new_reservation.start + offset
+        new_reservation_2.end = new_reservation.end - offset
         new_reservation_2.save()
 
     with pytest.raises(AssertionError):
         # A |     A |
-        new_reservation_2.starts_at = new_reservation.starts_at - offset
-        new_reservation_2.ends_at = new_reservation.ends_at - offset
+        new_reservation_2.start = new_reservation.start - offset
+        new_reservation_2.end = new_reservation.end - offset
         new_reservation_2.save()
 
     with pytest.raises(AssertionError):
         # | A     | A
-        new_reservation_2.starts_at = new_reservation.starts_at + offset
-        new_reservation_2.ends_at = new_reservation.ends_at + offset
+        new_reservation_2.start = new_reservation.start + offset
+        new_reservation_2.end = new_reservation.end + offset
         new_reservation_2.save()
 
     with pytest.raises(AssertionError):
         # A |      | A
-        new_reservation_2.starts_at = new_reservation.starts_at - offset
-        new_reservation_2.ends_at = new_reservation.ends_at + offset
+        new_reservation_2.start = new_reservation.start - offset
+        new_reservation_2.end = new_reservation.end + offset
         new_reservation_2.save()
 
 
@@ -44,23 +44,23 @@ def test_cancelled_reservation_does_not_cause_interference_with_others(tables, n
     offset = timedelta(minutes=5)
 
     # | A    A |
-    new_reservation_2.starts_at = new_reservation.starts_at + offset
-    new_reservation_2.ends_at = new_reservation.ends_at - offset
+    new_reservation_2.start = new_reservation.start + offset
+    new_reservation_2.end = new_reservation.end - offset
     new_reservation_2.save()
 
     # A |     A |
-    new_reservation_2.starts_at = new_reservation.starts_at - offset
-    new_reservation_2.ends_at = new_reservation.ends_at - offset
+    new_reservation_2.start = new_reservation.start - offset
+    new_reservation_2.end = new_reservation.end - offset
     new_reservation_2.save()
 
     # | A     | A
-    new_reservation_2.starts_at = new_reservation.starts_at + offset
-    new_reservation_2.ends_at = new_reservation.ends_at + offset
+    new_reservation_2.start = new_reservation.start + offset
+    new_reservation_2.end = new_reservation.end + offset
     new_reservation_2.save()
 
     # A |      | A
-    new_reservation_2.starts_at = new_reservation.starts_at - offset
-    new_reservation_2.ends_at = new_reservation.ends_at + offset
+    new_reservation_2.start = new_reservation.start - offset
+    new_reservation_2.end = new_reservation.end + offset
     new_reservation_2.save()
 
 
@@ -77,15 +77,15 @@ def test_string_time_format_conversion(tables, new_reservation, faker):
     invalid_format = '%Y_%m_%dT%H:%M:%S.%fZ'
     starts_at, ends_at = cast_dt_to_str(invalid_format)
     with pytest.raises(ValueError):
-        new_reservation.starts_at = starts_at
-        new_reservation.ends_at = ends_at
+        new_reservation.start = starts_at
+        new_reservation.end = ends_at
         new_reservation.save()
 
     # Test valid format
     valid_format = '%Y-%m-%dT%H:%M:%S.%fZ'
     starts_at, ends_at = cast_dt_to_str(valid_format)
-    new_reservation.starts_at = starts_at
-    new_reservation.ends_at = ends_at
+    new_reservation.start = starts_at
+    new_reservation.end = ends_at
     new_reservation.save()
 
 
@@ -93,26 +93,26 @@ def test_string_time_format_conversion(tables, new_reservation, faker):
 def test_invalid_reservation_time_range(tables, new_reservation, faker):
     with pytest.raises(AssertionError):
         # End before start
-        new_reservation.starts_at = faker.future_datetime(end_date='+1d')
-        new_reservation.ends_at = faker.past_datetime(start_date='-1d')
+        new_reservation.start = faker.future_datetime(end_date='+1d')
+        new_reservation.end = faker.past_datetime(start_date='-1d')
         new_reservation.save()
 
     with pytest.raises(AssertionError):
         # Duration too short (30 min at least required)
-        new_reservation.starts_at = faker.future_datetime()
-        new_reservation.ends_at = new_reservation.starts_at + timedelta(minutes=29, seconds=59)
+        new_reservation.start = faker.future_datetime()
+        new_reservation.end = new_reservation.start + timedelta(minutes=29, seconds=59)
         new_reservation.save()
 
     with pytest.raises(AssertionError):
         # Duration too long (2 days at last)
-        new_reservation.starts_at = faker.future_datetime()
-        new_reservation.ends_at = new_reservation.starts_at + timedelta(days=8, seconds=1)
+        new_reservation.start = faker.future_datetime()
+        new_reservation.end = new_reservation.start + timedelta(days=8, seconds=1)
         new_reservation.save()
 
 
 def test_current_events_will_only_return_non_cancelled_reservations(tables, new_reservation, new_reservation_2):
-    new_reservation.starts_at = datetime.utcnow() - timedelta(minutes=10)
-    new_reservation.ends_at = datetime.utcnow() + timedelta(minutes=60)
+    new_reservation.start = datetime.utcnow() - timedelta(minutes=10)
+    new_reservation.end = datetime.utcnow() + timedelta(minutes=60)
     new_reservation.save()
     assert new_reservation in Reservation.current_events()
 
