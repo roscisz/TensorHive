@@ -234,7 +234,14 @@
             <td>{{ props.item.username }}</td>
             <td>{{ props.item.email }}</td>
             <td>{{ prettyDate(props.item.createdAt) }}</td>
-            <td>{{ props.item.role }}</td>
+            <td>
+              <v-tooltip bottom :disabled="getUserGroups(props.item.id).length===0">
+                <template v-slot:activator="{ on, attrs }">
+                  <span v-bind="attrs" v-on="on">{{ getUserGroups(props.item.id).length }}</span>
+                </template>
+                <span class="white-space">{{ printNames(getUserGroups(props.item.id)) }}</span>
+              </v-tooltip>
+            </td>
             <td>
               <v-icon
                 small
@@ -264,6 +271,10 @@ import api from '../../../api'
 import UsersOverview from '../UsersOverview.vue'
 export default {
   name: 'UsersInfo',
+  props: {
+    groupsList: Array
+  },
+
   data () {
     return {
       dialog: false,
@@ -271,11 +282,11 @@ export default {
       pagination: {},
       selected: [],
       userHeaders: [
-        { text: 'User id', value: 'id' },
+        { text: 'ID', value: 'id' },
         { text: 'Username', value: 'username' },
         { text: 'Email', value: 'email' },
         { text: 'Created at', value: 'createdAt' },
-        { text: 'Role', value: 'role' },
+        { text: 'Groups', value: 'role', sortable: false },
         { text: 'Actions', sortable: false }
       ],
       users: [],
@@ -300,12 +311,14 @@ export default {
       modalAlert: false,
       showModalRemove: false,
       userId: -1,
-      showModal: false
+      showModal: false,
+      userGroups: []
     }
   },
   created () {
     this.prettyDate = UsersOverview.methods.prettyDate
     this.handleError = UsersOverview.methods.handleError
+    this.printNames = UsersOverview.methods.printNames
   },
   computed: {
     pages () {
@@ -448,6 +461,11 @@ export default {
           this.alert = true
         })
     },
+
+    getUserGroups (id) {
+      return this.groupsList.filter(g => g.users.some(u => u.id === id))
+    },
+
     showConfirmationDialog (id) {
       this.userId = id
       this.showModalRemove = true

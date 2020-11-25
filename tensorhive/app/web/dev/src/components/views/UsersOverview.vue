@@ -493,7 +493,7 @@
       <v-divider></v-divider>
     </div>
     <div class="data_table">
-      <UsersInfo class="data_box" @createdUser="userCreatedAlert" @usersList="updateUsers" />
+      <UsersInfo class="data_box" @createdUser="userCreatedAlert" @usersList="updateUsers" :groupsList="this.groups"/>
       <GroupsInfo class="data_box" :usersList="this.users" @createdGroup="groupCreatedAlert" @groupsList="updateGroups"/>
     </div>
   </section>
@@ -1114,7 +1114,7 @@ export default {
 }
 
 .data_box{
-  width: 45vw;
+  width: 50vw;
 }
 
 .fade-enter-active, .fade-leave-active {

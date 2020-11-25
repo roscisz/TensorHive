@@ -269,7 +269,7 @@ export default {
     return {
       pagination: {},
       groupHeaders: [
-        { text: 'Group id', value: 'id' },
+        { text: 'ID', value: 'id' },
         { text: 'Group name', value: 'name' },
         { text: 'Created at', value: 'gorupCreated' },
         { text: 'Users', sortable: false },
