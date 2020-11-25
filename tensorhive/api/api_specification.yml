@@ -2036,8 +2036,8 @@ paths:
           description: {{RESPONSES['nodes']['hostname']['not_found']}}
         422:
           description: {{RESPONSES['general']['auth_error']}}
-      # security:
-      #   - Bearer: []
+      security:
+        - Bearer: []
   /tasks:
     get:
       tags:
