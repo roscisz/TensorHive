@@ -212,6 +212,19 @@
               >
               </v-checkbox>
             </v-card-text>
+            <v-card-text>
+              User groups:
+            </v-card-text>
+            <v-autocomplete
+                v-model="userGroups"
+                :items="groupsList"
+                :multiple=true
+                placeholder="Groups"
+                item-value="id"
+                item-text="name"
+                prepend-icon="fa-group"
+                return-object
+              />
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -269,6 +282,7 @@
 <script>
 import api from '../../../api'
 import UsersOverview from '../UsersOverview.vue'
+import GroupsInfo from './GroupsInfo.vue'
 export default {
   name: 'UsersInfo',
   props: {
@@ -312,13 +326,16 @@ export default {
       showModalRemove: false,
       userId: -1,
       showModal: false,
-      userGroups: []
+      userGroups: [],
+      userOldGroups: []
     }
   },
   created () {
     this.prettyDate = UsersOverview.methods.prettyDate
     this.handleError = UsersOverview.methods.handleError
     this.printNames = UsersOverview.methods.printNames
+    this.addUserToGroup = GroupsInfo.methods.addUserToGroup
+    this.removeUserFromGroup = GroupsInfo.methods.removeUserFromGroup
   },
   computed: {
     pages () {
@@ -371,6 +388,8 @@ export default {
       }
       this.adminCheckbox = admin
       this.currentUser = currentUser
+      this.userGroups = this.getUserGroups(currentUser.id)
+      this.userOldGroups = this.userGroups.slice()
     },
 
     updateUser: function () {
@@ -393,6 +412,14 @@ export default {
         }
         if (this.user.roles.length !== this.currentUser.roles.length) {
           updatedUser['roles'] = this.user.roles
+        }
+        if (this.userGroups !== this.userOldGroups) {
+          const { userGroups, userOldGroups } = this
+          var toAdd = userGroups.filter(function (x) { return userOldGroups.indexOf(x) < 0 })
+          var toDelete = userOldGroups.filter(function (x) { return userGroups.indexOf(x) < 0 })
+
+          toAdd.forEach(group => this.addUserToGroup(group.id, this.user.id))
+          toDelete.forEach(group => this.removeUserFromGroup(group.id, this.user.id))
         }
         api
           .request('put', '/user', this.$store.state.accessToken, updatedUser)
