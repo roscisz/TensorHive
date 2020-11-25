@@ -1,4 +1,4 @@
-from datetime import time, timedelta
+from datetime import time, timedelta, datetime
 from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.models.Resource import Resource
 
@@ -89,12 +89,13 @@ class ReservationVerifier:
         """
         reservations = user.get_reservations(include_cancelled=True)
         for reservation in reservations:
-            if have_users_permissions_increased:
-                if reservation.is_cancelled and cls.is_reservation_allowed(user, reservation) \
-                        and not reservation.would_interfere():
-                    reservation.is_cancelled = False
-                    reservation.save()
-            else:
-                if not reservation.is_cancelled and not cls.is_reservation_allowed(user, reservation):
-                    reservation.is_cancelled = True
-                    reservation.save()
+            if reservation.end > datetime.utcnow():
+                if have_users_permissions_increased:
+                    if reservation.is_cancelled and cls.is_reservation_allowed(user, reservation) \
+                            and not reservation.would_interfere():
+                        reservation.is_cancelled = False
+                        reservation.save()
+                else:
+                    if not reservation.is_cancelled and not cls.is_reservation_allowed(user, reservation):
+                        reservation.is_cancelled = True
+                        reservation.save()
