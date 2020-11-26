@@ -2658,8 +2658,8 @@ paths:
       operationId: tensorhive.controllers.task.get_all
       parameters:
         - description: Job ID (Optional)
-          in: path
-          name: job_id
+          in: query
+          name: jobId
           required: false
           schema:
             type: integer

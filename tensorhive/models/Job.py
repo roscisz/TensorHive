@@ -101,6 +101,6 @@ class Job(CRUDModel, Base):  # type: ignore
             'description': self.description,
             'userId': self.user_id,
             'status': self.status.name,
-            'startAt': DateUtils.try_parse_datetime(self.start_at),
-            'stopAt': DateUtils.try_parse_datetime(self.stop_at)
+            'startAt': DateUtils.try_stringify_datetime(self.start_at),
+            'stopAt': DateUtils.try_stringify_datetime(self.stop_at)
         }

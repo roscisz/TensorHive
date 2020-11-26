@@ -158,10 +158,11 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-#  GET /tasks?job_id=1?syncAll=1
+#  GET /tasks?jobId=1?syncAll=1
 @jwt_required
-def get_all(job_id: Optional[JobId], syncAll: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
+def get_all(jobId: Optional[JobId], syncAll: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
     sync_all = syncAll
+    job_id = jobId
     try:
         if job_id is not None:
             job = Job.query.filter(Job.id == job_id).one()

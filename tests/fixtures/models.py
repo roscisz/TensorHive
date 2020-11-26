@@ -1,4 +1,5 @@
 import pytest
+import datetime
 from tensorhive.models.Reservation import Reservation
 from tensorhive.models.Restriction import Restriction
 from tensorhive.models.RestrictionSchedule import RestrictionSchedule
@@ -8,7 +9,7 @@ from tensorhive.models.Resource import Resource
 from tensorhive.models.Role import Role
 from tensorhive.models.Job import Job
 from tensorhive.models.Task import Task
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 
 @pytest.fixture(scope='function')

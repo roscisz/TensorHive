@@ -26,7 +26,8 @@ def test_get_all_jobs(tables, client, new_job, new_user):
 
 
 # POST /jobs
-def test_create_job(tables, client):
+def test_create_job(tables, client, new_user):
+    new_user.save()
     job_name = 'TestJob'
     data = {'name': job_name,
             'description': 'testDescription',
@@ -42,28 +43,30 @@ def test_create_job(tables, client):
 
 
 # DELETE /jobs/{job_id}
-def test_delete_job(tables, client, new_job, new_task):
+def test_delete_job(tables, client, new_job, new_task, new_user):
+    new_user.save()
     new_job.save()
     new_task.save()
     new_job.add_task(new_task)
-    resp = client.get(ENDPOINT + '/{}/tasks'.format(new_job.id), headers=HEADERS)
+    resp = client.get(BASE_URI + '/tasks?jobId={}'.format(new_job.id), headers=HEADERS)
     resp_json = json.loads(resp.data.decode('utf-8'))
     assert resp.status_code == HTTPStatus.OK
     assert len(resp_json['tasks']) == 1
 
     resp = client.delete(ENDPOINT + '/{}'.format(new_job.id), headers=HEADERS)
 
-    resp = client.get(ENDPOINT + '/{}/tasks'.format(new_job.id), headers=HEADERS)
+    resp = client.get(BASE_URI + '/tasks?jobId={}'.format(new_job.id), headers=HEADERS)
     assert resp.status_code == HTTPStatus.NOT_FOUND  # checks if task from deleted job is deleted by cascade
 
 
-# GET /jobs/{job_id}/tasks
-def test_get_tasks_from_job(tables, client, new_job, new_task):
+# GET /tasks?job_id=1
+def test_get_tasks_from_job(tables, client, new_job, new_task, new_user):
+    new_user.save()
     new_job.save()
     new_task.save()
     new_job.add_task(new_task)
 
-    resp = client.get(ENDPOINT + '/{}/tasks'.format(new_job.id), headers=HEADERS)
+    resp = client.get(BASE_URI + '/tasks?jobId={}'.format(new_job.id), headers=HEADERS)
     resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
@@ -71,7 +74,8 @@ def test_get_tasks_from_job(tables, client, new_job, new_task):
 
 
 # PUT /jobs/{id}/tasks/{id}
-def test_add_task_to_job(tables, client, new_job, new_task):
+def test_add_task_to_job(tables, client, new_job, new_task, new_user):
+    new_user.save()
     new_job.save()
     new_task.save()
 
@@ -83,7 +87,8 @@ def test_add_task_to_job(tables, client, new_job, new_task):
 
 
 # DELETE /jobs/{id}/tasks/{id}
-def test_remove_task_from_job(tables, client, new_job, new_task):
+def test_remove_task_from_job(tables, client, new_job, new_task, new_user):
+    new_user.save()
     new_job.save()
     new_task.save()
     new_job.add_task(new_task)
@@ -109,7 +114,8 @@ def test_execute_job(tables, client, new_job, new_user, new_task):
 
 
 # POST /jobs/{job_id}/tasks
-def test_create_task(tables, client, new_job):
+def test_create_task(tables, client, new_job, new_user):
+    new_user.save()
     new_job.save()
     command = 'ENV= python command.py --batch_size 32 --rank 2'
     data = {'command': command,
@@ -148,7 +154,8 @@ def test_delete_task(tables, client, new_job, new_user):
 
 
 # PUT /tasks/{id}
-def test_update_task(tables, client, new_job, new_task):
+def test_update_task(tables, client, new_job, new_task, new_user):
+    new_user.save()
     new_job.save()
     data_to_update = {'hostname': 'remotehost',
                       'cmd_segment_1': {'name': '--batch_size',
@@ -167,6 +174,6 @@ def test_update_task(tables, client, new_job, new_task):
                       headers=HEADERS, data=json.dumps(data_to_update))
     resp_json = json.loads(resp.data.decode('utf-8'))
 
-    assert resp.status_code == HTTPStatus.OK
+    assert resp.status_code == HTTPStatus.CREATED
     assert resp_json['task']['hostname'] == 'remotehost'
     assert resp_json['task']['command'] == 'ENV= python command.py --rank=3'
