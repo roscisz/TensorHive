@@ -216,7 +216,7 @@
               User groups:
             </v-card-text>
             <v-autocomplete
-                v-model="userGroups"
+                v-model="user.groups"
                 :items="groupsList"
                 :multiple=true
                 placeholder="Groups"
@@ -248,11 +248,11 @@
             <td>{{ props.item.email }}</td>
             <td>{{ prettyDate(props.item.createdAt) }}</td>
             <td>
-              <v-tooltip bottom :disabled="getUserGroups(props.item.id).length===0">
+              <v-tooltip bottom :disabled="props.item.groups.length===0">
                 <template v-slot:activator="{ on, attrs }">
-                  <span v-bind="attrs" v-on="on">{{ getUserGroups(props.item.id).length }}</span>
+                  <span v-bind="attrs" v-on="on">{{ props.item.groups.length }}</span>
                 </template>
-                <span class="white-space">{{ printNames(getUserGroups(props.item.id)) }}</span>
+                <span class="white-space">{{ printNames(props.item.groups) }}</span>
               </v-tooltip>
             </td>
             <td>
@@ -300,7 +300,7 @@ export default {
         { text: 'Username', value: 'username' },
         { text: 'Email', value: 'email' },
         { text: 'Created at', value: 'createdAt' },
-        { text: 'Groups', value: 'role', sortable: false },
+        { text: 'Groups', sortable: false },
         { text: 'Actions', sortable: false }
       ],
       users: [],
@@ -310,7 +310,8 @@ export default {
         email: '',
         password: '',
         password2: '',
-        roles: []
+        roles: [],
+        groups: []
       },
       currentUser: {},
       time: 1000,
@@ -326,7 +327,6 @@ export default {
       showModalRemove: false,
       userId: -1,
       showModal: false,
-      userGroups: [],
       userOldGroups: []
     }
   },
@@ -380,6 +380,8 @@ export default {
       this.user.id = currentUser.id
       this.user.username = currentUser.username
       this.user.email = currentUser.email
+      this.user.groups = currentUser.groups
+      this.userOldGroups = this.currentUser.groups.slice()
       var admin = false
       for (var role in currentUser.roles) {
         if (currentUser.roles[role] === 'admin') {
@@ -388,8 +390,6 @@ export default {
       }
       this.adminCheckbox = admin
       this.currentUser = currentUser
-      this.userGroups = this.getUserGroups(currentUser.id)
-      this.userOldGroups = this.userGroups.slice()
     },
 
     updateUser: function () {
@@ -413,8 +413,9 @@ export default {
         if (this.user.roles.length !== this.currentUser.roles.length) {
           updatedUser['roles'] = this.user.roles
         }
-        if (this.userGroups !== this.userOldGroups) {
-          const { userGroups, userOldGroups } = this
+        if (this.user.groups !== this.userOldGroups) {
+          const userOldGroups = this.userOldGroups
+          const userGroups = this.user.groups
           var toAdd = userGroups.filter(function (x) { return userOldGroups.indexOf(x) < 0 })
           var toDelete = userOldGroups.filter(function (x) { return userGroups.indexOf(x) < 0 })
 
@@ -487,10 +488,6 @@ export default {
           this.handleError(error)
           this.alert = true
         })
-    },
-
-    getUserGroups (id) {
-      return this.groupsList.filter(g => g.users.some(u => u.id === id))
     },
 
     showConfirmationDialog (id) {
