@@ -540,7 +540,7 @@ export default {
       restrictionHeaders: [
         { text: 'ID', value: 'id' },
         { text: 'Name', value: 'name' },
-        { text: 'Timespan', sortable: false },
+        { text: 'Timespan', sortable: false, width: 145 },
         { text: 'Schedules', sortable: false },
         { text: 'Users', value: 'users', sortable: false },
         { text: 'Groups', value: 'groups', sortable: false },
@@ -1087,7 +1087,8 @@ export default {
 
 <style>
 .white-space {
-  white-space: pre;
+  white-space: pre-line;
+
 }
 
 .float-right-button {

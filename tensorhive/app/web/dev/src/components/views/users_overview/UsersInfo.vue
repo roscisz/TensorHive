@@ -248,9 +248,14 @@
             <td>{{ props.item.email }}</td>
             <td>{{ prettyDate(props.item.createdAt) }}</td>
             <td>
-              <v-tooltip bottom :disabled="props.item.groups.length===0">
+              <v-tooltip bottom :disabled="props.item.groups.length <= 2">
                 <template v-slot:activator="{ on, attrs }">
-                  <span v-bind="attrs" v-on="on">{{ props.item.groups.length }}</span>
+                  <span v-if="props.item.groups.length > 0 & props.item.groups.length <= 2"
+                  v-bind="attrs" v-on="on" class="white-space">{{ printNames(props.item.groups) }}
+                  </span>
+                  <span v-else v-bind="attrs" v-on="on">
+                    {{ props.item.groups.length }}
+                  </span>
                 </template>
                 <span class="white-space">{{ printNames(props.item.groups) }}</span>
               </v-tooltip>
