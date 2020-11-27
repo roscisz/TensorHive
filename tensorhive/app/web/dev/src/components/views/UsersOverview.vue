@@ -921,6 +921,7 @@ export default {
         .request('delete', '/restrictions/' + restrictionId, this.$store.state.accessToken)
         .then(response => {
           this.showRemoveRestriction = false
+          this.clearForm()
           this.checkRestrictions()
         })
         .catch(error => {
