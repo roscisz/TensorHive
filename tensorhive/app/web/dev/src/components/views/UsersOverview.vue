@@ -382,7 +382,7 @@
                 v-model="schedule.hourStart"
                 full-width
                 format="24hr"
-                :max="schedule.hourEnd"
+                :max="maxScheduleHour(schedule)"
                 @click:minute="$refs.startMenu[key].save(schedule.hourStart)"
               ></v-time-picker>
             </v-menu>
@@ -413,7 +413,7 @@
                 v-model="schedule.hourEnd"
                 full-width
                 format="24hr"
-                :min="schedule.hourStart"
+                :min="minScheduleHour(schedule)"
                 @click:minute="$refs.endMenu[key].save(schedule.hourEnd)"
               ></v-time-picker>
               </v-menu>
@@ -596,6 +596,14 @@ export default {
       if (this.modalStartDate === this.modalEndDate) {
         return this.modalStartTime
       } else return ''
+    },
+    minScheduleHour (schedule) {
+      if (schedule.hourStart) return moment(schedule.hourStart, 'HH:mm').add(1, 'minutes').format('HH:mm')
+      else return ''
+    },
+    maxScheduleHour (schedule) {
+      if (schedule.hourEnd) return moment(schedule.hourEnd, 'HH:mm').subtract(1, 'minute').format('HH:mm')
+      else return ''
     },
     printTimespan (start, end, full = false) {
       var formattedEnd = 'no end date'
@@ -918,7 +926,10 @@ export default {
     },
     verifyTempSchedules () {
       if (this.tempSchedules.length === 0) return true
-      else return this.tempSchedules.every(s => s.hourStart && s.hourEnd && s.scheduleDays.length > 0)
+      else {
+        return this.tempSchedules.every(s => s.hourStart && s.hourEnd &&
+          s.hourStart !== s.hourEnd && s.scheduleDays.length > 0)
+      }
     },
     removeRestriction () {
       var restrictionId = this.restrictionId
