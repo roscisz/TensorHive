@@ -824,22 +824,20 @@ export default {
         })
     },
     createAndAddSchedule (restriction, schedule) {
-      if (schedule.hourStart && schedule.hourEnd && schedule.scheduleDays) {
-        api
-          .request('post', '/schedules', this.$store.state.accessToken, {
-            'hourStart': schedule.hourStart,
-            'hourEnd': schedule.hourEnd,
-            'scheduleDays': schedule.scheduleDays
-          })
-          .then(response => {
-            let scheduleId = response.data.schedule.id
-            this.addScheduleToRestriction(restriction, scheduleId)
-          })
-          .catch(error => {
-            this.handleError(error)
-            this.modalAlert = true
-          })
-      }
+      api
+        .request('post', '/schedules', this.$store.state.accessToken, {
+          'hourStart': schedule.hourStart,
+          'hourEnd': schedule.hourEnd,
+          'scheduleDays': schedule.scheduleDays
+        })
+        .then(response => {
+          let scheduleId = response.data.schedule.id
+          this.addScheduleToRestriction(restriction, scheduleId)
+        })
+        .catch(error => {
+          this.handleError(error)
+          this.modalAlert = true
+        })
     },
     addScheduleToRestriction (restriction, schedule) {
       api
@@ -867,53 +865,62 @@ export default {
       if (this.editMode) this.updateRestriction()
       else if (this.modalStartDate && this.modalStartTime &&
           ((this.modalEndDate && this.modalEndTime) || this.infiniteRestriction)) {
-        var formattedStart = moment(this.modalStartDate + 'T' + this.modalStartTime).toISOString()
-        var restrictionToCreate = {
-          name: this.modalRestrictionName,
-          start: formattedStart,
-          isGlobal: this.globalRestriction
+        if (this.verifyTempSchedules()) {
+          var formattedStart = moment(this.modalStartDate + 'T' + this.modalStartTime).toISOString()
+          var restrictionToCreate = {
+            name: this.modalRestrictionName,
+            start: formattedStart,
+            isGlobal: this.globalRestriction
+          }
+          if (!this.infiniteRestriction) {
+            var formattedEnd = moment(this.modalEndDate + 'T' + this.modalEndTime).toISOString()
+            restrictionToCreate.end = formattedEnd
+          }
+          const { globalRestriction, tempSchedules, resourcesValue, usersValue, groupsValue } = this
+          api
+            .request('post', '/restrictions', this.$store.state.accessToken,
+              restrictionToCreate)
+            .then(response => {
+              let restrictionId = response.data.restriction.id
+              if (resourcesValue.length > 0 && globalRestriction === false) {
+                for (const resource of resourcesValue) {
+                  this.addResourceToRestriction(restrictionId, resource.id)
+                }
+              }
+              if (usersValue.length > 0) {
+                for (const user of usersValue) {
+                  this.addUserToRestriction(restrictionId, user.id)
+                }
+              }
+              if (groupsValue.length > 0) {
+                for (const group of groupsValue) {
+                  this.addGroupToRestriction(restrictionId, group.id)
+                }
+              }
+              if (tempSchedules.length > 0) {
+                for (const schedule of tempSchedules) {
+                  this.createAndAddSchedule(restrictionId, schedule)
+                }
+              }
+              this.checkRestrictions()
+              this.clearForm()
+            })
+            .catch(error => {
+              this.handleError(error)
+              this.modalAlert = true
+            })
+        } else {
+          this.errorMessage = 'Specify details for all schedules you want to create'
+          this.modalAlert = true
         }
-        if (!this.infiniteRestriction) {
-          var formattedEnd = moment(this.modalEndDate + 'T' + this.modalEndTime).toISOString()
-          restrictionToCreate.end = formattedEnd
-        }
-        const { globalRestriction, tempSchedules, resourcesValue, usersValue, groupsValue } = this
-        api
-          .request('post', '/restrictions', this.$store.state.accessToken,
-            restrictionToCreate)
-          .then(response => {
-            let restrictionId = response.data.restriction.id
-            if (resourcesValue.length > 0 && globalRestriction === false) {
-              for (const resource of resourcesValue) {
-                this.addResourceToRestriction(restrictionId, resource.id)
-              }
-            }
-            if (usersValue.length > 0) {
-              for (const user of usersValue) {
-                this.addUserToRestriction(restrictionId, user.id)
-              }
-            }
-            if (groupsValue.length > 0) {
-              for (const group of groupsValue) {
-                this.addGroupToRestriction(restrictionId, group.id)
-              }
-            }
-            if (tempSchedules.length > 0) {
-              for (const schedule of tempSchedules) {
-                this.createAndAddSchedule(restrictionId, schedule)
-              }
-            }
-            this.checkRestrictions()
-            this.clearForm()
-          })
-          .catch(error => {
-            this.handleError(error)
-            this.modalAlert = true
-          })
       } else {
         this.errorMessage = 'Specify start and end date and time!'
         this.modalAlert = true
       }
+    },
+    verifyTempSchedules () {
+      if (this.tempSchedules.length === 0) return true
+      else return this.tempSchedules.every(s => s.hourStart && s.hourEnd && s.scheduleDays.length > 0)
     },
     removeRestriction () {
       var restrictionId = this.restrictionId
@@ -954,86 +961,91 @@ export default {
     updateRestriction () {
       if (this.modalStartDate && this.modalStartTime &&
           ((this.modalEndDate && this.modalEndTime) || this.infiniteRestriction)) {
-        var formattedStart = moment(this.modalStartDate + 'T' + this.modalStartTime).toISOString()
-        var formattedEnd = null
-        if (!this.infiniteRestriction) {
-          formattedEnd = moment(this.modalEndDate + 'T' + this.modalEndTime).toISOString()
+        if (this.verifyTempSchedules()) {
+          var formattedStart = moment(this.modalStartDate + 'T' + this.modalStartTime).toISOString()
+          var formattedEnd = null
+          if (!this.infiniteRestriction) {
+            formattedEnd = moment(this.modalEndDate + 'T' + this.modalEndTime).toISOString()
+          }
+          const { modalRestrictionName, globalRestriction, currentRestriction,
+            usersValue, groupsValue, resourcesValue, tempSchedules } = this
+          api
+            .request('put', '/restrictions/' + this.currentRestriction.id, this.$store.state.accessToken,
+              {
+                'name': modalRestrictionName,
+                'start': formattedStart,
+                'end': formattedEnd,
+                'isGlobal': globalRestriction
+              }).then(response => {
+              this.checkRestrictions()
+            })
+            .catch(error => {
+              this.handleError(error)
+              this.modalAlert = true
+            })
+
+          if (currentRestriction.users !== usersValue) {
+            var addUsers = usersValue.filter(
+              function (x) { return currentRestriction.users.indexOf(x) < 0 })
+            var deleteUsers = currentRestriction.users.filter(
+              function (x) { return usersValue.indexOf(x) < 0 })
+
+            for (const user of addUsers) {
+              this.addUserToRestriction(this.restrictionId, user.id)
+            }
+            for (const user of deleteUsers) {
+              this.removeUserFromRestriction(this.restrictionId, user.id)
+            }
+          }
+
+          if (currentRestriction.groups !== groupsValue) {
+            var addGroups = groupsValue.filter(
+              function (x) { return currentRestriction.groups.indexOf(x) < 0 })
+            var deleteGroups = currentRestriction.groups.filter(
+              function (x) { return groupsValue.indexOf(x) < 0 })
+
+            for (const group of addGroups) {
+              this.addGroupToRestriction(this.restrictionId, group.id)
+            }
+            for (const group of deleteGroups) {
+              this.removeGroupFromRestriction(this.restrictionId, group.id)
+            }
+          }
+
+          if (this.globalRestriction && currentRestriction.resources.length > 0) {
+            for (const resource of currentRestriction.resources) {
+              this.removeResourceFromRestriction(this.restrictionId, resource.id)
+            }
+          } else if (currentRestriction.resources !== resourcesValue) {
+            var addResources = resourcesValue.filter(
+              function (x) { return currentRestriction.resources.indexOf(x) < 0 })
+            var deleteResources = currentRestriction.resources.filter(
+              function (x) { return resourcesValue.indexOf(x) < 0 })
+
+            for (const resource of addResources) {
+              this.addResourceToRestriction(this.restrictionId, resource.id)
+            }
+            for (const resource of deleteResources) {
+              this.removeResourceFromRestriction(this.restrictionId, resource.id)
+            }
+          }
+
+          if (!this.equalSchedules(currentRestriction.schedules, tempSchedules)) {
+            var addSchedules = tempSchedules.filter(this.scheduleCompare(currentRestriction.schedules))
+            var deleteSchedules = currentRestriction.schedules.filter(this.scheduleCompare(tempSchedules))
+
+            for (const schedule of addSchedules) {
+              this.createAndAddSchedule(this.restrictionId, schedule)
+            }
+            for (const schedule of deleteSchedules) {
+              this.removeScheduleFromRestriction(this.restrictionId, schedule.id)
+            }
+          }
+          this.clearForm()
+        } else {
+          this.errorMessage = 'Specify details for every schedule'
+          this.modalAlert = true
         }
-        const { modalRestrictionName, globalRestriction, currentRestriction,
-          usersValue, groupsValue, resourcesValue, tempSchedules } = this
-        api
-          .request('put', '/restrictions/' + this.currentRestriction.id, this.$store.state.accessToken,
-            {
-              'name': modalRestrictionName,
-              'start': formattedStart,
-              'end': formattedEnd,
-              'isGlobal': globalRestriction
-            }).then(response => {
-            this.checkRestrictions()
-          })
-          .catch(error => {
-            this.handleError(error)
-            this.modalAlert = true
-          })
-
-        if (currentRestriction.users !== usersValue) {
-          var addUsers = usersValue.filter(
-            function (x) { return currentRestriction.users.indexOf(x) < 0 })
-          var deleteUsers = currentRestriction.users.filter(
-            function (x) { return usersValue.indexOf(x) < 0 })
-
-          for (const user of addUsers) {
-            this.addUserToRestriction(this.restrictionId, user.id)
-          }
-          for (const user of deleteUsers) {
-            this.removeUserFromRestriction(this.restrictionId, user.id)
-          }
-        }
-
-        if (currentRestriction.groups !== groupsValue) {
-          var addGroups = groupsValue.filter(
-            function (x) { return currentRestriction.groups.indexOf(x) < 0 })
-          var deleteGroups = currentRestriction.groups.filter(
-            function (x) { return groupsValue.indexOf(x) < 0 })
-
-          for (const group of addGroups) {
-            this.addGroupToRestriction(this.restrictionId, group.id)
-          }
-          for (const group of deleteGroups) {
-            this.removeGroupFromRestriction(this.restrictionId, group.id)
-          }
-        }
-
-        if (this.globalRestriction && currentRestriction.resources.length > 0) {
-          for (const resource of currentRestriction.resources) {
-            this.removeResourceFromRestriction(this.restrictionId, resource.id)
-          }
-        } else if (currentRestriction.resources !== resourcesValue) {
-          var addResources = resourcesValue.filter(
-            function (x) { return currentRestriction.resources.indexOf(x) < 0 })
-          var deleteResources = currentRestriction.resources.filter(
-            function (x) { return resourcesValue.indexOf(x) < 0 })
-
-          for (const resource of addResources) {
-            this.addResourceToRestriction(this.restrictionId, resource.id)
-          }
-          for (const resource of deleteResources) {
-            this.removeResourceFromRestriction(this.restrictionId, resource.id)
-          }
-        }
-
-        if (!this.equalSchedules(currentRestriction.schedules, tempSchedules)) {
-          var addSchedules = tempSchedules.filter(this.scheduleCompare(currentRestriction.schedules))
-          var deleteSchedules = currentRestriction.schedules.filter(this.scheduleCompare(tempSchedules))
-
-          for (const schedule of addSchedules) {
-            this.createAndAddSchedule(this.restrictionId, schedule)
-          }
-          for (const schedule of deleteSchedules) {
-            this.removeScheduleFromRestriction(this.restrictionId, schedule.id)
-          }
-        }
-        this.clearForm()
       } else {
         this.errorMessage = 'Specify start and end date and time!'
         this.modalAlert = true
