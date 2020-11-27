@@ -261,8 +261,8 @@ export default {
           for (const schedule of restriction.schedules) {
             for (const day of schedule.scheduleDays) {
               var date = this.findDateForWeekday(start, day)
-              var eventStart = date + ' ' + schedule.hourStart
-              var eventEnd = date + ' ' + schedule.hourEnd
+              var eventStart = moment.utc(date + ' ' + schedule.hourStart).local()
+              var eventEnd = moment.utc(date + ' ' + schedule.hourEnd).local()
 
               if (moment(date).isSameOrAfter(moment(restriction.startsAt).startOf('day')) &&
               moment(date).isSameOrBefore(moment(restriction.endsAt).endOf('day')) &&

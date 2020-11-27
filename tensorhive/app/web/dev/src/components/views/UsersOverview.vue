@@ -349,6 +349,12 @@
                 <v-icon>add</v-icon>
               </v-btn>
           </p>
+          <v-alert
+            :value="tempSchedules.length"
+            type="warning"
+          >
+            Please specify schedule hours in UTC time. Current UTC time is {{ currentUtcTime }}.
+          </v-alert>
           <transition-group name="fade">
             <v-layout align-center justify-center
               v-for="(schedule, key, index) in tempSchedules"
@@ -524,6 +530,17 @@ export default {
           this.selectHostResources(host[0])
         }
       } else this.triggerHostsWatcher = true
+    },
+    showRestrictions: function (after, before) {
+      let self = this
+      if (after === true && before === false) {
+        self.updateUtcTime()
+        this.interval = setInterval(function () {
+          self.updateUtcTime()
+        }, 5000)
+      } else {
+        clearInterval(self.interval)
+      }
     }
   },
   data () {
@@ -572,7 +589,8 @@ export default {
       editMode: false,
       currentRestriction: {},
       triggerResourcesWatcher: true,
-      triggerHostsWatcher: true
+      triggerHostsWatcher: true,
+      currentUtcTime: ''
     }
   },
   mounted () {
@@ -580,6 +598,9 @@ export default {
     this.checkRestrictions()
   },
   methods: {
+    updateUtcTime () {
+      this.currentUtcTime = moment().utc().format('HH:mm')
+    },
     prettyDate (date) {
       if (date !== null) {
         return moment(date).format('dddd, MMMM Do, HH:mm')
@@ -628,7 +649,8 @@ export default {
       else if (schedules.length === 1 || all) {
         var returnString = ''
         for (const schedule of schedules) {
-          returnString = returnString + schedule.hourStart + '-' + schedule.hourEnd + ' '
+          returnString = returnString + moment.utc(schedule.hourStart, 'HH:mm').local().format('HH:mm') +
+            '-' + moment.utc(schedule.hourEnd, 'HH:mm').local().format('HH:mm') + ' '
           if (schedules.length === 1) returnString = returnString + '\n'
           returnString = returnString + schedule.scheduleDays.map(a => a.substring(0, 3)).join(', ') + '\n'
         }
