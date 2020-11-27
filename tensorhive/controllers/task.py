@@ -11,6 +11,7 @@ from tensorhive.config import API
 from functools import wraps
 from typing import Optional, Callable, Any, Dict, Tuple
 from datetime import datetime, timedelta
+from stringcase import snakecase
 import logging
 
 log = logging.getLogger(__name__)
@@ -39,11 +40,6 @@ TaskId = int
 JobId = int
 
 
-def is_admin():
-    claims = get_jwt_claims()
-    return 'admin' in claims['roles']
-
-
 def synchronize(task_id: TaskId) -> None:
     """Updates the state of a Task object stored in database.
 
@@ -67,9 +63,9 @@ def synchronize(task_id: TaskId) -> None:
     try:
         task = Task.get(task_id)
         parent_job = Job.get(task.job_id)
-        assert task.host, 'hostname is empty'
+        assert task.hostname, 'hostname is empty'
         assert parent_job.user, 'user does not exist'
-        active_sessions_pids = task_nursery.running(host=task.host, user=parent_job.user.username)
+        active_sessions_pids = task_nursery.running(host=task.hostname, user=parent_job.user.username)
     except NoResultFound:
         # This exception must be handled within try/except block when using Task.get()
         # In other words, methods decorated with @synchronize_task_record must handle this case by themselves!
@@ -250,7 +246,7 @@ def business_get_all(job_id: Optional[JobId], sync_all: Optional[bool]) -> Tuple
     for task in tasks:
         if sync_all:
             synchronize(task.id)
-        results.append(task.as_dict)
+        results.append(task.as_dict())
     return {'msg': TASK['all']['success'], 'tasks': results}, 200
 
 
@@ -275,7 +271,7 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
     """
     try:
         new_task = Task(
-            host=task['hostname'],
+            hostname=task['hostname'],
             command=task['command'])
         parent_job = Job.query.filter(Job.id == job_id).one()
         command_segments = new_task.command.split()
@@ -325,9 +321,6 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
         new_task.add_cmd_segment(new_segment, actual_command[:-1])
         new_task.save()
         parent_job.add_task(new_task)
-    except ValueError:
-        # Invalid string format for datetime
-        content, status = {'msg': GENERAL['bad_request']}, 422
     except KeyError:
         # At least one of required fields was not present
         content, status = {'msg': GENERAL['bad_request']}, 422
@@ -337,7 +330,7 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, 500
     else:
-        content, status = {'msg': TASK['create']['success'], 'task': new_task.as_dict}, 201
+        content, status = {'msg': TASK['create']['success'], 'task': new_task.as_dict()}, 201
     finally:
         return content, status
 
@@ -353,18 +346,9 @@ def business_get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, 500
     else:
-        content, status = {'msg': TASK['get']['success'], 'task': task.as_dict}, 200
+        content, status = {'msg': TASK['get']['success'], 'task': task.as_dict()}, 200
     finally:
         return content, status
-
-
-def to_db_column() -> Dict[str, str]:
-    return {
-        'command': 'command',
-        'hostname': 'host',
-        'spawnAt': 'spawn_at',
-        'terminateAt': 'terminate_at'
-    }
 
 
 # TODO What if task is already running: allow for updating command, hostname, etc.?
@@ -390,16 +374,13 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
         task.save()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
-    except ValueError:
-        # Invalid string format for datetime
-        content, status = {'msg': GENERAL['bad_request']}, 422
     except AssertionError as e:
         content, status = {'msg': TASK['update']['failure']['assertions'].format(reason=e)}, 422
     except Exception as e:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, 500
     else:
-        content, status = {'msg': TASK['update']['success'], 'task': task.as_dict}, 201
+        content, status = {'msg': TASK['update']['success'], 'task': task.as_dict()}, 201
     finally:
         return content, status
 
@@ -468,10 +449,10 @@ def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         parent_job = Job.get(task.job_id)
         assert task.status is not TaskStatus.running, 'task is already running'
         assert task.command, 'command is empty'
-        assert task.host, 'hostname is empty'
+        assert task.hostname, 'hostname is empty'
         assert parent_job.user, 'user does not exist'
 
-        pid = task_nursery.spawn(task.command, task.host, parent_job.user.username, name_appendix=str(task.id))
+        pid = task_nursery.spawn(task.command, task.hostname, parent_job.user.username, name_appendix=str(task.id))
         task.pid = pid
         task.status = TaskStatus.running
         task.save()
@@ -512,7 +493,7 @@ def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[C
         # True -> interrupt (allows output to be flushed into log file)
         # None -> terminate (works almost every time, but losing output that could be produced before closing)
         # False -> kill (similar to above, but success is almost guaranteed)
-        exit_code = task_nursery.terminate(task.pid, task.host, parent_job.user.username, gracefully=gracefully)
+        exit_code = task_nursery.terminate(task.pid, task.hostname, parent_job.user.username, gracefully=gracefully)
 
         if exit_code != 0:
             raise ExitCodeError('operation exit code is not 0')
@@ -553,9 +534,9 @@ def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
     """
     try:
         task = Task.get(id)
-        assert task.host, 'hostname is empty'
+        assert task.hostname, 'hostname is empty'
         assert task.user, 'user does not exist'
-        output_gen, log_path = task_nursery.fetch_log(task.host, task.user.username, task.id, tail)
+        output_gen, log_path = task_nursery.fetch_log(task.hostname, task.user.username, task.id, tail)
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except ExitCodeError as e:
@@ -573,131 +554,5 @@ def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-if __name__ == '__main__':
-    """Manual testing suite for all controllers
-    ONLY FOR DEVELOPMENT purposes, code is ugly and it won't be maintained for that reason
-    It shows though that making CLI app for users (via real API) makes a lot of sense.
-    """
-    import os
-    from tensorhive.database import init_db
-    from inspect import cleandoc
-    init_db()
-
-    host = 'galileo.eti.pg.gda.pl'
-    cmd = './long.sh'
-    """
-    Example: create script named long.sh
-    ```
-    for i in {1..60}
-    do
-        echo "Counting: $i"
-        sleep 1s
-    done
-    ```
-    """
-
-    wait_for_clear = lambda: input('Press enter to show menu...')
-    while True:
-        print(
-            cleandoc('''
-            ==> Manual task controller test suite: <==
-
-            1) Create task record
-            2) Spawn one (id) or all
-            3) Get one (id)
-            4) Get multiple (all or by jobuser id)
-            5) Interrupt/Terminate/Kill (id)
-            6) Update task command and hostname (id)
-            7) Destroy task (id)
-            8) Create random user with 3 tasks
-            9) Destroy user (user id) - cascade deletion test
-            10) Show log file (id)
-            Any other key to clear console
-        '''))
-        action = input('> ')
-        if action == '1':
-            content, status = business_create(dict(hostname=host, command=cmd), job_id=1)
-            print(content, status)
-            print()
-            print('Created with ID: ', content.get('task').get('id'))
-        elif action == '2':
-            task_id = input('ID or Enter for all> ')
-            if task_id == '':
-                content, status = get_all(userId=None, syncAll=False)
-                tasks = content['tasks']
-                for task in tasks:
-                    content, status = business_spawn(task['id'])
-                    print(content, status)
-            else:
-                content, status = business_spawn(int(task_id))
-                print(content, status)
-        elif action == '3':
-            task_id = input('ID > ')
-            content, status = business_get(int(task_id))
-            print(content, status)
-        elif action == '4':
-            print('Press enter for all')
-            task_id = input('Job ID > ')
-            sync = True if input('Want synchronized records? (y/n) > ') == 'y' else False
-
-            if task_id:
-                tasks = business_get_all(job_id=int(task_id), sync_all=sync)
-            else:
-                tasks = business_get_all(job_id=None, sync_all=sync)
-            print('[')
-            print(*tasks, sep=',\n')
-            print(']')
-        elif action == '5':
-            task_id = input('ID > ')
-            mode = input('q to interrupt, w to terminate, Enter to kill > ')
-            if mode == 'q':
-                gracefully = True
-            elif mode == 'w':
-                gracefully = None
-            else:
-                gracefully = False
-            content, status = business_terminate(int(task_id), gracefully=gracefully)
-            print(content, status)
-        elif action == '6':
-            task_id = input('ID > ')
-            timenow = datetime.utcnow()
-            content, status = business_update(
-                int(task_id),
-                new_values=dict(command='new_command', hostname='foobar', spawnAt=timenow, terminateAt=timenow))
-            print(content, status)
-        elif action == '7':
-            task_id = input('ID > ')
-            content, status = business_destroy(int(task_id))
-            print(content, status)
-        elif action == '8':
-            import string
-            import random
-            rand_str = lambda: ''.join(random.choice(string.ascii_uppercase) for x in range(8))
-            random_username, random_email = rand_str(), rand_str() + '@test.com'
-            user = User(password='`123`123', email=random_email, username=random_username)
-            user.save()
-            for _ in range(3):
-                content, status = business_create(dict(hostname=host, command=cmd), job_id=1)
-                print(content, status)
-            print(user)
-        elif action == '9':
-            user_id = input('User ID > ')
-            user = User.get(user_id)
-            print('[BEFORE] User has {} tasks.'.format(len(user.tasks)))
-            user.destroy()
-            tasks_after = Task.query.filter(Task.user_id == user_id).all()
-            print('[AFTER] User has now {} tasks.'.format(len(tasks_after)))
-        elif action == '10':
-            task_id = input('ID > ')
-            if input('Request full content / Only last lines (y/Enter) > ') == 'y':
-                content, status = business_get_log(int(task_id), tail=False)
-            else:
-                content, status = business_get_log(int(task_id), tail=True)
-            print(content, status)
-            print()
-            print('\n'.join(content.get('output_lines') or []))
-        else:
-            os.system('clear')
-            continue
-        wait_for_clear()
-        os.system('clear')
+def is_admin() -> bool:
+    return 'admin' in get_jwt_claims()['roles']

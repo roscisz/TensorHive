@@ -9,6 +9,7 @@ from tensorhive.config import API
 from tensorhive.core.utils.ReservationVerifier import ReservationVerifier
 from tensorhive.models.RestrictionSchedule import RestrictionSchedule
 from tensorhive.utils.Weekday import Weekday
+from stringcase import snakecase
 
 log = logging.getLogger(__name__)
 SCHEDULE = API.RESPONSES['schedule']
@@ -23,7 +24,7 @@ ScheduleId = int
 @jwt_required
 def get() -> Tuple[List[Any], HttpStatusCode]:
     return [
-        schedule.as_dict for schedule in RestrictionSchedule.all()
+        schedule.as_dict() for schedule in RestrictionSchedule.all()
     ], HTTPStatus.OK.value
 
 
@@ -38,7 +39,7 @@ def get_by_id(id: ScheduleId) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
-        content, status = {'msg': SCHEDULE['get']['success'], 'schedule': schedule.as_dict}, HTTPStatus.OK.value
+        content, status = {'msg': SCHEDULE['get']['success'], 'schedule': schedule.as_dict()}, HTTPStatus.OK.value
     finally:
         return content, status
 
@@ -66,19 +67,11 @@ def create(schedule: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     else:
         content = {
             'msg': SCHEDULE['create']['success'],
-            'schedule': new_schedule.as_dict
+            'schedule': new_schedule.as_dict()
         }
         status = HTTPStatus.CREATED.value
     finally:
         return content, status
-
-
-def to_db_column() -> Dict[str, str]:
-    return {
-        'scheduleDays': 'schedule_days',
-        'hourStart': 'hour_start',
-        'hourEnd': 'hour_end'
-    }
 
 
 @admin_required
@@ -94,7 +87,7 @@ def update(id, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
                 new_value = [Weekday[day] for day in new_value]
             if field_name in ['hourStart', 'hourEnd']:
                 new_value = datetime.strptime(new_value, "%H:%M").time()
-            field_name = to_db_column().get(field_name)
+            field_name = snakecase(field_name)
             assert (field_name is not None) and hasattr(schedule, field_name), \
                 'schedule has no {} field'.format(field_name)
             setattr(schedule, field_name, new_value)
@@ -115,7 +108,7 @@ def update(id, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
-        content, status = {'msg': SCHEDULE['update']['success'], 'schedule': schedule.as_dict}, HTTPStatus.OK.value
+        content, status = {'msg': SCHEDULE['update']['success'], 'schedule': schedule.as_dict()}, HTTPStatus.OK.value
     finally:
         return content, status
 

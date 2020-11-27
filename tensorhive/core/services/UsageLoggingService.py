@@ -165,7 +165,7 @@ class UsageLoggingService(Service):
             log_file_path = self.log_dir / filename
             try:
                 gpu_data = self.extract_specific_gpu_data(
-                    uuid=reservation.protected_resource_id, infrastructure=infrastructure)
+                    uuid=reservation.resource_id, infrastructure=infrastructure)
                 Log(data=gpu_data).save(out_path=log_file_path)
             except Exception as e:
                 log.error(e)
@@ -208,7 +208,7 @@ class UsageLoggingService(Service):
                     log.debug('Processing file: {}'.format(item))
                     id_from_filename = int(item.stem)
                     reservation = Reservation.get(id=id_from_filename)
-                    reservation_expired = reservation.ends_at < time_now
+                    reservation_expired = reservation.end < time_now
 
                     if reservation_expired:
                         log.debug('Reservation id={} has endend.'.format(id_from_filename))

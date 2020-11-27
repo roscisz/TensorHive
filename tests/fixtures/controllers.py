@@ -7,13 +7,11 @@ from tensorhive.app.web.AppServer import API_SERVER, API
 API_URI = 'http://' + API_SERVER.HOST + ':' + str(API_SERVER.PORT) + '/' + API.URL_PREFIX
 HEADERS = {'Authorization': 'Bearer XXX', 'Content-Type': 'application/json'}
 
-patch('tensorhive.authorization.admin_required', lambda x: x).start()
 patch('flask_jwt_extended.get_jwt_identity', lambda: 1).start()
-patch('flask_jwt_extended.get_jwt_claims', lambda: {'roles': ['admin', 'user']}).start()
 patch('flask_jwt_extended.view_decorators.verify_jwt_in_request', lambda: None).start()
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def client():
     app = connexion.FlaskApp(__name__)
     app.add_api('../../tensorhive/api/' + API.SPEC_FILE,

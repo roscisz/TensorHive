@@ -18,20 +18,22 @@ class TaskStatus(enum.Enum):
 
 class Task(CRUDModel, Base):  # type: ignore
     __tablename__ = 'tasks'
+    __public__ = ['id', 'user_id', 'hostname', 'pid', 'command', 'spawn_at', 'terminate_at']
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     job_id = Column(Integer, ForeignKey('jobs.id', ondelete='CASCADE'))
-    host = Column(String(40), nullable=False)
+    hostname = Column(String(40), nullable=False)
     pid = Column(Integer)
     status = Column(Enum(TaskStatus), default=TaskStatus.not_running, nullable=False)
     command = Column(String(400), nullable=False)
     _cmd_segments = relationship('CommandSegment', secondary='cmd_segment2task', back_populates='_tasks')
 
     def __repr__(self):
-        return '<Task id={id}, jobId={job_id}, name={host}, command={command}\n' \
+        return '<Task id={id}, jobId={job_id}, name={hostname}, command={command}\n' \
             '\tpid={pid}, status={status}>'.format(
                 id=self.id,
                 job_id=self.job_id,
-                host=self.host,
+                hostname=self.hostname,
                 command=self.command,
                 pid=self.pid,
                 status=self.status.name)
@@ -126,13 +128,8 @@ class Task(CRUDModel, Base):  # type: ignore
                     setattr(link, '_index', link.index - 1)
         self.save()
 
-    @property
-    def as_dict(self):
-        return {
-            'id': self.id,
-            'jobId': self.job_id,
-            'hostname': self.host,
-            'pid': self.pid,
-            'status': self.status.name,
-            'command': self.command
-        }
+    def as_dict(self, include_private=None):
+        ret = super(Task, self).as_dict(include_private=include_private)
+        ret['jobId'] = self.job_id
+        ret['status'] = self.status.name
+        return ret

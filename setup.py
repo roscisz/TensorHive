@@ -34,7 +34,8 @@ setup(
         'gunicorn==19.9.0',
         'coloredlogs==10.0',
         'Safe==0.4',
-        'python-usernames==0.2.3'
+        'python-usernames==0.2.3',
+        'stringcase==1.2.0'
     ],
     zip_safe=False
 )
