@@ -90,7 +90,7 @@
                 <template v-slot:activator="{ on, attrs }">
                   <span v-bind="attrs" v-on="on">{{ props.item.resources.length }}</span>
                 </template>
-                <span class="white-space">{{ printNames(props.item.resources) }}</span>
+                <span class="white-space">{{ printResourceDisplayNames(props.item.resources) }}</span>
               </v-tooltip>
             </td>
             <td>
@@ -180,7 +180,7 @@
               :multiple=true
               placeholder="Resources"
               item-value="id"
-              item-text="name"
+              item-text="displayName"
               prepend-icon="fa-server"
               return-object
               :disabled="globalRestriction"
@@ -640,6 +640,15 @@ export default {
     },
     printNames (array) {
       return array.map(a => a.name).join(' \n')
+    },
+    printResourceDisplayNames (array) {
+      let self = this
+      return array.map(a => self.getResourceDisplayName(a)).join(' \n')
+    },
+    getResourceDisplayName (resource) {
+      var result = this.resources.find(r => { return r.id === resource.id })
+      if (result) return result.displayName
+      else return resource.name
     },
     printUsernames (array) {
       return array.map(a => a.username).join(' \n')
@@ -1109,6 +1118,26 @@ export default {
           this.hosts.push(newHost)
         }
       }
+      this.createResourcesDisplayNames()
+    },
+    createResourcesDisplayNames () {
+      this.displayNames = []
+      api
+        .request('get', '/nodes/metrics', this.$store.state.accessToken)
+        .then(response => {
+          var nodes = response.data
+          for (var node in nodes) {
+            var host = nodes[node]
+            for (var resourceID in host.GPU) {
+              var displayName = node + ' GPU' + host.GPU[resourceID].index
+              var resource = this.resources.find(r => { return r.id === resourceID })
+              resource.displayName = displayName
+            }
+          }
+        })
+        .catch(error => {
+          this.handleError(error)
+        })
     },
     showRemoveConfirmationDialog (id) {
       this.restrictionId = id
