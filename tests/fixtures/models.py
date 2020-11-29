@@ -186,9 +186,9 @@ def inactive_schedule():
 def new_job(new_user):
     new_user.save()
     job = Job(name='job_name',
-               description='testDescription',
-               user_id=1,
-               status=JobStatus.not_running)               
+              description='testDescription',
+              user_id=1,
+              status=JobStatus.not_running)
     job.save()
     return job
 

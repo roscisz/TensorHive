@@ -6,7 +6,7 @@ from tensorhive.exceptions.InvalidRequestException import InvalidRequestExceptio
 
 def test_job_creation(tables):
     new_job = Job(name='job_name',
-                    description='testDescription').save()
+                  description='testDescription').save()
     assert new_job.id is not None
 
 
