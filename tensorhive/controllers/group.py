@@ -9,6 +9,7 @@ from tensorhive.core.utils.ReservationVerifier import ReservationVerifier
 from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from tensorhive.models.Group import Group
 from tensorhive.models.User import User
+from stringcase import snakecase
 
 log = logging.getLogger(__name__)
 GROUP = API.RESPONSES['group']
@@ -29,7 +30,7 @@ def get(only_default: bool = False) -> Tuple[List[Any], HttpStatusCode]:
     else:
         groups = Group.all()
     return [
-        group.as_dict for group in groups
+        group.as_dict() for group in groups
     ], HTTPStatus.OK.value
 
 
@@ -44,7 +45,7 @@ def get_by_id(id: GroupId) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
-        content, status = {'msg': GROUP['get']['success'], 'group': group.as_dict}, HTTPStatus.OK.value
+        content, status = {'msg': GROUP['get']['success'], 'group': group.as_dict()}, HTTPStatus.OK.value
     finally:
         return content, status
 
@@ -66,18 +67,11 @@ def create(group: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     else:
         content = {
             'msg': GROUP['create']['success'],
-            'group': new_group.as_dict
+            'group': new_group.as_dict()
         }
         status = HTTPStatus.CREATED.value
     finally:
         return content, status
-
-
-def to_db_column() -> Dict[str, str]:
-    return {
-        'name': 'name',
-        'isDefault': 'is_default',
-    }
 
 
 @admin_required
@@ -89,7 +83,7 @@ def update(id: GroupId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusC
         group = Group.get(id)
 
         for field_name, new_value in new_values.items():
-            field_name = to_db_column().get(field_name)
+            field_name = snakecase(field_name)
             assert hasattr(group, field_name), 'group has no {} field'.format(field_name)
             setattr(group, field_name, new_value)
         group.save()
@@ -102,7 +96,7 @@ def update(id: GroupId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusC
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
-        content, status = {'msg': GROUP['update']['success'], 'group': group.as_dict}, HTTPStatus.OK.value
+        content, status = {'msg': GROUP['update']['success'], 'group': group.as_dict()}, HTTPStatus.OK.value
     finally:
         return content, status
 
@@ -137,7 +131,8 @@ def get_default_group() -> Tuple[Content, HttpStatusCode]:
         if group is None:
             content, status = {'msg': GROUP['default']['not_found']}, HTTPStatus.NOT_FOUND.value
         else:
-            content, status = {'msg': GROUP['default']['get']['success'], 'group': group.as_dict}, HTTPStatus.OK.value
+            content, status = {'msg': GROUP['default']['get']['success'], 'group': group.as_dict()},\
+                HTTPStatus.OK.value
     finally:
         return content, status
 
@@ -195,7 +190,7 @@ def add_user(group_id: GroupId, user_id: UserId) -> Tuple[Content, HttpStatusCod
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
-        content, status = {'msg': GROUP['users']['add']['success'], 'group': group.as_dict}, HTTPStatus.OK.value
+        content, status = {'msg': GROUP['users']['add']['success'], 'group': group.as_dict()}, HTTPStatus.OK.value
     finally:
         return content, status
 
@@ -222,6 +217,6 @@ def remove_user(group_id: GroupId, user_id: UserId) -> Tuple[Content, HttpStatus
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
-        content, status = {'msg': GROUP['users']['remove']['success'], 'group': group.as_dict}, HTTPStatus.OK.value
+        content, status = {'msg': GROUP['users']['remove']['success'], 'group': group.as_dict()}, HTTPStatus.OK.value
     finally:
         return content, status

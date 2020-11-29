@@ -3,14 +3,12 @@ import logging
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.database import Base
 from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from tensorhive.models.CRUDModel import CRUDModel
 from tensorhive.models.RestrictionAssignee import RestrictionAssignee
 from tensorhive.models.User import User
-from tensorhive.utils.DateUtils import DateUtils
 
 log = logging.getLogger(__name__)
 
@@ -18,6 +16,7 @@ log = logging.getLogger(__name__)
 class Group(CRUDModel, RestrictionAssignee):  # type: ignore
     __tablename__ = 'groups'
     __table_args__ = {'sqlite_autoincrement': True}
+    __public__ = ['id', 'name', 'is_default', 'created_at']
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(40), unique=False, nullable=True)
@@ -61,31 +60,16 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
         self.users.remove(user)
         self.save()
 
-    @hybrid_property
-    def as_dict(self):
-        """
-        Serializes current instance into dict.
-        :return: Dictionary representing current instance.
-        """
-        return self._as_dict(True)
-
-    @hybrid_property
-    def as_dict_shallow(self):
+    def as_dict(self, include_private=False, include_users=True):
         """
         Serializes current instance into dict. Will not include group's users (to prevent recurrence).
+        :param include_private: passed to CRUDModel as_dict
+        :param include_users: flag that determines if users should be included (False to prevent recurrence)
         :return: Dictionary representing current instance (without users).
         """
-        return self._as_dict(False)
-
-    def _as_dict(self, include_users):
-        group = {
-            'id': self.id,
-            'name': self.name,
-            'createdAt': DateUtils.stringify_datetime(self.created_at),
-            'isDefault': self.is_default
-        }
+        group = super(Group, self).as_dict(include_private=include_private)
         if include_users:
-            group['users'] = [user.as_dict_shallow for user in self.users]
+            group['users'] = [user.as_dict(include_groups=False) for user in self.users]
         return group
 
     @classmethod

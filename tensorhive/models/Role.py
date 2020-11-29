@@ -8,6 +8,8 @@ log = logging.getLogger(__name__)
 
 class Role(CRUDModel, Base):  # type: ignore
     __tablename__ = 'roles'
+    __public__ = ['id', 'name']
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(40), nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'))
@@ -32,10 +34,7 @@ class Role(CRUDModel, Base):  # type: ignore
         except Exception:
             return {'message': 'Deleting all roles operation failed'}
 
-    @property
-    def as_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'user_id': self.user_id
-        }
+    def as_dict(self, include_private=False):
+        ret = super(Role, self).as_dict(include_private=include_private)
+        ret['user_id'] = self.user_id
+        return ret

@@ -1,7 +1,10 @@
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from tensorhive.database import db_session, Base
+from stringcase import camelcase
+from tensorhive.utils.DateUtils import DateUtils
 import logging
+import datetime
 log = logging.getLogger(__name__)
 
 
@@ -64,3 +67,28 @@ class CRUDModel:
     @classmethod
     def all(cls):
         return db_session.query(cls).all()
+
+    @classmethod
+    def _serialize(self, field):
+        if type(field) == datetime.datetime:
+            return DateUtils.stringify_datetime(field)
+        else:
+            return field
+
+    def as_dict(self, include_private=False):
+        """
+        Serializes current instance into dict.
+        :param include_private: flag determining if private data should be included (True for superuser calls)
+        :return: Dictionary representing current instance.
+        """
+        attributes = getattr(self, "__public__", ['id'])
+
+        if include_private:
+            attributes = attributes + getattr(self, '__private__', [])
+
+        ret = dict((camelcase(c), getattr(self, c)) for c in attributes)
+
+        for field in ret:
+            ret[field] = CRUDModel._serialize(ret[field])
+
+        return ret

@@ -6,7 +6,6 @@ from sqlalchemy.orm import relationship, backref
 from tensorhive.database import db_session
 from tensorhive.models.CRUDModel import CRUDModel
 from tensorhive.models.RestrictionAssignee import RestrictionAssignee
-from tensorhive.utils.DateUtils import DateUtils
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm import validates
 from usernames import is_safe_username
@@ -31,6 +30,9 @@ USERNAME_WHITELIST = [
 
 class User(CRUDModel, RestrictionAssignee):  # type: ignore
     __tablename__ = 'users'
+    __public__ = ['id', 'username', 'created_at']
+    __private__ = ['email']
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
     email = Column(String(64), unique=False, nullable=False, server_default='<email_missing>')
@@ -111,37 +113,23 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
         else:
             return result
 
-    @hybrid_property
-    def as_dict(self):
+    def as_dict(self, include_private=False, include_groups=True):
         """
         Serializes current instance into dict.
+        :param include_private: passed to CRUDModel as_dict
+        :param include_groups: flag determining if user groups should be included (False to prevent recurrence)
         :return: Dictionary representing current instance.
         """
-        return self._as_dict(True)
+        user = super(User, self).as_dict(include_private)
 
-    @hybrid_property
-    def as_dict_shallow(self):
-        """
-        Serializes current instance into dict. Will not include user's groups (to prevent recurrence).
-        :return: Dictionary representing current instance (without groups).
-        """
-        return self._as_dict(False)
-
-    def _as_dict(self, include_groups):
         try:
             roles = self.role_names
         except Exception:
             roles = []
         finally:
-            user = {
-                'id': self.id,
-                'username': self.username,
-                'createdAt': DateUtils.stringify_datetime(self.created_at),
-                'roles': roles,
-                'email': self.email
-            }
+            user['roles'] = roles
             if include_groups:
-                user['groups'] = [group.as_dict_shallow for group in self.groups]
+                user['groups'] = [group.as_dict(include_users=False) for group in self.groups]
             return user
 
     @staticmethod

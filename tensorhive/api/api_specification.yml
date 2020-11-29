@@ -2698,9 +2698,6 @@ components:
         username:
           type: string
           example: foobar
-        email:
-          type: string
-          example: foo@bar.com
         createdAt:
           type: string
           format: date-time
@@ -2896,8 +2893,8 @@ components:
       required:
         - name
         - createdAt
-        - start
-        - end
+        - startsAt
+        - endsAt
         - isGlobal
         - schedules
       properties:
@@ -2913,10 +2910,10 @@ components:
           type: string
           format: date-time
           readOnly: true
-        start:
+        startsAt:
           type: string
           format: date-time
-        end:
+        endsAt:
           type: string
           format: date-time
         isGlobal:
@@ -2941,16 +2938,16 @@ components:
     RestrictionForm:
       type: object
       required:
-        - start
+        - startsAt
         - isGlobal
       properties:
         name:
           type: string
           example: Example restriction
-        start:
+        startsAt:
           type: string
           format: date-time
-        end:
+        endsAt:
           type: string
           format: date-time
         isGlobal:
@@ -2962,10 +2959,10 @@ components:
         name:
           type: string
           example: Example restriction
-        start:
+        startsAt:
           type: string
           format: date-time
-        end:
+        endsAt:
           type: string
           format: date-time
           nullable: true
@@ -3039,6 +3036,7 @@ components:
         - memUtilAvg
         - start
         - end
+        - isCancelled
       properties:
         id:
           type: integer
@@ -3076,6 +3074,9 @@ components:
         end:
           type: string
           format: date-time
+        isCancelled:
+          type: boolean
+          example: false
     ReservationForm:
       type: object
       required:

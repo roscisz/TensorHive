@@ -35,6 +35,15 @@ class DateUtils:
         return value.strftime(cls.output_date_format) + cls.server_timezone
 
     @classmethod
+    def stringify_datetime_to_api_format(cls, value: datetime) -> str:
+        """
+        Parses datetime object into string.
+        :param value: datetime object representing certain date
+        :return: string with date that was represented by the datetime object in the OpenAPI date-time format
+        """
+        return value.strftime(cls.input_date_format)
+
+    @classmethod
     def try_parse_string(cls, value: Union[str, datetime, None]) -> Optional[datetime]:
         """
         Parses string representing datetime into datetime gracefully.
