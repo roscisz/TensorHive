@@ -7,8 +7,8 @@ from tensorhive.models.User import User
 from tensorhive.models.Group import Group
 from tensorhive.models.Resource import Resource
 from tensorhive.models.Role import Role
-from tensorhive.models.Job import Job
-from tensorhive.models.Task import Task
+from tensorhive.models.Job import Job, JobStatus
+from tensorhive.models.Task import Task, TaskStatus
 from datetime import timedelta
 
 
@@ -183,19 +183,41 @@ def inactive_schedule():
 
 
 @pytest.fixture(scope='function')
-def new_job():
-    return Job(name='job_name',
+def new_job(new_user):
+    new_user.save()
+    job = Job(name='job_name',
                description='testDescription',
-               user_id=1)
+               user_id=1,
+               status=JobStatus.not_running)               
+    job.save()
+    return job
+
+
+@pytest.fixture(scope='function')
+def new_job_with_task(new_user, new_task):
+    new_user.save()
+    job = Job(name='job_name',
+              description='testDescription',
+              user_id=1,
+              status=JobStatus.not_running)
+    job.save()
+    job.add_task(new_task)
+    return job
 
 
 @pytest.fixture(scope='function')
 def new_task():
-    return Task(command='python command.py --batch_size 32',
-                host='localhost')
+    task = Task(command='python command.py --batch_size 32',
+                hostname='localhost',
+                status=TaskStatus.not_running)
+    task.save()
+    return task
 
 
 @pytest.fixture(scope='function')
 def new_task_2():
-    return Task(command='python command2.py --batch_size 16',
-                host='remotehost')
+    task = Task(command='python command2.py --batch_size 16',
+                hostname='remotehost',
+                status=TaskStatus.not_running)
+    task.save()
+    return task

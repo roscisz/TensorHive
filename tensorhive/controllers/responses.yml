@@ -189,6 +189,7 @@ task:
     failure:
       state: Unable to terminate, {reason}
       exit_code: Accepted, but termination operation did not succeed (op. exit_code was not 0)
+      connection: Cannot connect, unable to terminate task, {reason}
 job:
   not_found: Job has not been found
   all:

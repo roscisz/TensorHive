@@ -22,11 +22,6 @@ TaskId = int
 JobId = int
 
 
-def is_admin():
-    claims = get_jwt_claims()
-    return 'admin' in claims['roles']
-
-
 # GET /jobs/{id}
 @jwt_required
 def get_by_id(id: JobId) -> Tuple[Content, HttpStatusCode]:
@@ -43,7 +38,7 @@ def get_by_id(id: JobId) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
-        content, status = {'msg': JOB['get']['success'], 'job': job.as_dict}, HTTPStatus.OK.value
+        content, status = {'msg': JOB['get']['success'], 'job': job.as_dict()}, HTTPStatus.OK.value
     finally:
         return content, status
 
@@ -72,7 +67,7 @@ def get_all(userId: Optional[int]) -> Tuple[Content, HttpStatusCode]:
     else:
         results = []
         for job in jobs:
-            results.append(job.as_dict)
+            results.append(job.as_dict())
         content, status = {'msg': JOB['all']['success'], 'jobs': results}, HTTPStatus.OK.value
     finally:
         return content, status
@@ -105,7 +100,7 @@ def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     else:
         content = {
             'msg': JOB['create']['success'],
-            'job': new_job.as_dict
+            'job': new_job.as_dict()
         }
         status = HTTPStatus.CREATED.value
     finally:
@@ -136,7 +131,7 @@ def update(id: JobId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCod
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
-        content, status = {'msg': JOB['update']['success'], 'job': job.as_dict}, HTTPStatus.OK.value
+        content, status = {'msg': JOB['update']['success'], 'job': job.as_dict()}, HTTPStatus.OK.value
     finally:
         return content, status
 
@@ -191,7 +186,7 @@ def add_task(job_id: JobId, task_id: TaskId) -> Tuple[Content, HttpStatusCode]:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
-        content, status = {'msg': JOB['tasks']['add']['success'], 'job': job.as_dict}, HTTPStatus.OK.value
+        content, status = {'msg': JOB['tasks']['add']['success'], 'job': job.as_dict()}, HTTPStatus.OK.value
     finally:
         return content, status
 
@@ -221,7 +216,7 @@ def remove_task(job_id: JobId, task_id: TaskId) -> Tuple[Content, HttpStatusCode
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
-        content, status = {'msg': JOB['tasks']['remove']['success'], 'job': job.as_dict}, HTTPStatus.OK.value
+        content, status = {'msg': JOB['tasks']['remove']['success'], 'job': job.as_dict()}, HTTPStatus.OK.value
     finally:
         return content, status
 
@@ -283,7 +278,7 @@ def business_execute(id: JobId) -> Tuple[Content, HttpStatusCode]:
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
         log.info('Job {} is now: {}'.format(job.id, job.status.name))
-        content, status = {'msg': JOB['execute']['success'], 'job': job.as_dict}, HTTPStatus.OK.value
+        content, status = {'msg': JOB['execute']['success'], 'job': job.as_dict()}, HTTPStatus.OK.value
     finally:
         return content, status
 
@@ -350,6 +345,10 @@ def business_stop(id: JobId, gracefully: Optional[bool] = True) -> Tuple[Content
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
     else:
         log.info('Job {} is now: {}'.format(job.id, job.status.name))
-        content, status = {'msg': JOB['stop']['success'], 'job': job.as_dict}, HTTPStatus.OK.value
+        content, status = {'msg': JOB['stop']['success'], 'job': job.as_dict()}, HTTPStatus.OK.value
     finally:
         return content, status
+
+
+def is_admin() -> bool:
+    return 'admin' in get_jwt_claims()['roles']

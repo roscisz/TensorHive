@@ -6,6 +6,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.models.CRUDModel import CRUDModel
 from tensorhive.models.Task import Task, TaskStatus
 from tensorhive.utils.DateUtils import DateUtils
+from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from typing import Optional, Union
 import enum
 import logging
@@ -21,6 +22,8 @@ class JobStatus(enum.Enum):
 
 class Job(CRUDModel, Base):  # type: ignore
     __tablename__ = 'jobs'
+    __table_args__ = {'sqlite_autoincrement': True}
+    __public__ = ['id', 'name', 'description', 'user_id', 'start_at', 'stop_at']
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(40), unique=True, nullable=False)
@@ -59,15 +62,15 @@ class Job(CRUDModel, Base):  # type: ignore
 
     def add_task(self, task: Task):
         if task in self.tasks:
-            raise Exception('Task {task} is already assigned to job {job}!'
-                            .format(task=task, job=self))
+            raise InvalidRequestException('Task {task} is already assigned to job {job}!'
+                                          .format(task=task, job=self))
         self.tasks.append(task)
         self.save()
 
     def remove_task(self, task: Task):
         if task not in self.tasks:
-            raise Exception('Task {task} is not assigned to job {job}!'
-                            .format(task=task, job=self))
+            raise InvalidRequestException('Task {task} is not assigned to job {job}!'
+                                          .format(task=task, job=self))
         self.tasks.remove(task)
         self.save()
 
@@ -79,9 +82,9 @@ class Job(CRUDModel, Base):  # type: ignore
                 return
         if status is TaskStatus.unsynchronized:
             self.status = JobStatus.unsynchronized
-        if status is TaskStatus.not_running:
+        elif status is TaskStatus.not_running:
             self.status = JobStatus.not_running
-        if status is TaskStatus.terminated:
+        elif status is TaskStatus.terminated:
             self.status = JobStatus.terminated
         self.save()
 
@@ -93,14 +96,7 @@ class Job(CRUDModel, Base):  # type: ignore
     def stop_at(self):
         return self._stop_at
 
-    @property
-    def as_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'userId': self.user_id,
-            'status': self.status.name,
-            'startAt': DateUtils.try_stringify_datetime(self.start_at),
-            'stopAt': DateUtils.try_stringify_datetime(self.stop_at)
-        }
+    def as_dict(self, include_private=None):
+        ret = super(Job, self).as_dict(include_private=include_private)
+        ret['status'] = self.status.name
+        return ret

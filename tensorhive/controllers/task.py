@@ -351,15 +351,13 @@ def business_get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-# TODO What if task is already running: allow for updating command, hostname, etc.?
 def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """Updates certain fields of a Task db record, including command field."""
     try:
         task = Task.get(id)
+        assert task.status is not TaskStatus.running, "Cannot update task which is already running"
         for key, value in new_values.items():
             if key == 'hostname':
-                # API client is allowed to use more verbose name here (hostname <=> host)
-                key = 'host'
                 setattr(task, key, value)
             elif key.startswith('cmd_segment'):
                 segment = value
@@ -511,7 +509,8 @@ def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[C
         content, status = {'msg': TASK['terminate']['failure']['state'].format(reason=e)}, 409
     except ExitCodeError:
         content, status = {'msg': TASK['terminate']['failure']['exit_code'], 'exit_code': exit_code}, 202
-    # TODO What if terminate could not connect, ConnectionErrorException?
+    except ConnectionErrorException as e:
+        content, status = {'msg': TASK['failure']['connection'].format(reason=e)}, 500
     except Exception as e:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, 500
@@ -524,7 +523,7 @@ def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[C
 def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
     """Fetches log file created by spawned task (output redirection).
 
-    It relies on reading files located on filesystem, via connection with `task.user.username@task.host`
+    It relies on reading files located on filesystem, via connection with `parent_job.user.username@task.host`
     If file does not exist there's no way to fetch it from database (currently).
     File names must be named in one fashion (standard defined in `task_nursery.fetch_log`,
     currently: `task_<id>.log`). Renaming them manually will lead to inconsistency or 'Not Found' errors.
@@ -534,9 +533,10 @@ def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
     """
     try:
         task = Task.get(id)
+        parent_job = Job.query.filter(task.job_id).one()
         assert task.hostname, 'hostname is empty'
-        assert task.user, 'user does not exist'
-        output_gen, log_path = task_nursery.fetch_log(task.hostname, task.user.username, task.id, tail)
+        assert parent_job.user, 'user does not exist'
+        output_gen, log_path = task_nursery.fetch_log(task.hostname, parent_job.user.username, task.id, tail)
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except ExitCodeError as e:

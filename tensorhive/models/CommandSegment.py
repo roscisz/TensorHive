@@ -18,7 +18,8 @@ class SegmentType(enum.Enum):
 
 class CommandSegment(CRUDModel, Base):  # type: ignore
     __tablename__ = 'command_segments'
-
+    __table_args__ = {'sqlite_autoincrement': True}
+    
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), nullable=False)
     _segment_type = Column(Enum(SegmentType), default=SegmentType.env_variable, nullable=False)

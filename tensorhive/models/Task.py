@@ -18,7 +18,8 @@ class TaskStatus(enum.Enum):
 
 class Task(CRUDModel, Base):  # type: ignore
     __tablename__ = 'tasks'
-    __public__ = ['id', 'user_id', 'hostname', 'pid', 'command', 'spawn_at', 'terminate_at']
+    __table_args__ = {'sqlite_autoincrement': True}
+    __public__ = ['id', 'job_id', 'hostname', 'pid', 'command']
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     job_id = Column(Integer, ForeignKey('jobs.id', ondelete='CASCADE'))
@@ -130,6 +131,5 @@ class Task(CRUDModel, Base):  # type: ignore
 
     def as_dict(self, include_private=None):
         ret = super(Task, self).as_dict(include_private=include_private)
-        ret['jobId'] = self.job_id
         ret['status'] = self.status.name
         return ret
