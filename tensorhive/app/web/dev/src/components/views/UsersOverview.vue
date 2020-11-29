@@ -906,12 +906,12 @@ export default {
           var formattedStart = moment(this.modalStartDate + 'T' + this.modalStartTime).toISOString()
           var restrictionToCreate = {
             name: this.modalRestrictionName,
-            start: formattedStart,
+            startsAt: formattedStart,
             isGlobal: this.globalRestriction
           }
           if (!this.infiniteRestriction) {
             var formattedEnd = moment(this.modalEndDate + 'T' + this.modalEndTime).toISOString()
-            restrictionToCreate.end = formattedEnd
+            restrictionToCreate.endsAt = formattedEnd
           }
           const { globalRestriction, tempSchedules, resourcesValue, usersValue, groupsValue } = this
           api
@@ -1013,8 +1013,8 @@ export default {
             .request('put', '/restrictions/' + this.currentRestriction.id, this.$store.state.accessToken,
               {
                 'name': modalRestrictionName,
-                'start': formattedStart,
-                'end': formattedEnd,
+                'startsAt': formattedStart,
+                'endsAt': formattedEnd,
                 'isGlobal': globalRestriction
               }).then(response => {
               this.checkRestrictions()

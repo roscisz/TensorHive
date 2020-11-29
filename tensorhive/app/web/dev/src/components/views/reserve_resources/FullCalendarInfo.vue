@@ -325,8 +325,7 @@ export default {
     },
 
     reservationCancelled () {
-      if (this.reservation.isCancelled === 'True') return true
-      else return false
+      return this.reservation.isCancelled
     }
   },
 

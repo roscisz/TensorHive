@@ -100,7 +100,7 @@ export default {
             self.reservationId = -1
           }
           var reservationsEvents = response.data.filter(
-            r => r.userId === self.$store.state.id || r.isCancelled === 'False')
+            r => r.userId === self.$store.state.id || !r.isCancelled)
           callback(reservationsEvents)
         })
         .catch(error => {
@@ -362,7 +362,7 @@ export default {
           $(element).css('color', 'rgba(0, 0, 0, 0)')
         }
         if (!event.allDay && event.groupId !== 'restriction') {
-          if (event.isCancelled === 'True') {
+          if (event.isCancelled) {
             element.find('.fc-title').append('<br/>' + ('(cancelled)').big().italics())
           }
           api
@@ -416,7 +416,7 @@ export default {
           }
           if (event.groupId !== 'restriction') {
             var c
-            if (event.isCancelled === 'True') c = '#B5B7BA' // light gray
+            if (event.isCancelled) c = '#B5B7BA' // light gray
             else {
               c = self.setColor(resourceIndex, resourceNodeName)
               if (event.userId === self.$store.state.id) {
