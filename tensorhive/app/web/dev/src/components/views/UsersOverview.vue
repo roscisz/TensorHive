@@ -344,7 +344,7 @@
                 icon
                 color="blue-grey lighten-5"
                 @click="addSchedule()"
-                :disabled="tempSchedules.length===5"
+                :disabled="tempSchedules.length===10"
                 >
                 <v-icon>add</v-icon>
               </v-btn>

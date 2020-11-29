@@ -386,7 +386,7 @@ export default {
       this.user.username = currentUser.username
       this.user.email = currentUser.email
       this.user.groups = currentUser.groups
-      this.userOldGroups = this.currentUser.groups.slice()
+      this.userOldGroups = currentUser.groups.slice()
       var admin = false
       for (var role in currentUser.roles) {
         if (currentUser.roles[role] === 'admin') {
