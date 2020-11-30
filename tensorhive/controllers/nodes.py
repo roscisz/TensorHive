@@ -1,3 +1,4 @@
+import copy
 from connexion import NoContent
 from flask_jwt_extended import jwt_required, get_jwt_claims, get_jwt_identity
 from sqlalchemy.orm.exc import NoResultFound
@@ -11,7 +12,7 @@ NODES = API.RESPONSES['nodes']
 
 def get_infrastructure():
     # Make a copy of infrastructure
-    infrastructure = dict(TensorHiveManager().infrastructure_manager.infrastructure)
+    infrastructure = copy.deepcopy(TensorHiveManager().infrastructure_manager.infrastructure)
 
     # Try to save new and update existing GPU resources to database
     try:
