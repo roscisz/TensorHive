@@ -3,6 +3,10 @@ sudo: false   # Uses sudo for e.g. binding the port but not for testing
 language: python
 python:
   - 3.5
+  - 3.6
+  - 3.7
+  - 3.8
+  - 3.9
 cache: pip
 install: 
   - pip install .
