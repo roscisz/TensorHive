@@ -19,8 +19,12 @@ Base = declarative_base()
 Base.query = db_session.query_property()
 
 
-def init_db() -> None:
-    '''Creates the database, tables (if they does not exist)'''
+def check_if_db_exists() -> bool:
+    return database_exists(DB.SQLALCHEMY_DATABASE_URI)
+
+
+def init_db_schema_if_nonexistent() -> None:
+    """Creates the database, tables (if they does not exist)"""
     # Import all modules that define models so that
     # they could be registered properly on the metadata.
     from tensorhive.models.User import User
@@ -33,7 +37,7 @@ def init_db() -> None:
     from tensorhive.models.Role import Role
     from tensorhive.models.Task import Task
 
-    if not database_exists(DB.SQLALCHEMY_DATABASE_URI):
+    if not check_if_db_exists():
         Base.metadata.create_all(bind=engine, checkfirst=True)
         log.info('[✔] Database created ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
     else:

@@ -1,6 +1,6 @@
 import click
 
-from tensorhive.database import init_db
+from tensorhive.database import init_db_schema_if_nonexistent
 from tensorhive.models.Group import Group
 from tensorhive.models.Role import Role
 from tensorhive.models.User import User
@@ -14,7 +14,7 @@ class AccountCreator:
     '''
 
     def __init__(self):
-        init_db()
+        init_db_schema_if_nonexistent()
         # Prepare empty ORM object
         self.new_user = User()
 
