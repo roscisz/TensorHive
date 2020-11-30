@@ -40,28 +40,9 @@ def get_infrastructure():
         pass
 
     if not is_admin():
-        # Only return resources for which the user has permissions
         try:
             user = User.get(get_jwt_identity())
-            not_allowed_hostnames = []
-            allowed_gpus = []
-            for restriction in user.get_restrictions(include_expired=False, include_group=True):
-                # If restriction is global user has permissions to all resources
-                if restriction.is_global:
-                    return infrastructure
-                allowed_gpus.extend([resource.id for resource in restriction.resources])
-            allowed_gpus = set(allowed_gpus)
-            for hostname, value in infrastructure.items():
-                gpu_list = value.get('GPU')
-                if gpu_list is not None:
-                    all_gpus = set(gpu_list.keys())
-                    not_allowed_gpus = all_gpus - allowed_gpus
-                    for key in not_allowed_gpus:
-                        del gpu_list[key]
-                if gpu_list is None or len(gpu_list) == 0:
-                    not_allowed_hostnames.append(hostname)
-            for hostname in not_allowed_hostnames:
-                del infrastructure[hostname]
+            infrastructure = user.filter_infrastructure_by_user_restrictions(infrastructure)
         except NoResultFound:
             # Such user does not exist
             return {}
