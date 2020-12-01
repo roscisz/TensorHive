@@ -38,7 +38,10 @@ class MonitoringService(Service):
         start_time = time_func()
 
         for monitor in self.monitors:
-            monitor.update(self.connection_manager.connections, self.infrastructure_manager)
+            try:
+                monitor.update(self.connection_manager.connections, self.infrastructure_manager)
+            except Exception as e:
+                log.warning('Exception in monitor {}: {}'.format(monitor, e))
 
         end_time = time_func()
         execution_time = end_time - start_time
