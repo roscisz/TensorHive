@@ -41,7 +41,7 @@ class Group(CRUDModel, RestrictionAssignee):  # type: ignore
     def users(self):
         return self._users
 
-    @is_default.setter
+    @is_default.setter  # type: ignore
     def is_default(self, value):
         self._is_default = value
 

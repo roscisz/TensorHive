@@ -73,17 +73,17 @@ class Restriction(CRUDModel, Base):  # type: ignore
     def created_at(self):
         return self._created_at
 
-    @starts_at.setter
+    @starts_at.setter  # type: ignore
     def starts_at(self, value: str):
         self._starts_at = DateUtils.try_parse_string(value)
         if self._starts_at is None:
             log.error('Unsupported type (starts_at={})'.format(value))
 
-    @ends_at.setter
+    @ends_at.setter  # type: ignore
     def ends_at(self, value: str):
         self._ends_at = DateUtils.try_parse_string(value)
 
-    @created_at.setter
+    @created_at.setter  # type: ignore
     def created_at(self, value: str):
         self._created_at = DateUtils.try_parse_string(value)
         if self._created_at is None:
