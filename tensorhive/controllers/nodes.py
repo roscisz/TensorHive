@@ -1,16 +1,20 @@
+import copy
 from connexion import NoContent
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_claims, get_jwt_identity
+from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.config import API
 from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
+from tensorhive.models import User
 from tensorhive.models.Resource import Resource
 
 NODES = API.RESPONSES['nodes']
 
 
 def get_infrastructure():
-    infrastructure = TensorHiveManager().infrastructure_manager.infrastructure
+    # Make a copy of infrastructure
+    infrastructure = copy.deepcopy(TensorHiveManager().infrastructure_manager.infrastructure)
 
-    # Try to save gpu resource to database
+    # Try to save new and update existing GPU resources to database
     try:
         resources = Resource.all()
         id_list = [resource.id for resource in resources]
@@ -34,6 +38,14 @@ def get_infrastructure():
     except Exception:
         # In case of failure just return infrastructure
         pass
+
+    if not is_admin():
+        try:
+            user = User.get(get_jwt_identity())
+            infrastructure = user.filter_infrastructure_by_user_restrictions(infrastructure)
+        except NoResultFound:
+            # Such user does not exist
+            return {}
 
     return infrastructure
 
@@ -113,7 +125,7 @@ def get_gpu_metrics(hostname: str, metric_type: str = None):
         return content, status
 
 
-# @jwt_required
+@jwt_required
 def get_gpu_processes(hostname: str):
     try:
         infrastructure = get_infrastructure()
@@ -146,3 +158,7 @@ def get_gpu_info(hostname: str):
         status = 404
     finally:
         return content, status
+
+
+def is_admin() -> bool:
+    return 'admin' in get_jwt_claims()['roles']
