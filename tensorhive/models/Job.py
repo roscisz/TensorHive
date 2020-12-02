@@ -26,7 +26,7 @@ class Job(CRUDModel, Base):  # type: ignore
     __public__ = ['id', 'name', 'description', 'user_id', 'start_at', 'stop_at']
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(40), unique=True, nullable=False)
+    name = Column(String(40), nullable=False)
     description = Column(Text)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
     status = Column(Enum(JobStatus), default=JobStatus.not_running, nullable=False)

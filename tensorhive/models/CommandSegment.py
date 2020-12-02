@@ -21,7 +21,7 @@ class CommandSegment(CRUDModel, Base):  # type: ignore
     __table_args__ = {'sqlite_autoincrement': True}
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(50), nullable=False)
+    name = Column(String(50), unique=True, nullable=False)
     _segment_type = Column(Enum(SegmentType), default=SegmentType.env_variable, nullable=False)
     _tasks = relationship('Task', secondary='cmd_segment2task', back_populates='_cmd_segments')
 

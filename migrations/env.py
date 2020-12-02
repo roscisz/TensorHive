@@ -22,6 +22,8 @@ from tensorhive.models.Reservation import Reservation
 from tensorhive.models.RevokedToken import RevokedToken
 from tensorhive.models.Role import Role
 from tensorhive.models.Task import Task
+from tensorhive.models.Job import Job
+from tensorhive.models.CommandSegment import CommandSegment, CommandSegment2Task
 target_metadata = Base.metadata
 
 # Configuration
