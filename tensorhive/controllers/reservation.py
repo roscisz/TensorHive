@@ -133,6 +133,7 @@ def update(id: ReservationId, newValues: Dict[str, Any]) -> Tuple[Content, HttpS
                 ReservationVerifier.is_reservation_allowed(user, reservation):
             raise ForbiddenReservationException()
 
+        reservation.is_cancelled = False
         reservation.save()
         content, status = {'msg': RESERVATION['update']['success'], 'reservation': reservation.as_dict()}, 201
     except ForbiddenReservationException as fre:
