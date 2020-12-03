@@ -1,3 +1,5 @@
+from alembic import command, config
+from alembic.config import Config
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -32,9 +34,10 @@ def init_db() -> None:
     from tensorhive.models.RevokedToken import RevokedToken
     from tensorhive.models.Role import Role
     from tensorhive.models.Task import Task
-
     if not database_exists(DB.SQLALCHEMY_DATABASE_URI):
         Base.metadata.create_all(bind=engine, checkfirst=True)
+        # mark current DB as up to date with the most recent migration
+        command.stamp(Config('alembic.ini'), 'head')
         log.info('[✔] Database created ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
     else:
         log.info('[•] Database found ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
