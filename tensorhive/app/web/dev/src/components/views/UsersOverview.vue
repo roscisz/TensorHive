@@ -721,7 +721,10 @@ export default {
       var startOfDay = schedules.filter(s => s.hourStart === '00:00')
       var endOfDay = schedules.filter(s => s.hourEnd === '23:59')
       startOfDay.forEach(start => endOfDay.forEach(end => {
-        if (JSON.stringify(start.scheduleDays) === JSON.stringify(end.scheduleDays)) {
+        var localStart = moment.utc(end.hourStart, 'HH:mm').local().format('HH:mm')
+        var localEnd = moment.utc(start.hourEnd, 'HH:mm').local().format('HH:mm')
+        if (JSON.stringify(start.scheduleDays) === JSON.stringify(end.scheduleDays) &&
+        moment(localStart, 'HH:mm').isBefore(moment(localEnd, 'HH:mm'))) {
           schedules = schedules.filter(function (x) {
             return x.id !== start.id && x.id !== end.id
           })
