@@ -416,8 +416,15 @@ export default {
           }
           if (event.groupId !== 'restriction') {
             var c
-            if (event.isCancelled) c = '#B5B7BA' // light gray
-            else {
+            if (event.isCancelled) {
+              c = '#B5B7BA' // light gray
+              $(element).css('background-color', 'rgba(150, 150, 150, 0.5)')
+              $(element).hover(function () {
+                $(this).css('background-color', 'rgba(150, 150, 150, 0.3)')
+              }, function () {
+                $(this).css('background-color', 'rgba(150, 150, 150, 0.5)')
+              })
+            } else {
               c = self.setColor(resourceIndex, resourceNodeName)
               if (event.userId === self.$store.state.id) {
                 c = '#15C02C' // user specified color: green
