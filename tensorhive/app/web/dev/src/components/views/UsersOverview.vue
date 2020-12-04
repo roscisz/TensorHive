@@ -63,9 +63,9 @@
             <td>
               <v-tooltip bottom :disabled="props.item.schedules.length<=1">
                 <template v-slot:activator="{ on, attrs }">
-                  <span class="white-space" v-bind="attrs" v-on="on">{{ printSchedules(props.item.displaySchedules) }}</span>
+                  <span class="white-space" v-bind="attrs" v-on="on">{{ printSchedules(props.item.schedules) }}</span>
                 </template>
-                <span class="white-space">{{ printSchedules(props.item.displaySchedules, all=true) }}</span>
+                <span class="white-space">{{ printSchedules(props.item.schedules, all=true) }}</span>
               </v-tooltip>
             </td>
             <td>
@@ -349,6 +349,12 @@
                 <v-icon>add</v-icon>
               </v-btn>
           </p>
+          <v-alert
+            :value="tempSchedules.length"
+            type="warning"
+          >
+            Please specify schedule hours in UTC time. Current UTC time is {{ currentUtcTime }}.
+          </v-alert>
           <transition-group name="fade">
             <v-layout align-center justify-center
               v-for="(schedule, key, index) in tempSchedules"
@@ -524,6 +530,17 @@ export default {
           this.selectHostResources(host[0])
         }
       } else this.triggerHostsWatcher = true
+    },
+    showRestrictions: function (after, before) {
+      let self = this
+      if (after === true && before === false) {
+        self.updateUtcTime()
+        this.interval = setInterval(function () {
+          self.updateUtcTime()
+        }, 5000)
+      } else {
+        clearInterval(self.interval)
+      }
     }
   },
   data () {
@@ -581,6 +598,9 @@ export default {
     this.checkRestrictions()
   },
   methods: {
+    updateUtcTime () {
+      this.currentUtcTime = moment().utc().format('HH:mm')
+    },
     prettyDate (date) {
       if (date !== null) {
         return moment(date).format('dddd, MMMM Do, HH:mm')
@@ -717,32 +737,12 @@ export default {
     deleteSchedule (scheduleKey) {
       this.tempSchedules.splice(scheduleKey, 1)
     },
-    mergeSchedules (schedules) {
-      var startOfDay = schedules.filter(s => s.hourStart === '00:00')
-      var endOfDay = schedules.filter(s => s.hourEnd === '23:59')
-      startOfDay.forEach(start => endOfDay.forEach(end => {
-        var localStart = moment.utc(end.hourStart, 'HH:mm').local().format('HH:mm')
-        var localEnd = moment.utc(start.hourEnd, 'HH:mm').local().format('HH:mm')
-        if (JSON.stringify(start.scheduleDays) === JSON.stringify(end.scheduleDays) &&
-        moment(localStart, 'HH:mm').isBefore(moment(localEnd, 'HH:mm'))) {
-          schedules = schedules.filter(function (x) {
-            return x.id !== start.id && x.id !== end.id
-          })
-          var newSchedule = this.scheduleBlueprint()
-          newSchedule.hourStart = end.hourStart
-          newSchedule.hourEnd = start.hourEnd
-          newSchedule.scheduleDays = start.scheduleDays
-          schedules.push(newSchedule)
-        }
-      }))
-      return schedules
-    },
     copySchedules (schedules) {
       this.tempSchedules = []
       for (const schedule of schedules) {
         var newSchedule = this.scheduleBlueprint()
-        newSchedule.hourStart = moment.utc(schedule.hourStart, 'HH:mm').local().format('HH:mm')
-        newSchedule.hourEnd = moment.utc(schedule.hourEnd, 'HH:mm').local().format('HH:mm')
+        newSchedule.hourStart = schedule.hourStart
+        newSchedule.hourEnd = schedule.hourEnd
         newSchedule.scheduleDays = schedule.scheduleDays
         this.tempSchedules.push(newSchedule)
       }
@@ -787,9 +787,7 @@ export default {
       api
         .request('get', '/restrictions', this.$store.state.accessToken)
         .then(response => {
-          let self = this
-          self.restrictions = response.data
-          self.restrictions.forEach(function (r) { r.displaySchedules = self.mergeSchedules(r.schedules) })
+          this.restrictions = response.data
         })
         .catch(error => {
           this.handleError(error)
@@ -960,30 +958,9 @@ export default {
     verifyTempSchedules () {
       if (this.tempSchedules.length === 0) return true
       else {
-        if (this.tempSchedules.every(s => s.hourStart && s.hourEnd &&
-          s.hourStart !== s.hourEnd && s.scheduleDays.length > 0)) {
-          this.convertSchedulesTime()
-          return true
-        } else return false
+        return this.tempSchedules.every(s => s.hourStart && s.hourEnd &&
+          s.hourStart !== s.hourEnd && s.scheduleDays.length > 0)
       }
-    },
-    convertSchedulesTime () {
-      var newSchedules = []
-      for (const schedule of this.tempSchedules) {
-        var utcStart = moment(schedule.hourStart, 'HH:mm').utc().format('HH:mm')
-        var utcEnd = moment(schedule.hourEnd, 'HH:mm').utc().format('HH:mm')
-        schedule.hourStart = utcStart
-        schedule.hourEnd = utcEnd
-        if (moment(utcStart, 'HH:mm').isAfter(moment(utcEnd, 'HH:mm'))) {
-          var newSchedule = this.scheduleBlueprint()
-          newSchedule.hourStart = '00:00'
-          newSchedule.hourEnd = schedule.hourEnd
-          newSchedule.scheduleDays = schedule.scheduleDays
-          newSchedules.push(newSchedule)
-          schedule.hourEnd = '23:59'
-        }
-      }
-      newSchedules.forEach(s => this.tempSchedules.push(s))
     },
     removeRestriction () {
       var restrictionId = this.restrictionId
@@ -1018,7 +995,7 @@ export default {
         this.modalEndDate = ''
         this.modalEndTime = ''
       }
-      this.copySchedules(currentRestriction.displaySchedules)
+      this.copySchedules(currentRestriction.schedules)
       this.currentRestriction = currentRestriction
     },
     updateRestriction () {

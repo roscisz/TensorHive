@@ -261,10 +261,8 @@ export default {
           for (const schedule of restriction.schedules) {
             for (const day of schedule.scheduleDays) {
               var date = this.findDateForWeekday(start, day)
-              var localStartTime = moment.utc(schedule.hourStart, 'HH:mm').local().format('HH:mm')
-              var localEndTime = moment.utc(schedule.hourEnd, 'HH:mm').local().format('HH:mm')
-              var eventStart = moment(date + ' ' + localStartTime)
-              var eventEnd = moment(date + ' ' + localEndTime)
+              var eventStart = moment.utc(date + ' ' + schedule.hourStart).local()
+              var eventEnd = moment.utc(date + ' ' + schedule.hourEnd).local()
 
               if (moment(date).isSameOrAfter(moment(restriction.startsAt).startOf('day')) &&
               moment(date).isSameOrBefore(moment(restriction.endsAt).endOf('day')) &&
@@ -272,9 +270,7 @@ export default {
               moment(eventEnd).isSameOrAfter(restriction.startsAt)) {
                 if (moment(eventStart).isBefore(restriction.startsAt)) eventStart = restriction.startsAt
                 if (moment(eventEnd).isAfter(restriction.endsAt)) eventEnd = restriction.endsAt
-                if (moment(eventStart).format('YYYY-MM-DDTHH:mm:ssZ') !== moment(eventEnd).format('YYYY-MM-DDTHH:mm:ssZ')) {
-                  this.showRestrictionResourcesEvents(restriction, start, end, eventStart, eventEnd)
-                }
+                this.showRestrictionResourcesEvents(restriction, start, end, eventStart, eventEnd)
               }
             }
           }
