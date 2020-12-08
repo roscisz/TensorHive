@@ -85,7 +85,7 @@ def main(ctx, log_level):
         return
 
     click.echo('TensorHive {}'.format(tensorhive.__version__))
-    setup_logging(log_level)
+    setup_logging(log_level=log_level)
 
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
     from tensorhive.api.APIServer import APIServer
@@ -127,7 +127,7 @@ def test():
     from tensorhive.config import SSH
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
 
-    logging.basicConfig(level=logging.INFO, format='%(message)-79s')
+    setup_logging(log_level=logging.INFO)
 
     if not SSH.AVAILABLE_NODES:
         click.echo('[!] Empty ssh configuration. Please check {}'.format(SSH.HOSTS_CONFIG_FILE))
@@ -235,6 +235,7 @@ def key():
 @click.option('-m', '--multiple', is_flag=True, help='Create more users in one go.')
 def user(multiple):
     from tensorhive.core.utils.AccountCreator import AccountCreator
+    setup_logging()
     creator = AccountCreator()
     # Create one user
     creator.run_prompt()
