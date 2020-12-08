@@ -3,6 +3,10 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_utils import database_exists
 from tensorhive.config import DB
+from alembic import command
+from alembic.config import Config
+from alembic.migration import MigrationContext
+from alembic.script import ScriptDirectory
 import logging
 import os
 log = logging.getLogger(__name__)
@@ -23,8 +27,7 @@ def check_if_db_exists() -> bool:
     return database_exists(DB.SQLALCHEMY_DATABASE_URI)
 
 
-def init_db_schema_if_nonexistent() -> None:
-    """Creates the database, tables (if they does not exist)"""
+def _import_models() -> None:
     # Import all modules that define models so that
     # they could be registered properly on the metadata.
     from tensorhive.models.User import User
@@ -65,10 +68,14 @@ def ensure_db_with_current_schema() -> None:
     alembic_config = Config('alembic.ini')
 
     if not check_if_db_exists():
-        Base.metadata.create_all(bind=engine, checkfirst=True)
-        log.info('[✔] Database created ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
+        initialize_db(alembic_config)
     else:
-        log.info('[•] Database found ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
+        with engine.begin() as connection:
+            if _schema_version_is_current(alembic_config, connection):
+                log.info('[✔] DB up to date')
+            else:
+                log.warning('[•] DB schema is out of date, trying to upgrade automatically')
+                _upgrade_db_schema(alembic_config)
 
 
 def _fk_pragma_on_connect(dbapi_con, con_record):

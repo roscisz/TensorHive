@@ -120,9 +120,9 @@ class AccountCreator:
 
         if Restriction.query.count() == 0:
             if click.confirm(orange('There are no permissions specified') + ' - that means, that by default '
-                                    'users will not have access to any resources. Would you like to create '
-                                    'a default permission together with a default group now? (All users '
-                                    'would have access to every resource)', default=True):
+                             'users will not have access to any resources. Would you like to create '
+                             'a default permission together with a default group now? (All users '
+                             'would have access to every resource)', default=True):
                 default_group = Group(name='users')
                 default_group._is_default = True
                 default_group.save()
