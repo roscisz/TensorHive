@@ -1,7 +1,6 @@
 import click
 from tensorhive.core.utils.colors import orange, green
 from tensorhive.core.utils.exceptions import ConfigurationException
-from datetime import datetime
 import tensorhive
 import logging
 import sys
@@ -89,7 +88,7 @@ def main(ctx, log_level):
 
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
     from tensorhive.api.APIServer import APIServer
-    from tensorhive.database import check_if_db_exists, init_db_schema_if_nonexistent
+    from tensorhive.database import check_if_db_exists, ensure_db_with_current_schema
     from tensorhive.models.User import User
     from tensorhive.app.web.AppServer import start_server
     from multiprocessing import Process
@@ -97,6 +96,8 @@ def main(ctx, log_level):
     try:
         if not check_if_db_exists():
             init()
+        else:
+            ensure_db_with_current_schema()
 
         manager = TensorHiveManager()
         api_server = APIServer()
@@ -142,16 +143,18 @@ def init():
     from tensorhive.config import config as main_config
     from tensorhive.core.utils.AccountCreator import AccountCreator
     from inspect import cleandoc
-    from tensorhive.database import init_db_schema_if_nonexistent
+    from tensorhive.database import ensure_db_with_current_schema
     from tensorhive.models.User import User
     from tensorhive.models.Group import Group
     from tensorhive.models.Restriction import Restriction
-    logging.basicConfig(level=logging.INFO, format='%(message)-79s')
+    setup_logging(log_level=logging.INFO)
+
+    logging.info('[•] Initializing configuration...')
 
     # Exposed host
-    if click.confirm('[1/4] Do you want TensorHive to be accessible to other users in your network?'):
+    if click.confirm('[1/3] Do you want TensorHive to be accessible to other users in your network?'):
         host = click.prompt(
-            '[1/4] What is the public hostname/address of this node (which is visible by all end users)?')
+            '[1/3] What is the public hostname/address of this node (which is visible by all end users)?')
     else:
         host = '0.0.0.0'
     main_config.set('api', 'url_hostname', host)
@@ -159,41 +162,18 @@ def init():
         main_config.write(main_config_file)
     click.echo(green('[⚙] TensorHive will be accessible via: {}'.format(host)))
 
-    init_db_schema_if_nonexistent()
-
-    # Add default restriction, group
-    if Restriction.query.count() == 0:
-        if click.confirm('[2/4] ' + orange('There are no permissions specified') + ' - that means, that by default '
-                         'users will not have access to any resources. Would you like me to create a default '
-                         'permission together with a default group now? (All users would have access to every '
-                         'resource)', default=True):
-            default_group = Group(name='users')
-            default_group._is_default = True
-            default_group.save()
-
-            default_restriction = Restriction(name='can always use everything', starts_at=datetime.utcnow(),
-                                              is_global=True)
-            default_restriction.apply_to_group(default_group)
-
-            click.echo('[2/4] Created a default group: {} and a permission "{}" '
-                       .format(default_group.name, default_restriction.name) + 'allowing access to every resource '
-                       'at any time.')
-        else:
-            click.echo('[•] OK - not creating any permissions. Please remember that you need to define permissions'
-                       ' in order for users to be able to access the resources.')
-    else:
-        click.echo('[•] There are some permissions in the database already, skipping...')
+    ensure_db_with_current_schema()
 
     # First user account
     if User.query.count() == 0:
-        if click.confirm('[3/4] ' + orange('Database has no users.') + ' Would you like to create an account now?',
+        if click.confirm('[2/3] ' + orange('Database has no users.') + ' Would you like to create an account now?',
                          default=True):
             AccountCreator().run_prompt()
     else:
         click.echo('[•] There are some users in the database already, skipping...')
 
     # Edit configs
-    click.echo('[4/4] ' + green('Done ✔!') + ' Now you just need to adjust these configs to your needs:\n')
+    click.echo('[3/3] ' + green('Done ✔!') + ' Now you just need to adjust these configs to your needs:\n')
     click.echo(cleandoc('''
         (required) {hosts}
         (optional) {main}

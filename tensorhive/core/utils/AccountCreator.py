@@ -1,9 +1,12 @@
 import click
 
-from tensorhive.database import init_db_schema_if_nonexistent
+from tensorhive.database import ensure_db_with_current_schema
+from tensorhive.core.utils.colors import orange, green, red
 from tensorhive.models.Group import Group
 from tensorhive.models.Role import Role
 from tensorhive.models.User import User
+from tensorhive.models.Restriction import Restriction
+from datetime import datetime
 
 
 class AccountCreator:
@@ -14,7 +17,8 @@ class AccountCreator:
     '''
 
     def __init__(self):
-        init_db_schema_if_nonexistent()
+        ensure_db_with_current_schema()
+        self._check_restrictions()
         # Prepare empty ORM object
         self.new_user = User()
 
@@ -23,16 +27,18 @@ class AccountCreator:
         self._ask_for_email()
         self._ask_for_password()
         self._ask_for_role()
-        self._create_user()
-        self._add_to_default_groups()
+        if self._create_user():
+            self._add_to_default_groups()
 
-    def _create_user(self):
+    def _create_user(self) -> bool:
         try:
             self.new_user.save()
         except Exception as e:
-            click.echo('Account creation failed due to an error: {}.'.format(e))
+            click.echo(red('Account creation failed due to an error: {}.'.format(e)))
+            return False
         else:
-            click.echo('Account created successfully.')
+            click.echo(green('Account created successfully.'))
+            return True
 
     def _ask_for_username(self):
         '''
@@ -47,7 +53,7 @@ class AccountCreator:
             except click.Abort:
                 raise
             except Exception as e:
-                click.echo('Invalid username: {reason}.'.format(reason=e))
+                click.echo(red('Invalid username: {reason}.'.format(reason=e)))
             else:
                 valid_username_provided = True
 
@@ -60,7 +66,7 @@ class AccountCreator:
             except click.Abort:
                 raise
             except Exception as e:
-                click.echo('Invalid email: {reason}.'.format(reason=e))
+                click.echo(red('Invalid email: {reason}.'.format(reason=e)))
             else:
                 valid_email_provided = True
 
@@ -77,7 +83,7 @@ class AccountCreator:
                 password1 = prompt_for_password(message=first_password_message)
                 self.new_user.password = password1
                 password2 = prompt_for_password(message=repeated_password_message)
-                assert password1 == password2, 'Passwords don\'t match, please try again.'
+                assert password1 == password2, orange('Passwords don\'t match, please try again.')
             except click.Abort:
                 raise
             except Exception as error_msg:
@@ -96,7 +102,7 @@ class AccountCreator:
         except click.Abort:
             raise
         except Exception:
-            click.echo('Unknown error - could not assign role.')
+            click.echo(red('Unknown error - could not assign role.'))
 
     def _add_to_default_groups(self):
         groups = Group.get_default_groups()
@@ -104,4 +110,30 @@ class AccountCreator:
             group.add_user(self.new_user)
 
         if len(groups) > 0:
-            click.echo('Account added to the existing default groups')
+            click.echo(green('Account added to the existing default groups'))
+
+    @classmethod
+    def _check_restrictions(cls):
+        # If there are already users in the DB, don't bother
+        if User.query.count() > 0:
+            return
+
+        if Restriction.query.count() == 0:
+            if click.confirm(orange('There are no permissions specified') + ' - that means, that by default '
+                                    'users will not have access to any resources. Would you like to create '
+                                    'a default permission together with a default group now? (All users '
+                                    'would have access to every resource)', default=True):
+                default_group = Group(name='users')
+                default_group._is_default = True
+                default_group.save()
+
+                default_restriction = Restriction(name='can always use everything', starts_at=datetime.utcnow(),
+                                                  is_global=True)
+                default_restriction.apply_to_group(default_group)
+
+                click.echo(green('Created a default group: {} and a permission "{}" '
+                           .format(default_group.name, default_restriction.name) + 'allowing access to every resource '
+                                                                                   'at any time.'))
+            else:
+                click.echo(orange('[•] OK - not creating any permissions. Remember that you need to define permissions'
+                           ' in order for users to be able to access the resources.'))

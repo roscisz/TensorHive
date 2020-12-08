@@ -37,6 +37,33 @@ def init_db_schema_if_nonexistent() -> None:
     from tensorhive.models.Role import Role
     from tensorhive.models.Task import Task
 
+
+def initialize_db(alembic_config) -> None:
+    log.info('[•] Initializing DB...')
+    Base.metadata.create_all(bind=engine, checkfirst=True)
+    command.stamp(alembic_config, 'head')
+    log.info('[✔] DB created ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
+
+
+def _schema_version_is_current(alembic_config, connection):
+    log.info('[•] Checking version of DB: ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
+    migration_ctx = MigrationContext.configure(connection)
+    alembic_config.attributes['connection'] = connection
+    script_directory = ScriptDirectory.from_config(alembic_config)
+    return migration_ctx.get_current_revision() == script_directory.get_current_head()
+
+
+def _upgrade_db_schema(alembic_config):
+    command.upgrade(alembic_config, 'head')
+    log.info('[✔] Database upgraded')
+
+
+def ensure_db_with_current_schema() -> None:
+    """Makes sure that there is a DB in proper version and creates or upgrades the DB if needed"""
+    _import_models()
+
+    alembic_config = Config('alembic.ini')
+
     if not check_if_db_exists():
         Base.metadata.create_all(bind=engine, checkfirst=True)
         log.info('[✔] Database created ({path})'.format(path=DB.SQLALCHEMY_DATABASE_URI))
