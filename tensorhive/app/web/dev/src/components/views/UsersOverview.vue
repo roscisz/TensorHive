@@ -366,7 +366,7 @@
               v-model="schedule.startMenu"
               :close-on-content-click="false"
               :nudge-right="40"
-              :return-value.sync="schedule.hourStart"
+              :return-value.sync="schedule.hourStartLocal"
               lazy
               transition="none"
               offset-y
@@ -376,7 +376,7 @@
             >
               <template v-slot:activator="{ on }">
                 <v-text-field
-                  v-model="schedule.hourStart"
+                  v-model="schedule.hourStartLocal"
                   placeholder="Start time"
                   prepend-icon="access_time"
                   v-on="on"
@@ -385,11 +385,11 @@
               <v-time-picker
                 title="Start time"
                 v-if="schedule.startMenu"
-                v-model="schedule.hourStart"
+                v-model="schedule.hourStartLocal"
                 full-width
                 format="24hr"
                 :max="maxScheduleHour(schedule)"
-                @click:minute="$refs.startMenu[key].save(schedule.hourStart)"
+                @click:minute="$refs.startMenu[key].save(schedule.hourStartLocal)"
               ></v-time-picker>
             </v-menu>
             <v-menu
@@ -397,7 +397,7 @@
               v-model="schedule.endMenu"
               :close-on-content-click="false"
               :nudge-right="40"
-              :return-value.sync="schedule.hourEnd"
+              :return-value.sync="schedule.hourEndLocal"
               lazy
               transition="none"
               offset-y
@@ -407,7 +407,7 @@
             >
               <template v-slot:activator="{ on }">
                 <v-text-field
-                  v-model="schedule.hourEnd"
+                  v-model="schedule.hourEndLocal"
                   placeholder="End time"
                   prepend-icon="access_time"
                   v-on="on"
@@ -416,16 +416,16 @@
               <v-time-picker
                 title="End time"
                 v-if="schedule.endMenu"
-                v-model="schedule.hourEnd"
+                v-model="schedule.hourEndLocal"
                 full-width
                 format="24hr"
                 :min="minScheduleHour(schedule)"
-                @click:minute="$refs.endMenu[key].save(schedule.hourEnd)"
+                @click:minute="$refs.endMenu[key].save(schedule.hourEndLocal)"
               ></v-time-picker>
               </v-menu>
               <v-select
                 style="width: 50%"
-                v-model="schedule.scheduleDays"
+                v-model="schedule.scheduleDaysLocal"
                 :items="weekdays"
                 placeholder="Weekdays"
                 prepend-icon="event"
@@ -658,10 +658,10 @@ export default {
       else if (schedules.length === 1 || all) {
         var returnString = ''
         for (const schedule of schedules) {
-          returnString = returnString + moment.utc(schedule.hourStart, 'HH:mm').local().format('HH:mm') +
-            '-' + moment.utc(schedule.hourEnd, 'HH:mm').local().format('HH:mm') + ' '
+          this.convertToLocal(schedule)
+          returnString = returnString + schedule.hourStartLocal + '-' + schedule.hourEndLocal + ' '
           if (schedules.length === 1) returnString = returnString + '\n'
-          returnString = returnString + schedule.scheduleDays.map(a => a.substring(0, 3)).join(', ') + '\n'
+          returnString = returnString + schedule.scheduleDaysLocal.map(a => a.substring(0, 3)).join(', ') + '\n'
         }
         return returnString
       } else return schedules.length
@@ -723,8 +723,11 @@ export default {
     },
     scheduleBlueprint () {
       return {
+        hourStartLocal: '',
+        hourEndLocal: '',
         hourStart: '',
         hourEnd: '',
+        scheduleDaysLocal: [],
         scheduleDays: [],
         startMenu: false,
         endMenu: false
@@ -737,13 +740,63 @@ export default {
     deleteSchedule (scheduleKey) {
       this.tempSchedules.splice(scheduleKey, 1)
     },
+    convertToUTC (schedule) {
+      schedule.hourStart = moment(schedule.hourStartLocal, 'HH:mm').add(new Date().getTimezoneOffset(), 'minutes').format('HH:mm')
+      schedule.hourEnd = moment(schedule.hourEndLocal, 'HH:mm').add(new Date().getTimezoneOffset(), 'minutes').format('HH:mm')
+
+      if (Date.parse('01/01/2011 ' + schedule.hourStart) > moment('01/01/2011 ' + schedule.hourEnd)) { // day is arbitrary
+        for (const day of schedule.scheduleDaysLocal) {
+          let newDay = this.weekdays.indexOf(day)
+          if (new Date().getTimezoneOffset() < 0) { // we are to the right of UTC
+            newDay -= 1
+          } else {
+            // to the left of UTC
+            newDay += 1
+          }
+          if (newDay < 0) newDay += 7
+          newDay %= 7
+          schedule.scheduleDays.push(this.weekdays[newDay])
+        }
+      } else {
+        schedule.scheduleDays = schedule.scheduleDaysLocal
+      }
+    },
+    convertToLocal (schedule) {
+      schedule.hourStartLocal = moment.utc(schedule.hourStart, 'HH:mm').local().format('HH:mm')
+      schedule.hourEndLocal = moment.utc(schedule.hourEnd, 'HH:mm').local().format('HH:mm')
+      schedule.scheduleDaysLocal = []
+      if (Date.parse('01/01/2011 ' + schedule.hourStart) > moment('01/01/2011 ' + schedule.hourEnd)) { // day is arbitrary
+        for (const day of schedule.scheduleDays) {
+          let newDay = this.weekdays.indexOf(day)
+          if (new Date().getTimezoneOffset() < 0) { // we are to the right of UTC
+            newDay += 1
+          } else {
+            // to the left of UTC
+            newDay -= 1
+          }
+          if (newDay < 0) newDay += 7
+          newDay %= 7
+          schedule.scheduleDaysLocal.push(this.weekdays[newDay])
+        }
+        this.sortScheduleDays(schedule)
+      } else {
+        schedule.scheduleDaysLocal = schedule.scheduleDays
+      }
+    },
+    sortScheduleDays (schedule) {
+      let weekdays = this.weekdays
+      schedule.scheduleDaysLocal.sort(function (a, b) {
+        return weekdays.indexOf(a) - weekdays.indexOf(b)
+      })
+    },
     copySchedules (schedules) {
       this.tempSchedules = []
       for (const schedule of schedules) {
         var newSchedule = this.scheduleBlueprint()
-        newSchedule.hourStart = schedule.hourStart
-        newSchedule.hourEnd = schedule.hourEnd
-        newSchedule.scheduleDays = schedule.scheduleDays
+        newSchedule.hourStartLocal = schedule.hourStartLocal
+        newSchedule.hourEndLocal = schedule.hourEndLocal
+        newSchedule.scheduleDaysLocal = schedule.scheduleDaysLocal
+        this.convertToUTC(newSchedule)
         this.tempSchedules.push(newSchedule)
       }
     },
@@ -868,6 +921,7 @@ export default {
           'scheduleDays': schedule.scheduleDays
         })
         .then(response => {
+          this.convertToLocal(response.data.schedule)
           let scheduleId = response.data.schedule.id
           this.addScheduleToRestriction(restriction, scheduleId)
         })
@@ -902,6 +956,7 @@ export default {
       if (this.editMode) this.updateRestriction()
       else if (this.modalStartDate && this.modalStartTime &&
           ((this.modalEndDate && this.modalEndTime) || this.infiniteRestriction)) {
+        this.tempSchedules.forEach(s => this.convertToUTC(s))
         if (this.verifyTempSchedules()) {
           var formattedStart = moment(this.modalStartDate + 'T' + this.modalStartTime).toISOString()
           var restrictionToCreate = {
@@ -1001,6 +1056,7 @@ export default {
     updateRestriction () {
       if (this.modalStartDate && this.modalStartTime &&
           ((this.modalEndDate && this.modalEndTime) || this.infiniteRestriction)) {
+        this.tempSchedules.forEach(s => this.convertToUTC(s))
         if (this.verifyTempSchedules()) {
           var formattedStart = moment(this.modalStartDate + 'T' + this.modalStartTime).toISOString()
           var formattedEnd = null

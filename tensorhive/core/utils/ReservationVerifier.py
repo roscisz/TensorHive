@@ -20,7 +20,7 @@ class ReservationVerifier:
             for schedule in schedules:
                 day = start_date.weekday() + 1
                 if str(day) in schedule.schedule_days and schedule.hour_start <= start_date.time():
-                    if schedule.hour_end == time(hour=23, minute=59):
+                    if schedule.hour_end == time(hour=23, minute=59) or schedule.hour_end < schedule.hour_start:
                         start_date = start_date.replace(hour=0, minute=0) + timedelta(days=1)
                     elif start_date.time() < schedule.hour_end:
                         start_date = start_date.replace(hour=schedule.hour_end.hour, minute=schedule.hour_end.minute)
