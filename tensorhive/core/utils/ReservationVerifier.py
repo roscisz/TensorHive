@@ -1,4 +1,4 @@
-from datetime import time, timedelta
+from datetime import time, timedelta, datetime
 from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.models.Resource import Resource
 
@@ -14,7 +14,6 @@ class ReservationVerifier:
         :param schedules: Schedule list that is checked to determine if reservation is allowed
         :return: latest date starting from start_date allowed by given schedules
         """
-        reservation_allowed = False
         while True:
             start_date_changed = False
             for schedule in schedules:
@@ -22,15 +21,24 @@ class ReservationVerifier:
                 if str(day) in schedule.schedule_days and schedule.hour_start <= start_date.time():
                     if schedule.hour_end == time(hour=23, minute=59):
                         start_date = start_date.replace(hour=0, minute=0) + timedelta(days=1)
+                    elif schedule.hour_start > schedule.hour_end:
+                        start_date = start_date.replace(hour=schedule.hour_end.hour, minute=schedule.hour_end.minute)\
+                            + timedelta(days=1)
                     elif start_date.time() < schedule.hour_end:
                         start_date = start_date.replace(hour=schedule.hour_end.hour, minute=schedule.hour_end.minute)
                     else:
                         continue
                     start_date_changed = True
-                    if start_date >= end_date:
-                        reservation_allowed = True
-                        break
-            if reservation_allowed or not start_date_changed:
+                # schedule starts on the previous day
+                elif str((day - 1) % 7) in schedule.schedule_days \
+                        and start_date.time() < schedule.hour_end < schedule.hour_start:
+                    start_date = start_date.replace(hour=schedule.hour_end.hour, minute=schedule.hour_end.minute)
+                    start_date_changed = True
+                if start_date.minute == 59:
+                    start_date = start_date + timedelta(minutes=1)
+                if start_date >= end_date:
+                    return start_date
+            if not start_date_changed:
                 break
         return start_date
 
@@ -89,12 +97,13 @@ class ReservationVerifier:
         """
         reservations = user.get_reservations(include_cancelled=True)
         for reservation in reservations:
-            if have_users_permissions_increased:
-                if reservation.is_cancelled and cls.is_reservation_allowed(user, reservation) \
-                        and not reservation.would_interfere():
-                    reservation.is_cancelled = False
-                    reservation.save()
-            else:
-                if not reservation.is_cancelled and not cls.is_reservation_allowed(user, reservation):
-                    reservation.is_cancelled = True
-                    reservation.save()
+            if reservation.end > datetime.utcnow():
+                if have_users_permissions_increased:
+                    if reservation.is_cancelled and cls.is_reservation_allowed(user, reservation) \
+                            and not reservation.would_interfere():
+                        reservation.is_cancelled = False
+                        reservation.save()
+                else:
+                    if not reservation.is_cancelled and not cls.is_reservation_allowed(user, reservation):
+                        reservation.is_cancelled = True
+                        reservation.save()

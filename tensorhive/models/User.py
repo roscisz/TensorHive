@@ -152,3 +152,25 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
 
     def get_reservations(self, include_cancelled=False):
         return self._reservations if include_cancelled else [r for r in self._reservations if not r.is_cancelled]
+
+    def filter_infrastructure_by_user_restrictions(self, infrastructure):
+        not_allowed_hostnames = []
+        allowed_gpus = []
+        for restriction in self.get_restrictions(include_expired=False, include_group=True):
+            # If restriction is global user has permissions to all resources
+            if restriction.is_global:
+                return infrastructure
+            allowed_gpus.extend([resource.id for resource in restriction.resources])
+        allowed_gpus = set(allowed_gpus)
+        for hostname, value in infrastructure.items():
+            gpu_list = value.get('GPU')
+            if gpu_list is not None:
+                all_gpus = set(gpu_list.keys())
+                not_allowed_gpus = all_gpus - allowed_gpus
+                for key in not_allowed_gpus:
+                    del gpu_list[key]
+            if gpu_list is None or len(gpu_list) == 0:
+                not_allowed_hostnames.append(hostname)
+        for hostname in not_allowed_hostnames:
+            del infrastructure[hostname]
+        return infrastructure
