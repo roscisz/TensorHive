@@ -256,7 +256,7 @@ export default {
       this.restrictionEvents = []
       for (const restriction of restrictions) {
         if (restriction.schedules.length === 0) {
-          this.showRestrictionResourcesEvents(restriction, start, end, restriction.startsAt, restriction.endsAt)
+          this.showRestrictionResourcesEvents(restriction, start, end, restriction.startsAt, !restriction.endsAt ? end : restriction.endsAt)
         } else {
           for (const schedule of restriction.schedules) {
             convertToLocal(schedule)
