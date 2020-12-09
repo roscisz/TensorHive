@@ -118,25 +118,6 @@ def test_update_nonexistent_schedule(tables, client):
     assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
-# PUT /schedules/{id} - incorrect data
-def test_update_schedule_with_invalid_start_and_end_hours(tables, client, active_schedule):
-    active_schedule.hour_start = datetime.time(8, 0, 0)
-    active_schedule.hour_end = datetime.time(10, 0, 0)
-    active_schedule.save()
-
-    data = {
-        'hourStart': '15:30',
-        'hourEnd': '9:30'
-    }
-    resp = client.put(ENDPOINT + '/' + str(active_schedule.id), headers=HEADERS, data=json.dumps(data))
-
-    db_session.remove()  # make sure we'll get the restriction from the DB, and not from memory
-    active_schedule = RestrictionSchedule.get(active_schedule.id)
-    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert active_schedule.hour_start == datetime.time(8, 0, 0)
-    assert active_schedule.hour_end == datetime.time(10, 0, 0)
-
-
 # GET /schedules
 def test_get_list_of_schedules_superuser(tables, client):
     resp = client.get(ENDPOINT, headers=HEADERS)

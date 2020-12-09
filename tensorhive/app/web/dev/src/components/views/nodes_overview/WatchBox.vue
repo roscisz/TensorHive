@@ -1,5 +1,12 @@
 <template>
   <div>
+    <v-alert
+      v-model="alert"
+      dismissible
+      type="error"
+    >
+      {{ errorMessage }}
+    </v-alert>
     <div class="select_line">
       <v-select
         class="select_item"
@@ -29,13 +36,6 @@
         <v-icon dark>delete</v-icon>
       </v-btn>
     </div>
-    <v-alert
-      v-model="alert"
-      dismissible
-      type="error"
-    >
-      {{ errorMessage }}
-    </v-alert>
     <div v-if="showProcesses === true" class="table_box">
       <v-data-table
         :headers="headers"
@@ -141,7 +141,7 @@ export default {
       for (var nodeName in nodes) {
         this.nodes.push(nodeName)
       }
-      if (this.defaultNode === '') {
+      if (this.defaultNode === undefined || this.defaultNode === '') {
         this.selectedNode = this.nodes[0]
       } else {
         this.selectedNode = this.defaultNode
@@ -223,7 +223,7 @@ export default {
               this.errorMessage = error.response.data.msg
             }
           }
-          this.alert = true
+          if (this.errorMessage.length > 0) this.alert = true
         })
     }
   },

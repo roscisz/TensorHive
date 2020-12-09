@@ -30,6 +30,9 @@
           <v-icon>close</v-icon>
         </v-btn>
 
+        <v-card-text v-if="reservationCancelled">
+          <h3>This reservation is cancelled</h3>
+        </v-card-text>
         <v-card-text>
           <b>Title:</b>
           {{reservation.title}}
@@ -319,6 +322,10 @@ export default {
 
     reservationEnd () {
       return this.reservation.end
+    },
+
+    reservationCancelled () {
+      return this.reservation.isCancelled
     }
   },
 
