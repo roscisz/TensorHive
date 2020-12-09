@@ -349,12 +349,6 @@
                 <v-icon>add</v-icon>
               </v-btn>
           </p>
-          <v-alert
-            :value="tempSchedules.length"
-            type="warning"
-          >
-            Please specify schedule hours in UTC time. Current UTC time is {{ currentUtcTime }}.
-          </v-alert>
           <transition-group name="fade">
             <v-layout align-center justify-center
               v-for="(schedule, key, index) in tempSchedules"
@@ -508,6 +502,7 @@ import api from '../../api'
 import moment from 'moment'
 import GroupsInfo from './users_overview/GroupsInfo.vue'
 import UsersInfo from './users_overview/UsersInfo.vue'
+import { convertToUTC, convertToLocal } from '../../utils/scheduleUtils.js'
 export default {
   components: {
     GroupsInfo,
@@ -619,11 +614,11 @@ export default {
       } else return ''
     },
     minScheduleHour (schedule) {
-      if (schedule.hourStart) return moment(schedule.hourStart, 'HH:mm').add(1, 'minutes').format('HH:mm')
+      if (schedule.hourStartLocal) return moment(schedule.hourStartLocal, 'HH:mm').add(1, 'minutes').format('HH:mm')
       else return ''
     },
     maxScheduleHour (schedule) {
-      if (schedule.hourEnd) return moment(schedule.hourEnd, 'HH:mm').subtract(1, 'minute').format('HH:mm')
+      if (schedule.hourEndLocal) return moment(schedule.hourEndLocal, 'HH:mm').subtract(1, 'minute').format('HH:mm')
       else return ''
     },
     printTimespan (start, end, full = false) {
@@ -658,7 +653,7 @@ export default {
       else if (schedules.length === 1 || all) {
         var returnString = ''
         for (const schedule of schedules) {
-          this.convertToLocal(schedule)
+          convertToLocal(schedule)
           returnString = returnString + schedule.hourStartLocal + '-' + schedule.hourEndLocal + ' '
           if (schedules.length === 1) returnString = returnString + '\n'
           returnString = returnString + schedule.scheduleDaysLocal.map(a => a.substring(0, 3)).join(', ') + '\n'
@@ -740,63 +735,14 @@ export default {
     deleteSchedule (scheduleKey) {
       this.tempSchedules.splice(scheduleKey, 1)
     },
-    convertToUTC (schedule) {
-      schedule.hourStart = moment(schedule.hourStartLocal, 'HH:mm').add(new Date().getTimezoneOffset(), 'minutes').format('HH:mm')
-      schedule.hourEnd = moment(schedule.hourEndLocal, 'HH:mm').add(new Date().getTimezoneOffset(), 'minutes').format('HH:mm')
-
-      if (Date.parse('01/01/2011 ' + schedule.hourStart) > moment('01/01/2011 ' + schedule.hourEnd)) { // day is arbitrary
-        for (const day of schedule.scheduleDaysLocal) {
-          let newDay = this.weekdays.indexOf(day)
-          if (new Date().getTimezoneOffset() < 0) { // we are to the right of UTC
-            newDay -= 1
-          } else {
-            // to the left of UTC
-            newDay += 1
-          }
-          if (newDay < 0) newDay += 7
-          newDay %= 7
-          schedule.scheduleDays.push(this.weekdays[newDay])
-        }
-      } else {
-        schedule.scheduleDays = schedule.scheduleDaysLocal
-      }
-    },
-    convertToLocal (schedule) {
-      schedule.hourStartLocal = moment.utc(schedule.hourStart, 'HH:mm').local().format('HH:mm')
-      schedule.hourEndLocal = moment.utc(schedule.hourEnd, 'HH:mm').local().format('HH:mm')
-      schedule.scheduleDaysLocal = []
-      if (Date.parse('01/01/2011 ' + schedule.hourStart) > moment('01/01/2011 ' + schedule.hourEnd)) { // day is arbitrary
-        for (const day of schedule.scheduleDays) {
-          let newDay = this.weekdays.indexOf(day)
-          if (new Date().getTimezoneOffset() < 0) { // we are to the right of UTC
-            newDay += 1
-          } else {
-            // to the left of UTC
-            newDay -= 1
-          }
-          if (newDay < 0) newDay += 7
-          newDay %= 7
-          schedule.scheduleDaysLocal.push(this.weekdays[newDay])
-        }
-        this.sortScheduleDays(schedule)
-      } else {
-        schedule.scheduleDaysLocal = schedule.scheduleDays
-      }
-    },
-    sortScheduleDays (schedule) {
-      let weekdays = this.weekdays
-      schedule.scheduleDaysLocal.sort(function (a, b) {
-        return weekdays.indexOf(a) - weekdays.indexOf(b)
-      })
-    },
     copySchedules (schedules) {
       this.tempSchedules = []
       for (const schedule of schedules) {
         var newSchedule = this.scheduleBlueprint()
-        newSchedule.hourStartLocal = schedule.hourStartLocal
-        newSchedule.hourEndLocal = schedule.hourEndLocal
-        newSchedule.scheduleDaysLocal = schedule.scheduleDaysLocal
-        this.convertToUTC(newSchedule)
+        newSchedule.hourStart = schedule.hourStart
+        newSchedule.hourEnd = schedule.hourEnd
+        newSchedule.scheduleDays = schedule.scheduleDays
+        convertToLocal(newSchedule)
         this.tempSchedules.push(newSchedule)
       }
     },
@@ -921,7 +867,7 @@ export default {
           'scheduleDays': schedule.scheduleDays
         })
         .then(response => {
-          this.convertToLocal(response.data.schedule)
+          convertToLocal(response.data.schedule)
           let scheduleId = response.data.schedule.id
           this.addScheduleToRestriction(restriction, scheduleId)
         })
@@ -956,7 +902,7 @@ export default {
       if (this.editMode) this.updateRestriction()
       else if (this.modalStartDate && this.modalStartTime &&
           ((this.modalEndDate && this.modalEndTime) || this.infiniteRestriction)) {
-        this.tempSchedules.forEach(s => this.convertToUTC(s))
+        this.tempSchedules.forEach(s => convertToUTC(s))
         if (this.verifyTempSchedules()) {
           var formattedStart = moment(this.modalStartDate + 'T' + this.modalStartTime).toISOString()
           var restrictionToCreate = {
@@ -1056,7 +1002,7 @@ export default {
     updateRestriction () {
       if (this.modalStartDate && this.modalStartTime &&
           ((this.modalEndDate && this.modalEndTime) || this.infiniteRestriction)) {
-        this.tempSchedules.forEach(s => this.convertToUTC(s))
+        this.tempSchedules.forEach(s => convertToUTC(s))
         if (this.verifyTempSchedules()) {
           var formattedStart = moment(this.modalStartDate + 'T' + this.modalStartTime).toISOString()
           var formattedEnd = null

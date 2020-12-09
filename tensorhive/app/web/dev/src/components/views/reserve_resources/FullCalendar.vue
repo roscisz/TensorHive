@@ -29,6 +29,7 @@ import api from '../../../api'
 import $ from 'jquery'
 import moment from 'moment'
 import _ from 'lodash'
+import { convertToLocal } from '../../../utils/scheduleUtils.js'
 require('../../../../static/fullcalendar/fullcalendar.js')
 
 export default {
@@ -254,22 +255,25 @@ export default {
       var end = _.cloneDeep(this.calendar.fullCalendar('getView').end)
       this.restrictionEvents = []
       for (const restriction of restrictions) {
-        if (!restriction.endsAt) restriction.endsAt = end
         if (restriction.schedules.length === 0) {
           this.showRestrictionResourcesEvents(restriction, start, end, restriction.startsAt, restriction.endsAt)
         } else {
           for (const schedule of restriction.schedules) {
-            for (const day of schedule.scheduleDays) {
+            convertToLocal(schedule)
+            for (const day of schedule.scheduleDaysLocal) {
               var date = this.findDateForWeekday(start, day)
               var eventStart = moment.utc(date + ' ' + schedule.hourStart).local()
               var eventEnd = moment.utc(date + ' ' + schedule.hourEnd).local()
+              if (moment(eventStart).isAfter(eventEnd)) {
+                eventStart = moment(eventStart).subtract(1, 'day')
+              }
 
               if (moment(date).isSameOrAfter(moment(restriction.startsAt).startOf('day')) &&
-              moment(date).isSameOrBefore(moment(restriction.endsAt).endOf('day')) &&
-              moment(eventStart).isSameOrBefore(moment(restriction.endsAt)) &&
+                (!restriction.endsAt || moment(date).isSameOrBefore(moment(restriction.endsAt).endOf('day'))) &&
+                (!restriction.endsAt || moment(eventStart).isSameOrBefore(moment(restriction.endsAt))) &&
               moment(eventEnd).isSameOrAfter(restriction.startsAt)) {
                 if (moment(eventStart).isBefore(restriction.startsAt)) eventStart = restriction.startsAt
-                if (moment(eventEnd).isAfter(restriction.endsAt)) eventEnd = restriction.endsAt
+                if (!!restriction.endsAt && moment(eventEnd).isAfter(moment(restriction.endsAt))) eventEnd = restriction.endsAt
                 this.showRestrictionResourcesEvents(restriction, start, end, eventStart, eventEnd)
               }
             }
@@ -292,8 +296,8 @@ export default {
       if (restriction.isGlobal) resourceCount = 1
       else resourceCount = restriction.resources.length
       for (var j = 0; j < resourceCount; j++) {
-        if (moment(calendarStart).isSameOrBefore(restriction.endsAt) &&
-        moment(calendarEnd).isSameOrAfter(restriction.startsAt)) {
+        if ((!restriction.endsAt || moment(calendarStart).isSameOrBefore(restriction.endsAt)) &&
+        moment(calendarEnd).isSameOrAfter(moment(restriction.startsAt))) {
           restrictionEvent.start = eventStart
           restrictionEvent.end = eventEnd
           restrictionEvent.isGlobal = restriction.isGlobal
