@@ -235,6 +235,7 @@ def business_get_all(job_id: Optional[JobId], sync_all: Optional[bool]) -> Tuple
     then run sync each records individually.
     """
     try:
+        # Temporary solution with sync_all
         sync_all = True
         tasks = []
         if job_id is not None:

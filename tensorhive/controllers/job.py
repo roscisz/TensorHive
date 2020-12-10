@@ -89,8 +89,8 @@ def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
             name=job['name'],
             description=job['description'],
             user_id=job['userId'],
-            _start_at=job['startAt'],
-            _stop_at=job['stopAt']
+            _start_at=DateUtils.try_parse_string(job['startAt']),
+            _stop_at=DateUtils.try_parse_string(job['stopAt'])
         )
         if new_job._stop_at is not None:
             assert new_job.stop_at > datetime.utcnow(), 'Trying to edit time of the job from the past'
