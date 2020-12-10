@@ -53,7 +53,13 @@ def _schema_version_is_current(alembic_config, connection):
     migration_ctx = MigrationContext.configure(connection)
     alembic_config.attributes['connection'] = connection
     script_directory = ScriptDirectory.from_config(alembic_config)
-    return migration_ctx.get_current_revision() == script_directory.get_current_head()
+    current_revision = migration_ctx.get_current_revision()
+    if current_revision is None:
+        log.error('[✘] DB has not been stamped. This makes automatic migration impossible. If you have been using TH'
+                  '< 0.3.4, use alembic to upgrade the DB, otherwise please report a bug. Now using the DB as is...')
+        return True
+    else:
+        return current_revision == script_directory.get_current_head()
 
 
 def _upgrade_db_schema(alembic_config):
