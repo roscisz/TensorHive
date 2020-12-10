@@ -1,7 +1,6 @@
 pytest==5.3.1
 pytest-faker==2.0.0
 pytest-env==0.6.2
-alembic==1.0.3
 flake8==3.8.4
 mypy==0.780
 pdoc==0.3.2
