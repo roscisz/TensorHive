@@ -33,7 +33,7 @@ def get_by_id(id: JobId) -> Tuple[Content, HttpStatusCode]:
         log.warning(e)
         content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
     except AssertionError:
-        content, status = {'msg': GENERAL['unpriviliged']}, HTTPStatus.FORBIDDEN.value
+        content, status = {'msg': GENERAL['unprivileged']}, HTTPStatus.FORBIDDEN.value
     except Exception as e:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
@@ -60,7 +60,7 @@ def get_all(userId: Optional[int]) -> Tuple[Content, HttpStatusCode]:
     except NoResultFound:
         content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
     except AssertionError:
-        content, status = {'msg': GENERAL['unpriviliged']}, HTTPStatus.FORBIDDEN.value
+        content, status = {'msg': GENERAL['unprivileged']}, HTTPStatus.FORBIDDEN.value
     except Exception as e:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
@@ -82,11 +82,13 @@ def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         new_job = Job(
             name=job['name'],
             description=job['description'],
-            user_id=job['userId']
+            user_id=job['userId'],
+            _start_at=DateUtils.try_parse_string(job['startAt']),
+            _stop_at=DateUtils.try_parse_string(job['stopAt'])
         )
         new_job.save()
     except AssertionError:
-        content, status = {'msg': GENERAL['unpriviliged']}, HTTPStatus.FORBIDDEN.value
+        content, status = {'msg': GENERAL['unprivileged']}, HTTPStatus.FORBIDDEN.value
     except ValueError:
         # Invalid string format for datetime
         content, status = {'msg': GENERAL['bad_request']}, HTTPStatus.UNPROCESSABLE_ENTITY.value
@@ -230,7 +232,7 @@ def execute(id: JobId) -> Tuple[Content, HttpStatusCode]:
     except NoResultFound:
         content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
     except AssertionError as e:
-        content, status = {'msg': GENERAL['unpriviliged'].format(reason=e)}, HTTPStatus.FORBIDDEN.value
+        content, status = {'msg': GENERAL['unprivileged'].format(reason=e)}, HTTPStatus.FORBIDDEN.value
     else:
         content, status = business_execute(id)
     finally:
@@ -297,7 +299,7 @@ def stop(id: JobId, gracefully: Optional[bool] = True) -> Tuple[Content, HttpSta
             content, status = {'msg': JOB['stop']['failure']['state'].format(reason=e)}, \
                 HTTPStatus.CONFLICT.value
         else:
-            content, status = {'msg': GENERAL['unpriviliged']}, HTTPStatus.FORBIDDEN.value
+            content, status = {'msg': GENERAL['unprivileged']}, HTTPStatus.FORBIDDEN.value
     else:
         content, status = business_stop(id, gracefully)
     finally:
