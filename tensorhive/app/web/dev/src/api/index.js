@@ -18,5 +18,20 @@ export default {
       axios.defaults.headers.common['Authorization'] = token
     }
     return axios({ method: method, url: url, data: data })
+  },
+  withQueryParams (path, params) {
+    const query = Object.entries(params)
+      .filter(([key, value]) => value !== undefined)
+      .map(
+        ([key, value]) =>
+          `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+      )
+      .join('&')
+
+    if (query === '') {
+      return path
+    }
+
+    return `${path}?${query}`
   }
 }
