@@ -13,7 +13,6 @@ log = logging.getLogger(__name__)
 class SegmentType(enum.Enum):
     env_variable = 1
     parameter = 2
-    actual_command = 3
 
 
 class CommandSegment(CRUDModel, Base):  # type: ignore

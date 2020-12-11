@@ -255,11 +255,11 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
 
     Command argument is divided into segments to make editing easier.
     Main dividing procedure assumptions:
-    1) Environmental variables are placed first in the command and they contain "=" sign
+    1) Environmental variables are placed first in the full command and they contain "=" sign
         - if_envs,
         - if_eq_sign
     2) After that actual command (path) is given and it contains no "=" sign
-        - actual_command
+        - command field
     3) Following actual command parameters are given and they start by at least one "-" sign
         - if segment[0] == '-'
     3a) Parameters may contain value
@@ -267,18 +267,18 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
         - if_parameter_value_expected
 
     After each cycle new segment is stored if the information about it is complete.
-    If not values are stored till it is complete, and then it is added (e.g. actual_command)
+    If not values are stored till it is complete, and then it is added (e.g. command)
     """
     try:
         new_task = Task(
             hostname=task['hostname'],
-            command=task['command'])
+            command='')
+        full_command = task['command']
         parent_job = Job.query.filter(Job.id == job_id).one()
-        command_segments = new_task.command.split()
+        command_segments = full_command.split()
         if_envs = True
         if_eqsign_found = False
         if_parameter_value_expected = False
-        actual_command = ''
         for segment in command_segments:
             for x in segment:
                 if x == '=':
@@ -300,7 +300,7 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
                 splitted_segment[1] = segment
                 if_parameter_value_expected = False
             else:
-                actual_command += segment + ' '
+                new_task.command += segment + ' '
                 continue
 
             if if_parameter_value_expected is False:
@@ -312,13 +312,7 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
                         _segment_type=segment_type)
                 new_task.add_cmd_segment(new_segment, splitted_segment[1])
 
-        new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.actual_command,
-                                                  CommandSegment.name == '').first()
-        if (new_segment is None):
-            new_segment = CommandSegment(
-                name='',
-                _segment_type=SegmentType.actual_command)
-        new_task.add_cmd_segment(new_segment, actual_command[:-1])
+        new_task.command = new_task.command[:-1]
         new_task.save()
         parent_job.add_task(new_task)
     except KeyError:
@@ -359,6 +353,8 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
         for key, value in new_values.items():
             if key == 'hostname':
                 setattr(task, key, value)
+            elif key == 'command':
+                setattr(task, key, value)
             elif key.startswith('cmd_segment'):
                 segment = value
                 cmd_segment = CommandSegment.find_by_name(segment['name'])
@@ -368,7 +364,6 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
                 elif (segment['mode'] == 'update'):
                     link = task.get_cmd_segment_link(cmd_segment)
                     setattr(link, '_value', segment['value'])
-        task.update_command()
         task.save()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
@@ -437,7 +432,7 @@ def screen_sessions(username: str, hostname: str) -> Tuple[Content, HttpStatusCo
 
 @synchronize_task_record
 def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
-    """Spawns command stored in Task db record (task.command).
+    """Spawns command stored in Task db record (task.full_command).
 
     It won't allow for spawning task which is currently running (sync + status check).
     If spawn operation has succeeded then `running` status is set.
@@ -446,11 +441,14 @@ def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         task = Task.get(id)
         parent_job = Job.get(task.job_id)
         assert task.status is not TaskStatus.running, 'task is already running'
-        assert task.command, 'command is empty'
+        assert task.full_command, 'command is empty'
         assert task.hostname, 'hostname is empty'
         assert parent_job.user, 'user does not exist'
 
-        pid = task_nursery.spawn(task.command, task.hostname, parent_job.user.username, name_appendix=str(task.id))
+        pid = task_nursery.spawn(task.full_command,
+                                 task.hostname,
+                                 parent_job.user.username,
+                                 name_appendix=str(task.id))
         task.pid = pid
         task.status = TaskStatus.running
         task.save()

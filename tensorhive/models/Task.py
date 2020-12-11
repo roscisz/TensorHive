@@ -63,29 +63,28 @@ class Task(CRUDModel, Base):  # type: ignore
         return env_variables
 
     @hybrid_property
-    def actual_command(self):
-        for segment in self.cmd_segments:
-            if segment.segment_type == SegmentType.actual_command:
-                link = self.get_cmd_segment_link(segment)
-                actual_command = link.value
-                return actual_command
-        return ''
-
-    def update_command(self):
-        command = ''
+    def full_command(self):
+        _full_command = ''
         start = - self.number_of_env_vars
         end = self.number_of_params + 1
-        for i in range(start, end):
+        for i in range(start, 0):
             link = CommandSegment2Task.query.filter(CommandSegment2Task.index == i,
                                                     CommandSegment2Task.task_id == self.id).one()
             cmd_segment = CommandSegment.query.filter(CommandSegment.id == link.cmd_segment_id).one()
             if i != start:
-                command += ' '
-            if cmd_segment.segment_type == SegmentType.actual_command:
-                command += cmd_segment.name + link.value
+                _full_command += ' '
+            _full_command += cmd_segment.name + '=' + link.value
+        _full_command += ' ' + self.command
+        for i in range(1, end):
+            _full_command += ' '
+            link = CommandSegment2Task.query.filter(CommandSegment2Task.index == i,
+                                                    CommandSegment2Task.task_id == self.id).one()
+            cmd_segment = CommandSegment.query.filter(CommandSegment.id == link.cmd_segment_id).one()
+            if link.value == '':
+                _full_command += cmd_segment.name
             else:
-                command += cmd_segment.name + '=' + link.value
-        self.command = command
+                _full_command += cmd_segment.name + ' ' + link.value
+        return _full_command
 
     def get_cmd_segment_link(self, cmd_segment: CommandSegment):
         """returns connection between task and its command segment"""
@@ -107,8 +106,6 @@ class Task(CRUDModel, Base):  # type: ignore
             setattr(link, '_index', -self.number_of_env_vars)
         elif cmd_segment.segment_type == SegmentType.parameter:
             setattr(link, '_index', self.number_of_params)
-        elif cmd_segment.segment_type == SegmentType.actual_command:
-            setattr(link, '_index', 0)
         setattr(link, '_value', value)
 
     def remove_cmd_segment(self, cmd_segment: CommandSegment):

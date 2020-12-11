@@ -3177,6 +3177,9 @@ components:
         hostname:
           type: string
           example: localhost
+        command:
+          type: string
+          example: command.py
       additionalProperties:            
         type: object
         properties:
