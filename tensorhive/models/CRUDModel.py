@@ -43,7 +43,7 @@ class CRUDModel:
             db_session.commit()
         except SQLAlchemyError as e:
             db_session.rollback()
-            log.error('{} with {}'.format(cause=e.__cause__, data=self))
+            log.error('{cause} with {data}'.format(cause=e.__cause__, data=self))
             raise e
         else:
             log.debug('Deleted {}'.format(self))

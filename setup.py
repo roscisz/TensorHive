@@ -35,7 +35,8 @@ setup(
         'coloredlogs==10.0',
         'Safe==0.4',
         'python-usernames==0.2.3',
-        'stringcase==1.2.0'
+        'stringcase==1.2.0',
+        'alembic==1.0.3'
     ],
     zip_safe=False
 )

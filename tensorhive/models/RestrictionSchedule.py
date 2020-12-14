@@ -64,7 +64,7 @@ class RestrictionSchedule(CRUDModel, Base):  # type: ignore
     def restrictions(self):
         return self._restrictions
 
-    @schedule_days.setter
+    @schedule_days.setter  # type: ignore
     def schedule_days(self, days: Union[List[Weekday], str]):
         if isinstance(days, str):
             self._schedule_days = (''.join(sorted(days)))

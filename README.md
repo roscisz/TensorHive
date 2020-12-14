@@ -1,22 +1,67 @@
 TensorHive
 ===
-![](https://img.shields.io/badge/release-v0.3.3-brightgreen.svg?style=popout-square)
-![](https://img.shields.io/badge/pypi-v0.3.3-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/release-v0.3.4-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/pypi-v0.3.4-brightgreen.svg?style=popout-square)
 ![](https://img.shields.io/badge/Issues%20and%20PRs-welcome-yellow.svg?style=popout-square)
 ![](https://img.shields.io/badge/platform-Linux-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/hardware-Nvidia-green.svg?style=popout-square)
-![](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7-blue.svg?style=popout-square)
+![](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7%20|%203.8-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=popout-square)
 
 <img src="https://github.com/roscisz/TensorHive/raw/master/images/logo_small.png" height="130" align="left">
 
-TensorHive is an open source system for monitoring and managing computing resources across multiple hosts.
+TensorHive is an open source tool for monitoring and managing computing resources across multiple hosts.
 It solves the most common problems and nightmares about accessing and sharing your AI-oriented infrastructure across multiple, often competing users.
 
 It's designed with __simplicity, flexibility and configuration-friendliness__ in mind.
 
-Use cases
-----------------------
+---------------
+
+### Main features:
+
+#### GPU Reservation calendar
+
+Each column represents all reservation events for a GPU on a given day.
+In order to make a new reservation simply click and drag with your mouse, select GPU(s), add some meaningful title, optionally adjust time range.
+
+If there are many hosts and GPUs in our infrastructure, you can use our simplified, horizontal calendar to quickly identify empty time slots and filter out already reserved GPUs.
+![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/reservations_overview_screenshot.png)
+
+From now on, **only your processes are eligible to run on reserved GPU(s)**. TensorHive periodically checks if some other user has violated it. He will be spammed with warnings on all his PTYs, emailed every once in a while, additionally admin will also be notified (it all depends on the configuration).
+
+Terminal warning             |  Email warning             |  Admin warning
+:-------------------------:|:-------------------------:|:-------------------------:
+![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/terminal_warning_screenshot.png)  |  ![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/email_warning_screenshot.png) | ![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/admin_warning_screenshot.png)
+ 
+
+
+#### Infrastructure monitoring dashboard
+Accessible infrastructure can be monitored in the Nodes overview tab. Sample screenshot:
+Here you can add new watches, select metrics and monitor ongoing GPU processes and its' owners.
+
+![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/nodes_overview_screenshot.png)
+
+#### Task execution
+
+Thanks to the `Task execution` module, you can define commands for tasks you want to run on any configured nodes.
+You can manage them manually or set spawn/terminate date.
+Commands are run within `screen` session, so attaching to it while they are running is a piece of cake.
+
+It provides a simple, but flexible (**framework-agnostic**) command templating mechanism that will help you automate multi-node trainings.
+Additionally, specialized templates help to conveniently set proper parameters for chosen well known frameworks:
+
+![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/TF_CONFIG/img/multi_process.png)
+
+In the [examples](https://github.com/roscisz/TensorHive/tree/master/examples)
+directory, you will find sample scenarios of using the `Task execution` module for various
+frameworks and computing environments.
+
+TensorHive requires that users who want to use this feature must append TensorHive's public key to their `~/.ssh/authorized_keys` on all nodes they want to connect to.
+
+---------------
+
+### Use cases
+
 Our goal is to provide solutions for painful problems that ML engineers often have to struggle with when working with remote machines in order to run neural network trainings.
 
 #### You should really consider using TensorHive if anything described in profiles below matches you:
@@ -33,8 +78,8 @@ Our goal is to provide solutions for painful problems that ML engineers often ha
 - :dizzy_face: Managing a list of training commands for all your distributed training experiments drives you nuts
 - :zzz: Remembering to manually launch the training before going sleep is no fun anymore
 
-What TensorHive has to offer
------------------------------
+#### Advantages of TensorHive 
+
 :zero: Dead-simple one-machine installation and configuration, no `sudo` requirements
 
 :one: Users can make GPU reservations for specific time range in advance via **reservation mechanism**
@@ -51,21 +96,23 @@ What TensorHive has to offer
 
 For more details, check out the [full list of features](#features).
 
-Getting started
 ---------------
-### Prerequisites
+
+### Getting started
+
+#### Prerequisites
 * All nodes must be accessible via SSH, without password, using SSH Key-Based Authentication ([How to set up SSH keys](https://www.shellhacks.com/ssh-login-without-password/) - explained in [Quickstart section](#basic-usage))
 * Only NVIDIA GPUs are supported (relying on ```nvidia-smi``` command)
 * Currently TensorHive assumes that all users who want to register into the system must have identical UNIX usernames on all nodes configured by TensorHive administrator (not relevant for standalone developers)
 
-### Installation
+#### Installation
 
-#### via pip
+##### via pip
 ```shell
 pip install tensorhive
 ```
 
-#### From source
+##### From source
 (optional) For development purposes we encourage separation from your current python packages using e.g. virtualenv, Anaconda. 
 
 ```shell
@@ -74,11 +121,11 @@ pip install -e .
 ```
 
 TensorHive is already shipped with newest web app build, but in case you modify the source, you can can build it with `make app` (currently on `master` branch). For more useful commands see our [Makefile](https://github.com/roscisz/TensorHive/blob/master/tensorhive/Makefile).
-Build tested with `Node v10.15.2` and `npm 5.8.0`
+Build tested with `Node v14.15.1` and `npm 6.14.8`
 
-Basic usage
------
-#### Quickstart
+#### Basic usage
+
+###### Quickstart
 The `init` command will guide you through basic configuration process:
 ```
 tensorhive init
@@ -102,7 +149,7 @@ tensorhive
 
 Web application and API Documentation can be accessed via URLs highlighted in green (Ctrl + click to open in browser).
 
-#### Advanced configuration
+##### Advanced configuration
 You can fully customize TensorHive behaviours via INI configuration files (which will be created automatically after `tensorhive init`):
 ```
 ~/.config/TensorHive/main_config.ini
@@ -111,49 +158,10 @@ You can fully customize TensorHive behaviours via INI configuration files (which
 ```
 [(see example)](https://github.com/roscisz/TensorHive/blob/master/tensorhive/main_config.ini)
 
-#### Infrastructure monitoring dashboard
-Accessible infrastructure can be monitored in the Nodes overview tab. Sample screenshot:
-Here you can add new watches, select metrics and monitor ongoing GPU processes and its' owners.
-
-![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/nodes_overview_screenshot.png)
-
-#### GPU Reservation calendar
-
-Each column represents all reservation events for a GPU on a given day.
-In order to make a new reservation simply click and drag with your mouse, select GPU(s), add some meaningful title, optionally adjust time range.
-
-If there are many hosts and GPUs in our infrastructure, you can use our simplified, horizontal calendar to quickly identify empty time slots and filter out already reserved GPUs.
-![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/reservations_overview_screenshot.png)
-
-From now on, **only your processes are eligible to run on reserved GPU(s)**. TensorHive periodically checks if some other user has violated it. He will be spammed with warnings on all his PTYs, emailed every once in a while, additionally admin will also be notified (it all depends on the configuration).
-
-Terminal warning             |  Email warning
-:-------------------------:|:-------------------------:
-![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/terminal_warning_screenshot.png)  |  ![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/email_warning_screenshot.png)
- 
-#### What admin is e-mailed:
-
-![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/admin_warning_screenshot.png)
-
-#### Task execution
-
-Thanks to the `Task execution` module, you can define commands for tasks you want to run on any configured nodes.
-You can manage them manually or set spawn/terminate date.
-Commands are run within `screen` session, so attaching to it while they are running is a piece of cake.
-
-It provides a simple, but flexible (**framework-agnostic**) command templating mechanism that will help you automate multi-node trainings.
-Additionally, specialized templates help to conveniently set proper parameters for chosen well known frameworks:
-
-![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/TF_CONFIG/img/multi_process.png)
-
-In the [examples](https://github.com/roscisz/TensorHive/tree/master/examples)
-directory, you will find sample scenarios of using the `Task execution` module for various
-frameworks and computing environments.
-
-TensorHive requires that users who want to use this feature must append TensorHive's public key to their `~/.ssh/authorized_keys` on all nodes they want to connect to.
-
-Features
 ----------------------
+
+### Features
+
 #### Core
 - [x] :mag_right: Monitor metrics on each host
     - [x] :tm: Nvidia GPUs
@@ -162,6 +170,7 @@ Features
 - [x] :customs: Protection of reserved resources
     - [x] :warning:	Send warning messages to terminal of users who violate the rules
     - [x] :mailbox_with_no_mail: Send e-mail warnings
+    - [x] :closed_lock_with_key: Grant users and groups access to specific GPUs at given time schedules
     - [ ] :bomb: Kill unwanted processes
 - [X] :rocket: Task execution and scheduling
     - [x] :old_key: Execute any command in the name of a user
@@ -170,7 +179,6 @@ Features
     - [x] :factory: Use `screen` command as backend - user can easily attach to running task
     - [x] :skull: Remote process interruption, termination and kill
     - [x] :floppy_disk: Save stdout to disk
-    - [ ] :page_facing_up: Capture stderr
 - [x] :watch: Track wasted (idle) time during reservation
     - [x] :hocho: Gather and calculate average gpu and mem utilization
     - [ ] :loudspeaker: Remind user when his reservation starts and ends
@@ -196,33 +204,6 @@ Features
     - [ ] Accept/reject reservation requests
     - [ ] Modify rules on-the-fly (without restarting)
     - [ ] Show popups to users (something like message of the day - `motd`)
-    
-#### CLI
-- [ ] Implement command-line app that communicates with core via API
-- [ ] Migrate all features from web app that don't require GUI (so no charts)
-
-#### API
-- [x] OpenAPI specification with Swagger UI
-- [x] User authentication via JWT
-
-
-TensorHive is currently being used in production in the following environments:
------
-
-| Organization  | Hardware | No. users |
-| ------ | -------- | --------- |
-| ![](https://cdn.pg.edu.pl/ekontakt-updated-theme/images/favicon/favicon-16x16.png?v=jw6lLb8YQ4) [Gdansk University of Technology](https://eti.pg.edu.pl/en) | NVIDIA DGX Station (4x Tesla V100) + NVIDIA DGX-1 (8x Tesla V100) | 30+ |
-| ![](https://cdn.pg.edu.pl/ekontakt-updated-theme/images/favicon/favicon-16x16.png?v=jw6lLb8YQ4) [Lab at GUT](https://eti.pg.edu.pl/katedra-architektury-systemow-komputerowych/main) | 20 machines with GTX 1060 each | 20+ |
-| <img src="http://gradient.eti.pg.gda.pl/assets/logo.png" width=15>[Gradient PG](http://gradient.eti.pg.gda.pl/en/) | A server with two GPUs shared by the Gradient science club at GUT. | 30+ |
-| ![](https://res-4.cloudinary.com/crunchbase-production/image/upload/c_lpad,h_20,w_20,f_auto,q_auto:eco/v1444894092/jeuh0l6opc159e1ltzky.png) [VoiceLab - Conversational Intelligence](https://www.voicelab.ai) | 30+ GTX and RTX GPUs | 10+
-
-
-TensorHive architecture (simplified)
------------------------
-
-This diagram will help you to grasp the rough concept of the system.
-
-![TensorHive_diagram _final](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/architecture.png)
 
 
 Contribution and feedback
@@ -231,9 +212,7 @@ We'd :heart: to collect your observations, issues and pull requests!
 
 Feel free to **report any configuration problems, we will help you**.
 
-Currently we are working on user groups for differentiated GPU access control,
-grouping tasks into jobs and process-killing reservation violation handler,
-deadline - July 2020 :shipit:, so stay tuned!
+Currently we are working on grouping tasks into jobs that can be queued and automatically scheduled, deadline - January 2021 :shipit:, so stay tuned!
 
 If you consider becoming a contributor, please look at issues labeled as 
 [**good-first-issue**](https://github.com/roscisz/TensorHive/issues?q=is%3Aissue+is%3Aopen+label%3Agood-first-issue)
@@ -252,9 +231,12 @@ Project created and maintained by:
 - Filip Schodowski [(@filschod)](https://github.com/filschod)
 
  Top contributors:
+- Jacek Szempliński [(@jszemplinski)](https://github.com/jszemplinski)
+- Mateusz Piotrowski [(@matpiotrowski)](https://github.com/matpiotrowski)
+- Martyna Oleszkiewicz [(@martyole)](https://github.com/martyole)
 - Tomasz Menet [(@tomenet)](https://github.com/tomenet)
-- Dariusz Piotrowski [(@PiotrowskiD)](https://github.com/PiotrowskiD)
-- Karol Draszawka [(@szarakawka)](https://github.com/szarakawka)
+
+
 
 
 License
