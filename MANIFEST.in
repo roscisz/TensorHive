@@ -6,6 +6,8 @@ include tensorhive/api/*.yml
 include tensorhive/controllers/responses.yml
 include tensorhive/*.ini
 graft tensorhive/app/web/dist
+include tensorhive/alembic.ini
+graft tensorhive/migrations
 
 global-exclude *.py[co]
 prune tensorhive/app/web/dev

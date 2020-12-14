@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_utils import database_exists
-from tensorhive.config import DB
+from tensorhive.config import DB, CONFIG_FILES
 from alembic import command
 from alembic.config import Config
 from alembic.migration import MigrationContext
@@ -71,7 +71,8 @@ def ensure_db_with_current_schema() -> None:
     """Makes sure that there is a DB in proper version and creates or upgrades the DB if needed"""
     _import_models()
 
-    alembic_config = Config('alembic.ini')
+    alembic_config = Config(CONFIG_FILES.ALEMBIC_CONFIG_PATH)
+    alembic_config.set_main_option("script_location", CONFIG_FILES.MIGRATIONS_CONFIG_PATH)
 
     if not check_if_db_exists():
         initialize_db(alembic_config)
