@@ -1,6 +1,6 @@
 {
   "name": "tensorhive_web_app",
-  "version": "0.1.0",
+  "version": "0.3.4",
   "description": "Web aplication based on CoPilot admin template",
   "author": "filschod",
   "license": "MIT",
