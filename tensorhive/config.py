@@ -24,6 +24,9 @@ class CONFIG_FILES:
     HOSTS_CONFIG_TEMPLATE_PATH = str(tensorhive_package_dir / 'hosts_config.ini')
     MAILBOT_TEMPLATE_CONFIG_PATH = str(tensorhive_package_dir / 'mailbot_config.ini')
 
+    ALEMBIC_CONFIG_PATH = str(tensorhive_package_dir / 'alembic.ini')
+    MIGRATIONS_CONFIG_PATH = str(tensorhive_package_dir / 'migrations')
+
 
 class ConfigInitilizer:
     '''Makes sure that all default config files exist'''
