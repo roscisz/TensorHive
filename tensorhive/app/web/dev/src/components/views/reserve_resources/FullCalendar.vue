@@ -29,6 +29,7 @@ import api from '../../../api'
 import $ from 'jquery'
 import moment from 'moment'
 import _ from 'lodash'
+import { convertToLocal } from '../../../utils/scheduleUtils.js'
 require('../../../../static/fullcalendar/fullcalendar.js')
 
 export default {
@@ -59,14 +60,16 @@ export default {
         description: '',
         resourceId: '',
         start: new Date(),
-        end: new Date()
+        end: new Date(),
+        isCancelled: false
       },
       reservationId: -1,
       startDate: null,
       endDate: null,
       resourcesCheckboxes: [],
       refreshTasks: false,
-      parsedNodeNames: []
+      parsedNodeNames: [],
+      restrictionEvents: []
     }
   },
 
@@ -97,25 +100,43 @@ export default {
             }
             self.reservationId = -1
           }
-          callback(response.data)
+          var reservationsEvents = response.data.filter(
+            r => r.userId === self.$store.state.id || !r.isCancelled)
+          callback(reservationsEvents)
         })
         .catch(error => {
           this.$emit('handleError', error)
         })
       var obj
+      var previousCheckboxes = []
+      var previousLength = this.resourcesCheckboxes.length
+      for (i = 0; i < previousLength; i++) {
+        obj = {
+          uuid: this.resourcesCheckboxes[i].uuid,
+          checked: this.resourcesCheckboxes[i].checked
+        }
+        previousCheckboxes[i] = obj
+      }
       this.resourcesCheckboxes = []
       for (i = 0; i < this.selectedResources.length; i++) {
+        var previousChecked = false
+        for (var j = 0; j < previousLength; j++) {
+          if (this.selectedResources[i].uuid === previousCheckboxes[j].uuid) {
+            previousChecked = previousCheckboxes[j].checked
+          }
+        }
         obj = {
           nodeName: this.selectedResources[i].nodeName,
           name: this.selectedResources[i].name,
           uuid: this.selectedResources[i].uuid,
           index: this.selectedResources[i].index,
-          checked: false,
+          checked: previousChecked,
           disabled: false
         }
         this.resourcesCheckboxes[i] = obj
       }
       this.addResourcesHeader()
+      this.addUserRestrictions()
     },
 
     addResourcesHeader: function () {
@@ -216,6 +237,87 @@ export default {
         .catch(error => {
           this.$emit('handleError', error)
         })
+    },
+
+    addUserRestrictions () {
+      api
+        .request('get', '/restrictions?user_id=' + this.$store.state.id + '&include_user_groups=true', this.$store.state.accessToken)
+        .then(response => {
+          this.createRestrictionEvents(response.data)
+        })
+        .catch(error => {
+          this.$emit('handleError', error)
+        })
+    },
+
+    createRestrictionEvents (restrictions) {
+      var start = _.cloneDeep(this.calendar.fullCalendar('getView').start)
+      var end = _.cloneDeep(this.calendar.fullCalendar('getView').end)
+      this.restrictionEvents = []
+      for (const restriction of restrictions) {
+        if (restriction.schedules.length === 0) {
+          this.showRestrictionResourcesEvents(restriction, start, end, restriction.startsAt, !restriction.endsAt ? end : restriction.endsAt)
+        } else {
+          for (const schedule of restriction.schedules) {
+            convertToLocal(schedule)
+            for (const day of schedule.scheduleDaysLocal) {
+              var date = this.findDateForWeekday(start, day)
+              var eventStart = moment.utc(date + ' ' + schedule.hourStart).local()
+              var eventEnd = moment.utc(date + ' ' + schedule.hourEnd).local()
+              if (moment(eventStart).isAfter(eventEnd)) {
+                eventStart = moment(eventStart).subtract(1, 'day')
+              }
+
+              if (moment(date).isSameOrAfter(moment(restriction.startsAt).startOf('day')) &&
+                (!restriction.endsAt || moment(date).isSameOrBefore(moment(restriction.endsAt).endOf('day'))) &&
+                (!restriction.endsAt || moment(eventStart).isSameOrBefore(moment(restriction.endsAt))) &&
+              moment(eventEnd).isSameOrAfter(restriction.startsAt)) {
+                if (moment(eventStart).isBefore(restriction.startsAt)) eventStart = restriction.startsAt
+                if (!!restriction.endsAt && moment(eventEnd).isAfter(moment(restriction.endsAt))) eventEnd = restriction.endsAt
+                this.showRestrictionResourcesEvents(restriction, start, end, eventStart, eventEnd)
+              }
+            }
+          }
+        }
+      }
+    },
+
+    showRestrictionResourcesEvents (restriction, calendarStart, calendarEnd, eventStart, eventEnd) {
+      var restrictionEvent = {
+        start: '',
+        end: '',
+        isGlobal: false,
+        resourceId: '',
+        groupId: 'restriction',
+        rendering: 'background',
+        backgroundColor: '#bdf2ae'
+      }
+      var resourceCount = 0
+      if (restriction.isGlobal) resourceCount = 1
+      else resourceCount = restriction.resources.length
+      for (var j = 0; j < resourceCount; j++) {
+        if ((!restriction.endsAt || moment(calendarStart).isSameOrBefore(restriction.endsAt)) &&
+        moment(calendarEnd).isSameOrAfter(moment(restriction.startsAt))) {
+          restrictionEvent.start = eventStart
+          restrictionEvent.end = eventEnd
+          restrictionEvent.isGlobal = restriction.isGlobal
+          if (!restriction.isGlobal) restrictionEvent.resourceId = restriction.resources[j].id
+          this.restrictionEvents.push(restrictionEvent)
+
+          if (this.selectedResources.some(r => r.uuid === restrictionEvent.resourceId) ||
+          restrictionEvent.isGlobal) {
+            this.calendar.fullCalendar('renderEvent', restrictionEvent)
+          }
+        }
+      }
+    },
+
+    findDateForWeekday (startDate, weekday) {
+      var date = moment(startDate)
+      while (date.format('dddd') !== weekday) {
+        date = date.add(1, 'days')
+      }
+      return date.format('YYYY-MM-DD')
     }
   },
 
@@ -263,71 +365,92 @@ export default {
         if (self.selectedResources.length > 6) {
           $(element).css('color', 'rgba(0, 0, 0, 0)')
         }
-        if (!event.allDay) {
+        if (!event.allDay && event.groupId !== 'restriction') {
+          if (event.isCancelled) {
+            element.find('.fc-title').append('<br/>' + ('(cancelled)').big().italics())
+          }
           api
             .request('get', '/users/' + event.userId, self.$store.state.accessToken)
             .then(response => {
-              element.find('.fc-title').prepend((response.data.username).bold().big().italics() + '<br/>')
+              element.find('.fc-title').prepend((response.data.user.username).bold().big().italics() + '<br/>')
             })
             .catch(error => {
-              this.$emit('handleError', error)
+              self.$emit('handleError', error)
             })
         }
       },
       eventAfterRender: function (event, element, view) {
-        var columnIndex
-        var resourceIndex
-        var resourceNodeName
-        for (var i = 0; i < self.selectedResources.length; i++) {
-          if (self.selectedResources[i].uuid === event.resourceId) {
-            columnIndex = i
-            resourceIndex = self.selectedResources[i].index
-            resourceNodeName = self.selectedResources[i].nodeName
+        if (event.groupId !== 'restriction' || (event.groupId === 'restriction' && !event.isGlobal)) {
+          var columnIndex
+          var resourceIndex
+          var resourceNodeName
+          for (var i = 0; i < self.selectedResources.length; i++) {
+            if (self.selectedResources[i].uuid === event.resourceId) {
+              columnIndex = i
+              resourceIndex = self.selectedResources[i].index
+              resourceNodeName = self.selectedResources[i].nodeName
+            }
           }
-        }
-        var hoursWidth = 42
-        var scrollWidth = 16
-        var width = view.el[0].clientWidth
-        var dayWidth = (width - scrollWidth - hoursWidth) / 7
-        var eventSlotWidth = dayWidth / self.selectedResources.length
-        var eventWidth = (Math.round(eventSlotWidth - 1)).toString() + 'px'
-        $(element).css('width', eventWidth)
-        if (columnIndex !== 0) {
-          var margin = (Math.round(columnIndex * (eventSlotWidth)) - 2).toString() + 'px'
-          $(element).css('margin-left', margin)
-        } else {
-          if (event.allDay) {
-            $(element).css('margin-left', '1px')
+          var hoursWidth = 42
+          var scrollWidth = 16
+          var width = view.el[0].clientWidth
+          var dayWidth = (width - scrollWidth - hoursWidth) / 7
+          var eventSlotWidth = dayWidth / self.selectedResources.length
+          var eventWidth
+          if (event.groupId !== 'restriction') eventWidth = (Math.round(eventSlotWidth - 1)).toString() + 'px'
+          else eventWidth = (Math.round(eventSlotWidth) + 1).toString() + 'px'
+          $(element).css('width', eventWidth)
+          if (columnIndex !== 0) {
+            var margin
+            if (event.groupId !== 'restriction') margin = (Math.round(columnIndex * (eventSlotWidth)) - 2).toString() + 'px'
+            else margin = (Math.round(columnIndex * (eventSlotWidth)) + 1).toString() + 'px'
+            $(element).css('margin-left', margin)
           } else {
-            $(element).css('margin-left', '-2px')
+            if (event.allDay) {
+              $(element).css('margin-left', '1px')
+            } else if (event.groupId !== 'restriction') {
+              $(element).css('margin-left', '-2px')
+            }
           }
-        }
-        if (event.allDay) {
-          if (columnIndex) {
-            $(element).css('margin-top', '-36px')
+          if (event.allDay) {
+            if (columnIndex) {
+              $(element).css('margin-top', '-36px')
+            }
+            $(element).css('height', 17 * 2)
           }
-          $(element).css('height', 17 * 2)
-        }
-        var c = self.setColor(resourceIndex, resourceNodeName)
-        if (event.userId === self.$store.state.id) {
-          c = '#15C02C' // user specified color: green
-        }
-        if (event.color !== c) {
-          event.color = c
-          self.calendar.fullCalendar('updateEvent', event)
+          if (event.groupId !== 'restriction') {
+            var c
+            if (event.isCancelled) {
+              c = '#B5B7BA' // light gray
+              $(element).css('background-color', 'rgba(150, 150, 150, 0.5)')
+              $(element).hover(function () {
+                $(this).css('background-color', 'rgba(150, 150, 150, 0.3)')
+              }, function () {
+                $(this).css('background-color', 'rgba(150, 150, 150, 0.5)')
+              })
+            } else {
+              c = self.setColor(resourceIndex, resourceNodeName)
+              if (event.userId === self.$store.state.id) {
+                c = '#15C02C' // user specified color: green
+              }
+            }
+            if (event.color !== c) {
+              event.color = c
+              self.calendar.fullCalendar('updateEvent', event)
+            }
+          }
         }
       },
 
       select: function (startDate, endDate) {
         if (!startDate._ambigTime) {
           for (var i = 0; i < self.selectedResources.length; i++) {
-            self.resourcesCheckboxes[i].checked = false
             self.resourcesCheckboxes[i].disabled = false
           }
           var events = self.calendar.fullCalendar('clientEvents')
           var id
           for (i = 0; i < events.length; i++) {
-            if (!events[i].allDay) {
+            if (!events[i].allDay && events[i].groupId !== 'restriction') {
               if (events[i].end > startDate && events[i].start < endDate) {
                 for (var j = 0; j < self.selectedResources.length; j++) {
                   if (self.selectedResources[j].uuid === events[i].resourceId) {

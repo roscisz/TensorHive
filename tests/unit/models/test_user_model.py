@@ -1,5 +1,5 @@
 import pytest
-from sqlalchemy.exc import OperationalError, IntegrityError
+from sqlalchemy.exc import IntegrityError
 from tensorhive.models.User import User
 
 
@@ -43,3 +43,15 @@ def test_exception_on_creating_user_with_not_unique_username(tables):
 
         existing_user.save()
         duplicated_user.save()
+
+
+def test_get_users_reservations(tables, new_user, new_reservation):
+    new_reservation.save()
+    assert new_reservation in new_user.get_reservations()
+
+
+def test_get_users_reservations_does_not_include_cancelled_reservations_by_default(tables, new_user, new_reservation):
+    new_reservation.is_cancelled = True
+    new_reservation.save()
+    assert new_reservation not in new_user.get_reservations()
+    assert new_reservation in new_user.get_reservations(include_cancelled=True)

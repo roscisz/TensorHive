@@ -3,50 +3,153 @@ general:
   success: Fetched successfully
   unauthorized: Unauthorized
   bad_request: Bad Request
-  unpriviliged: Unpriviliged
+  unprivileged: Unprivileged
   no_identity: Could not resolve identity
   auth_error: Authorization error
   ok: OK
 user:
   not_found: User has not been found
+  get:
+    success: User has been successfully fetched
+  create:
+    success: User created successfully
+    failure:
+      duplicate: Such user exists
+      invalid: Requirements not met - {reason}
+  update:
+    success: User has been successfully updated
+    failure:
+      invalid: Requirements not met - {reason}
+  delete:
+    self: Cannot delete own account
+    success: User deleted successfully
   login:
     success: Logged in as {username}
     failure:
       credentials: Incorrect credentials
   logout:
     success: Logged out successfully
-  delete:
-    self: Cannot delete own account
-    success: User deleted successfully
-  create:
-    success: User created successfully
-    failure:
-      duplicate: Such user exists
-      invalid: Requirements not met - {reason}
-  get:
-    success: User has been successfully fetched 
-  update:
-    success: User has been successfully updated
-    failure:
-      invalid: Requirements not met - {reason}
   authorized_keys_entry:
     success: Fetched successfully
+group:
+  users:
+    add:
+      success: User has been added to group
+      failure:
+        duplicate: User is already member of group
+        assertions: Unable to add user to group - {reason}
+    remove:
+      success: User has been removed from group
+      failure:
+        assertions: Unable to remove user from group - {reason}
+        not_found: User is not a member of group
+  not_found: Group has not been found
+  get:
+    success: Group has been successfuly fetched
+  create:
+    success: Group has been successfully created
+    failure:
+      invalid: Requirements not met - {reason}
+  update:
+    success: Group has been successfully updated
+    failure:
+      assertions: Unable to update group - {reason}
+  delete:
+    success: Group deleted successfully
+restriction:
+  users:
+    apply:
+      success: Restriction has been applied to user
+      failure:
+        duplicate: Restriction is already being applied to user
+        assertions: Unable to apply restriction to user - {reason}
+    remove:
+      success: Restriction has been removed from user
+      failure:
+        assertions: Unable to remove restriction from user - {reason}
+        not_found: User is not affected by restriction
+  groups:
+    apply:
+      success: Restriction has been applied to group
+      failure:
+        duplicate: Restriction is already being applied to group
+        assertions: Unable to apply restriction to group - {reason}
+    remove:
+      success: Restriction has been removed from group
+      failure:
+        assertions: Unable to remove restriction from group - {reason}
+        not_found: Group is not affected by restriction
+  resources:
+    apply:
+      success: Restriction has been applied to resource
+      failure:
+        duplicate: Restriction is already being applied to resource
+        assertions: Unable to apply restriction to resource - {reason}
+    remove:
+      success: Restriction has been removed from resource
+      failure:
+        assertions: Unable to remove restriction from resource - {reason}
+        not_found: Resource is not affected by restriction
+  hosts:
+    apply:
+      success: Restriction has been applied to all resources with given hostname
+      failure:
+        assertions: Unable to apply restriction to resources with given hostname - {reason}
+    remove:
+      success: Restriction has been removed from all resources with given hostname
+      failure:
+        assertions: Unable to remove restriction from resources with given hostname - {reason}
+  schedules:
+    add:
+      success: Schedule has been added to restriction
+      failure:
+        duplicate: Schedule has already been added to restriction
+        assertions: Unable to add schedule to restriction - {reason}
+    remove:
+      success: Schedule has been removed from restriction
+      failure:
+        assertions: Unable to remove schedule from restriction - {reason}
+        not_found: Schedule is not applied to restriction
+  not_found: Restriction has not been found
+  create:
+    success: Restriction has been successfully created
+    failure:
+      invalid: Requirements not met - {reason}
+  update:
+    success: Restriction has been successfully updated
+    failure:
+      assertions: Unable to update restriction - {reason}
+  delete:
+    success: Restriction has been successfully deleted
+schedule:
+  not_found: Schedule has not been found
+  get:
+    success: Schedule has been successfully fetched
+  create:
+    success: Schedule has been successfully created
+    failure:
+      invalid: Requirements not met - {reason}
+  update:
+    success: Schedule has been successfully updated
+    failure:
+      assertions: Unable to update schedule - {reason}
+  delete:
+    success: Schedule has been successfully deleted
 reservation:
   not_found: Reservation has not been found
   create:
     success: Reservation has been successfully created
     failure:
+      forbidden: Cannot create reservation due to lack of permissions
       invalid: Requirements not met - {reason}
   update:
     success: Reservation has been successfully updated
     failure:
+      forbidden: Cannot update reservation due to lack of permissions
       invalid: Requirements not met - {reason}
       assertions: Unable to update reservation - {reason}
   delete:
     success: Reservation has been successfully deleted
-users:
-  get:
-    success: Fetched successfully
 screen-sessions:
   success: PIDs of active screen sessions acquired successfully
   failure:
@@ -55,7 +158,7 @@ task:
   all:
     success: Tasks has been successfully fetched
   get:
-    success: Task has been successfully fetched 
+    success: Task has been successfully fetched
   get_log:
     success: Log file has been found
     failure:
@@ -66,14 +169,14 @@ task:
     success: Task has been successfully created
     failure:
       invalid: Requirements not met - {reason}
-  delete:
-    success: Task has been successfully deleted
-    failure:
-      assertions: Unable to delete task, {reason}
   update:
     success: Task has been successfully updated
     failure:
       assertions: Unable to update task, {reason}
+  delete:
+    success: Task has been successfully deleted
+    failure:
+      assertions: Unable to delete task, {reason}
   spawn:
     success: Task has been successfully spawned 
     failure:
@@ -90,14 +193,18 @@ token:
     success: '{token_type} has been revoked'
     failure: '{token_type} has not been revoked'
   refresh:
-    failure: Unable to refresh - unauthorized user
     success: Token has been refreshed successfully
+    failure: Unable to refresh - unauthorized user
     required: Only refresh tokens are allowed
   access:
     required: Only access tokens are allowed
   revoked: Token has been revoked
   expired: Token has expired
   missing_auth_header: Missing Authorization Header
+resource:
+  not_found: Resource has not been found
+  get:
+    success: Resource has been successfully fetched
 nodes:
   hostname:
     not_found: Hostname has not been found

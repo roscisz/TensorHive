@@ -27,13 +27,16 @@ setup(
         'sqlalchemy-utils==0.33.8',
         'click==7.0',
         'werkzeug==0.16.1',
-        'connexion==1.5.3',
+        'connexion==2.3.0',
+        'swagger_ui_bundle==0.0.8',
         'flask_cors==3.0.7',
         'flask_jwt_extended==3.13.1',
         'gunicorn==19.9.0',
         'coloredlogs==10.0',
         'Safe==0.4',
-        'python-usernames==0.2.3'
+        'python-usernames==0.2.3',
+        'stringcase==1.2.0',
+        'alembic==1.0.3'
     ],
     zip_safe=False
 )

@@ -1,9 +1,10 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, and_, not_, or_, event
+from sqlalchemy import Column, Boolean, Integer, String, DateTime, ForeignKey, and_, not_, or_, event
 from tensorhive.database import db_session, Base
 from tensorhive.models.CRUDModel import CRUDModel
+from tensorhive.utils.DateUtils import DateUtils
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, backref
-from typing import Optional, List
+from typing import List
 import datetime
 import logging
 log = logging.getLogger(__name__)
@@ -12,24 +13,26 @@ log = logging.getLogger(__name__)
 class Reservation(CRUDModel, Base):  # type: ignore
     __tablename__ = 'reservations'
     __table_args__ = {'sqlite_autoincrement': True}
+    __public__ = ['id', 'title', 'description', 'resource_id', 'user_id', 'gpu_util_avg', 'mem_util_avg', 'start',
+                  'end', 'created_at', 'is_cancelled']
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    # TODO 'owner' would be much better name (needs refactoring)
     user = relationship(
         'User',
         backref=backref('reservations', passive_deletes=True, cascade='all, delete, delete-orphan'),
         lazy='subquery')
     title = Column(String(60), unique=False, nullable=False)
     description = Column(String(200), nullable=True)
-    protected_resource_id = Column(String(60), nullable=False)
+    resource_id = Column(String(60), nullable=False)
+    _is_cancelled = Column('is_cancelled', Boolean, nullable=True)
 
     gpu_util_avg = Column(Integer, nullable=True)
     mem_util_avg = Column(Integer, nullable=True)
 
     # Stored as UTC time
-    _starts_at = Column(DateTime, nullable=False)
-    _ends_at = Column(DateTime, nullable=False)
+    _start = Column(DateTime, nullable=False)
+    _end = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     __min_reservation_time = datetime.timedelta(minutes=30)
@@ -37,94 +40,74 @@ class Reservation(CRUDModel, Base):  # type: ignore
 
     def check_assertions(self):
         assert self.user_id, 'Reservation owner must be given!'
-        assert self.protected_resource_id, 'Reservation must be related with a resource!'
-        assert self.starts_at, 'Reservation start time is invalid!'
-        assert self.ends_at, 'Reservation end time is invalid!'
+        assert self.resource_id, 'Reservation must be related with a resource!'
+        assert self.start, 'Reservation start time is invalid!'
+        assert self.end, 'Reservation end time is invalid!'
         assert self.duration >= self.__min_reservation_time, 'Reservation duration is too short!'
         assert self.duration <= self.__max_reservation_time, 'Reservation duration is too long!'
 
         assert 0 < len(self.title) < 60, 'Reservation title length has incorrect length!'
         assert len(self.description) < 200, 'Reservation description has incorrect length!'
-        assert len(self.protected_resource_id) == 40, 'Protected resource UUID has incorrect length!'
+        assert len(self.resource_id) == 40, 'Protected resource UUID has incorrect length!'
 
         collision = self.would_interfere()
         assert not collision, 'Reservation would interfere with some other reservation!'
 
     @hybrid_property
     def duration(self):
-        return self.ends_at - self.starts_at
-
-    @classmethod
-    def parsed_input_datetime(cls, value: str) -> Optional[datetime.datetime]:
-        client_datetime_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-        try:
-            result = datetime.datetime.strptime(value, client_datetime_format)
-        except ValueError as e:
-            log.error(e)
-            raise
-        else:
-            return result
-
-    @classmethod
-    def parsed_output_datetime(cls, value: datetime.datetime) -> str:
-        display_datetime_format = '%Y-%m-%dT%H:%M:%S'
-        server_timezone = '+00:00'
-        return value.strftime(display_datetime_format) + server_timezone
+        return self.end - self.start
 
     @hybrid_property
-    def starts_at(self):
-        return self._starts_at
+    def start(self):
+        return self._start
 
-    @starts_at.setter  # type: ignore
-    def starts_at(self, value):
-        if isinstance(value, str):
-            self._starts_at = self.parsed_input_datetime(value)
-        elif isinstance(value, datetime.datetime):
-            self._starts_at = value
-        else:
-            self._starts_at = None
-            log.error('Unsupported type (starts_at={})'.format(value))
+    @start.setter  # type: ignore
+    def start(self, value):
+        self._start = DateUtils.try_parse_string(value)
+        if self._start is None:
+            log.error('Unsupported type (start={})'.format(value))
 
     @hybrid_property
-    def ends_at(self):
-        return self._ends_at
+    def end(self):
+        return self._end
 
-    @ends_at.setter  # type: ignore
-    def ends_at(self, value):
-        if isinstance(value, str):
-            try:
-                self._ends_at = Reservation.parsed_input_datetime(value)
-            except ValueError:
-                # Catch, but don't propagate at this moment,
-                # let the dev to change it to correct value later
-                self._ends_at = None
-        elif isinstance(value, datetime.datetime):
-            self._ends_at = value
-        else:
-            self._ends_at = None
-            log.error('Unsupported type (ends_at={})'.format(value))
+    @end.setter  # type: ignore
+    def end(self, value):
+        self._end = DateUtils.try_parse_string(value)
+        if self._end is None:
+            log.error('Unsupported type (end={})'.format(value))
+
+    @hybrid_property
+    def is_cancelled(self):
+        return self._is_cancelled is not None and self._is_cancelled
+
+    @is_cancelled.setter  # type: ignore
+    def is_cancelled(self, value):
+        self._is_cancelled = value
 
     @classmethod
     def current_events(cls):
         '''Returns only those events that should be currently respected by users'''
         current_time = datetime.datetime.utcnow()
-        return cls.query.filter(
+        current_events = cls.query.filter(
             and_(
                 # Events that has already started
-                cls.starts_at <= current_time,
+                cls.start <= current_time,
                 # Events before their end
-                current_time <= cls.ends_at)).all()
+                current_time <= cls.end)).all()
+        return [c for c in current_events if not c.is_cancelled]
 
     def would_interfere(self):
-        return Reservation.query.filter(
+        conflicting_reservations = Reservation.query.filter(
             # Two events overlap in time domain
             and_(
-                self.starts_at < Reservation.ends_at,
-                self.ends_at > Reservation.starts_at
+                self.start < Reservation.end,
+                self.end > Reservation.start
             ),
             # Case concerns the same resource
         ).filter(Reservation.id != self.id)\
-         .filter(Reservation.protected_resource_id == self.protected_resource_id).first()
+         .filter(Reservation.resource_id == self.resource_id).all()
+        return any(not r.is_cancelled for r in conflicting_reservations)
 
     @classmethod
     def filter_by_uuids_and_time_range(cls, uuids: List[str], start: datetime.datetime, end: datetime.datetime):
@@ -138,9 +121,9 @@ class Reservation(CRUDModel, Base):  # type: ignore
         assert isinstance(start, datetime.datetime), assertion_failed_msg
         assert isinstance(end, datetime.datetime), assertion_failed_msg
 
-        uuid_filter = cls.protected_resource_id.in_(uuids)
-        after_start_filter = cls.starts_at <= end
-        before_end_filter = start <= cls.ends_at
+        uuid_filter = cls.resource_id.in_(uuids)
+        after_start_filter = cls.start <= end  # type: ignore
+        before_end_filter = start <= cls.end  # type: ignore
         matching_conditions = and_(uuid_filter, after_start_filter, before_end_filter)
         return cls.query.filter(matching_conditions).all()
 
@@ -149,29 +132,17 @@ class Reservation(CRUDModel, Base):  # type: ignore
 <ReservationEvent id={0}, user_id={1}
     title={2}
     description={3}
-    protected_resource_id={4}
+    resource_id={4}
 
     gpu_util_avg={5}
     mem_util_avg={6}
 
-    starts_at={7}
-    ends_at={8}
-    created_at={9}'''.format(self.id, self.user_id, self.title, self.description, self.protected_resource_id,
-                             self.gpu_util_avg, self.mem_util_avg, self.starts_at, self.ends_at, self.created_at)
+    start={7}
+    end={8}
+    created_at={9}'''.format(self.id, self.user_id, self.title, self.description, self.resource_id,
+                             self.gpu_util_avg, self.mem_util_avg, self.start, self.end, self.created_at)
 
-    @property
-    def as_dict(self):
-        '''Serializes model instance into dict (which is interpreted as json automatically)'''
-        return {
-            'id': self.id,
-            'title': self.title,
-            'description': self.description,
-            'resourceId': self.protected_resource_id,
-            'userId': self.user_id,
-            'userName': self.user.username,
-            'gpuUtilAvg': self.gpu_util_avg,
-            'memUtilAvg': self.mem_util_avg,
-            'start': self.parsed_output_datetime(self.starts_at),
-            'end': self.parsed_output_datetime(self.ends_at),
-            'createdAt': self.parsed_output_datetime(self.created_at)
-        }
+    def as_dict(self, include_private=False):
+        ret = super(Reservation, self).as_dict(include_private=include_private)
+        ret['userName'] = self.user.username
+        return ret

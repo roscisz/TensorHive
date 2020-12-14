@@ -81,7 +81,7 @@
                 v-if="startTimeMenu"
                 v-model="newStartTime"
                 full-width
-                :allowed-minutes="m => m % 30 === 0"
+                :allowed-minutes="m => m % 5 === 0"
                 format="24hr"
                 @click:minute="$refs.startMenu.save(newStartTime)"
               ></v-time-picker>
@@ -136,7 +136,7 @@
                 v-if="endTimeMenu"
                 v-model="newEndTime"
                 full-width
-                :allowed-minutes="m => m % 30 === 0"
+                :allowed-minutes="m => m % 5 === 0"
                 format="24hr"
                 @click:minute="$refs.endMenu.save(newEndTime)"
               ></v-time-picker>

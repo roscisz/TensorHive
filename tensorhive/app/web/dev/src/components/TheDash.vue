@@ -21,7 +21,7 @@
           <span class="sr-only">Toggle navigation</span>
         </a>
         <div class="version_info">
-          <b>TensorHive</b> v{{version}} <b>API</b> v{{apiVersion}}
+          <b>TensorHive</b> v{{version}}
         </div>
         <v-menu
           class="user_chip"
@@ -65,7 +65,7 @@
           white--text
           xs12
         >
-          Found a bug or needs some improvements? Leave us an <a href="https://github.com/roscisz/TensorHive/issues">issue on Github</a>)
+          Want to report a bug or suggest an enhancement? Create an <a href="https://github.com/roscisz/TensorHive/issues">issue on Github</a>.
         </v-flex>
       </v-layout>
     </v-footer>
@@ -103,9 +103,6 @@ export default {
     },
     version () {
       return config.version
-    },
-    apiVersion () {
-      return config.apiVersion
     }
   },
 

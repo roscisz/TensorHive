@@ -3,8 +3,9 @@ import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship, backref
-from tensorhive.database import db_session, Base
+from tensorhive.database import db_session
 from tensorhive.models.CRUDModel import CRUDModel
+from tensorhive.models.RestrictionAssignee import RestrictionAssignee
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm import validates
 from usernames import is_safe_username
@@ -27,8 +28,11 @@ USERNAME_WHITELIST = [
 ]
 
 
-class User(CRUDModel, Base):  # type: ignore
+class User(CRUDModel, RestrictionAssignee):  # type: ignore
     __tablename__ = 'users'
+    __public__ = ['id', 'username', 'created_at']
+    __private__ = ['email']
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(40), unique=True, nullable=False)
     email = Column(String(64), unique=False, nullable=False, server_default='<email_missing>')
@@ -37,6 +41,10 @@ class User(CRUDModel, Base):  # type: ignore
     # Managed via property getters and setters
     _hashed_password = Column(String(120), nullable=False)
     _roles = relationship('Role', cascade='all,delete', backref=backref('user'))
+    _groups = relationship('Group', secondary='user2group', back_populates='_users', viewonly=True)
+    _restrictions = relationship('Restriction', secondary='restriction2assignee', back_populates='_users',
+                                 viewonly=True)
+    _reservations = relationship('Reservation', cascade='all,delete')
 
     min_password_length = 8
 
@@ -62,6 +70,10 @@ class User(CRUDModel, Base):  # type: ignore
 
     def has_role(self, role_name):
         return bool(role_name in self.role_names)
+
+    @hybrid_property
+    def groups(self):
+        return self._groups
 
     @hybrid_property
     def password(self):
@@ -101,22 +113,64 @@ class User(CRUDModel, Base):  # type: ignore
         else:
             return result
 
-    @property
-    def as_dict(self):
-        '''Serializes model instance into dict (which is interpreted as json automatically)'''
+    def as_dict(self, include_private=False, include_groups=True):
+        """
+        Serializes current instance into dict.
+        :param include_private: passed to CRUDModel as_dict
+        :param include_groups: flag determining if user groups should be included (False to prevent recurrence)
+        :return: Dictionary representing current instance.
+        """
+        user = super(User, self).as_dict(include_private)
+
         try:
             roles = self.role_names
         except Exception:
             roles = []
         finally:
-            return {
-                'id': self.id,
-                'username': self.username,
-                'createdAt': self.created_at.isoformat(),
-                'roles': roles,
-                'email': self.email
-            }
+            user['roles'] = roles
+            if include_groups:
+                user['groups'] = [group.as_dict(include_users=False) for group in self.groups]
+            return user
 
     @staticmethod
     def verify_hash(password, hash):
         return sha256.verify(password, hash)
+
+    def get_restrictions(self, include_expired=False, include_group=False):
+        restrictions = super(User, self).get_restrictions(include_expired=include_expired)
+        if include_group:
+            for group in self.groups:
+                restrictions = restrictions + group.get_restrictions(include_expired=include_expired)
+        return list(set(restrictions))
+
+    def get_active_restrictions(self, include_group=False):
+        restrictions = super(User, self).get_active_restrictions()
+        if include_group:
+            for group in self.groups:
+                restrictions = restrictions + group.get_active_restrictions()
+        return list(set(restrictions))
+
+    def get_reservations(self, include_cancelled=False):
+        return self._reservations if include_cancelled else [r for r in self._reservations if not r.is_cancelled]
+
+    def filter_infrastructure_by_user_restrictions(self, infrastructure):
+        not_allowed_hostnames = []
+        allowed_gpus = []
+        for restriction in self.get_restrictions(include_expired=False, include_group=True):
+            # If restriction is global user has permissions to all resources
+            if restriction.is_global:
+                return infrastructure
+            allowed_gpus.extend([resource.id for resource in restriction.resources])
+        allowed_gpus = set(allowed_gpus)
+        for hostname, value in infrastructure.items():
+            gpu_list = value.get('GPU')
+            if gpu_list is not None:
+                all_gpus = set(gpu_list.keys())
+                not_allowed_gpus = all_gpus - allowed_gpus
+                for key in not_allowed_gpus:
+                    del gpu_list[key]
+            if gpu_list is None or len(gpu_list) == 0:
+                not_allowed_hostnames.append(hostname)
+        for hostname in not_allowed_hostnames:
+            del infrastructure[hostname]
+        return infrastructure

@@ -79,8 +79,9 @@ class ProtectionService(Service):
         # Loop through each GPU on node
         node_processes = {}
         for uuid, gpu_data in infrastructure[hostname]['GPU'].items():
-            single_gpu_processes = infrastructure[hostname]['GPU'][uuid]['processes']
-            node_processes[uuid] = single_gpu_processes
+            if 'processes' in infrastructure[hostname]['GPU'][uuid]:
+                single_gpu_processes = infrastructure[hostname]['GPU'][uuid]['processes']
+                node_processes[uuid] = single_gpu_processes
         return node_processes
 
     def _parse_output(self, stdout: Generator) -> List[Dict]:
@@ -154,11 +155,11 @@ class ProtectionService(Service):
         current_reservations = Reservation.current_events()
 
         # FIXME DEBUG ONLY
-        log.debug(json.dumps([r.as_dict for r in current_reservations], indent=4))
+        log.debug(json.dumps([r.as_dict() for r in current_reservations], indent=4))
 
         for reservation in current_reservations:
             # 1. Extract reservation info
-            uuid = reservation.protected_resource_id
+            uuid = reservation.resource_id
             hostname = self.find_hostname(uuid)
             user = User.get(reservation.user_id)
             username = user.username
@@ -172,8 +173,8 @@ class ProtectionService(Service):
             node_processes = self.node_gpu_processes(hostname)
             reserved_gpu_process_owners = self.gpu_users(node_processes, uuid)
 
-            is_unpriviliged = lambda sess: sess['USER'] in reserved_gpu_process_owners
-            intruder_ttys = [sess for sess in node_sessions if is_unpriviliged(sess)]
+            is_unprivileged = lambda sess: sess['USER'] in reserved_gpu_process_owners
+            intruder_ttys = [sess for sess in node_sessions if is_unprivileged(sess)]
 
             try:
                 # Priviliged user can be ignored on this list
@@ -181,15 +182,15 @@ class ProtectionService(Service):
             except ValueError:
                 pass
             finally:
-                unpriviliged_gpu_process_owners = reserved_gpu_process_owners
+                unprivileged_gpu_process_owners = reserved_gpu_process_owners
 
             # 3. Execute protection handlers
-            for intruder in unpriviliged_gpu_process_owners:
+            for intruder in unprivileged_gpu_process_owners:
                 violation_data = {
                     'INTRUDER_USERNAME': intruder,
                     'RESERVATION_OWNER_USERNAME': username,
                     'RESERVATION_OWNER_EMAIL': user.email,
-                    'RESERVATION_END': utc2local(reservation.ends_at),
+                    'RESERVATION_END': utc2local(reservation.end),
                     'UUID': uuid,
                     'GPU_NAME': self.gpu_attr(hostname, uuid, attribute='name'),
                     'GPU_ID': self.gpu_attr(hostname, uuid, attribute='index'),

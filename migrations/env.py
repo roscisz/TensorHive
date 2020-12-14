@@ -1,19 +1,18 @@
 from __future__ import with_statement
 from alembic import context
 from sqlalchemy import engine_from_config, pool
-from logging.config import fileConfig
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
-fileConfig(config.config_file_name)
-
 # Schema metadata
 from tensorhive.database import Base
 from tensorhive.models.User import User
+from tensorhive.models.Group import Group, User2Group
+from tensorhive.models.Resource import Resource
+from tensorhive.models.Restriction import Restriction, Restriction2Assignee, Restriction2Resource
+from tensorhive.models.RestrictionSchedule import RestrictionSchedule, Restriction2Schedule
 from tensorhive.models.Reservation import Reservation
 from tensorhive.models.RevokedToken import RevokedToken
 from tensorhive.models.Role import Role

@@ -8,6 +8,10 @@ from tensorhive.config import API
 G = API.RESPONSES['general']
 
 
+def decode_token(token):
+    return {}
+
+
 def init_jwt(app):
     for key, value in AUTH.FLASK_JWT.items():
         app.config[key] = value
@@ -37,5 +41,5 @@ def admin_required(fn):
         claims = get_jwt_claims()
         if 'admin' in claims['roles']:
             return fn(*args, **kwargs)
-        return {'msg': G['unpriviliged']}, 401
+        return {'msg': G['unprivileged']}, 403
     return wrapper

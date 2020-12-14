@@ -24,24 +24,12 @@ import axios from 'axios'
 import config from './config'
 axios.get('static/config.json').then(response => {
   config.serverURI = response.data.apiPath
-  config.apiVersion = response.data.apiVersion
   config.version = response.data.version
   if (window.localStorage) {
-    var apiVersion = JSON.parse(window.localStorage.getItem('apiVersion'))
     var version = JSON.parse(window.localStorage.getItem('version'))
-    if (apiVersion === null) {
-      if (config.apiVersion !== undefined) {
-        window.localStorage.setItem('apiVersion', JSON.stringify(config.apiVersion))
-      } else {
-        window.localStorage.setItem('apiVersion', JSON.stringify('no data in config file'))
-      }
-    } else if (apiVersion !== config.apiVersion) {
-      window.localStorage.clear()
-      location.reload(true)
-    }
     if (version === null) {
       if (config.version !== undefined) {
-        window.localStorage.setItem('version', JSON.stringify(config.apiVersion))
+        window.localStorage.setItem('version', JSON.stringify(config.version))
       } else {
         window.localStorage.setItem('version', JSON.stringify('no data in config file'))
       }

@@ -84,17 +84,20 @@ def main(ctx, log_level):
         return
 
     click.echo('TensorHive {}'.format(tensorhive.__version__))
-    setup_logging(log_level)
+    setup_logging(log_level=log_level)
 
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
     from tensorhive.api.APIServer import APIServer
-    from tensorhive.database import init_db
+    from tensorhive.database import check_if_db_exists, ensure_db_with_current_schema
     from tensorhive.models.User import User
     from tensorhive.app.web.AppServer import start_server
     from multiprocessing import Process
 
     try:
-        init_db()
+        if not check_if_db_exists():
+            init()
+        else:
+            ensure_db_with_current_schema()
 
         manager = TensorHiveManager()
         api_server = APIServer()
@@ -125,7 +128,7 @@ def test():
     from tensorhive.config import SSH
     from tensorhive.core.managers.TensorHiveManager import TensorHiveManager
 
-    logging.basicConfig(level=logging.INFO, format='%(message)-79s')
+    setup_logging(log_level=logging.INFO)
 
     if not SSH.AVAILABLE_NODES:
         click.echo('[!] Empty ssh configuration. Please check {}'.format(SSH.HOSTS_CONFIG_FILE))
@@ -140,9 +143,13 @@ def init():
     from tensorhive.config import config as main_config
     from tensorhive.core.utils.AccountCreator import AccountCreator
     from inspect import cleandoc
-    from tensorhive.database import init_db
+    from tensorhive.database import ensure_db_with_current_schema
     from tensorhive.models.User import User
-    logging.basicConfig(level=logging.INFO, format='%(message)-79s')
+    from tensorhive.models.Group import Group
+    from tensorhive.models.Restriction import Restriction
+    setup_logging(log_level=logging.INFO)
+
+    logging.info('[•] Initializing configuration...')
 
     # Exposed host
     if click.confirm('[1/3] Do you want TensorHive to be accessible to other users in your network?'):
@@ -155,8 +162,9 @@ def init():
         main_config.write(main_config_file)
     click.echo(green('[⚙] TensorHive will be accessible via: {}'.format(host)))
 
+    ensure_db_with_current_schema()
+
     # First user account
-    init_db()
     if User.query.count() == 0:
         if click.confirm('[2/3] ' + orange('Database has no users.') + ' Would you like to create an account now?',
                          default=True):
@@ -207,6 +215,7 @@ def key():
 @click.option('-m', '--multiple', is_flag=True, help='Create more users in one go.')
 def user(multiple):
     from tensorhive.core.utils.AccountCreator import AccountCreator
+    setup_logging()
     creator = AccountCreator()
     # Create one user
     creator.run_prompt()
