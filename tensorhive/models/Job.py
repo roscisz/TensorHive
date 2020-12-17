@@ -34,7 +34,7 @@ class Job(CRUDModel, Base):  # type: ignore
     _stop_at = Column(DateTime)
 
     _tasks = relationship(
-        'Task', backref=backref('job', single_parent=True), lazy='subquery')
+        'Task', cascade='all, delete', backref=backref('job', single_parent=True), lazy='subquery')
 
     def __repr__(self):
         return '<Job id={id}, name={name}, description={description}, user={user_id}, status={status}>'.format(

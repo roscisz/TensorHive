@@ -9,6 +9,7 @@ from tensorhive.models.Resource import Resource
 from tensorhive.models.Role import Role
 from tensorhive.models.Job import Job, JobStatus
 from tensorhive.models.Task import Task, TaskStatus
+from tensorhive.models.CommandSegment import CommandSegment, SegmentType
 from datetime import timedelta
 
 
@@ -207,17 +208,27 @@ def new_job_with_task(new_user, new_task):
 
 @pytest.fixture(scope='function')
 def new_task():
-    task = Task(command='python command.py --batch_size 32',
+    task = Task(command='python command.py',
                 hostname='localhost',
                 status=TaskStatus.not_running)
+    cmd_segment = CommandSegment(
+        name='--batch_size',
+        _segment_type=SegmentType.parameter
+    )
+    task.add_cmd_segment(cmd_segment, '32')
     task.save()
     return task
 
 
 @pytest.fixture(scope='function')
 def new_task_2():
-    task = Task(command='python command2.py --batch_size 16',
+    task = Task(command='python command2.py',
                 hostname='remotehost',
                 status=TaskStatus.not_running)
+    cmd_segment = CommandSegment(
+        name='--rank',
+        _segment_type=SegmentType.parameter
+    )
+    task.add_cmd_segment(cmd_segment, '1')
     task.save()
     return task
