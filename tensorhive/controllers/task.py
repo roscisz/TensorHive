@@ -9,7 +9,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt_claims
 from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.config import API
 from functools import wraps
-from typing import Optional, Callable, Any, Dict, Tuple
+from typing import Optional, Callable, Any, Dict, Tuple, List
 from datetime import datetime, timedelta
 from stringcase import snakecase
 import logging
@@ -158,6 +158,7 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 @jwt_required
 def get_all(jobId: Optional[JobId], syncAll: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
     sync_all = syncAll
+    sync_all = True
     job_id = jobId
     try:
         if job_id is not None:
@@ -269,7 +270,6 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
             hostname=task['hostname'],
             command=task['command'])
         parent_job = Job.query.filter(Job.id == job_id).one()
-
         for segment in task['cmdsegments']['envs']:
             new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.env_variable,
                                                       CommandSegment.name == segment['name']).first()

@@ -2772,7 +2772,7 @@ paths:
       operationId: tensorhive.controllers.task.update
       requestBody:
         description: |
-          Task object with fields to overwrite.
+          New task object to overwrite the old one.
         required: true
         content:
           application/json:
