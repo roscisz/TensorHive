@@ -67,7 +67,7 @@ const routes = [
           requiresAuth: true,
           role: 'user'
         }
-        },
+      },
       {
         path: 'tasks_overview',
         alias: '',

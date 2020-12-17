@@ -1723,14 +1723,16 @@ paths:
       responses:
         201:
           description: {{RESPONSES['job']['create']['success']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['job']['create']['success']}}
-              task:
-                $ref: '#/components/schemas/JobToDisplay'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['job']['create']['success']}}
+                  job:
+                    $ref: '#/components/schemas/JobToDisplay'
         400:
           description: {{RESPONSES['general']['bad_request']}}
         401:
@@ -1859,66 +1861,6 @@ paths:
                 example: {{RESPONSES['general']['internal_error']}}   
       security:
         - Bearer: []
-    put:
-      tags: 
-        - jobs
-      operationId: tensorhive.controllers.job.update
-      summary: Update specific job
-      description: Updates chosen fields in specific job
-      parameters:
-        - description: Job ID
-          in: path
-          name: id
-          type: integer
-          required: true
-        - description: |
-            Job object with fields to overwrite.
-          in: body
-          name: newValues
-          required: true
-          schema:
-            $ref: '#/definitions/JobUpdateForm'
-      responses:
-        201:
-          description: {{RESPONSES['general']['ok']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['job']['update']['success']}}
-              task:
-                $ref: '#/definitions/JobToDisplay'
-        401:
-          description: {{RESPONSES['general']['unauthorized']}}
-        403:
-          description: {{RESPONSES['general']['unpriviliged']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
-        404:
-          description: {{RESPONSES['job']['not_found']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['job']['not_found']}}
-        422:
-          description: {{RESPONSES['general']['auth_error']}}
-        500:
-          description: {{RESPONSES['general']['internal_error']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['internal_error']}}
-      security:
-        - Bearer: []
     delete:
       tags:
         - jobs
@@ -1967,101 +1909,6 @@ paths:
               msg:
                 type: string
                 example: {{RESPONSES['general']['internal_error']}}
-      security:
-        - Bearer: []
-  /jobs/{job_id}/tasks:
-    get:
-      tags: 
-        - tasks
-      operationId: tensorhive.controllers.task.get_all
-      summary: Query tasks
-      description: Fetches all tasks from specific job.
-      parameters:
-        - description: Job ID
-          in: path
-          name: job_id
-          type: integer
-          required: true
-        - description: Synchronize all tasks (optional)
-          in: query
-          name: syncAll
-          type: boolean
-          required: false
-          default: false
-      responses:
-        200:
-          description: {{RESPONSES['task']['all']['success']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['all']['success']}}
-              tasks:
-                type: array
-                items:
-                  $ref: '#/definitions/TaskToDisplay'
-        401:
-          description: {{RESPONSES['general']['unauthorized']}}
-        403:
-          description: {{RESPONSES['general']['unpriviliged']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
-        422:
-          description: {{RESPONSES['general']['auth_error']}}
-      security:
-        - Bearer: []
-    post:
-      tags: 
-        - tasks
-      summary: Create new task
-      operationId: tensorhive.controllers.task.create
-      parameters:
-        - description: |
-            Task object
-          in: body
-          name: task
-          required: true
-          schema:
-            $ref: '#/definitions/TaskForm'
-        - description: Job ID
-          in: path
-          name: job_id
-          type: integer
-          required: true
-      responses:
-        201:
-          description: {{RESPONSES['task']['create']['success']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['task']['create']['success']}}
-              task:
-                $ref: '#/definitions/TaskToDisplay'
-        400:
-          description: {{RESPONSES['general']['bad_request']}}
-        401:
-          description: {{RESPONSES['general']['unauthorized']}}
-        403:
-          description: {{RESPONSES['general']['unpriviliged']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
-        409:
-          description: {{RESPONSES['task']['create']['failure']['duplicate']}}
-        422:
-          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['task']['create']['failure']['invalid']}}
-        500:
-          description: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
   /jobs/{job_id}/tasks/{task_id}:
@@ -2092,7 +1939,7 @@ paths:
                 type: string
                 example: {{RESPONSES['job']['tasks']['add']['success']}}
               job:
-                $ref: '#/definitions/JobToDisplay'
+                $ref: '#/components/schemas/JobToDisplay'
         401:
           description: {{RESPONSES['general']['unauthorized']}}
         403:
@@ -2111,56 +1958,6 @@ paths:
           description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['job']['tasks']['add']['failure']['assertions']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
-      security:
-        - Bearer: []
-    delete:
-      tags:
-        - jobs
-      summary: Delete job
-      operationId: tensorhive.controllers.job.delete
-      parameters:
-        - description: Job ID
-          in: path
-          name: id
-          required: true
-          type: integer
-      responses:
-        200:
-          description: {{RESPONSES['general']['ok']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['job']['delete']['success']}}
-        401:
-          description: {{RESPONSES['general']['unauthorized']}}
-        403:
-          description: {{RESPONSES['general']['unpriviliged']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['unpriviliged']}}
-        404:
-          description: {{RESPONSES['job']['not_found']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['job']['not_found']}}
-        422:
-          description: {{RESPONSES['general']['auth_error']}}
-        500:
-          description: {{RESPONSES['general']['internal_error']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
   /jobs/{id}/execute:
@@ -2187,7 +1984,7 @@ paths:
                 type: string
                 example: {{RESPONSES['job']['execute']['success']}}
               job:
-                $ref: '#/definitions/JobToDisplay'
+                $ref: '#/components/schemas/JobToDisplay'
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
           schema:
@@ -2268,7 +2065,7 @@ paths:
                 type: string
                 example: {{RESPONSES['job']['stop']['success']}}
               job:
-                $ref: '#/definitions/JobToDisplay'
+                $ref: '#/components/schemas/JobToDisplay'
         403:
           description: {{RESPONSES['general']['unpriviliged']}}
           schema:
@@ -2360,10 +2157,19 @@ paths:
       security:
         - Bearer: []
     post:
-      tags: 
-        - tasks
+      tags:
+        - jobs
       summary: Create new task
       operationId: tensorhive.controllers.task.create
+      requestBody:
+        description: |
+          Task object
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskForm'
+              x-body-name: task
       parameters:
         - description: |
             Task object
@@ -2404,102 +2210,6 @@ paths:
           description: {{RESPONSES['task']['create']['failure']['duplicate']}}
         422:
           description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['task']['create']['failure']['invalid']}}
-        500:
-          description: {{RESPONSES['general']['internal_error']}}
-      security:
-        - Bearer: []
-  /jobs/{job_id}/tasks/{task_id}:
-    put:
-      tags:
-        - jobs
-      summary: Add task to job
-      operationId: tensorhive.controllers.job.add_task
-      parameters:
-        - description: Job ID
-          in: path
-          name: job_id
-          required: true
-          schema:
-            type: integer
-        - description: Task ID
-          in: path
-          name: task_id
-          required: true
-          schema:
-            type: integer
-      responses:
-        200:
-          description: {{RESPONSES['job']['tasks']['add']['success']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['job']['tasks']['add']['success']}}
-              job:
-                $ref: '#/components/schemas/JobToDisplay'
-        401:
-          description: {{RESPONSES['general']['unauthorized']}}
-        403:
-          description: {{RESPONSES['job']['tasks']['add']['failure']['assertions']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['job']['tasks']['add']['failure']['assertions']}}
-        404:
-          description: {{RESPONSES['job']['not_found']}} or {{RESPONSES['task']['not_found']}}
-        409:
-          description: {{RESPONSES['job']['tasks']['add']['failure']['duplicate']}}
-        422:
-          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['job']['tasks']['add']['failure']['assertions']}}
-        500:
-          description: {{RESPONSES['general']['internal_error']}}
-      security:
-        - Bearer: []
-    delete:
-      tags:
-        - jobs
-      summary: Remove task from job
-      operationId: tensorhive.controllers.job.remove_task
-      description: Removes specific task from specific job      
-      parameters:
-        - description: Job ID
-          in: path
-          name: job_id
-          required: true
-          type: integer
-        - description: Task ID
-          in: path
-          name: task_id
-          required: true
-          type: integer
-      responses:
-        200:
-          description: {{RESPONSES['job']['tasks']['remove']['success']}}
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['job']['tasks']['remove']['success']}}
-              job:
-                $ref: '#/components/schemas/JobToDisplay'
-        401:
-          description: {{RESPONSES['general']['unauthorized']}}
-        403:
-          description: {{RESPONSES['job']['tasks']['remove']['failure']['assertions']}}   
-          schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                example: {{RESPONSES['job']['tasks']['remove']['failure']['assertions']}}
-        404:
-          description: {{RESPONSES['job']['not_found']}} or {{RESPONSES['task']['not_found']}} or {{RESPONSES['job']['tasks']['remove']['failure']['not_found']}}
-        422:
-          description: {{RESPONSES['general']['auth_error']}} or {{RESPONSES['job']['tasks']['add']['failure']['assertions']}}
         500:
           description: {{RESPONSES['general']['internal_error']}}
       security:
@@ -2903,7 +2613,7 @@ paths:
           required: false
           schema:
             type: boolean
-            default: false
+            default: true
       responses:
         200:
           description: {{RESPONSES['task']['all']['success']}}
@@ -3056,9 +2766,7 @@ paths:
       operationId: tensorhive.controllers.task.update
       requestBody:
         description: |
-          Task object with fields to overwrite.
-          * spawn field is nullable string
-          * terminate field is nullable string
+          New task object to overwrite the old one.
         required: true
         content:
           application/json:
@@ -3609,14 +3317,28 @@ components:
           example: 1
         command:
           type: string
-          example: CUDA_VISIBLE_DEVICES=0 train.py
+          example: user/home/python user/train.py
+        cmdsegments:
+          type: object
+          properties:
+            envs:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommandSegmentToDisplay'
+            params:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommandSegmentToDisplay'
         pid:
           type: integer
           format: int64
           example: 4321
         hostname:
           type: string
-          format: localhost
+          example: localhost
+        status:
+          type: string
+          example: unsynchronized
     TaskForm:
       type: object
       required:
@@ -3628,31 +3350,62 @@ components:
           example: 1
         command:
           type: string
-          example: CUDA_VISIBLE_DEVICES=0 train.py
+          example: user/home/python user/train.py
         hostname:
           type: string
           example: localhost
+        cmdsegments:
+          type: object
+          properties:
+            envs:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommandSegment'
+            params:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommandSegment'
     TaskUpdateForm:
       type: object
       properties:
+        command:
+          type: string
+          example: user/home/python user/train.py
         hostname:
           type: string
           example: localhost
-      additionalProperties:            
-        type: object
-        properties:
-          name:
-            type: string
-            example: ENV
-          mode:
-            type: string
-            example: remove
-          value:
-            type: string
-            example: 1
-          index:
-            type: string
-            example: -1
+        cmdsegments:
+          type: object
+          properties:
+            envs:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommandSegment'
+            params:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommandSegment'
+    CommandSegment:
+      type: object
+      properties:
+        name:
+          type: string
+          example: LIB_PATH
+        value:
+          type: string
+          example: user/home/lib
+    CommandSegmentToDisplay:
+      type: object
+      properties:
+        name:
+          type: string
+          example: LIB_PATH
+        value:
+          type: string
+          example: user/home/lib
+        index:
+          type: integer
+          example: -2
     JobForm:
       type: object
       required:
@@ -3692,6 +3445,9 @@ components:
         description:
           type: string
           example: Job which goal is to run classifier training.
+        status:
+          type: string
+          example: unsynchronized
         startAt:
           type: string
           format: date-time
