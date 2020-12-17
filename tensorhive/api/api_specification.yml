@@ -2113,7 +2113,7 @@ paths:
   /jobs/{job_id}/tasks:
     get:
       tags: 
-        - tasks
+        - jobs
       operationId: tensorhive.controllers.task.get_all
       summary: Query tasks
       description: Fetches all tasks from specific job.

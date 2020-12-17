@@ -236,7 +236,7 @@ def business_get_all(job_id: JobId, sync_all: Optional[bool]) -> Tuple[Content, 
     then run sync each records individually.
     """
     try:
-        tasks = []
+        tasks = List[Task]
         if job_id is not None:
             tasks = Task.query.filter(Task.job_id == job_id).all()
         else:
