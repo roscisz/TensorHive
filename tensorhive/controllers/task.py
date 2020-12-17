@@ -158,6 +158,7 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 @jwt_required
 def get_all(jobId: Optional[JobId], syncAll: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
     sync_all = syncAll
+    sync_all = True
     job_id = jobId
     try:
         if job_id is not None:
@@ -260,74 +261,33 @@ def business_get_all(job_id: Optional[JobId], sync_all: Optional[bool]) -> Tuple
 
 
 def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpStatusCode]:
-    """ Creates new Task db record under the given parent job.
+    """ Creates new Task db record under the given parent job
+    and new db records for given command segments of that task.
 
-    Command argument is divided into segments to make editing easier.
-    Main dividing procedure assumptions:
-    1) Environmental variables are placed first in the command and they contain "=" sign
-        - if_envs,
-        - if_eq_sign
-    2) After that actual command (path) is given and it contains no "=" sign
-        - actual_command
-    3) Following actual command parameters are given and they start by at least one "-" sign
-        - if segment[0] == '-'
-    3a) Parameters may contain value
-    3b) Value is given after "=" sign or after space character
-        - if_parameter_value_expected
-
-    After each cycle new segment is stored if the information about it is complete.
-    If not values are stored till it is complete, and then it is added (e.g. actual_command)
     """
     try:
         new_task = Task(
             hostname=task['hostname'],
             command=task['command'])
         parent_job = Job.query.filter(Job.id == job_id).one()
-        command_segments = new_task.command.split()
-        if_envs = True
-        if_eqsign_found = False
-        if_parameter_value_expected = False
-        actual_command = ''
-        for segment in command_segments:
-            for x in segment:
-                if x == '=':
-                    if_eqsign_found = True
-                    break
-            if if_eqsign_found is False:
-                if_envs = False
-            if_eqsign_found = False
-            if if_envs:
-                splitted_segment = segment.split('=')
-                segment_type = SegmentType.env_variable
-            elif segment[0] == '-':
-                splitted_segment = segment.split('=')
-                segment_type = SegmentType.parameter
-                if len(splitted_segment) == 1:
-                    splitted_segment.append('')
-                    if_parameter_value_expected = True
-            elif if_parameter_value_expected is True:
-                splitted_segment[1] = segment
-                if_parameter_value_expected = False
-            else:
-                actual_command += segment + ' '
-                continue
+        
+        for segment in task['cmdsegments']['envs']:
+            new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.env_variable,
+                                                      CommandSegment.name == segment['name']).first()
+            if (new_segment is None):
+                new_segment = CommandSegment(
+                    name=segment['name'],
+                    _segment_type=SegmentType.env_variable)
+            new_task.add_cmd_segment(new_segment, segment['value'])
+        for segment in task['cmdsegments']['params']:
+            new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.parameter,
+                                                      CommandSegment.name == segment['name']).first()
+            if (new_segment is None):
+                new_segment = CommandSegment(
+                    name=segment['name'],
+                    _segment_type=SegmentType.parameter)
+            new_task.add_cmd_segment(new_segment, segment['value'])
 
-            if if_parameter_value_expected is False:
-                new_segment = CommandSegment.query.filter(CommandSegment.segment_type == segment_type,
-                                                          CommandSegment.name == splitted_segment[0]).first()
-                if (new_segment is None):
-                    new_segment = CommandSegment(
-                        name=splitted_segment[0],
-                        _segment_type=segment_type)
-                new_task.add_cmd_segment(new_segment, splitted_segment[1])
-
-        new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.actual_command,
-                                                  CommandSegment.name == '').first()
-        if (new_segment is None):
-            new_segment = CommandSegment(
-                name='',
-                _segment_type=SegmentType.actual_command)
-        new_task.add_cmd_segment(new_segment, actual_command[:-1])
         new_task.save()
         parent_job.add_task(new_task)
     except KeyError:
@@ -360,24 +320,40 @@ def business_get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
-    """Updates certain fields of a Task db record, including command field."""
+def business_update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
+    """Updates certain fields of a Task db record, including command field and segments."""
     try:
+        new_values = newValues
         task = Task.get(id)
         assert task.status is not TaskStatus.running, "Cannot update task which is already running"
         for key, value in new_values.items():
             if key == 'hostname':
                 setattr(task, key, value)
-            elif key.startswith('cmd_segment'):
-                segment = value
-                cmd_segment = CommandSegment.find_by_name(segment['name'])
-                assert cmd_segment is not None, 'Invalid command segment name'
-                if (segment['mode'] == 'remove'):
-                    task.remove_cmd_segment(cmd_segment)
-                elif (segment['mode'] == 'update'):
-                    link = task.get_cmd_segment_link(cmd_segment)
-                    setattr(link, '_value', segment['value'])
-        task.update_command()
+            elif key == 'command':
+                setattr(task, key, value)
+            elif key == 'cmdsegments':
+# FIXME Somehow the loop doesn't get all of the elements by the first time
+# but repeating it cleares it
+                for segment in task.cmd_segments:
+                    task.remove_cmd_segment(segment)
+                for segment in task.cmd_segments:
+                    task.remove_cmd_segment(segment)
+                for segment in new_values['cmdsegments']['envs']:
+                    new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.env_variable,
+                                                              CommandSegment.name == segment['name']).first()
+                    if (new_segment is None):
+                        new_segment = CommandSegment(
+                            name=segment['name'],
+                            _segment_type=SegmentType.env_variable)
+                    task.add_cmd_segment(new_segment, segment['value'])
+                for segment in new_values['cmdsegments']['params']:
+                    new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.parameter,
+                                                              CommandSegment.name == segment['name']).first()
+                    if (new_segment is None):
+                        new_segment = CommandSegment(
+                            name=segment['name'],
+                            _segment_type=SegmentType.parameter)
+                    task.add_cmd_segment(new_segment, segment['value'])
         task.save()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
@@ -446,7 +422,7 @@ def screen_sessions(username: str, hostname: str) -> Tuple[Content, HttpStatusCo
 
 @synchronize_task_record
 def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
-    """Spawns command stored in Task db record (task.command).
+    """Spawns command stored in Task db record (task.full_command).
 
     It won't allow for spawning task which is currently running (sync + status check).
     If spawn operation has succeeded then `running` status is set.
@@ -455,11 +431,14 @@ def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         task = Task.get(id)
         parent_job = Job.get(task.job_id)
         assert task.status is not TaskStatus.running, 'task is already running'
-        assert task.command, 'command is empty'
+        assert task.full_command, 'command is empty'
         assert task.hostname, 'hostname is empty'
         assert parent_job.user, 'user does not exist'
 
-        pid = task_nursery.spawn(task.command, task.hostname, parent_job.user.username, name_appendix=str(task.id))
+        pid = task_nursery.spawn(task.full_command,
+                                 task.hostname,
+                                 parent_job.user.username,
+                                 name_appendix=str(task.id))
         task.pid = pid
         task.status = TaskStatus.running
         task.save()
@@ -514,10 +493,10 @@ def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[C
         task.save()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError as e:
-        content, status = {'msg': TASK['terminate']['failure']['state'].format(reason=e)}, 409
     except ExitCodeError:
         content, status = {'msg': TASK['terminate']['failure']['exit_code'], 'exit_code': exit_code}, 202
+    except AssertionError as e:
+        content, status = {'msg': TASK['terminate']['failure']['state'].format(reason=e)}, 409
     except ConnectionErrorException as e:
         content, status = {'msg': TASK['failure']['connection'].format(reason=e)}, 500
     except Exception as e:
