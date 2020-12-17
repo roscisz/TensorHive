@@ -1736,7 +1736,7 @@ paths:
                   msg:
                     type: string
                     example: {{RESPONSES['job']['create']['success']}}
-                  task:
+                  job:
                     $ref: '#/components/schemas/JobToDisplay'
         400:
           description: {{RESPONSES['general']['bad_request']}}
@@ -2114,7 +2114,7 @@ paths:
   /jobs/{job_id}/tasks:
     post:
       tags: 
-        - tasks
+        - jobs
       summary: Create new task
       operationId: tensorhive.controllers.task.create
       requestBody:
@@ -2671,7 +2671,7 @@ paths:
           required: false
           schema:
             type: boolean
-            default: false
+            default: true
       responses:
         200:
           description: {{RESPONSES['task']['all']['success']}}
@@ -2772,7 +2772,7 @@ paths:
       operationId: tensorhive.controllers.task.update
       requestBody:
         description: |
-          Task object with fields to overwrite.
+          New task object to overwrite the old one.
         required: true
         content:
           application/json:
@@ -3148,14 +3148,28 @@ components:
           example: 1
         command:
           type: string
-          example: CUDA_VISIBLE_DEVICES=0 train.py
+          example: user/home/python user/train.py
+        cmdsegments:
+          type: object
+          properties:
+            envs:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommandSegmentToDisplay'
+            params:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommandSegmentToDisplay'
         pid:
           type: integer
           format: int64
           example: 4321
         hostname:
           type: string
-          format: localhost
+          example: localhost
+        status:
+          type: string
+          example: unsynchronized
     TaskForm:
       type: object
       required:
@@ -3167,31 +3181,62 @@ components:
           example: 1
         command:
           type: string
-          example: CUDA_VISIBLE_DEVICES=0 train.py
+          example: user/home/python user/train.py
         hostname:
           type: string
           example: localhost
+        cmdsegments:
+          type: object
+          properties:
+            envs:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommandSegment'
+            params:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommandSegment'
     TaskUpdateForm:
       type: object
       properties:
+        command:
+          type: string
+          example: user/home/python user/train.py
         hostname:
           type: string
           example: localhost
-      additionalProperties:            
-        type: object
-        properties:
-          name:
-            type: string
-            example: ENV
-          mode:
-            type: string
-            example: remove
-          value:
-            type: string
-            example: 1
-          index:
-            type: string
-            example: -1
+        cmdsegments:
+          type: object
+          properties:
+            envs:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommandSegment'
+            params:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommandSegment'
+    CommandSegment:
+      type: object
+      properties:
+        name:
+          type: string
+          example: LIB_PATH
+        value:
+          type: string
+          example: user/home/lib
+    CommandSegmentToDisplay:
+      type: object
+      properties:
+        name:
+          type: string
+          example: LIB_PATH
+        value:
+          type: string
+          example: user/home/lib
+        index:
+          type: integer
+          example: -2
     JobForm:
       type: object
       required:
@@ -3231,6 +3276,9 @@ components:
         description:
           type: string
           example: Job which goal is to run classifier training.
+        status:
+          type: string
+          example: unsynchronized
         startAt:
           type: string
           format: date-time

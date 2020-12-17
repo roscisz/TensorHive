@@ -24,7 +24,9 @@ def test_create_job(tables, client, new_user):
     job_name = 'TestJob'
     data = {'name': job_name,
             'description': 'testDescription',
-            'userId': 1}
+            'userId': 1,
+            'startAt': None,
+            'stopAt': None}
 
     resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
     resp_json = json.loads(resp.data.decode('utf-8'))
