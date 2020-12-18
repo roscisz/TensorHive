@@ -1,6 +1,6 @@
 {
   "name": "tensorhive_web_app",
-  "version": "0.1.0",
+  "version": "0.3.5",
   "description": "Web aplication based on CoPilot admin template",
   "author": "filschod",
   "license": "MIT",
@@ -14,14 +14,14 @@
     "lint": "eslint --ext .js,.vue src test/unit/specs test/e2e/specs"
   },
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.18.1",
     "chart.js": "^2.7.2",
     "eventsource-polyfill": "^0.9.6",
     "hideseek": "^0.8.0",
-    "jquery": "^3.3.1",
+    "jquery": "^3.5.1",
     "material-design-icons-iconfont": "^3.0.3",
     "moment": "^2.22.2",
-    "node-sass": "^4.9.2",
+    "node-sass": "^4.14.1",
     "sass-loader": "^7.0.3",
     "vue": "^2.5.2",
     "vue-chartjs": "^3.3.2",
@@ -97,7 +97,7 @@
     "vue-template-compiler": "^2.5.2",
     "webpack": "^3.6.0",
     "webpack-bundle-analyzer": "^3.3.2",
-    "webpack-dev-server": "^3.1.11",
+    "webpack-dev-server": "^3.11.0",
     "webpack-merge": "^4.1.0"
   },
   "engines": {

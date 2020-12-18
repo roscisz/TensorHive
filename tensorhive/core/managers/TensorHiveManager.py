@@ -105,7 +105,7 @@ class TensorHiveManager(metaclass=Singleton):
             connection_manager=self.connection_manager)
 
     def init(self):
-        log.info('[⚙] {} Initializing services...'.format(self.__class__.__name__))
+        log.info('[⚙] Initializing services {}...'.format(self.__class__.__name__))
         self.service_manager.start_all_services()
 
     def shutdown(self):

@@ -446,5 +446,6 @@ export default {
   width: 25vw;
   min-width: 300px;
   margin-left: 3vh;
+  margin-bottom: 5vh;
 }
 </style>

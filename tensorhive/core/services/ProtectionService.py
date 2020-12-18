@@ -79,8 +79,9 @@ class ProtectionService(Service):
         # Loop through each GPU on node
         node_processes = {}
         for uuid, gpu_data in infrastructure[hostname]['GPU'].items():
-            single_gpu_processes = infrastructure[hostname]['GPU'][uuid]['processes']
-            node_processes[uuid] = single_gpu_processes
+            if 'processes' in infrastructure[hostname]['GPU'][uuid]:
+                single_gpu_processes = infrastructure[hostname]['GPU'][uuid]['processes']
+                node_processes[uuid] = single_gpu_processes
         return node_processes
 
     def _parse_output(self, stdout: Generator) -> List[Dict]:

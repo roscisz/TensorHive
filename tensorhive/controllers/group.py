@@ -121,53 +121,6 @@ def delete(id: GroupId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-def get_default_group() -> Tuple[Content, HttpStatusCode]:
-    try:
-        group = Group.get_default_group()
-    except Exception as e:
-        log.critical(e)
-        content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
-    else:
-        if group is None:
-            content, status = {'msg': GROUP['default']['not_found']}, HTTPStatus.NOT_FOUND.value
-        else:
-            content, status = {'msg': GROUP['default']['get']['success'], 'group': group.as_dict()},\
-                HTTPStatus.OK.value
-    finally:
-        return content, status
-
-
-@admin_required
-def set_default_group(group_id: GroupId) -> Tuple[Content, HttpStatusCode]:
-    try:
-        Group.set_default_group(group_id)
-    except NoResultFound:
-        content, status = {'msg': GROUP['not_found']}, HTTPStatus.NOT_FOUND.value
-    except AssertionError as e:
-        content, status = {'msg': GROUP['default']['set']['failure']['assertions'].format(reason=e)}, \
-            HTTPStatus.UNPROCESSABLE_ENTITY.value
-    else:
-        content, status = {'msg': GROUP['default']['set']['success']}, HTTPStatus.OK.value
-    finally:
-        return content, status
-
-
-@admin_required
-def delete_default_group() -> Tuple[Content, HttpStatusCode]:
-    try:
-        Group.delete_default_group_if_exists()
-    except AssertionError as e:
-        content, status = {'msg': GROUP['default']['delete']['failure']['assertions'].format(reason=e)}, \
-            HTTPStatus.UNPROCESSABLE_ENTITY.value
-    except Exception as e:
-        log.critical(e)
-        content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
-    else:
-        content, status = {'msg': GROUP['default']['delete']['success']}, HTTPStatus.OK.value
-    finally:
-        return content, status
-
-
 @admin_required
 def add_user(group_id: GroupId, user_id: UserId) -> Tuple[Content, HttpStatusCode]:
     group = None

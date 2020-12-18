@@ -1,8 +1,12 @@
 from setuptools import setup, find_packages
 import tensorhive
+import os
+
+this_directory = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 
-# TODO Add platform and license
 setup(
     name='tensorhive',
     version=tensorhive.__version__,
@@ -15,11 +19,13 @@ setup(
         ],
     },
     description='A user-friendly GPU management tool for distributed machine learning workloads',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     author='Pawel Rosciszewski, Michal Martyniak, Filip Schodowski',
     author_email='pawel.rosciszewski@pg.edu.pl',
     url='https://github.com/roscisz/TensorHive',
     download_url='https://github.com/roscisz/TensorHive/archive/{}.tar.gz'.format(tensorhive.__version__),
-    keywords='reservation monitoring machine learning distributed tensorflow pytorch',
+    keywords='gpu reservation calendar monitoring machine learning distributed tensorflow pytorch',
     install_requires=[
         'parallel-ssh==1.9.1',
         'passlib==1.7.1',
@@ -35,7 +41,8 @@ setup(
         'coloredlogs==10.0',
         'Safe==0.4',
         'python-usernames==0.2.3',
-        'stringcase==1.2.0'
+        'stringcase==1.2.0',
+        'alembic==1.0.3'
     ],
     zip_safe=False
 )

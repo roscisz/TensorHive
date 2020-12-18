@@ -55,7 +55,6 @@ class RestrictionSchedule(CRUDModel, Base):  # type: ignore
         schedule_days does not contain valid schedule expression - it should consist of numbers from 1 to 7 inclusive,
         each representing day of the week that the schedule is valid on (1 - Monday, 2 - Tuesday, ..., 7 - Sunday).
         '''
-        assert self.hour_end > self.hour_start, 'End hour cannot happen before start hour!'
 
     @hybrid_property
     def schedule_days(self):
@@ -65,7 +64,7 @@ class RestrictionSchedule(CRUDModel, Base):  # type: ignore
     def restrictions(self):
         return self._restrictions
 
-    @schedule_days.setter
+    @schedule_days.setter  # type: ignore
     def schedule_days(self, days: Union[List[Weekday], str]):
         if isinstance(days, str):
             self._schedule_days = (''.join(sorted(days)))
