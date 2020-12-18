@@ -132,7 +132,7 @@ class Task(CRUDModel, Base):  # type: ignore
             envs_array = []
             params_array = []
             for cmd_segment in self.cmd_segments:
-                link = self.get_cmd_segment_link(cmd_segment) 
+                link = self.get_cmd_segment_link(cmd_segment)
                 segment = {
                     'name': cmd_segment.name,
                     'value': link.value,

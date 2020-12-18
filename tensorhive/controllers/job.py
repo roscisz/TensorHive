@@ -95,12 +95,12 @@ def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         )
         new_job.save()
     except AssertionError as e:
-        if e.args[0]=='Not an owner':
+        if e.args[0] == 'Not an owner':
             content, status = {'msg': GENERAL['unprivileged']}, HTTPStatus.FORBIDDEN.value
         else:
             content = {'msg': JOB['create']['failure']['invalid'].format(reason=e)}
             status = HTTPStatus.UNPROCESSABLE_ENTITY.value
-    except ValueError as e:
+    except ValueError:
         # Invalid string format for datetime
         content, status = {'msg': GENERAL['bad_request']}, HTTPStatus.UNPROCESSABLE_ENTITY.value
     except KeyError as e:
