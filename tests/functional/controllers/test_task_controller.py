@@ -121,7 +121,7 @@ def test_update_task(tables, client, new_job, new_task, new_user):
             'envs': envs,
             'params': params
         }
-    }
+        }
 
     params_post = [
         {
