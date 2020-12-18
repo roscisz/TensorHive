@@ -236,7 +236,7 @@ def business_get_all(job_id: JobId, sync_all: Optional[bool]) -> Tuple[Content, 
     then run sync each records individually.
     """
     try:
-        tasks = List[Task]
+        tasks = []
         if job_id is not None:
             tasks = Task.query.filter(Task.job_id == job_id).all()
         else:
@@ -270,7 +270,7 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
             command=task['command'])
         # parent job
         parent_job = Job.query.filter(Job.id == job_id).one()
-        
+
         for segment in task['cmdsegments']['envs']:
             new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.env_variable,
                                                       CommandSegment.name == segment['name']).first()
