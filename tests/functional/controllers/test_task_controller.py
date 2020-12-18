@@ -73,20 +73,22 @@ def test_delete_task(tables, client, new_job, new_user):
             'value': '2'
         }
     ]
-    data1 = {'command': 'python command.py',
-             'hostname': 'localhost',
-             'cmdsegments': {
-                'envs': envs,
-                'params': params1
-            }
-            }
-    data2 = {'command': 'python command.py',
-             'hostname': 'localhost',
-             'cmdsegments': {
-                'envs': envs,
-                'params': params2
-            }
-            }
+    data1 = {
+        'command': 'python command.py',
+        'hostname': 'localhost',
+        'cmdsegments': {
+            'envs': envs,
+            'params': params1
+        }
+    }
+    data2 = {
+        'command': 'python command.py',
+        'hostname': 'localhost',
+        'cmdsegments': {
+            'envs': envs,
+            'params': params2
+        }
+    }
 
     resp = client.post(BASE_URI + '/jobs/{}/tasks'.format(new_job.id), headers=HEADERS, data=json.dumps(data1))
     resp_json = json.loads(resp.data.decode('utf-8'))
@@ -119,7 +121,7 @@ def test_update_task(tables, client, new_job, new_task, new_user):
             'envs': envs,
             'params': params
         }
-        }
+    }
 
     params_post = [
         {
