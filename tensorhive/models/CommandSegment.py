@@ -21,7 +21,7 @@ class CommandSegment(CRUDModel, Base):  # type: ignore
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), unique=True, nullable=False)
-    _segment_type = Column(Enum(SegmentType), default=SegmentType.env_variable, nullable=False)
+    _segment_type = Column('segment_type', Enum(SegmentType), default=SegmentType.env_variable, nullable=False)
     _tasks = relationship('Task', secondary='cmd_segment2task', back_populates='_cmd_segments')
 
     def __repr__(self):
@@ -64,7 +64,7 @@ class CommandSegment2Task(Base):  # type: ignore
     task_id = Column(Integer, ForeignKey('tasks.id', ondelete='CASCADE'), primary_key=True)
     cmd_segment_id = Column(Integer, ForeignKey('command_segments.id', ondelete='CASCADE'), primary_key=True)
     _value = Column(String(100))
-    _index = Column(Integer)  # positive - parameters; negative - env variables; 0 - actual command
+    _index = Column(Integer)  # positive - parameters; negative - env variables
 
     @hybrid_property
     def index(self):

@@ -13,9 +13,33 @@ ENDPOINT = BASE_URI + '/tasks'
 def test_create_task(tables, client, new_job, new_user):
     new_user.save()
     new_job.save()
-    command = 'ENV= python command.py --batch_size 32 --rank 2'
-    data = {'command': command,
-            'hostname': 'localhost'}
+    envs = [
+        {
+            'name': 'ENV',
+            'value': 'path'
+        },
+        {
+            'name': 'LIBPATH',
+            'value': 'some/path/2'
+        }
+    ]
+    params = [
+        {
+            'name': '--batch_size',
+            'value': '32'
+        },
+        {
+            'name': '--rank',
+            'value': '2'
+        }
+    ]
+    data = {'command': 'python command.py',
+            'hostname': 'localhost',
+            'cmdsegments': {
+                'envs': envs,
+                'params': params
+            }
+            }
 
     resp = client.post(BASE_URI + '/jobs/{}/tasks'.format(new_job.id), headers=HEADERS, data=json.dumps(data))
     resp_json = json.loads(resp.data.decode('utf-8'))
@@ -31,10 +55,38 @@ def test_create_task(tables, client, new_job, new_user):
 def test_delete_task(tables, client, new_job, new_user):
     new_user.save()
     new_job.save()
-    data1 = {'command': 'ENV= python command.py --batch_size 32 --rank=2',
-             'hostname': 'localhost'}
-    data2 = {'command': 'ENV= python command.py --batch_size 32',
-             'hostname': 'localhost'}
+    envs = [{
+        'name': 'ENV',
+        'value': 'path'
+    }]
+    params2 = [{
+        'name': '--batch_size',
+        'value': '32'
+    }]
+    params1 = [
+        {
+            'name': '--batch_size',
+            'value': '32'
+        },
+        {
+            'name': '--rank',
+            'value': '2'
+        }
+    ]
+    data1 = {'command': 'python command.py',
+             'hostname': 'localhost',
+             'cmdsegments': {
+                'envs': envs,
+                'params': params1
+            }
+            }
+    data2 = {'command': 'python command.py',
+             'hostname': 'localhost',
+             'cmdsegments': {
+                'envs': envs,
+                'params': params2
+            }
+            }
 
     resp = client.post(BASE_URI + '/jobs/{}/tasks'.format(new_job.id), headers=HEADERS, data=json.dumps(data1))
     resp_json = json.loads(resp.data.decode('utf-8'))
@@ -53,16 +105,39 @@ def test_delete_task(tables, client, new_job, new_user):
 def test_update_task(tables, client, new_job, new_task, new_user):
     new_user.save()
     new_job.save()
-    data_to_update = {'hostname': 'remotehost',
-                      'command': 'python updated_command.py',
-                      'cmd_segment_1': {'name': '--batch_size',
-                                        'mode': 'remove'},
-                      'cmd_segment_2': {'name': '--rank',
-                                        'mode': 'update',
-                                        'value': '3'}}
+    envs = [{
+        'name': 'ENV',
+        'value': 'path'
+    }]
+    params = [{
+        'name': '--rank',
+        'value': '3'
+    }]
+    data_to_update = {
+        'hostname': 'remotehost',
+        'cmdsegments': {
+            'envs': envs,
+            'params': params
+        }
+        }
 
-    data_to_post = {'command': 'ENV= python command.py --batch_size 32 --rank=1',
-                    'hostname': 'localhost'}
+    params_post = [
+        {
+            'name': '--batch_size',
+            'value': '32'
+        },
+        {
+            'name': '--rank',
+            'value': '2'
+        }
+    ]
+    data_to_post = {'command': 'python command.py',
+                    'hostname': 'localhost',
+                    'cmdsegments': {
+                        'envs': envs,
+                        'params': params_post
+                    }
+                    }
 
     resp = client.post(BASE_URI + '/jobs/{}/tasks'.format(new_job.id), headers=HEADERS, data=json.dumps(data_to_post))
     resp_json = json.loads(resp.data.decode('utf-8'))
@@ -73,4 +148,4 @@ def test_update_task(tables, client, new_job, new_task, new_user):
 
     assert resp.status_code == HTTPStatus.CREATED
     assert resp_json['task']['hostname'] == 'remotehost'
-    assert resp_json['task']['command'] == 'python updated_command.py'
+    assert Task.get(int(resp_json['task']['id'])).number_of_params == 1

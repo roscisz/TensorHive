@@ -7,8 +7,9 @@ from tensorhive.config import API
 from tensorhive.models.Job import Job, JobStatus
 from tensorhive.models.Task import Task
 from tensorhive.utils.DateUtils import DateUtils
-from tensorhive.controllers.task import business_spawn, business_terminate
+from tensorhive.controllers.task import business_spawn, business_terminate, synchronize
 from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
+from datetime import datetime
 
 log = logging.getLogger(__name__)
 JOB = API.RESPONSES['job']
@@ -48,6 +49,7 @@ def get_by_id(id: JobId) -> Tuple[Content, HttpStatusCode]:
 def get_all(userId: Optional[int]) -> Tuple[Content, HttpStatusCode]:
     """Fetches all Job records"""
     user_id = userId
+    sync_all = True
     try:
         if user_id:
             # Owner or admin can fetch
@@ -57,6 +59,10 @@ def get_all(userId: Optional[int]) -> Tuple[Content, HttpStatusCode]:
             # Only admin can fetch all
             assert is_admin()
             jobs = Job.all()
+        if sync_all:
+            for job in jobs:
+                for task in job.tasks:
+                    synchronize(task.id)
     except NoResultFound:
         content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
     except AssertionError:
@@ -78,15 +84,19 @@ def get_all(userId: Optional[int]) -> Tuple[Content, HttpStatusCode]:
 def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """ Creates new Job db record."""
     try:
-        assert job['userId'] == get_jwt_identity()
+        assert job['userId'] == get_jwt_identity(), 'Not an owner'
         new_job = Job(
             name=job['name'],
             description=job['description'],
             user_id=job['userId']
         )
         new_job.save()
-    except AssertionError:
-        content, status = {'msg': GENERAL['unpriviliged']}, HTTPStatus.FORBIDDEN.value
+    except AssertionError as e:
+        if e.args[0]=='Not an owner':
+            content, status = {'msg': GENERAL['unprivileged']}, HTTPStatus.FORBIDDEN.value
+        else:
+            content = {'msg': JOB['create']['failure']['invalid'].format(reason=e)}
+            status = HTTPStatus.UNPROCESSABLE_ENTITY.value
     except ValueError:
         # Invalid string format for datetime
         content, status = {'msg': GENERAL['bad_request']}, HTTPStatus.UNPROCESSABLE_ENTITY.value

@@ -68,15 +68,12 @@ class Task(CRUDModel, Base):  # type: ignore
         start = - self.number_of_env_vars
         end = self.number_of_params + 1
         for i in range(start, 0):
-            link = CommandSegment2Task.query.filter(CommandSegment2Task.index == i,
+            link = CommandSegment2Task.query.filter(CommandSegment2Task.index == (start - i - 1),
                                                     CommandSegment2Task.task_id == self.id).one()
             cmd_segment = CommandSegment.query.filter(CommandSegment.id == link.cmd_segment_id).one()
-            if i != start:
-                _full_command += ' '
-            _full_command += cmd_segment.name + '=' + link.value
-        _full_command += ' ' + self.command
+            _full_command += cmd_segment.name + '=' + link.value + ' '
+        _full_command += self.command + ' '
         for i in range(1, end):
-            _full_command += ' '
             link = CommandSegment2Task.query.filter(CommandSegment2Task.index == i,
                                                     CommandSegment2Task.task_id == self.id).one()
             cmd_segment = CommandSegment.query.filter(CommandSegment.id == link.cmd_segment_id).one()
@@ -84,6 +81,8 @@ class Task(CRUDModel, Base):  # type: ignore
                 _full_command += cmd_segment.name
             else:
                 _full_command += cmd_segment.name + ' ' + link.value
+            _full_command += ' '
+        _full_command = _full_command[:-1]
         return _full_command
 
     def get_cmd_segment_link(self, cmd_segment: CommandSegment):
@@ -129,4 +128,25 @@ class Task(CRUDModel, Base):  # type: ignore
     def as_dict(self, include_private=None):
         ret = super(Task, self).as_dict(include_private=include_private)
         ret['status'] = self.status.name
-        return ret
+        try:
+            envs_array = []
+            params_array = []
+            for cmd_segment in self.cmd_segments:
+                link = self.get_cmd_segment_link(cmd_segment)
+                segment = {
+                    'name': cmd_segment.name,
+                    'value': link.value,
+                    'index': link.index
+                }
+                if cmd_segment.segment_type == SegmentType.env_variable:
+                    envs_array.append(segment)
+                elif cmd_segment.segment_type == SegmentType.parameter:
+                    params_array.append(segment)
+            ret['cmdsegments'] = {
+                'envs': envs_array,
+                'params': params_array
+            }
+        except Exception:
+            ret['cmdsegments'] = []
+        finally:
+            return ret
