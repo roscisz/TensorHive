@@ -237,7 +237,7 @@ def business_get_all(job_id: Optional[JobId], sync_all: Optional[bool]) -> Tuple
     """
 
     try:
-        tasks = List[Task]
+        tasks: List[Task] = []
         if job_id is not None:
             tasks = Task.query.filter(Task.job_id == job_id).all()
         else:
