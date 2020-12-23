@@ -1,7 +1,7 @@
 TensorHive
 ===
-![](https://img.shields.io/badge/release-v0.3.5-brightgreen.svg?style=popout-square)
-![](https://img.shields.io/badge/pypi-v0.3.5-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/release-v0.3.6-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/pypi-v0.3.6-brightgreen.svg?style=popout-square)
 ![](https://img.shields.io/badge/Issues%20and%20PRs-welcome-yellow.svg?style=popout-square)
 ![](https://img.shields.io/badge/platform-Linux-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/hardware-Nvidia-green.svg?style=popout-square)
