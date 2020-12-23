@@ -383,6 +383,7 @@
                 full-width
                 format="24hr"
                 :max="maxScheduleHour(schedule)"
+                :allowed-minutes="m => m % 5 === 0"
                 @click:minute="$refs.startMenu[key].save(schedule.hourStartLocal)"
               ></v-time-picker>
             </v-menu>
@@ -414,6 +415,7 @@
                 full-width
                 format="24hr"
                 :min="minScheduleHour(schedule)"
+                :allowed-minutes="m => m % 5 === 0"
                 @click:minute="$refs.endMenu[key].save(schedule.hourEndLocal)"
               ></v-time-picker>
               </v-menu>
