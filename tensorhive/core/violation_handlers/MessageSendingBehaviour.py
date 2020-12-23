@@ -21,7 +21,6 @@ class MessageSendingBehaviour():
 
             If this was by a mistake, please do not do this again.
             Before starting any GPU-related computations, see TensorHive reservations calendar.
-            Please visit: {green_bg}http://cuda3:5000{reset}
 
             Regards,
             TensorHive bot

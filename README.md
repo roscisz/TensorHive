@@ -104,6 +104,7 @@ For more details, check out the [full list of features](#features).
 * All nodes must be accessible via SSH, without password, using SSH Key-Based Authentication ([How to set up SSH keys](https://www.shellhacks.com/ssh-login-without-password/) - explained in [Quickstart section](#basic-usage))
 * Only NVIDIA GPUs are supported (relying on ```nvidia-smi``` command)
 * Currently TensorHive assumes that all users who want to register into the system must have identical UNIX usernames on all nodes configured by TensorHive administrator (not relevant for standalone developers)
+* (optional) We recommend installing TensorHive on a separate user account (for example `tensorhive`) and adding this user to the `tty` system group.
 
 #### Installation
 
