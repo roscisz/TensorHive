@@ -89,8 +89,8 @@ def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
             name=job['name'],
             description=job['description'],
             user_id=job['userId'],
-            start_at=job['startAt'],
-            stop_at=job['stopAt']
+            _start_at=job['startAt'],
+            _stop_at=job['stopAt']
         )
         if new_job._stop_at is not None:
             assert new_job.stop_at > datetime.utcnow(), 'Trying to edit time of the job from the past'
@@ -135,7 +135,7 @@ def update(id: JobId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCod
         for field_name, new_value in new_values.items():
             assert hasattr(job, field_name), 'job has no {} field'.format(field_name)
             setattr(job, field_name, new_value)
-            if field_name == '_start_at':
+            if field_name == '_stop_at':
                 assert job.stop_at > datetime.utcnow(), 'Trying to edit time of the job from the past'
         job.save()
     except NoResultFound:
