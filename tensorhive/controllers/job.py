@@ -121,9 +121,9 @@ def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
 # PUT /jobs/{id}
 @jwt_required
 def update(id: JobId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
-    """Updates certain fields of a Task db record, see `allowed_fields`."""
+    """Updates certain fields of a Job db record, see `allowed_fields`."""
     new_values = newValues
-    allowed_fields = {'name', 'description'}
+    allowed_fields = {'name', 'description', '_start_at', '_stop_at'}
     try:
         job = Job.get(id)
         assert job.user_id == get_jwt_identity(), 'Not an owner'
