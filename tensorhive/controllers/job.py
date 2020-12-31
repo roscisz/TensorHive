@@ -86,7 +86,9 @@ def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         new_job = Job(
             name=job['name'],
             description=job['description'],
-            user_id=job['userId']
+            user_id=job['userId'],
+            _start_at=job['startAt'],
+            _stop_at=job['stopAt']
         )
         new_job.save()
     except AssertionError:
@@ -125,6 +127,8 @@ def update(id: JobId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCod
         for field_name, new_value in new_values.items():
             assert hasattr(job, field_name), 'job has no {} field'.format(field_name)
             setattr(job, field_name, new_value)
+            if field_name == '_stop_at':
+                assert job.stop_at > datetime.utcnow(), 'Trying to edit time of the job from the past'
         job.save()
     except NoResultFound:
         content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
