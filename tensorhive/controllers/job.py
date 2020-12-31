@@ -97,6 +97,8 @@ def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
             _start_at=job['startAt'],
             _stop_at=job['stopAt']
         )
+        if new_job._stop_at is not None:
+            assert new_job._stop_at > datetime.utcnow(), 'Trying to edit time of the job from the past'
         new_job.save()
     except AssertionError as e:
         if e.args[0] == 'Not an owner':
