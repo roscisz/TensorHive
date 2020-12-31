@@ -93,6 +93,8 @@ def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
             _start_at=DateUtils.try_parse_string(job['startAt']),
             _stop_at=DateUtils.try_parse_string(job['stopAt'])
         )
+        if new_job._stop_at is not None:
+            assert new_job._stop_at > datetime.utcnow(), 'Trying to edit time of the job from the past'
         new_job.save()
     except AssertionError as e:
         if e.args[0] == 'Not an owner':
@@ -123,9 +125,9 @@ def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
 # PUT /jobs/{id}
 @jwt_required
 def update(id: JobId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
-    """Updates certain fields of a Task db record, see `allowed_fields`."""
+    """Updates certain fields of a Job db record, see `allowed_fields`."""
     new_values = newValues
-    allowed_fields = {'name', 'description'}
+    allowed_fields = {'name', 'description', '_start_at', '_stop_at'}
     try:
         job = Job.get(id)
         assert job.user_id == get_jwt_identity(), 'Not an owner'
@@ -134,6 +136,8 @@ def update(id: JobId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCod
         for field_name, new_value in new_values.items():
             assert hasattr(job, field_name), 'job has no {} field'.format(field_name)
             setattr(job, field_name, new_value)
+        if job._stop_at is not None:
+            assert job._stop_at > datetime.utcnow(), 'Trying to edit time of the job from the past'
         job.save()
     except NoResultFound:
         content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value

@@ -47,7 +47,6 @@ class Job(CRUDModel, Base):  # type: ignore
     def check_assertions(self):
         if self.stop_at is not None and self.start_at is not None:
             assert self.stop_at >= self.start_at, 'Time of the end must happen after the start!'
-            assert self.stop_at > datetime.utcnow(), 'Trying to edit time of the job from the past'
 
         if self.stop_at is not None:
             assert self.start_at is not None, 'If stop time of the job is known, start time has to be known too'
