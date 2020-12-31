@@ -136,7 +136,7 @@ def update(id: JobId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCod
             assert hasattr(job, field_name), 'job has no {} field'.format(field_name)
             setattr(job, field_name, new_value)
             if field_name == '_start_at':
-                assert job.stop_at > datetime.utcnow(), 'Trying to edit time of the job from the past'        
+                assert job.stop_at > datetime.utcnow(), 'Trying to edit time of the job from the past'
         job.save()
     except NoResultFound:
         content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
