@@ -33,13 +33,14 @@ def test_create_task(tables, client, new_job, new_user):
             'value': '2'
         }
     ]
-    data = {'command': 'python command.py',
-            'hostname': 'localhost',
-            'cmdsegments': {
-                'envs': envs,
-                'params': params
-            }
-            }
+    data = {
+        'command': 'python command.py',
+        'hostname': 'localhost',
+        'cmdsegments': {
+            'envs': envs,
+            'params': params
+        }
+    }
 
     resp = client.post(BASE_URI + '/jobs/{}/tasks'.format(new_job.id), headers=HEADERS, data=json.dumps(data))
     resp_json = json.loads(resp.data.decode('utf-8'))
@@ -121,7 +122,7 @@ def test_update_task(tables, client, new_job, new_task, new_user):
             'envs': envs,
             'params': params
         }
-        }
+    }
 
     params_post = [
         {
@@ -133,13 +134,14 @@ def test_update_task(tables, client, new_job, new_task, new_user):
             'value': '2'
         }
     ]
-    data_to_post = {'command': 'python command.py',
-                    'hostname': 'localhost',
-                    'cmdsegments': {
-                        'envs': envs,
-                        'params': params_post
-                    }
-                    }
+    data_to_post = {
+        'command': 'python command.py',
+        'hostname': 'localhost',
+        'cmdsegments': {
+            'envs': envs,
+            'params': params_post
+        }
+    }
 
 
     resp = client.put(ENDPOINT + '/{}'.format(resp_json['task']['id']),
