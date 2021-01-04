@@ -270,14 +270,6 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
             hostname=task['hostname'],
             command=task['command'])
         parent_job = Job.query.filter(Job.id == job_id).one()
-        for segment in task['cmdsegments']['envs']:
-            new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.env_variable,
-                                                      CommandSegment.name == segment['name']).first()
-            if (new_segment is None):
-                new_segment = CommandSegment(
-                    name=segment['name'],
-                    _segment_type=SegmentType.env_variable)
-            new_task.add_cmd_segment(new_segment, segment['value'])
         for segment in task['cmdsegments']['params']:
             new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.parameter,
                                                       CommandSegment.name == segment['name']).first()
