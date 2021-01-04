@@ -11,9 +11,6 @@ from tensorhive.models.Job import Job, JobStatus
 from tensorhive.models.Task import Task, TaskStatus
 from tensorhive.models.CommandSegment import CommandSegment, SegmentType
 from datetime import timedelta
-from tensorhive.models.Job import Job
-from tensorhive.models.Task import Task
-from datetime import timedelta
 
 
 @pytest.fixture(scope='function')

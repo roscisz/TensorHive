@@ -57,6 +57,7 @@ class CommandSegment(CRUDModel, Base):  # type: ignore
         else:
             return result
 
+
 class CommandSegment2Task(Base):  # type: ignore
     __tablename__ = 'cmd_segment2task'
 

@@ -103,7 +103,7 @@ def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
             status = HTTPStatus.UNPROCESSABLE_ENTITY.value
     except ValueError:
         # Invalid string format for datetime
-        content = {'msg': JOB['create']['failure']['invalid'].format(reason=e)}
+        content = {'msg': JOB['create']['failure']['invalid']}
         status = HTTPStatus.UNPROCESSABLE_ENTITY.value
     except Exception as e:
         log.critical(e)
