@@ -143,6 +143,8 @@ def test_update_task(tables, client, new_job, new_task, new_user):
         }
     }
 
+    resp = client.post(BASE_URI + '/jobs/{}/tasks'.format(new_job.id), headers=HEADERS, data=json.dumps(data_to_post))
+    resp_json = json.loads(resp.data.decode('utf-8'))
 
     resp = client.put(ENDPOINT + '/{}'.format(resp_json['task']['id']),
                       headers=HEADERS, data=json.dumps(data_to_update))
@@ -151,3 +153,4 @@ def test_update_task(tables, client, new_job, new_task, new_user):
     assert resp.status_code == HTTPStatus.CREATED
     assert resp_json['task']['hostname'] == 'remotehost'
     assert Task.get(int(resp_json['task']['id'])).number_of_params == 1
+    assert Task.get(int(resp_json['task']['id'])).number_of_env_vars == 1
