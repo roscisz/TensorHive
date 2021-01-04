@@ -151,3 +151,4 @@ def test_update_task(tables, client, new_job, new_task, new_user):
     assert resp.status_code == HTTPStatus.CREATED
     assert resp_json['task']['hostname'] == 'remotehost'
     assert Task.get(int(resp_json['task']['id'])).number_of_params == 1
+    assert Task.get(int(resp_json['task']['id'])).number_of_env_vars == 1
