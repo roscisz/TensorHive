@@ -1,4 +1,3 @@
-from fixtures.models import new_job, new_task, new_user
 from fixtures.controllers import API_URI as BASE_URI, HEADERS
 from tensorhive.models.Job import Job
 from tensorhive.models.Task import Task
@@ -11,23 +10,17 @@ ENDPOINT = BASE_URI + '/jobs'
 
 
 # GET /jobs
-def test_get_all_jobs(tables, client, new_job, new_user):
-    new_user.save()
-    resp = client.get(ENDPOINT + '?userId={}'.format(new_user.id), headers=HEADERS)
-    resp_json = json.loads(resp.data.decode('utf-8'))
-    assert resp.status_code == HTTPStatus.OK
-    assert len(resp_json['jobs']) == 0
-
-    new_job.save()
-
-    resp = client.get(ENDPOINT + '?userId={}'.format(new_user.id), headers=HEADERS)
+def test_get_all_jobs(tables, client, new_job):
+    user = new_job.user
+    resp = client.get(ENDPOINT + '?userId={}'.format(user.id), headers=HEADERS)
     resp_json = json.loads(resp.data.decode('utf-8'))
     assert resp.status_code == HTTPStatus.OK
     assert len(resp_json['jobs']) == 1
 
 
 # POST /jobs
-def test_create_job(tables, client):
+def test_create_job(tables, client, new_user):
+    new_user.save()
     job_name = 'TestJob'
     data = {'name': job_name,
             'description': 'testDescription',
@@ -45,28 +38,21 @@ def test_create_job(tables, client):
 
 
 # DELETE /jobs/{job_id}
-def test_delete_job(tables, client, new_job, new_task):
-    new_job.save()
-    new_task.save()
-    new_job.add_task(new_task)
-    resp = client.get(ENDPOINT + '/{}/tasks'.format(new_job.id), headers=HEADERS)
+def test_delete_job(tables, client, new_job_with_task):
+    resp = client.get(BASE_URI + '/tasks?jobId={}'.format(new_job_with_task.id), headers=HEADERS)
     resp_json = json.loads(resp.data.decode('utf-8'))
     assert resp.status_code == HTTPStatus.OK
     assert len(resp_json['tasks']) == 1
 
-    resp = client.delete(ENDPOINT + '/{}'.format(new_job.id), headers=HEADERS)
+    resp = client.delete(ENDPOINT + '/{}'.format(new_job_with_task.id), headers=HEADERS)
 
-    resp = client.get(ENDPOINT + '/{}/tasks'.format(new_job.id), headers=HEADERS)
+    resp = client.get(BASE_URI + '/tasks?jobId={}'.format(new_job_with_task.id), headers=HEADERS)
     assert resp.status_code == HTTPStatus.NOT_FOUND  # checks if task from deleted job is deleted by cascade
 
 
-# GET /jobs/{job_id}/tasks
-def test_get_tasks_from_job(tables, client, new_job, new_task):
-    new_job.save()
-    new_task.save()
-    new_job.add_task(new_task)
-
-    resp = client.get(ENDPOINT + '/{}/tasks'.format(new_job.id), headers=HEADERS)
+# GET /tasks?job_id=1
+def test_get_tasks_from_job(tables, client, new_job_with_task):
+    resp = client.get(BASE_URI + '/tasks?jobId={}'.format(new_job_with_task.id), headers=HEADERS)
     resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.OK
@@ -75,9 +61,6 @@ def test_get_tasks_from_job(tables, client, new_job, new_task):
 
 # PUT /jobs/{id}/tasks/{id}
 def test_add_task_to_job(tables, client, new_job, new_task):
-    new_job.save()
-    new_task.save()
-
     resp = client.put(ENDPOINT + '/{}/tasks/{}'.format(new_job.id, new_task.id), headers=HEADERS)
 
     assert resp.status_code == HTTPStatus.OK

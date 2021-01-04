@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Enum, ForeignKey
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from tensorhive.database import Base, db_session
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -16,6 +17,7 @@ class SegmentType(enum.Enum):
 
 class CommandSegment(CRUDModel, Base):  # type: ignore
     __tablename__ = 'command_segments'
+    __table_args__ = {'sqlite_autoincrement': True}
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), unique=True, nullable=False)
@@ -26,8 +28,7 @@ class CommandSegment(CRUDModel, Base):  # type: ignore
         return '<Segment id={id}, name={name}, type={type}>'.format(
             id=self.id,
             name=self.name,
-            type=self.segment_type
-        )
+            type=self.segment_type)
 
     def check_assertions(self):
         pass
@@ -62,7 +63,7 @@ class CommandSegment2Task(Base):  # type: ignore
     task_id = Column(Integer, ForeignKey('tasks.id', ondelete='CASCADE'), primary_key=True)
     cmd_segment_id = Column(Integer, ForeignKey('command_segments.id', ondelete='CASCADE'), primary_key=True)
     _value = Column(String(100))
-    _index = Column(Integer)  # positive - parameters; negative - env variables;
+    _index = Column(Integer)  # positive - parameters; negative - env variables
 
     @hybrid_property
     def index(self):

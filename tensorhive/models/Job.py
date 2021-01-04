@@ -6,10 +6,12 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from tensorhive.models.CRUDModel import CRUDModel
 from tensorhive.models.Task import Task, TaskStatus
 from tensorhive.utils.DateUtils import DateUtils
+from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from typing import Optional, Union
 import enum
 import logging
 log = logging.getLogger(__name__)
+
 
 class JobStatus(enum.Enum):
     not_running = 1
@@ -17,8 +19,11 @@ class JobStatus(enum.Enum):
     terminated = 3
     unsynchronized = 4
 
+
 class Job(CRUDModel, Base):  # type: ignore
     __tablename__ = 'jobs'
+    __table_args__ = {'sqlite_autoincrement': True}
+    __public__ = ['id', 'name', 'description', 'user_id', 'start_at', 'stop_at']
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(40), nullable=False)
@@ -33,11 +38,11 @@ class Job(CRUDModel, Base):  # type: ignore
 
     def __repr__(self):
         return '<Job id={id}, name={name}, description={description}, user={user_id}, status={status}>'.format(
-                id=self.id,
-                name=self.name,
-                description=self.description,
-                user_id=self.user_id,
-                status=self.status.name)
+            id=self.id,
+            name=self.name,
+            description=self.description,
+            user_id=self.user_id,
+            status=self.status.name)
 
     def check_assertions(self):
         if self.stop_at is not None and self.start_at is not None:
@@ -55,14 +60,14 @@ class Job(CRUDModel, Base):  # type: ignore
 
     def add_task(self, task: Task):
         if task in self.tasks:
-            raise Exception('Task {task} is already assigned to job {job}!'
+            raise InvalidRequestException('Task {task} is already assigned to job {job}!'
                                           .format(task=task, job=self))
         self.tasks.append(task)
         self.save()
 
     def remove_task(self, task: Task):
         if task not in self.tasks:
-            raise Exception('Task {task} is not assigned to job {job}!'
+            raise InvalidRequestException('Task {task} is not assigned to job {job}!'
                                           .format(task=task, job=self))
         self.tasks.remove(task)
         self.save()
@@ -75,28 +80,21 @@ class Job(CRUDModel, Base):  # type: ignore
                 return
         if status is TaskStatus.unsynchronized:
             self.status = JobStatus.unsynchronized
-        if status is TaskStatus.not_running:
+        elif status is TaskStatus.not_running:
             self.status = JobStatus.not_running
-        if status is TaskStatus.terminated:
+        elif status is TaskStatus.terminated:
             self.status = JobStatus.terminated
         self.save()
 
     @hybrid_property
     def start_at(self):
         return self._start_at
-    
+
     @hybrid_property
     def stop_at(self):
         return self._stop_at
 
-    @property
-    def as_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'userId': self.user_id,
-            'status': self.status.name,
-            'startAt': DateUtils.try_parse_datetime(self.start_at),
-            'stopAt': DateUtils.try_parse_datetime(self.stop_at)
-        }
+    def as_dict(self, include_private=None):
+        ret = super(Job, self).as_dict(include_private=include_private)
+        ret['status'] = self.status.name
+        return ret

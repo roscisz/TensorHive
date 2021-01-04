@@ -185,11 +185,29 @@ def inactive_schedule():
     schedule.save()
     return schedule
 
+
 @pytest.fixture(scope='function')
-def new_job():
-    return Job(name='job_name',
-                description='testDescription',
-                user_id=1)
+def new_job(new_user):
+    new_user.save()
+    job = Job(name='job_name',
+              description='testDescription',
+              user_id=1,
+              status=JobStatus.not_running)
+    job.save()
+    return job
+
+
+@pytest.fixture(scope='function')
+def new_job_with_task(new_user, new_task):
+    new_user.save()
+    job = Job(name='job_name',
+              description='testDescription',
+              user_id=1,
+              status=JobStatus.not_running)
+    job.save()
+    job.add_task(new_task)
+    return job
+
 
 @pytest.fixture(scope='function')
 def new_task():

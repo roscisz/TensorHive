@@ -43,8 +43,6 @@ def _import_models() -> None:
     from tensorhive.models.CommandSegment import CommandSegment, CommandSegment2Task
 
 
-
-
 def initialize_db(alembic_config) -> None:
     log.info('[•] Initializing DB...')
     Base.metadata.create_all(bind=engine, checkfirst=True)

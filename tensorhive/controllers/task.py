@@ -1,8 +1,8 @@
 from tensorhive.models.Task import Task, TaskStatus
+from tensorhive.models.CommandSegment import CommandSegment, CommandSegment2Task, SegmentType
 from tensorhive.models.User import User
 from tensorhive.models.Job import Job
-from tensorhive.core import task_nursery, ssh
-from tensorhive.utils.DateUtils import DateUtils
+from tensorhive.core import task_nursery
 from tensorhive.core.task_nursery import SpawnError, ExitCodeError
 from pssh.exceptions import ConnectionErrorException, AuthenticationException, UnknownHostException
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt_claims
@@ -63,9 +63,9 @@ def synchronize(task_id: TaskId) -> None:
     try:
         task = Task.get(task_id)
         parent_job = Job.get(task.job_id)
-        assert task.host, 'hostname is empty'
+        assert task.hostname, 'hostname is empty'
         assert parent_job.user, 'user does not exist'
-        active_sessions_pids = task_nursery.running(host=task.host, user=parent_job.user.username)
+        active_sessions_pids = task_nursery.running(host=task.hostname, user=parent_job.user.username)
     except NoResultFound:
         # This exception must be handled within try/except block when using Task.get()
         # In other words, methods decorated with @synchronize_task_record must handle this case by themselves!
@@ -120,7 +120,7 @@ def synchronize_task_record(func: Callable) -> Callable:
 
 
 # Controllers
-# POST jobs/{job_id}/tasks
+# POST /jobs/{job_id}/tasks
 @jwt_required
 def create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpStatusCode]:
     try:
@@ -154,16 +154,16 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-#  GET jobs/{job_id}/tasks?syncAll=1
+#  GET /tasks?jobId=1?syncAll=1
 @jwt_required
-def get_all(job_id: JobId, syncAll: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
+def get_all(jobId: Optional[JobId], syncAll: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
     sync_all = syncAll
-    # temporary solution
     sync_all = True
     job_id = jobId
     try:
-        job = Job.query.filter(Job.id == job_id).one()
-        assert get_jwt_identity() == job.user_id or is_admin()
+        if job_id is not None:
+            job = Job.query.filter(Job.id == job_id).one()
+            assert get_jwt_identity() == job.user_id or is_admin()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:
@@ -228,14 +228,16 @@ def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
 # Business logic
 
 
-def business_get_all(job_id: JobId, sync_all: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
-    """Fetches all Task records within specific job.
+def business_get_all(job_id: Optional[JobId], sync_all: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
+    """Fetches all Task records or those within specific job.
     Allows for synchronizing state of each Task out-of-the-box.
 
     In typical scenario API client would want to get all records without sync and
     then run sync each records individually.
     """
     try:
+        # Temporary solution with sync_all
+        sync_all = True
         tasks = []
         if job_id is not None:
             tasks = Task.query.filter(Task.job_id == job_id).all()
@@ -262,23 +264,12 @@ def business_get_all(job_id: JobId, sync_all: Optional[bool]) -> Tuple[Content, 
 def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpStatusCode]:
     """ Creates new Task db record under the given parent job
     and new db records for given command segments of that task.
-
     """
     try:
         new_task = Task(
-            host=task['hostname'],
+            hostname=task['hostname'],
             command=task['command'])
-        # parent job
         parent_job = Job.query.filter(Job.id == job_id).one()
-
-        for segment in task['cmdsegments']['envs']:
-            new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.env_variable,
-                                                      CommandSegment.name == segment['name']).first()
-            if (new_segment is None):
-                new_segment = CommandSegment(
-                    name=segment['name'],
-                    _segment_type=SegmentType.env_variable)
-            new_task.add_cmd_segment(new_segment, segment['value'])
         for segment in task['cmdsegments']['params']:
             new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.parameter,
                                                       CommandSegment.name == segment['name']).first()
@@ -297,10 +288,7 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
             new_task.add_cmd_segment(new_segment, segment['value'])
 
         new_task.save()
-        parent_job.add_task(new_task)        
-    except ValueError:
-        # Invalid string format for datetime
-        content, status = {'msg': GENERAL['bad_request']}, 422
+        parent_job.add_task(new_task)
     except KeyError:
         # At least one of required fields was not present
         content, status = {'msg': GENERAL['bad_request']}, 422
@@ -336,6 +324,7 @@ def business_update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, Htt
     try:
         new_values = newValues
         task = Task.get(id)
+        assert task.status is not TaskStatus.running, "Cannot update task which is already running"
         for key, value in new_values.items():
             if key == 'hostname':
                 setattr(task, key, value)
@@ -367,9 +356,6 @@ def business_update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, Htt
         task.save()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
-    except ValueError:
-        # Invalid string format for datetime
-        content, status = {'msg': GENERAL['bad_request']}, 422
     except AssertionError as e:
         content, status = {'msg': TASK['update']['failure']['assertions'].format(reason=e)}, 422
     except Exception as e:
@@ -384,7 +370,6 @@ def business_update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, Htt
 @synchronize_task_record
 def business_destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     """Deletes a Task db record. Requires terminating task manually in advance.
-    
     All of the m-n relationship links (task-cmd_segment) are deleted too
     Have to delete unwanted command segments (no task attached) manually
     """
@@ -436,7 +421,6 @@ def screen_sessions(username: str, hostname: str) -> Tuple[Content, HttpStatusCo
 @synchronize_task_record
 def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     """Spawns command stored in Task db record (task.full_command).
-
     It won't allow for spawning task which is currently running (sync + status check).
     If spawn operation has succeeded then `running` status is set.
     """
@@ -492,8 +476,7 @@ def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[C
         # True -> interrupt (allows output to be flushed into log file)
         # None -> terminate (works almost every time, but losing output that could be produced before closing)
         # False -> kill (similar to above, but success is almost guaranteed)
-        exit_code = task_nursery.terminate(task.pid, task.host, parent_job.user.username, gracefully=gracefully)
-
+        exit_code = task_nursery.terminate(task.pid, task.hostname, parent_job.user.username, gracefully=gracefully)
         if exit_code != 0:
             raise ExitCodeError('operation exit code is not 0')
 
@@ -524,7 +507,7 @@ def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[C
 def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
     """Fetches log file created by spawned task (output redirection).
 
-    It relies on reading files located on filesystem, via connection with `task.user.username@task.host`
+    It relies on reading files located on filesystem, via connection with `parent_job.user.username@task.host`
     If file does not exist there's no way to fetch it from database (currently).
     File names must be named in one fashion (standard defined in `task_nursery.fetch_log`,
     currently: `task_<id>.log`). Renaming them manually will lead to inconsistency or 'Not Found' errors.
@@ -534,9 +517,10 @@ def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
     """
     try:
         task = Task.get(id)
+        parent_job = Job.query.filter(task.job_id).one()
         assert task.hostname, 'hostname is empty'
-        assert task.user, 'user does not exist'
-        output_gen, log_path = task_nursery.fetch_log(task.hostname, task.user.username, task.id, tail)
+        assert parent_job.user, 'user does not exist'
+        output_gen, log_path = task_nursery.fetch_log(task.hostname, parent_job.user.username, task.id, tail)
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except ExitCodeError as e:

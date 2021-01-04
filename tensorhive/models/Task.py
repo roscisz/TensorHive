@@ -18,22 +18,23 @@ class TaskStatus(enum.Enum):
 
 class Task(CRUDModel, Base):  # type: ignore
     __tablename__ = 'tasks'
-    __public__ = ['id', 'user_id', 'hostname', 'pid', 'command', 'spawn_at', 'terminate_at']
+    __table_args__ = {'sqlite_autoincrement': True}
+    __public__ = ['id', 'job_id', 'hostname', 'pid', 'command']
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     job_id = Column(Integer, ForeignKey('jobs.id', ondelete='CASCADE'))
-    host = Column(String(40), nullable=False)
+    hostname = Column(String(40), nullable=False)
     pid = Column(Integer)
     status = Column(Enum(TaskStatus), default=TaskStatus.not_running, nullable=False)
     command = Column(String(400), nullable=False)
     _cmd_segments = relationship('CommandSegment', secondary='cmd_segment2task', back_populates='_tasks')
 
     def __repr__(self):
-        return '<Task id={id}, jobId={job_id}, name={host}, command={command}\n' \
+        return '<Task id={id}, jobId={job_id}, name={hostname}, command={command}\n' \
             '\tpid={pid}, status={status}>'.format(
                 id=self.id,
                 job_id=self.job_id,
-                host=self.host,
+                hostname=self.hostname,
                 command=self.command,
                 pid=self.pid,
                 status=self.status.name)
