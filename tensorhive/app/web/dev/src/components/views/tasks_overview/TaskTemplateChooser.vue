@@ -3,6 +3,11 @@
     width="80vw"
     v-model="show"
   >
+    <template v-slot:activator="{ on }">
+      <v-btn v-on="on" color="primary" :small="smallAddButton">
+        Add Tasks From Template
+      </v-btn>
+    </template>
     <v-card>
       <v-card-text>
         <v-btn
@@ -75,10 +80,10 @@ export default {
 
     setChosenTemplate: function (templateName) {
       switch (templateName) {
-        case 'Tensorflow - cluster parameters':
+        case 'TensorFlow - cluster parameters':
           this.chosenTemplate = 'tf1'
           break
-        case 'Tensorflow - TF_CONFIG':
+        case 'TensorFlow - TF_CONFIG':
           this.chosenTemplate = 'tf2'
           break
         case 'PyTorch':

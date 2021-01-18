@@ -3,6 +3,11 @@
     width="80vw"
     v-model="show"
   >
+    <template v-slot:activator="{ on }">
+      <v-btn v-on="on" color="primary" :small="smallAddButton">
+        Add Tasks
+      </v-btn>
+    </template>
     <v-card>
       <v-card-text>
         <v-btn
@@ -126,9 +131,6 @@ export default {
 
   props: {
     showModal: Boolean,
-    hostnames: Array,
-    hosts: Object,
-    actionFlag: Boolean,
     chosenTemplate: String
   },
 
@@ -160,10 +162,18 @@ export default {
       staticEnvVariables: [],
       isNewFieldStatic: false,
       enableSmartTfConfig: false,
-      show: false
+      show: false,
+      hosts: {},
+      hostname: []
     }
   },
-
+  mounted () {
+    api
+      .request('get', '/nodes/metrics', this.$store.state.accessToken)
+      .then(response => {
+        this.convertHostsInfo(response.data)
+      })
+  },
   watch: {
     showModal () {
       this.show = this.showModal
@@ -203,45 +213,49 @@ export default {
       this.$emit('close')
     },
 
-    addTasks: function () {
-      for (var lineIndex in this.lines) {
-        var line = this.lines[lineIndex]
-        var command = this.convertResource(line.resource)
-        if (line.enableTfConfig) {
-          command += ' TF_CONFIG=' + line.tfConfig
+    convertHostsInfo (hostsInfo) {
+      var hosts = {}
+      for (var hostname in hostsInfo) {
+        var host = hostsInfo[hostname]
+        var resources = ['CPU']
+        for (var gpuUUID in host.GPU) {
+          resources.push('GPU' + host.GPU[gpuUUID].index)
         }
-        for (var envIndex in line.envVariables) {
-          var envVariable = line.envVariables[envIndex]
-          command += ' ' + envVariable.envVariable + '=' + envVariable.value
-        }
-        command += ' ' + line.command
-        for (var parameterIndex in line.parameters) {
-          var parameter = line.parameters[parameterIndex]
-          var parameterNameLength = parameter.parameter.length
-          if (parameter.parameter.charAt(parameterNameLength - 1) === ' ' ||
-              parameter.parameter.charAt(parameterNameLength - 1) === '=') {
-            command += ' ' + parameter.parameter + parameter.value
-          } else {
-            command += ' ' + parameter.parameter + ' ' + parameter.value
-          }
-        }
-        var task = {
-          userId: this.$store.state.id,
-          hostname: line.host,
-          command: command
-        }
-        if (!this.actionFlag) {
-          api
-            .request('post', '/tasks', this.$store.state.accessToken, task)
-            .then(response => {
-              this.close()
-              this.$emit('getTasks', false)
-            })
-        }
+        hosts[hostname] = { resources: resources }
       }
+      this.hosts = hosts
+      this.hostnames = Object.keys(hosts)
     },
 
-    addParameter: function (event, parameterName, parameterValue) {
+    addTasks () {
+      let tasks = []
+      for (var lineIndex in this.lines) {
+        let line = this.lines[lineIndex]
+        let task = {
+          hostname: line.host,
+          cmdsegments: {
+            envs: this.formatSegments(line.envVariables),
+            params: this.formatSegments(line.parameters, false)
+          },
+          command: this.convertResource(line.resource) + ' ' + line.command
+        }
+        tasks.push(task)
+      }
+      this.$emit('submit', tasks)
+    },
+
+    formatSegments (segments, envVariable = true) {
+      let formatedVariables = []
+      for (let segment of segments) {
+        formatedVariables.push({
+          name: envVariable ? segment.envVariable : segment.parameter,
+          value: segment.value
+        })
+      }
+      return formatedVariables
+    },
+
+    addParameter (event, parameterName, parameterValue) {
       let taskIndex = 0
       for (var line in this.lines) {
         var parameter = {

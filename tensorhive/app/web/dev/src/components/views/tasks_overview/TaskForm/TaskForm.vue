@@ -43,7 +43,18 @@
                 />
               </v-flex>
             </v-layout>
-
+            <v-layout v-if="tfConfigVisible">
+              <v-flex xs12>
+                <v-subheader>TF CONFIG
+                  <v-switch
+                    class="float-right-button"
+                    v-if="chosenTemplate === 'tf2'"
+                    v-model="enableSmartTfConfig"
+                    label="Smart TF_CONFIG"
+                  />
+                </v-subheader>
+              </v-flex>
+            </v-layout>
             <v-layout class="mb-3">
               <v-flex xs12>
                 <v-subheader>Full command</v-subheader>
@@ -142,7 +153,8 @@ export default {
     header: String,
     hostname: String,
     resource: Object,
-    command: String
+    command: String,
+    chosenTemplate: String
   },
   data () {
     return {
@@ -155,7 +167,8 @@ export default {
       paramId: 0,
       hosts: {},
       loading: false,
-      error: undefined
+      error: undefined,
+      tfConfigVisible: false
     }
   },
   computed: {
@@ -195,14 +208,41 @@ export default {
         }
       })
   },
+  watch: {
+    chosenTemplate () {
+      this.envs = []
+      this.params = []
+      switch (this.chosenTemplate) {
+        case 'tf1':
+          this.addParam('--ps_hosts=')
+          this.addParam('--worker_hosts=')
+          this.addParam('--job_name=', 'worker')
+          this.addParam('--task_index=')
+          this.staticParameters = ['--ps_hosts=', '--worker_hosts=']
+          break
+        case 'tf2':
+          this.addEnv('TF_CONFIG=', "{\"cluster\":{\"worker\":[\":\"]},\"task\":{\"type\":\"worker\",\"index\":\"0\"}}'")
+          break
+        case 'torch':
+          this.addParam('--init-method=')
+          this.addParam('--backend=', 'gloo')
+          this.addParam('--rank=')
+          this.addParam('--world-size=')
+          this.staticParameters = ['--init-method=', '--backend=', '--world-size=']
+          break
+        default:
+          break
+      }
+    }
+  },
   methods: {
-    addEnv (name, value) {
+    addEnv (name, value = '') {
       this.envs.push({ id: this.envId++, name, value })
     },
     removeEnv (id) {
       this.envs = this.envs.filter(env => env.id !== id)
     },
-    addParam (name, value) {
+    addParam (name, value = '') {
       this.params.push({ id: this.paramId++, name, value })
     },
     removeParam (id) {
@@ -221,9 +261,19 @@ export default {
       if (this.$refs.basicInfo.validate()) {
         const task = {
           hostname: this.internalHostname,
-          command: this.stringifiedCommand
+          cmdsegments: {
+            envs: this.envs,
+            params: this.params
+          }
         }
 
+        if (this.internalResource !== undefined && this.internalResource !== null) {
+          if (this.internalResource.id === undefined || this.internalResource.id === null) {
+            task.command = 'CUDA_VISIBLE_DEVICES= ' + this.internalCommand
+          } else {
+            task.command = `CUDA_VISIBLE_DEVICES=${String(this.internalResource.id)} ` + this.internalCommand
+          }
+        }
         this.reset()
         this.$emit('submit', task)
       }
@@ -236,7 +286,7 @@ export default {
 /* This resets font weight set by Bootstrap to the default 'normal' value. */
 /* The proper way of creating a deep selector would be using `::v-deep` but */
 /* it requires Vue Loader v15 which we do not use for now. */
->>> label {
+label {
   font-weight: normal;
 }
 

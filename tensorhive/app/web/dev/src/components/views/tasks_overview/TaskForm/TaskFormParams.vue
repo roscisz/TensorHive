@@ -13,7 +13,7 @@
       <v-list-tile-content>
         <v-list-tile-title class="text-monospace">
           <span v-if="param.value !== undefined"
-            >{{ param.name }} {{ param.value }}</span
+            >{{ param.name }}{{ param.value }}</span
           >
           <span v-else>{{ param.name }}</span>
         </v-list-tile-title>

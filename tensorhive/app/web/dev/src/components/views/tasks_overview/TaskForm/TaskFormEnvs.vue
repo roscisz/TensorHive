@@ -12,7 +12,7 @@
 
       <v-list-tile-content>
         <v-list-tile-title class="text-monospace">
-          <span>{{ env.name }}={{ env.value }}</span>
+          <span>{{ env.name }}{{ env.value }}</span>
         </v-list-tile-title>
       </v-list-tile-content>
 

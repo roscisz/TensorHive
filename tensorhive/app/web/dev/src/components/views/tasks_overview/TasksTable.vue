@@ -36,8 +36,25 @@
           </v-btn>
         </template>
 
-        <TaskAddForm @cancel="addDialog = false" @add="addPrototype" />
+        <TaskAddForm
+          @cancel="addDialog = false"
+          @add="addPrototype"
+          :chosen-template="chosenTemplate"
+        />
       </v-dialog>
+      <TaskCreate
+        v-if="showAddButton && prototypingMode"
+        :show-modal="addMultipleDialog"
+        @close="addDialog=false"
+        :chosen-template="chosenTemplate"
+        @submit="addPrototypes"
+      />
+      <TaskTemplateChooser
+        v-if="showAddButton && prototypingMode"
+        :show-modal="templateDialog"
+        @close="templateDialog=false"
+        @openFromTemplate="openFromTemplate"
+      />
     </v-layout>
 
     <v-layout>
@@ -154,11 +171,14 @@
 </template>
 
 <script>
+// import api from '../../../api'
 import TaskAddForm from './TaskAddForm'
 import TaskBulkActions from './TaskBulkActions'
 import TaskCommand from './TaskCommand'
 import TaskCrudActions from './TaskCrudActions'
 import TaskStatus from './TaskStatus'
+import TaskTemplateChooser from './TaskTemplateChooser'
+import TaskCreate from './TaskCreate'
 
 export default {
   components: {
@@ -166,7 +186,9 @@ export default {
     TaskBulkActions,
     TaskCommand,
     TaskCrudActions,
-    TaskStatus
+    TaskStatus,
+    TaskTemplateChooser,
+    TaskCreate
   },
   props: {
     elevation: {
@@ -229,6 +251,8 @@ export default {
   data () {
     return {
       addDialog: false,
+      addMultipleDialog: false,
+      templateDialog: false,
       internalPrototypes: this.prototypes,
       internalSelected: this.selected,
       prototypeId: 0,
@@ -248,7 +272,8 @@ export default {
         sortBy: 'hostname',
         descending: false,
         rowsPerPage: 10
-      }
+      },
+      chosenTemplate: ''
     }
   },
   computed: {
@@ -273,10 +298,22 @@ export default {
     }
   },
   methods: {
+    openFromTemplate (chosenTemplate) {
+      this.chosenTemplate = chosenTemplate
+      this.addDialog = true
+    },
+    addPrototypes (tasks) {
+      for (let task of tasks) {
+        let newTask = { ...task, id: this.prototypeId++, status: 'prototype' }
+        this.internalPrototypes.push(newTask)
+      }
+      debugger
+      this.addMultipleDialog = false
+      this.$emit('update:prototypes', this.internalPrototypes)
+    },
     addPrototype (task) {
-      const newTask = { ...task, id: this.prototypeId++ }
+      let newTask = { ...task, id: this.prototypeId++ }
       this.addDialog = false
-
       if (this.prototypingMode) {
         this.internalPrototypes.push(newTask)
         this.$emit('update:prototypes', this.internalPrototypes)
@@ -305,7 +342,7 @@ export default {
 /* This resets font weight set by Bootstrap to the default 'normal' value. */
 /* The proper way of creating a deep selector would be using `::v-deep` but */
 /* it requires Vue Loader v15 which we do not use for now. */
->>> label {
+label {
   font-weight: normal;
 }
 

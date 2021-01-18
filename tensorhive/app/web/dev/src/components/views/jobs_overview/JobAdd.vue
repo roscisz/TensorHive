@@ -108,11 +108,12 @@ export default {
     },
     createTasks (jobId) {
       return Promise.all(
-        [...this.selectedTasks, ...this.newTasks].map(({ hostname, command }) =>
+        [...this.selectedTasks, ...this.newTasks].map(({ hostname, command, cmdsegments }) =>
           createJobTask(this.$store.state.accessToken, jobId, {
             jobId,
             hostname,
-            command
+            command,
+            cmdsegments
           })
         )
       )

@@ -28,8 +28,8 @@ export function stringifyCommand (hostname, resource, command, envs, params) {
       envs
         .map(({ name, value }) =>
           value === undefined || value === null
-            ? `${name}=`
-            : `${name}=${value}`
+            ? `${name}`
+            : `${name}${value}`
         )
         .join(' ')
     )
@@ -43,7 +43,7 @@ export function stringifyCommand (hostname, resource, command, envs, params) {
     segments.push(
       params
         .map(({ name, value }) =>
-          value === undefined || value === null ? name : `${name} ${value}`
+          value === undefined || value === null ? name : `${name}${value}`
         )
         .join(' ')
     )
