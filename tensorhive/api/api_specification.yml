@@ -3298,6 +3298,14 @@ components:
         description:
           type: string
           example: Description of a job
+        startAt:
+          type: string
+          format: date-time
+          nullable: true
+        stopAt:
+          type: string
+          format: date-time
+          nullable: true
     Group:
       type: object
       required:

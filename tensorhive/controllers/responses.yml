@@ -210,7 +210,7 @@ job:
     failure:
       assertions: Unable to delete job - {reason}
   execute:
-    success: Job has been succesfully execute
+    success: Job has been succesfully executed
     failure:
       state: Unable to execute job - {reason}
       tasks: Unable to execute job - {reason}

@@ -10,6 +10,7 @@ from tensorhive.utils.DateUtils import DateUtils
 from tensorhive.controllers.task import business_spawn, business_terminate, synchronize
 from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from datetime import datetime
+from stringcase import snakecase
 
 log = logging.getLogger(__name__)
 JOB = API.RESPONSES['job']
@@ -123,17 +124,18 @@ def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
 def update(id: JobId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """Updates certain fields of a Job db record, see `allowed_fields`."""
     new_values = newValues
-    allowed_fields = {'name', 'description', '_start_at', '_stop_at'}
+    allowed_fields = {'name', 'description', 'startAt', 'stopAt'}
     try:
         job = Job.get(id)
         assert job.user_id == get_jwt_identity(), 'Not an owner'
         assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
 
         for field_name, new_value in new_values.items():
+            field_name = snakecase(field_name)
+            if field_name == 'start_at':
+                assert job.stop_at > datetime.utcnow(), 'Trying to edit time of the job from the past'
             assert hasattr(job, field_name), 'job has no {} field'.format(field_name)
             setattr(job, field_name, new_value)
-            if field_name == '_stop_at':
-                assert job.stop_at > datetime.utcnow(), 'Trying to edit time of the job from the past'
         job.save()
     except NoResultFound:
         content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
