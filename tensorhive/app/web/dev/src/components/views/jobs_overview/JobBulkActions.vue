@@ -3,6 +3,7 @@
     <v-select
       v-model="action"
       solo
+      dense
       hide-details
       color="primary"
       label="Action"

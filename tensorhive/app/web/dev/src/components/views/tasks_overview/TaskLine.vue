@@ -70,7 +70,6 @@
         />
       </v-layout>
       <v-btn
-        color="error"
         small
         @click="removeMe()"
       >
@@ -178,6 +177,12 @@ export default {
   },
 
   watch: {
+    host () {
+      this.newHost = this.host
+    },
+    command () {
+      this.newCommand = this.command
+    },
     parameters () {
       this.newParameters = this.parameters
     },

@@ -2,8 +2,8 @@
   <TaskForm
     header="Edit the task"
     :hostname="task.hostname"
-    :resource="resource"
-    :command="task.command"
+    :resource="parsedCommand.resource"
+    :command="parsedCommand.command"
     @cancel="$emit('cancel', $event)"
     @submit="editTask"
   />
@@ -23,14 +23,21 @@ export default {
   computed: {
     // We should change the Task model in the future to simplify these
     // operations.
-    resource () {
-      const match = /CUDA_VISIBLE_DEVICES=(\d*)/.exec(this.task.command)
+    parsedCommand () {
+      let command = this.task.command
+      const match = /CUDA_VISIBLE_DEVICES=(\d*)/.exec(command)
 
       if (match && match[1]) {
-        return { name: `GPU${match[1]}`, id: Number(match[1]) }
+        return {
+          resource: { name: `GPU${match[1]}`, id: Number(match[1]) },
+          command: command.replace(/CUDA_VISIBLE_DEVICES=(\d*) /, '')
+        }
       }
 
-      return { name: 'CPU', id: null }
+      return {
+        resource: { name: 'CPU', id: null },
+        command: command.replace('CUDA_VISIBLE_DEVICES=', '')
+      }
     }
   },
   methods: {

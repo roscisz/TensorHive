@@ -3,6 +3,7 @@
     <v-select
       v-model="action"
       solo
+      small
       hide-details
       color="primary"
       label="Action"
@@ -11,7 +12,7 @@
     <v-btn
       color="primary"
       :loading="performingAction"
-      :small="smallPerformButton"
+      small
       @click="$emit('action', action)"
     >
       Perform
@@ -21,10 +22,7 @@
 
 <script>
 export const TaskBulkActions = {
-  Execute: 'Execute',
-  Stop: 'Stop',
-  Kill: 'Kill',
-  Copy: 'Copy',
+  Edit: 'Edit',
   Delete: 'Delete'
 }
 

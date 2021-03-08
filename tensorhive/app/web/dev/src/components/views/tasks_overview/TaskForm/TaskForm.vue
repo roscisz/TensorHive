@@ -153,8 +153,7 @@ export default {
     header: String,
     hostname: String,
     resource: Object,
-    command: String,
-    chosenTemplate: String
+    command: String
   },
   data () {
     return {
@@ -167,8 +166,7 @@ export default {
       paramId: 0,
       hosts: {},
       loading: false,
-      error: undefined,
-      tfConfigVisible: false
+      error: undefined
     }
   },
   computed: {
@@ -207,33 +205,6 @@ export default {
           this.hosts[hostname] = [{ name: 'CPU', id: null }, ...gpus]
         }
       })
-  },
-  watch: {
-    chosenTemplate () {
-      this.envs = []
-      this.params = []
-      switch (this.chosenTemplate) {
-        case 'tf1':
-          this.addParam('--ps_hosts=')
-          this.addParam('--worker_hosts=')
-          this.addParam('--job_name=', 'worker')
-          this.addParam('--task_index=')
-          this.staticParameters = ['--ps_hosts=', '--worker_hosts=']
-          break
-        case 'tf2':
-          this.addEnv('TF_CONFIG=', "{\"cluster\":{\"worker\":[\":\"]},\"task\":{\"type\":\"worker\",\"index\":\"0\"}}'")
-          break
-        case 'torch':
-          this.addParam('--init-method=')
-          this.addParam('--backend=', 'gloo')
-          this.addParam('--rank=')
-          this.addParam('--world-size=')
-          this.staticParameters = ['--init-method=', '--backend=', '--world-size=']
-          break
-        default:
-          break
-      }
-    }
   },
   methods: {
     addEnv (name, value = '') {

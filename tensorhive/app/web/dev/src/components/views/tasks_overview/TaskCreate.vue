@@ -1,10 +1,10 @@
 <template>
   <v-dialog
     width="80vw"
-    v-model="show"
+    v-model="showModal"
   >
     <template v-slot:activator="{ on }">
-      <v-btn v-on="on" color="primary" :small="smallAddButton">
+      <v-btn v-on="on" color="primary" small @click="$emit('open')">
         Add Tasks
       </v-btn>
     </template>
@@ -15,11 +15,12 @@
           flat
           icon
           color="black"
-          @click="close()"
+          @click="close"
         >
           <v-icon>close</v-icon>
         </v-btn>
-        <span class="headline">Create tasks</span>
+        <span v-if="editingTasks && editingTasks.length > 0" class="headline">Edit tasks</span>
+        <span v-else class="headline">Create tasks</span>
         <v-tooltip right>
           <template v-slot:activator="{ on }">
             <v-icon v-on="on">
@@ -73,7 +74,7 @@
       <v-card-text>
         <v-flex xs12>
           <v-btn
-            color="info"
+            color="primary"
             block
             small
             @click="copyLine"
@@ -89,15 +90,13 @@
             v-model="newParameter"
           ></v-text-field>
           <v-btn
-            color="info"
-            round
+            color="primary"
             @click="addEnvVariable"
           >
             Add as ENV variable to all tasks
           </v-btn>
           <v-btn
-            color="info"
-            round
+            color="primary"
             @click="addParameter"
           >
             Add as parameter to all tasks
@@ -110,10 +109,12 @@
       <v-card-text>
         <v-layout align-center justify-end>
           <v-btn
-            color="success"
-            @click="addTasks"
+            v-if="editingTasks && editingTasks.length > 0"
+            color="primary"
+            @click="saveTasks"
           >
-            Create all tasks
+            <span v-if="editingTasks && editingTasks.length > 0">Edit all tasks</span>
+            <span v-else>Create all tasks</span>
           </v-btn>
         </v-layout>
       </v-card-text>
@@ -128,12 +129,28 @@ export default {
   components: {
     TaskLine
   },
-
   props: {
-    showModal: Boolean,
-    chosenTemplate: String
+    showModal: {
+      type: Boolean,
+      default: false
+    },
+    chosenTemplate: {
+      type: String,
+      default: ''
+    },
+    selectedTasks: {
+      type: Array,
+      default () {
+        return []
+      }
+    },
+    editingTasks: {
+      type: Array,
+      default () {
+        return []
+      }
+    }
   },
-
   data () {
     return {
       newParameter: '',
@@ -176,10 +193,7 @@ export default {
   },
   watch: {
     showModal () {
-      this.show = this.showModal
-    },
-    show () {
-      if (this.show === false) this.close()
+      if (this.showModal === false) this.close()
       else {
         this.emptyParametersAndEnvVariables()
         switch (this.chosenTemplate) {
@@ -205,14 +219,106 @@ export default {
             break
         }
       }
+    },
+    selectedTasks () {
+      if (this.selectedTasks && this.selectedTasks.length) {
+        let newLines = []
+        let ids = 0
+        for (let task of this.selectedTasks) {
+          let parsedCommand = this.parseCommand(task)
+          let parsedEnvVariables = this.parseSegments(task, 'envs')
+          let parsedParams = this.parseSegments(task, 'params')
+          newLines.push({
+            id: ids,
+            host: task.hostname,
+            resource: parsedCommand.resource,
+            command: parsedCommand.command,
+            parameters: parsedParams.params,
+            envVariables: parsedEnvVariables.envs,
+            parameterIds: parsedParams.ids,
+            envVariableIds: parsedEnvVariables.ids,
+            enableTfConfig: false,
+            tfConfig: '',
+            tfConfigPort: '',
+            tfConfigTaskType: '',
+            tfConfigTaskIndex: -1
+          })
+          ids++
+        }
+        this.lines = newLines
+        this.linesIds = ids
+      }
+    },
+    editingTasks () {
+      if (this.editingTasks && this.editingTasks.length) {
+        let newLines = []
+        let ids = 0
+        for (let task of this.editingTasks) {
+          let parsedCommand = this.parseCommand(task)
+          let parsedEnvVariables = this.parseSegments(task, 'envs')
+          let parsedParams = this.parseSegments(task, 'params')
+          newLines.push({
+            id: ids,
+            host: task.hostname,
+            resource: parsedCommand.resource,
+            command: parsedCommand.command,
+            parameters: parsedParams.params,
+            envVariables: parsedEnvVariables.envs,
+            parameterIds: parsedParams.ids,
+            envVariableIds: parsedEnvVariables.ids,
+            enableTfConfig: false,
+            tfConfig: '',
+            tfConfigPort: '',
+            tfConfigTaskType: '',
+            tfConfigTaskIndex: -1
+          })
+          ids++
+        }
+        this.lines = newLines
+        this.linesIds = ids
+      }
     }
   },
 
   methods: {
-    close: function () {
+    close () {
       this.$emit('close')
     },
+    parseCommand (task) {
+      const match = /CUDA_VISIBLE_DEVICES=(\d*)/.exec(task.command)
 
+      if (match && match[1]) {
+        return {
+          resource: { name: `GPU${match[1]}`, id: Number(match[1]) },
+          command: task.command.replace(/CUDA_VISIBLE_DEVICES=(\d*) /, '')
+        }
+      }
+
+      return {
+        resource: { name: 'CPU', id: null },
+        command: task.command.replace('CUDA_VISIBLE_DEVICES=', '')
+      }
+    },
+    parseSegments (task, type) {
+      let ids = 0
+      let newSegments = []
+      if (task.cmdsegments && task.cmdsegments[type] && task.cmdsegments[type].length) {
+        for (let segment of task.cmdsegments[type]) {
+          segment.id = ids
+          newSegments.push(segment)
+          ids++
+        }
+        return {
+          [type]: newSegments,
+          ids: ids
+        }
+      } else {
+        return {
+          [type]: [],
+          ids: 0
+        }
+      }
+    },
     convertHostsInfo (hostsInfo) {
       var hosts = {}
       for (var hostname in hostsInfo) {
@@ -227,7 +333,7 @@ export default {
       this.hostnames = Object.keys(hosts)
     },
 
-    addTasks () {
+    saveTasks () {
       let tasks = []
       for (var lineIndex in this.lines) {
         let line = this.lines[lineIndex]
@@ -241,7 +347,11 @@ export default {
         }
         tasks.push(task)
       }
-      this.$emit('submit', tasks)
+      if (this.editingTasks && this.editingTasks.length > 0) {
+        this.$emit('edit', tasks)
+      } else {
+        this.$emit('add', tasks)
+      }
     },
 
     formatSegments (segments, envVariable = true) {

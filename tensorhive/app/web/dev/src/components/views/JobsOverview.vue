@@ -5,7 +5,7 @@
         <JobsTable
           header="Jobs"
           :elevation="1"
-          :jobs="jobs"
+          :jobs="Object.values(jobs)"
           :loading="loading"
           :performing-bulk-action="performingJobBulkAction"
           :performing-crud-action="performingJobCrudAction"
@@ -45,12 +45,7 @@ export default {
   },
   data () {
     return {
-      // Vue 2 does not support reactivity for Map collections so we need to
-      // keep this array in sync with the map manually.
-      jobs: [],
-      // Map makes it easier to update or remove particular jobs in comparison
-      // to an array.
-      jobsMap: new Map(),
+      jobs: {},
       loading: true,
       performingJobBulkAction: false,
       performingJobCrudAction: [],
@@ -61,8 +56,9 @@ export default {
   mounted () {
     getJobs(this.$store.state.accessToken)
       .then(jobs => {
-        this.jobs = jobs
-        this.jobsMap = new Map(jobs.map(job => [job.id, job]))
+        jobs.forEach((job) => {
+          this.jobs[job.id] = job
+        })
         this.loading = false
       })
       .catch(error => {
@@ -130,15 +126,13 @@ export default {
           action === JobBulkActions.Delete
         ) {
           for (const job of jobs) {
-            this.jobsMap.delete(job.id)
+            delete this.jobs[job.id]
           }
         } else {
           for (const job of jobs) {
-            this.jobsMap.set(job.id, job)
+            this.jobs[job.id] = job
           }
         }
-
-        this.syncJobs()
       })
     },
     executeJobs (jobs) {
@@ -192,9 +186,6 @@ export default {
       return Promise.all(
         jobs.map(({ id }) => deleteJob(this.$store.state.accessToken, id))
       ).then(() => jobs)
-    },
-    syncJobs () {
-      this.jobs = [...this.jobsMap.values()]
     },
     handleError (error) {
       this.errorMessage = getErrorMessage(error)

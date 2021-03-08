@@ -1,10 +1,10 @@
 <template>
   <v-dialog
     width="80vw"
-    v-model="show"
+    v-model="showModal"
   >
     <template v-slot:activator="{ on }">
-      <v-btn v-on="on" color="primary" :small="smallAddButton">
+      <v-btn v-on="on" color="primary" small @click="$emit('open')">
         Add Tasks From Template
       </v-btn>
     </template>
@@ -15,7 +15,7 @@
           flat
           icon
           color="black"
-          @click="close()"
+          @click="close"
         >
           <v-icon>close</v-icon>
         </v-btn>
@@ -32,7 +32,7 @@
       <v-card-text>
         <v-layout align-center justify-end>
           <v-btn
-            color="success"
+            color="primary"
             @click="goToCreate()"
           >
             Go to task creator
@@ -46,11 +46,12 @@
 <script>
 export default {
   name: 'TaskTemplateChooser',
-
   props: {
-    showModal: Boolean
+    showModal: {
+      type: Boolean,
+      default: false
+    }
   },
-
   data () {
     return {
       chosenTemplate: '',
@@ -59,26 +60,16 @@ export default {
         'TensorFlow - cluster parameters',
         'TensorFlow - TF_CONFIG',
         'PyTorch'
-      ],
-      show: false
-    }
-  },
-
-  watch: {
-    showModal () {
-      this.show = this.showModal
-    },
-    show () {
-      if (this.show === false) this.close()
+      ]
     }
   },
 
   methods: {
-    close: function () {
+    close () {
       this.$emit('close')
     },
 
-    setChosenTemplate: function (templateName) {
+    setChosenTemplate (templateName) {
       switch (templateName) {
         case 'TensorFlow - cluster parameters':
           this.chosenTemplate = 'tf1'
@@ -93,7 +84,7 @@ export default {
       }
     },
 
-    goToCreate: function () {
+    goToCreate () {
       this.close()
       this.$emit('openFromTemplate', this.chosenTemplate)
     }
@@ -102,7 +93,6 @@ export default {
 </script>
 
 <style scoped>
-
   .float-right-button {
     float: right;
   }

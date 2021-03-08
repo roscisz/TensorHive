@@ -1,6 +1,6 @@
 <template>
   <v-layout align-center justify-end>
-    <v-dialog v-model="editDialog" scrollable max-width="860px" width="60%">
+    <v-dialog v-if="!readOnly" v-model="editDialog" scrollable max-width="860px" width="60%">
       <template v-slot:activator="{ on: onDialog }">
         <v-tooltip bottom>
           <template v-slot:activator="{ on: onTooltip }">
@@ -30,62 +30,17 @@
         @edit="editTask"
       />
     </v-dialog>
-
-    <!-- <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-btn
-          class="ma-0"
-          v-on="on"
-          flat
-          icon
-          small
-          color="grey"
-          :readonly="performingAction"
-          @click="$emit('action', task, TaskCrudActions.Execute)"
-        >
-          <v-icon small>play_arrow</v-icon>
-        </v-btn>
-      </template>
-      <span>Execute this task</span>
-    </v-tooltip>
-
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-btn
-          class="ma-0"
-          v-on="on"
-          flat
-          icon
-          small
-          color="grey"
-          :readonly="performingAction"
-          @click="$emit('action', task, TaskCrudActions.Stop)"
-        >
-          <v-icon small>stop</v-icon>
-        </v-btn>
-      </template>
-      <span>Stop this task</span>
-    </v-tooltip>
-
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-btn
-          class="ma-0"
-          v-on="on"
-          flat
-          icon
-          small
-          color="grey"
-          :readonly="performingAction"
-          @click="$emit('action', task, TaskCrudActions.Kill)"
-        >
-          <v-icon small>cancel</v-icon>
-        </v-btn>
-      </template>
-      <span>Kill this task</span>
-    </v-tooltip> -->
-
-    <v-tooltip bottom>
+    <TaskLog
+      v-if="readOnly"
+      :show-modal="showModalLog"
+      @open="showModalLog = true"
+      @close="showModalLog = false"
+      @getLog="getLog(...arguments)"
+      :lines="logs"
+      :path="path"
+      :taskId="task.id"
+    />
+    <v-tooltip v-if="!readOnly" bottom>
       <template v-slot:activator="{ on }">
         <v-btn
           class="ma-0"
@@ -103,7 +58,7 @@
       <span>Remove this task</span>
     </v-tooltip>
 
-    <v-tooltip v-if="showDetailsAction" bottom>
+    <!-- <v-tooltip v-if="showDetailsAction" bottom>
       <template v-slot:activator="{ on }">
         <v-btn
           class="ma-0"
@@ -119,24 +74,23 @@
         </v-btn>
       </template>
       <span>View task details</span>
-    </v-tooltip>
+    </v-tooltip> -->
   </v-layout>
 </template>
 
 <script>
 import TaskEditForm from './TaskEditForm'
+import TaskLog from './TaskLog'
 
 export const TaskCrudActions = {
   Edit: 'Edit',
-  Execute: 'Execute',
-  Stop: 'Stop',
-  Kill: 'Kill',
   Delete: 'Delete'
 }
 
 export default {
-  components: { TaskEditForm },
+  components: { TaskEditForm, TaskLog },
   props: {
+    readOnly: Boolean,
     task: {
       type: Object,
       required: true
@@ -154,7 +108,7 @@ export default {
     return {
       TaskCrudActions: TaskCrudActions,
       editDialog: false,
-      detailsDialog: false
+      showModalLog: false
     }
   },
   methods: {

@@ -3,6 +3,33 @@
     width="80vw"
     v-model="show"
   >
+    <template v-slot:activator="{ on: onDialog }">
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on: onTooltip }">
+          <!-- Disabling these rules here since they are bugged. See also: -->
+          <!-- https://github.com/vuejs/eslint-plugin-vue/issues/497 -->
+          <!-- eslint-disable vue/valid-v-on vue/no-parsing-error -->
+          <v-btn
+            class="ma-0"
+            v-on="{ ...onTooltip, ...onDialog }"
+            flat
+            icon
+            small
+            color="grey"
+            :readonly="performingAction"
+            @click="$emit('open')"
+          >
+            <!-- eslint-enable vue/valid-v-on vue/no-parsing-error -->
+            <v-icon
+              style="font-size:20px;"
+              v-on="on"
+              @click="getLog(taskId)"
+            >description</v-icon>
+          </v-btn>
+        </template>
+        <span>Show log</span>
+      </v-tooltip>
+    </template>
     <v-card>
       <v-card-text>
         <v-btn
@@ -56,12 +83,14 @@
 </template>
 
 <script>
+import { getTaskLogs } from '../../../api/tasks'
 export default {
   props: {
     showModal: Boolean,
     lines: Array,
     path: String,
-    taskId: Number
+    taskId: Number,
+    performingAction: Boolean
   },
   data () {
     return {
@@ -86,26 +115,44 @@ export default {
     }
   },
   methods: {
-    close: function () {
+    close () {
       if (this.autoRefreshIntervalId !== -1) {
         window.clearInterval(this.autoRefreshIntervalId)
         this.autoRefreshIntervalId = -1
       }
       this.$emit('close')
     },
-    refresh: function () {
-      this.$emit('getLog', this.taskId, this.tailMode)
+    refresh () {
+      this.getLog(this.taskId, this.tailMode)
       if (this.autoRefresh && !this.tailMode) {
         this.autoRefresh = false
         this.toggleAutoRefresh()
       }
     },
-    toggleAutoRefresh: function () {
+    toggleAutoRefresh () {
       if (this.autoRefresh) {
         this.autoRefreshIntervalId = window.setInterval(this.refresh, 5000)
       } else {
         window.clearInterval(this.autoRefreshIntervalId)
         this.autoRefreshIntervalId = -1
+      }
+    },
+    getLog (id, tailMode = false) {
+      if (!this.actionFlag) {
+        this.snackbar = true
+        this.actionFlag = true
+        getTaskLogs(this.$store.state.accessToken, id, tailMode)
+          .then(response => {
+            this.logs = response.data.output_lines
+            this.path = response.data.path
+            this.showModalLog = true
+          })
+          .catch(error => {
+            this.handleError(error)
+          }).finally(() => {
+            this.snackbar = false
+            this.actionFlag = false
+          })
       }
     }
   }
