@@ -109,7 +109,6 @@
       <v-card-text>
         <v-layout align-center justify-end>
           <v-btn
-            v-if="editingTasks && editingTasks.length > 0"
             color="primary"
             @click="saveTasks"
           >
