@@ -35,7 +35,7 @@ import {
 } from '../../api/jobs'
 import { getTasks } from '../../api/tasks'
 import { getErrorMessage } from '../../utils/errors'
-import { JobCrudActions } from './jobs_overview/JobCrudActions'
+import { Actions as JobCrudActions } from './jobs_overview/JobCrudActions'
 import { JobBulkActions } from './jobs_overview/JobBulkActions'
 import JobsTable from './jobs_overview/JobsTable'
 
@@ -54,7 +54,7 @@ export default {
     }
   },
   mounted () {
-    getJobs(this.$store.state.accessToken)
+    getJobs(this.$store.state.accessToken, this.$store.state.role === 'admin' ? null : this.$store.state.id)
       .then(jobs => {
         jobs.forEach((job) => {
           this.jobs[job.id] = job

@@ -18,8 +18,8 @@
 </template>
 
 <script>
-import JobDetailsField from '../JobDetailsField'
-import { required, maxLength } from '../../../../utils/rules'
+import JobDetailsField from './JobDetailsField'
+import { required, maxLength } from '../../../../../utils/rules'
 
 const nameCounter = 40
 

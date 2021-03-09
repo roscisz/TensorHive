@@ -4,7 +4,8 @@
       <v-layout class="px-4" v-if="prototypingMode" align-center>
         <v-icon>info</v-icon>
         <div class="ml-2 caption grey--text text--darken-1">
-          Newly added tasks have the <i>Prototype</i> status and they will be
+          Newly added tasks have the
+          <i>Prototype</i> status and they will be
           saved along with this job.
         </div>
       </v-layout>
@@ -101,32 +102,62 @@
                   <span v-else>Task selected</span>
                 </v-tooltip>
               </td>
-
               <td>{{ props.item.hostname }}</td>
-
               <td class="command-cell">
-                <TaskCommand no-command-text="" :command="props.item.command" />
+                <TaskCommand no-command-text :command="props.item.command" />
               </td>
-
               <td>
                 <TaskStatus class="ma-0" :status="props.item.status" />
               </td>
-
-              <td class="text-tabular-nums text-xs-right">
-                {{ props.item.pid }}
-              </td>
-
+              <td class="text-tabular-nums text-xs-right">{{ props.item.pid }}</td>
               <td>
-                <TaskCrudActions
-                  :read-only="!prototypingMode"
-                  :performing-action="isPerformingCrud(props.item.id)"
-                  :task="props.item"
-                  @action="emitCrudAction"
-                />
+                <v-layout align-center justify-end>
+                  <TaskLog
+                    v-if="readOnly"
+                    :show-modal="showModalLog"
+                    @open="showModalLog = true"
+                    @close="showModalLog = false"
+                    @getLog="getLog(...arguments)"
+                    :lines="logs"
+                    :path="path"
+                    :taskId="task.id"
+                  />
+                  <v-tooltip v-if="prototypingMode" bottom>
+                    <template v-slot:activator="{ on }">
+                      <v-btn
+                        class="ma-0"
+                        v-on="on"
+                        flat
+                        icon
+                        small
+                        color="grey"
+                        @click="editTask(props.item)"
+                      >
+                        <v-icon small>edit</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Edit this task</span>
+                  </v-tooltip>
+                  <v-tooltip v-if="prototypingMode" bottom>
+                    <template v-slot:activator="{ on }">
+                      <v-btn
+                        class="ma-0"
+                        v-on="on"
+                        flat
+                        icon
+                        small
+                        color="grey"
+                        @click="removeTask(props.item)"
+                      >
+                        <v-icon small>delete</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Remove this task</span>
+                  </v-tooltip>
+                </v-layout>
               </td>
             </tr>
           </template>
-
           <template v-if="prototypingMode" v-slot:footer>
             <tr v-for="task in internalPrototypes" :key="task.id">
               <td>
@@ -144,19 +175,16 @@
                   <span>This task will be created</span>
                 </v-tooltip>
               </td>
-
               <td>{{ task.hostname }}</td>
-
               <td class="command-cell">
-                <TaskCommand no-command-text="" :command="task.command" />
+                <TaskCommand no-command-text :command="task.command" />
               </td>
-
               <td>
                 <TaskStatus class="ma-0" :status="task.status" />
               </td>
-
-              <td><!-- Skipping. Prototypes do not have PID. --></td>
-
+              <td>
+                <!-- Skipping. Prototypes do not have PID. -->
+              </td>
               <td>
                 <v-layout align-center justify-end>
                   <v-tooltip bottom>
@@ -185,20 +213,15 @@
 </template>
 
 <script>
-// import api from '../../../api'
-import TaskBulkActions from '../tasks_overview/TaskBulkActions'
-import TaskCommand from '../tasks_overview/TaskCommand'
-import TaskCrudActions from '../tasks_overview/TaskCrudActions'
-import TaskStatus from '../tasks_overview/TaskStatus'
-import TaskDuplicate from '../tasks_overview/TaskDuplicate'
-import TaskTemplateChooser from '../tasks_overview/TaskTemplateChooser'
-import TaskCreate from '../tasks_overview/TaskCreate'
+import TaskCommand from './job_tasks/TaskCommand'
+import TaskStatus from './job_tasks/TaskStatus'
+import TaskDuplicate from './job_tasks/TaskDuplicate'
+import TaskTemplateChooser from './job_tasks/TaskTemplateChooser'
+import TaskCreate from './job_tasks/TaskCreate'
 
 export default {
   components: {
-    TaskBulkActions,
     TaskCommand,
-    TaskCrudActions,
     TaskStatus,
     TaskDuplicate,
     TaskTemplateChooser,
@@ -299,6 +322,10 @@ export default {
     }
   },
   methods: {
+    editTask (task) {
+      this.editingTasks = [task]
+      this.addMultipleDialog = true
+    },
     editMultipleTasks () {
       this.editingTasks = this.internalSelected
       this.addMultipleDialog = true
@@ -331,6 +358,14 @@ export default {
       this.addMultipleDialog = false
       this.$emit('updateTasks', this.tasks)
     },
+    removeTask (task) {
+      for (let taskIndex in this.tasks) {
+        if (this.tasks[taskIndex].id === task.id) {
+          this.tasks.splice(taskIndex, 1)
+        }
+      }
+      this.$emit('removeTasks', this.tasks)
+    },
     removeTasks () {
       for (let selectedTask of this.internalSelected) {
         for (let taskIndex in this.tasks) {
@@ -356,38 +391,35 @@ export default {
     },
     isPerformingCrud (taskId) {
       return this.tasksPerformingCrud.includes(taskId)
-    },
-    emitCrudAction (task, action) {
-      this.$emit('crud-action', task, action)
     }
   }
 }
 </script>
 
 <style scoped>
-/* This resets font weight set by Bootstrap to the default 'normal' value. */
-/* The proper way of creating a deep selector would be using `::v-deep` but */
-/* it requires Vue Loader v15 which we do not use for now. */
-label {
-  font-weight: normal;
-}
+  /* This resets font weight set by Bootstrap to the default 'normal' value. */
+  /* The proper way of creating a deep selector would be using `::v-deep` but */
+  /* it requires Vue Loader v15 which we do not use for now. */
+  label {
+    font-weight: normal;
+  }
 
-.text-monospace {
-  font-family: ui-monospace, "SF Mono", SFMono-Regular, "DejaVu Sans Mono",
-    Liberation Mono, Menlo, Consolas, Monaco, monospace;
-}
+  .text-monospace {
+    font-family: ui-monospace, "SF Mono", SFMono-Regular, "DejaVu Sans Mono",
+      Liberation Mono, Menlo, Consolas, Monaco, monospace;
+  }
 
-.text-tabular-nums {
-  font-variant-numeric: tabular-nums;
-}
+  .text-tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
 
-.command-cell {
-  max-width: 360px;
-}
+  .command-cell {
+    max-width: 360px;
+  }
 
-/* Sets the same font properties for prototypes */
-table.v-table tfoot td {
-  font-weight: 400;
-  font-size: 13px;
-}
+  /* Sets the same font properties for prototypes */
+  table.v-table tfoot td {
+    font-weight: 400;
+    font-size: 13px;
+  }
 </style>

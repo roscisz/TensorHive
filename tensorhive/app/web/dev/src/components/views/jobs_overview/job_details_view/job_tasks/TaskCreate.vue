@@ -1,12 +1,7 @@
 <template>
-  <v-dialog
-    width="80vw"
-    v-model="showModal"
-  >
+  <v-dialog width="80vw" v-model="showModal">
     <template v-slot:activator="{ on }">
-      <v-btn v-on="on" color="primary" small @click="$emit('open')">
-        Add Tasks
-      </v-btn>
+      <v-btn v-on="on" color="primary" small @click="$emit('open')">Add Tasks</v-btn>
     </template>
     <v-card>
       <v-card-text>
@@ -19,25 +14,28 @@
         >
           <v-icon>close</v-icon>
         </v-btn>
-        <span v-if="editingTasks && editingTasks.length > 0" class="headline">Edit tasks</span>
+        <span
+          v-if="editingTasks && editingTasks.length > 0"
+          class="headline"
+        >Edit tasks</span>
         <span v-else class="headline">Create tasks</span>
         <v-tooltip right>
           <template v-slot:activator="{ on }">
-            <v-icon v-on="on">
-              info
-            </v-icon>
+            <v-icon v-on="on">info</v-icon>
           </template>
-          <span>CPU tasks can be run without making reservation.
-            <br>When you want to create a GPU task, you must
-            <br>first ensure that you are eligible to do so
-            <br>(having active reservation for that GPU).
+          <span>
+            CPU tasks can be run without making reservation.
+            <br />When you want to create a GPU task, you must
+            <br />first ensure that you are eligible to do so
+            <br />(having active reservation for that GPU).
           </span>
         </v-tooltip>
         <v-switch
           class="float-right-button"
           v-if="chosenTemplate === 'tf2'"
           v-model="enableSmartTfConfig"
-          label="Smart TF_CONFIG"/>
+          label="Smart TF_CONFIG"
+        />
       </v-card-text>
       <v-card-text>
         <TaskLine
@@ -73,14 +71,7 @@
       </v-card-text>
       <v-card-text>
         <v-flex xs12>
-          <v-btn
-            color="primary"
-            block
-            small
-            @click="copyLine"
-          >
-            Add task
-          </v-btn>
+          <v-btn color="primary" block small @click="copyLine">Add task</v-btn>
         </v-flex>
         <v-layout align-center justify-start>
           <v-text-field
@@ -92,26 +83,17 @@
           <v-btn
             color="primary"
             @click="addEnvVariable"
-          >
-            Add as ENV variable to all tasks
-          </v-btn>
+          >Add as ENV variable to all tasks</v-btn>
           <v-btn
             color="primary"
             @click="addParameter"
-          >
-            Add as parameter to all tasks
-          </v-btn>
-          <v-checkbox
-            v-model="isNewFieldStatic"
-            :label="`Static`"></v-checkbox>
+          >Add as parameter to all tasks</v-btn>
+          <v-checkbox v-model="isNewFieldStatic" :label="`Static`"></v-checkbox>
         </v-layout>
       </v-card-text>
       <v-card-text>
         <v-layout align-center justify-end>
-          <v-btn
-            color="primary"
-            @click="saveTasks"
-          >
+          <v-btn color="primary" @click="saveTasks">
             <span v-if="editingTasks && editingTasks.length > 0">Edit all tasks</span>
             <span v-else>Create all tasks</span>
           </v-btn>
@@ -122,7 +104,7 @@
 </template>
 
 <script>
-import api from '../../../api'
+import api from '../../../../../api'
 import TaskLine from './TaskLine.vue'
 export default {
   components: {
@@ -258,6 +240,7 @@ export default {
           let parsedParams = this.parseSegments(task, 'params')
           newLines.push({
             id: ids,
+            taskId: task.id,
             host: task.hostname,
             resource: parsedCommand.resource,
             command: parsedCommand.command,
@@ -342,7 +325,8 @@ export default {
             envs: this.formatSegments(line.envVariables),
             params: this.formatSegments(line.parameters, false)
           },
-          command: this.convertResource(line.resource) + ' ' + line.command
+          command: this.convertResource(line.resource) + ' ' + line.command,
+          id: line.taskId ? line.taskId : -1
         }
         tasks.push(task)
       }
@@ -782,7 +766,7 @@ export default {
       }
 
       if (!this.lines[lineIndex].enableTfConfig || !this.enableSmartTfConfig ||
-          newTaskIndex === this.lines[lineIndex].tfConfigTaskIndex) {
+        newTaskIndex === this.lines[lineIndex].tfConfigTaskIndex) {
         return
       }
 
@@ -848,10 +832,10 @@ export default {
 </script>
 
 <style scoped>
-.float-right-button {
-  float: right;
-}
-.parameter-name-input{
-  max-width: 150px;
-}
+  .float-right-button {
+    float: right;
+  }
+  .parameter-name-input {
+    max-width: 150px;
+  }
 </style>

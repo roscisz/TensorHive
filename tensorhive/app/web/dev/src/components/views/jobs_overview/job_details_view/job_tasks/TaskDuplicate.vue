@@ -1,12 +1,12 @@
 <template>
-  <v-dialog
-    width="80vw"
-    v-model="showModal"
-  >
+  <v-dialog width="80vw" v-model="showModal">
     <template v-slot:activator="{ on }">
-      <v-btn v-on="on" color="primary" small @click="$emit('open')">
-        Duplicate tasks
-      </v-btn>
+      <v-btn
+        v-on="on"
+        color="primary"
+        small
+        @click="$emit('open')"
+      >Duplicate tasks</v-btn>
     </template>
     <v-card>
       <v-card-text>
@@ -22,7 +22,7 @@
         <span class="headline">Choose framework template</span>
       </v-card-text>
       <v-card-text>
-         <v-layout>
+        <v-layout>
           <v-flex xs12>
             <v-data-table
               v-bind:class="`elevation-${elevation}`"
@@ -48,15 +48,17 @@
                   </td>
                   <td>{{ props.item.hostname }}</td>
                   <td>
-                    <p :key="index" v-for="(env, index) of props.item.cmdsegments.envs">
-                      {{ env.name }}{{ env.value }}
-                    </p>
+                    <p
+                      :key="index"
+                      v-for="(env, index) of props.item.cmdsegments.envs"
+                    >{{ env.name }}{{ env.value }}</p>
                   </td>
                   <td>{{ props.item.command }}</td>
                   <td>
-                    <p :key="index" v-for="(param, index) of props.item.cmdsegments.params">
-                      {{ param.name }}{{ param.value }}
-                    </p>
+                    <p
+                      :key="index"
+                      v-for="(param, index) of props.item.cmdsegments.params"
+                    >{{ param.name }}{{ param.value }}</p>
                   </td>
                 </tr>
               </template>
@@ -70,9 +72,7 @@
             color="primary"
             @click="goToCreateTasks()"
             small
-          >
-            Go to tasks creator
-          </v-btn>
+          >Go to tasks creator</v-btn>
         </v-layout>
       </v-card-text>
     </v-card>
@@ -80,7 +80,7 @@
 </template>
 
 <script>
-import { getTasks } from '../../../api/tasks'
+import { getTasks } from '../../../../../api/tasks'
 export default {
   name: 'TaskTemplateChooser',
   props: {

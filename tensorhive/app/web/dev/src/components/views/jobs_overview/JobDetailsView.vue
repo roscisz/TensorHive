@@ -1,17 +1,14 @@
 <template>
   <v-container>
     <v-card outlined>
-      <div
-        class="editIcon"
-        v-if="readOnly"
-      >
+      <div class="editIcon" v-if="readOnly">
         <v-layout>
           <v-flex xs12>
             <JobCrudActions
               :job-id="jobId"
               :performing-action="performingCrudAction"
               :show-details-action="false"
-              @action="$emit('crud-action', job, $event)"
+              @action="performJobCrudAction"
             />
           </v-flex>
         </v-layout>
@@ -28,9 +25,7 @@
                     :readOnly="readOnly"
                     :job="job"
                     :loading="loadingJob"
-                    :performing-crud-action="performingJobCrudAction"
                     @changeJob="changeJob"
-                    @crud-action="performJobCrudAction"
                   />
                 </v-flex>
               </v-layout>
@@ -62,14 +57,7 @@
       </v-tabs>
       <v-card-actions>
         <v-layout align-center justify-end>
-          <v-btn
-            outlined
-            rounded
-            text
-            @click="cancelHandler"
-          >
-            Cancel
-          </v-btn>
+          <v-btn outlined rounded text @click="cancelHandler">Cancel</v-btn>
           <v-btn
             v-if="!readOnly && activeTab===1"
             color="primary"
@@ -77,9 +65,7 @@
             rounded
             :disabled="!job || job.name === ''"
             @click="saveHandler"
-          >
-            Save job
-          </v-btn>
+          >Save job</v-btn>
           <v-btn
             v-if="activeTab===0"
             color="primary"
@@ -87,16 +73,14 @@
             rounded
             :disabled="!job || job.name === ''"
             @click="activeTab = 1"
-          >
-            Next step
-          </v-btn>
+          >Next step</v-btn>
         </v-layout>
       </v-card-actions>
     </v-card>
     <v-snackbar v-model="snackbar" bottom color="error">
-        {{ errorMessage }}
-        <v-btn flat @click="snackbar = false">Close</v-btn>
-      </v-snackbar>
+      {{ errorMessage }}
+      <v-btn flat @click="snackbar = false">Close</v-btn>
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -105,14 +89,18 @@ import {
   getJob,
   createJobTask,
   createJob,
-  updateJob
+  updateJob,
+  executeJob,
+  stopJob,
+  killJob,
+  deleteJob
 } from '../../../api/jobs'
 import { getErrorMessage } from '../../../utils/errors'
 import { getTasks, updateTask, deleteTask } from '../../../api/tasks'
 
-import JobInfo from './job_steps/JobInfo'
-import JobTasks from './JobTasks'
-import JobCrudActions from './JobCrudActions'
+import JobInfo from './job_details_view/JobInfo'
+import JobTasks from './job_details_view/JobTasks'
+import JobCrudActions, { Actions } from './JobCrudActions'
 
 export default {
   components: {
@@ -131,6 +119,7 @@ export default {
       prototypes: [],
       loadingJob: false,
       loadingTasks: false,
+      performingJobCrudAction: false,
       submitting: false,
       snackbar: false,
       errorMessage: '',
@@ -178,7 +167,6 @@ export default {
       getTasks(this.$store.state.accessToken, this.$route.params.id)
         .then((tasks) => {
           this.tasks = tasks
-          this.originalTasks = tasks
           this.loadingTasks = false
         })
         .catch((error) => {
@@ -249,14 +237,13 @@ export default {
       )
     },
     updateJob () {
-      // const { description, name, startAt, stopAt } = this.job
-      const { description, name } = this.job
+      const { description, name, startAt, stopAt } = this.job
+
       return updateJob(this.$store.state.accessToken, this.$route.params.id, {
         name,
-        description: description || ''
-        // userId: this.$store.state.id,
-        // startAt: (startAt && startAt.toISOString()) || null,
-        // stopAt: (stopAt && stopAt.toISOString()) || null
+        description: description || '',
+        startAt: (startAt && startAt.toISOString()) || null,
+        stopAt: (stopAt && stopAt.toISOString()) || null
       })
     },
     updatePrototypes (prototypes) {
@@ -278,16 +265,87 @@ export default {
     errorHandler (error) {
       this.errorMessage = getErrorMessage(error)
       this.snackbar = true
+    },
+    performJobCrudAction (action) {
+      let promise = null
+      this.performingJobCrudAction = true
+      this.loadingTasks = true
+
+      switch (action) {
+        case Actions.Execute:
+          promise = this.executeJob()
+          break
+        case Actions.Stop:
+          promise = this.stopJob()
+          break
+        case Actions.Kill:
+          promise = this.killJob()
+          break
+        case Actions.Delete:
+          promise = this.deleteJob()
+          break
+        default:
+          this.performingJobCrudAction = false
+          this.loadingTasks = false
+          this.handleError(new Error(`Unknown action ${action}`))
+      }
+
+      if (promise) {
+        if (action === Actions.Delete) {
+          promise.then(() => this.$router.push('/jobs_overview'))
+        } else {
+          promise.then(([job, tasks]) => {
+            this.job = job
+            this.tasks = tasks
+            this.performingJobCrudAction = false
+            this.loadingTasks = false
+          })
+        }
+
+        promise.catch(error => {
+          this.handleError(error)
+
+          this.performingJobAction = false
+          this.loadingTasks = false
+        })
+      }
+    },
+    executeJob () {
+      return executeJob(this.$store.state.accessToken, this.job.id).then(job =>
+        getTasks(this.$store.state.accessToken, this.job.id).then(tasks => [
+          job,
+          tasks
+        ])
+      )
+    },
+    stopJob () {
+      return stopJob(this.$store.state.accessToken, this.job.id).then(job =>
+        getTasks(this.$store.state.accessToken, this.job.id).then(tasks => [
+          job,
+          tasks
+        ])
+      )
+    },
+    killJob () {
+      return killJob(this.$store.state.accessToken, this.job.id).then(job =>
+        getTasks(this.$store.state.accessToken, this.job.id).then(tasks => [
+          job,
+          tasks
+        ])
+      )
+    },
+    deleteJob () {
+      return deleteJob(this.$store.state.accessToken, this.job.id)
     }
   }
 }
 </script>
 
 <style>
-.editIcon {
-  position: absolute;
-  right: 12px;
-  top: 12px;
-  z-index: 9999;
-}
+  .editIcon {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    z-index: 9999;
+  }
 </style>

@@ -1,9 +1,7 @@
 <template>
   <div>
     <v-layout align-center justify-center>
-      <div class="task-preview">
-        {{taskPreview}}
-      </div>
+      <div class="task-preview">{{taskPreview}}</div>
     </v-layout>
     <v-layout align-center justify-start>
       <v-select
@@ -13,7 +11,7 @@
         small
         v-model="newHost"
       ></v-select>
-      <span class="space"/>
+      <span class="space" />
       <v-select
         class="task-select"
         :items="hostResources"
@@ -21,7 +19,7 @@
         small
         v-model="newResource"
       ></v-select>
-      <span class="space"/>
+      <span class="space" />
       <v-layout align-center justify-start>
         <TaskLineTfConfig
           v-if="newEnableTfConfig"
@@ -38,7 +36,7 @@
           @updateTfConfigTaskIndex="updateTfConfigTaskIndex(...arguments)"
         />
       </v-layout>
-      <span class="space"/>
+      <span class="space" />
       <v-layout align-center justify-start>
         <TaskLineEnvVariable
           class="task-input"
@@ -50,14 +48,14 @@
           @deleteEnvVariable="deleteEnvVariable(envVariable.id)"
         />
       </v-layout>
-      <span class="space"/>
+      <span class="space" />
       <v-text-field
         class="task-input"
         label="Command"
         small
         v-model="newCommand"
       ></v-text-field>
-      <span class="space"/>
+      <span class="space" />
       <v-layout align-center justify-start>
         <TaskLineParameter
           class="task-input"
@@ -69,20 +67,15 @@
           @deleteParameter="deleteParameter(parameter.id)"
         />
       </v-layout>
-      <v-btn
-        small
-        @click="removeMe()"
-      >
-        Remove task
-      </v-btn>
+      <v-btn small @click="removeMe()">Remove task</v-btn>
     </v-layout>
   </div>
 </template>
 
 <script>
-import TaskLineParameter from './TaskLineParameter.vue'
-import TaskLineEnvVariable from './TaskLineEnvVariable.vue'
-import TaskLineTfConfig from './TaskLineTfConfig'
+import TaskLineParameter from './task_line/TaskLineParameter.vue'
+import TaskLineEnvVariable from './task_line/TaskLineEnvVariable.vue'
+import TaskLineTfConfig from './task_line/TaskLineTfConfig'
 export default {
   components: {
     TaskLineTfConfig,
@@ -159,7 +152,7 @@ export default {
       for (var index in this.parameters) {
         var parameterNameLength = this.parameters[index].parameter.length
         if (this.parameters[index].parameter.charAt(parameterNameLength - 1) === ' ' ||
-            this.parameters[index].parameter.charAt(parameterNameLength - 1) === '=') {
+          this.parameters[index].parameter.charAt(parameterNameLength - 1) === '=') {
           parameters += this.parameters[index].parameter + this.parameters[index].value + ' '
         } else {
           parameters += this.parameters[index].parameter + ' ' + this.parameters[index].value + ' '
@@ -323,18 +316,18 @@ export default {
 </script>
 
 <style scoped>
-.space{
-  width: 5px;
-}
-.task-preview{
-  background-color: #f8f9fa;
-  border: 1px solid #eaecf0;
-  max-width: max-content;
-}
-.task-select{
-  max-width:200px;
-}
-.task-input{
-  max-width:200px;
-}
+  .space {
+    width: 5px;
+  }
+  .task-preview {
+    background-color: #f8f9fa;
+    border: 1px solid #eaecf0;
+    max-width: max-content;
+  }
+  .task-select {
+    max-width: 200px;
+  }
+  .task-input {
+    max-width: 200px;
+  }
 </style>

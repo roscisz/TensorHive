@@ -1,36 +1,31 @@
 <template>
-  <v-layout wrap v-if='readOnly'>
-    <!-- This nested form is used to revalidate dates which depend -->
-    <!-- on each other. Unfortunately, Vuetify currently does not -->
-    <!-- have an option to validate a single field so such a hacky -->
-    <!-- way of doing that is required here. -->
-    <v-flex xs12 sm6 md4>
-      <JobDetailsField header='Start at' :value='startAt' />
+  <v-layout wrap v-if="readOnly">
+    <v-flex xs18 sm8 md6>
+      <JobDetailsField header="Start at" :value="startAt" />
     </v-flex>
     <v-flex xs12 sm6 md4>
-      <JobDetailsField header='Stop at' :value='stopAt' />
+      <JobDetailsField header="Stop at" :value="stopAt" />
     </v-flex>
   </v-layout>
   <v-flex xs12 v-else>
-    <v-form ref='dates'>
+    <v-form ref="dates">
       <v-layout wrap>
         <v-flex xs12 sm6>
           <DatetimePicker
-            v-model="startAtModel"
-            :value='startAt'
-            @change='changeStartAt'
+            :datetime="startAtModel"
+            @input="changeStartAt"
             box
-            label='Start at'
-            :rules='startAtRules'
+            label="Start at"
+            :rules="startAtRules"
           />
         </v-flex>
         <v-flex xs12 sm6>
           <DatetimePicker
-            :value='stopAt'
-            @change='changeStopAt'
+            :datetime="stopAtModel"
+            @input="changeStopAt"
             box
-            label='Stop at'
-            :rules='stopAtRules'
+            label="Stop at"
+            :rules="stopAtRules"
           />
         </v-flex>
       </v-layout>
@@ -40,8 +35,8 @@
 
 <script>
 import moment from 'moment'
-import JobDetailsField from '../JobDetailsField'
-import DatetimePicker from '../../../general/DatetimePicker'
+import JobDetailsField from './JobDetailsField'
+import DatetimePicker from '../../../../general/DatetimePicker'
 
 export default {
   components: { JobDetailsField, DatetimePicker },
@@ -57,11 +52,15 @@ export default {
     }
   },
   watch: {
-    startAtModel () {
-      this.changeStartAt()
+    startAt () {
+      this.startAtModel = this.startAt
     },
-    stopAtModel () {
-      this.changeStopAt()
+    stopAt () {
+      this.stopAtModel = this.stopAt
+    },
+    readOnly () {
+      this.startAtModel = this.startAt
+      this.stopAtModel = this.stopAt
     }
   },
   computed: {
@@ -79,7 +78,7 @@ export default {
         }
       ]
 
-      if (this.stopAt) {
+      if (!this.startAt && this.stopAt) {
         rules.push(
           (v) =>
             !!v ||
@@ -135,7 +134,7 @@ export default {
       this.$refs.dates.validate()
     },
     changeStopAt () {
-      this.$emit('changeStopAt', this.startAtModel)
+      this.$emit('changeStopAt', this.stopAtModel)
       this.$refs.dates.validate()
     }
   }

@@ -111,7 +111,7 @@
 </template>
 
 <script>
-export const JobCrudActions = {
+export const Actions = {
   Execute: 'Execute',
   Stop: 'Stop',
   Kill: 'Kill',
@@ -135,7 +135,7 @@ export default {
   },
   data () {
     return {
-      JobCrudActions: JobCrudActions
+      JobCrudActions: Actions
     }
   }
 }

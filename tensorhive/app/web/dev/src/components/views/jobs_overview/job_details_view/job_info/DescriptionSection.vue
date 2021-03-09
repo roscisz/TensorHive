@@ -1,10 +1,6 @@
 <template>
   <v-flex xs12 sm6 md8 v-if="readOnly">
-    <JobDetailsField
-      v-slot="props"
-      header="Description"
-      :value="description"
-    >
+    <JobDetailsField v-slot="props" header="Description" :value="description">
       <div class="description">{{ props.value }}</div>
     </JobDetailsField>
   </v-flex>
@@ -21,7 +17,7 @@
 </template>
 
 <script>
-import JobDetailsField from '../JobDetailsField'
+import JobDetailsField from './JobDetailsField'
 
 export default {
   components: { JobDetailsField },
@@ -38,9 +34,9 @@ export default {
 </script>
 
 <style scoped>
-.description {
-  max-height: 280px;
-  overflow-y: auto;
-  white-space: pre-line;
-}
+  .description {
+    max-height: 280px;
+    overflow-y: auto;
+    white-space: pre-line;
+  }
 </style>

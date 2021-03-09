@@ -30,11 +30,7 @@
           <v-tab-item key="calendar">
             <v-card flat>
               <v-card-text>
-                <v-date-picker
-                  v-model="date"
-                  full-width
-                  @input="activeTab = 1"
-                ></v-date-picker>
+                <v-date-picker v-model="date" full-width @input="activeTab = 1"></v-date-picker>
               </v-card-text>
             </v-card>
           </v-tab-item>
@@ -109,6 +105,12 @@ export default {
       activeTab: 0,
       date: defaultDate,
       time: defaultTime
+    }
+  },
+  watch: {
+    datetime () {
+      this.date = moment(this.datetime).format('L')
+      this.time = moment(this.datetime).time()
     }
   },
   computed: {

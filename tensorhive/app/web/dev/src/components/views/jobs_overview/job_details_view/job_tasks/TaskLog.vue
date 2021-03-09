@@ -1,8 +1,5 @@
 <template>
-  <v-dialog
-    width="80vw"
-    v-model="show"
-  >
+  <v-dialog width="80vw" v-model="show">
     <template v-slot:activator="{ on: onDialog }">
       <v-tooltip bottom>
         <template v-slot:activator="{ on: onTooltip }">
@@ -43,11 +40,7 @@
         </v-btn>
         <span class="headline">
           Task log
-          <v-btn
-            flat
-            icon
-            color="green"
-            @click="refresh()">
+          <v-btn flat icon color="green" @click="refresh()">
             <v-icon>refresh</v-icon>
           </v-btn>
         </span>
@@ -58,7 +51,7 @@
             label="Tail mode"
             v-model="tailMode"
             hide-details
-           />
+          />
           <v-checkbox
             flat
             style="display: inline"
@@ -72,18 +65,16 @@
       </v-card-text>
       <v-card-text>
         {{path}}
-      <div class="log_box">
-        <div v-for="(line, index) in lines" :key="index">
-          {{line}}
+        <div class="log_box">
+          <div v-for="(line, index) in lines" :key="index">{{line}}</div>
         </div>
-      </div>
       </v-card-text>
     </v-card>
   </v-dialog>
 </template>
 
 <script>
-import { getTaskLogs } from '../../../api/tasks'
+import { getTaskLogs } from '../../../../../api/tasks'
 export default {
   props: {
     showModal: Boolean,
@@ -160,12 +151,12 @@ export default {
 </script>
 
 <style scoped>
-.float-right-button {
-  float: right;
-}
-.log_box{
-  resize: both;
-  background-color: #f8f9fa;
-  border: 1px solid #eaecf0;
-}
+  .float-right-button {
+    float: right;
+  }
+  .log_box {
+    resize: both;
+    background-color: #f8f9fa;
+    border: 1px solid #eaecf0;
+  }
 </style>
