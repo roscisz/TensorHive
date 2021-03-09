@@ -132,7 +132,7 @@ def update(id: JobId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCod
 
         for field_name, new_value in new_values.items():
             field_name = snakecase(field_name)
-            if field_name == 'start_at':
+            if field_name == 'start_at' and job.stop_at is not None:
                 assert job.stop_at > datetime.utcnow(), 'Trying to edit time of the job from the past'
             assert hasattr(job, field_name), 'job has no {} field'.format(field_name)
             setattr(job, field_name, new_value)
