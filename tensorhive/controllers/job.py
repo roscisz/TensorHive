@@ -11,6 +11,7 @@ from tensorhive.controllers.task import business_spawn, business_terminate, sync
 from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
 from datetime import datetime
 from stringcase import snakecase
+from tensorhive.exceptions.ForbiddenException import ForbiddenException
 
 log = logging.getLogger(__name__)
 JOB = API.RESPONSES['job']
@@ -89,12 +90,12 @@ def create(job: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         new_job = Job(
             name=job['name'],
             description=job['description'],
-            user_id=job['userId'],
-            _start_at=DateUtils.try_parse_string(job['startAt']),
-            _stop_at=DateUtils.try_parse_string(job['stopAt'])
+            user_id=job['userId']
         )
-        if new_job._stop_at is not None:
-            assert new_job.stop_at > datetime.utcnow(), 'Trying to edit time of the job from the past'
+        if 'startAt' in job and job['startAt'] is not None:
+            setattr(new_job, 'start_at', job['startAt'])
+        if 'stopAt' in job and job['stopAt'] is not None:
+            setattr(new_job, 'stop_at', job['stopAt'])
         new_job.save()
     except AssertionError as e:
         if e.args[0] == 'Not an owner':
@@ -127,16 +128,22 @@ def update(id: JobId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCod
     allowed_fields = {'name', 'description', 'startAt', 'stopAt'}
     try:
         job = Job.get(id)
-        assert job.user_id == get_jwt_identity(), 'Not an owner'
+
+        if not (is_admin() or job.user_id == get_jwt_identity()):
+            raise ForbiddenException('not an owner')
+
         assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
+
+        assert job.status is not JobStatus.running, 'must be stopped first'
 
         for field_name, new_value in new_values.items():
             field_name = snakecase(field_name)
-            if field_name == 'start_at' and job.stop_at is not None:
-                assert job.stop_at > datetime.utcnow(), 'Trying to edit time of the job from the past'
-            assert hasattr(job, field_name), 'job has no {} field'.format(field_name)
-            setattr(job, field_name, new_value)
+            if new_value is not None:
+                assert hasattr(job, field_name), 'job has no {} field'.format(field_name)
+                setattr(job, field_name, new_value)
         job.save()
+    except ForbiddenException as fe:
+        content, status = {'msg': JOB['update']['failure']['forbidden'].format(reason=fe)}, 403
     except NoResultFound:
         content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
     except AssertionError as e:
@@ -159,9 +166,14 @@ def delete(id: JobId) -> Tuple[Content, HttpStatusCode]:
     If running, requires stopping job manually in advance."""
     try:
         job = Job.get(id)
-        assert job.user_id == get_jwt_identity(), 'Not an owner'
+
+        if not (is_admin() or job.user_id == get_jwt_identity()):
+            raise ForbiddenException('not an owner')
+
         assert job.status is not JobStatus.running, 'must be stopped first'
         job.destroy()
+    except ForbiddenException as fe:
+        content, status = {'msg': JOB['update']['failure']['forbidden'].format(reason=fe)}, 403
     except AssertionError as e:
         content, status = {'msg': JOB['delete']['failure']['assertions'].format(reason=e)}, \
             HTTPStatus.UNPROCESSABLE_ENTITY.value

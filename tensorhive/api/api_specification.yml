@@ -1836,7 +1836,7 @@ paths:
           schema:
             type: integer
       responses:
-        201:
+        200:
           description: {{RESPONSES['general']['ok']}}
           content:
             application/json:

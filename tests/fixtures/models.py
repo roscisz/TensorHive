@@ -188,8 +188,19 @@ def new_job(new_user):
     new_user.save()
     job = Job(name='job_name',
               description='testDescription',
-              user_id=1,
+              user_id=new_user.id,
               status=JobStatus.not_running)
+    job.save()
+    return job
+
+
+@pytest.fixture(scope='function')
+def new_running_job(new_user):
+    new_user.save()
+    job = Job(name='running_job',
+              description='A running job',
+              user_id=new_user.id,
+              status=JobStatus.running)
     job.save()
     return job
 
@@ -199,7 +210,20 @@ def new_job_with_task(new_user, new_task):
     new_user.save()
     job = Job(name='job_name',
               description='testDescription',
-              user_id=1,
+              user_id=new_user.id,
+              status=JobStatus.not_running)
+    job.save()
+    job.add_task(new_task)
+    return job
+
+
+@pytest.fixture(scope='function')
+def new_admin_job(new_user, new_admin, new_task):
+    new_user.save()
+    new_admin.save()
+    job = Job(name='admin_job',
+              description='Admin is the owner of this job',
+              user_id=new_admin.id,
               status=JobStatus.not_running)
     job.save()
     job.add_task(new_task)

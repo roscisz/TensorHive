@@ -45,6 +45,10 @@ class Job(CRUDModel, Base):  # type: ignore
             status=self.status.name)
 
     def check_assertions(self):
+        print(self.start_at)
+        print(self.stop_at)
+        if self.start_at is not None:
+            assert self.start_at > datetime.utcnow(), 'Job start time must be in the future!'
         if self.stop_at is not None and self.start_at is not None:
             assert self.stop_at >= self.start_at, 'Time of the end must happen after the start!'
         if self.stop_at is not None:
@@ -90,9 +94,21 @@ class Job(CRUDModel, Base):  # type: ignore
     def start_at(self):
         return self._start_at
 
+    @start_at.setter  # type: ignore
+    def start_at(self, value):
+        self._start_at = DateUtils.try_parse_string(value)
+        if self._start_at is None:
+            log.error('Unsupported type (start_at={})'.format(value))
+
     @hybrid_property
     def stop_at(self):
         return self._stop_at
+
+    @stop_at.setter  # type: ignore
+    def stop_at(self, value):
+        self._stop_at = DateUtils.try_parse_string(value)
+        if self._stop_at is None:
+            log.error('Unsupported type (start_at={})'.format(value))
 
     def as_dict(self, include_private=None):
         ret = super(Job, self).as_dict(include_private=include_private)

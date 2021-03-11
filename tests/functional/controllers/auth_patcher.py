@@ -7,8 +7,10 @@ import tensorhive.controllers.reservation as reservation
 import tensorhive.controllers.restriction as restriction
 import tensorhive.controllers.schedule as schedule
 import tensorhive.controllers.user as user
+import tensorhive.controllers.job as job
+import tensorhive.controllers.task as task
 
-CONTROLLER_MODULES = [group, reservation, restriction, schedule, user]
+CONTROLLER_MODULES = [group, reservation, restriction, schedule, user, job, task]
 
 G = API.RESPONSES['general']
 
