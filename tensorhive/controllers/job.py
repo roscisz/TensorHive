@@ -67,8 +67,8 @@ def get_all(userId: Optional[int]) -> Tuple[Content, HttpStatusCode]:
                     synchronize(task.id)
     except NoResultFound:
         content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
-    except AssertionError:
-        content, status = {'msg': GENERAL['unprivileged']}, HTTPStatus.FORBIDDEN.value
+    except AssertionError as ae:
+        content, status = {'msg': JOB['all']['forbidden'].format(reason=ae)}, HTTPStatus.FORBIDDEN.value
     except Exception as e:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value

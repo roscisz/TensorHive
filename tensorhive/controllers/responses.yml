@@ -194,8 +194,10 @@ job:
   not_found: Job has not been found
   all:
     success: Jobs has been successfully fetched
+    forbidden: Fetching job list forbidden - {reason}
   get:
-    success: Job has been successfully fetched    
+    success: Job has been successfully fetched
+    forbidden: Fetching job forbidden - {reason}
   create:
     success: Job has been successfully created
     failure:
