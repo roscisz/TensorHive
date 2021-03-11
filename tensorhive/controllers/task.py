@@ -180,7 +180,7 @@ def update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCo
     try:
         task = Task.get(id)
         parent_job = Job.get(task.job_id)
-        assert parent_job.user_id == get_jwt_identity(), 'Not an owner'
+        assert is_admin() or parent_job.user_id == get_jwt_identity(), 'Not an owner'
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:
@@ -197,7 +197,7 @@ def destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
         parent_job = Job.get(task.job_id)
-        assert parent_job.user_id == get_jwt_identity(), 'Not an owner'
+        assert is_admin() or parent_job.user_id == get_jwt_identity(), 'Not an owner'
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except AssertionError:

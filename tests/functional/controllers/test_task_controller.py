@@ -3,10 +3,21 @@ from tensorhive.models.Job import Job
 from tensorhive.models.Task import Task
 from tensorhive.models.CommandSegment import CommandSegment2Task, CommandSegment
 from http import HTTPStatus
-
 import json
+import auth_patcher
+from importlib import reload
 
 ENDPOINT = BASE_URI + '/tasks'
+
+
+def setup_module(_):
+    auth_patches = auth_patcher.get_patches(superuser=False)
+    for auth_patch in auth_patches:
+        auth_patch.start()
+    for module in auth_patcher.CONTROLLER_MODULES:
+        reload(module)
+    for auth_patch in auth_patches:
+        auth_patch.stop()
 
 
 # POST /jobs/{job_id}/tasks
@@ -53,60 +64,31 @@ def test_create_task(tables, client, new_job, new_user):
 
 
 # DELETE /tasks/{id}
-def test_delete_task(tables, client, new_job, new_user):
-    new_user.save()
+def test_delete_task(tables, client, new_job, new_task):
+    new_job.add_task(new_task)
     new_job.save()
-    envs = [{
-        'name': 'ENV',
-        'value': 'path'
-    }]
-    params2 = [{
-        'name': '--batch_size',
-        'value': '32'
-    }]
-    params1 = [
-        {
-            'name': '--batch_size',
-            'value': '32'
-        },
-        {
-            'name': '--rank',
-            'value': '2'
-        }
-    ]
-    data1 = {
-        'command': 'python command.py',
-        'hostname': 'localhost',
-        'cmdsegments': {
-            'envs': envs,
-            'params': params1
-        }
-    }
-    data2 = {
-        'command': 'python command.py',
-        'hostname': 'localhost',
-        'cmdsegments': {
-            'envs': envs,
-            'params': params2
-        }
-    }
 
-    resp = client.post(BASE_URI + '/jobs/{}/tasks'.format(new_job.id), headers=HEADERS, data=json.dumps(data1))
-    resp_json = json.loads(resp.data.decode('utf-8'))
-    client.post(BASE_URI + '/jobs/{}/tasks'.format(new_job.id), headers=HEADERS, data=json.dumps(data2))
-
-    resp = client.delete(ENDPOINT + '/{}'.format(resp_json['task']['id']), headers=HEADERS)
-    resp_json = json.loads(resp.data.decode('utf-8'))
+    resp = client.delete(ENDPOINT + '/{}'.format(new_task.id), headers=HEADERS)
 
     assert resp.status_code == HTTPStatus.OK
-    assert len(Task.all()) == 1
+    assert len(Task.all()) == 0
     assert len(Job.all()) == 1
-    assert len(CommandSegment.all()) == 2  # checks if segments from deleted task are deleted by cascade
+    assert len(CommandSegment.all()) == 0  # checks if segments from deleted task are deleted by cascade
+
+
+# DELETE /tasks/{id}
+def test_delete_not_owned_task(tables, client, new_admin_job):
+    new_admin_job.save()
+    task = new_admin_job.tasks[0]
+
+    resp = client.delete(ENDPOINT + "/{}".format(task.id), headers=HEADERS)
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
 
 
 # PUT /tasks/{id}
-def test_update_task(tables, client, new_job, new_task, new_user):
-    new_user.save()
+def test_update_task(tables, client, new_job, new_task):
+    new_job.add_task(new_task)
     new_job.save()
     envs = [{
         'name': 'ENV',
@@ -124,33 +106,36 @@ def test_update_task(tables, client, new_job, new_task, new_user):
         }
     }
 
-    params_post = [
-        {
-            'name': '--batch_size',
-            'value': '32'
-        },
-        {
-            'name': '--rank',
-            'value': '2'
-        }
-    ]
-    data_to_post = {
-        'command': 'python command.py',
-        'hostname': 'localhost',
-        'cmdsegments': {
-            'envs': envs,
-            'params': params_post
-        }
-    }
-
-    resp = client.post(BASE_URI + '/jobs/{}/tasks'.format(new_job.id), headers=HEADERS, data=json.dumps(data_to_post))
-    resp_json = json.loads(resp.data.decode('utf-8'))
-
-    resp = client.put(ENDPOINT + '/{}'.format(resp_json['task']['id']),
-                      headers=HEADERS, data=json.dumps(data_to_update))
+    resp = client.put(ENDPOINT + '/{}'.format(new_task.id), headers=HEADERS, data=json.dumps(data_to_update))
     resp_json = json.loads(resp.data.decode('utf-8'))
 
     assert resp.status_code == HTTPStatus.CREATED
     assert resp_json['task']['hostname'] == 'remotehost'
     assert Task.get(int(resp_json['task']['id'])).number_of_params == 1
     assert Task.get(int(resp_json['task']['id'])).number_of_env_vars == 1
+
+
+# PUT /tasks/{id}
+def test_update_not_owned_task(tables, client, new_admin_job):
+    new_admin_job.save()
+    task = new_admin_job.tasks[0]
+
+    envs = [{
+        'name': 'ENV',
+        'value': 'path'
+    }]
+    params = [{
+        'name': '--rank',
+        'value': '3'
+    }]
+    data_to_update = {
+        'hostname': 'remotehost',
+        'cmdsegments': {
+            'envs': envs,
+            'params': params
+        }
+    }
+
+    resp = client.put(ENDPOINT + '/{}'.format(task.id), headers=HEADERS, data=json.dumps(data_to_update))
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN

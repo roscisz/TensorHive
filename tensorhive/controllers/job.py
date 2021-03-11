@@ -55,7 +55,7 @@ def get_all(userId: Optional[int]) -> Tuple[Content, HttpStatusCode]:
     try:
         if user_id:
             # Owner or admin can fetch
-            assert get_jwt_identity() == user_id or is_admin()
+            assert is_admin() or get_jwt_identity() == user_id
             jobs = Job.query.filter(Job.user_id == user_id).all()
         else:
             # Only admin can fetch all
