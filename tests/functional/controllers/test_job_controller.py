@@ -201,7 +201,6 @@ def test_get_tasks_from_job(tables, client, new_job_with_task):
 # GET /tasks?job_id=1
 def test_get_tasks_from_not_owned_job(tables, client, new_admin_job):
     resp = client.get(BASE_URI + '/tasks?jobId={}'.format(new_admin_job.id), headers=HEADERS)
-    resp_json = json.loads(resp.data.decode('utf-8'))
     assert resp.status_code == HTTPStatus.FORBIDDEN
 
 

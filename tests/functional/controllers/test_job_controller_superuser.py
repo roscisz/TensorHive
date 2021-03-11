@@ -31,6 +31,7 @@ def test_get_all_jobs(tables, client, new_job, new_admin_job):
     assert resp.status_code == HTTPStatus.OK
     assert len(resp_json['jobs']) == 2
 
+
 # PUT /jobs/{job_id}
 def test_update_not_owned_job(tables, client, new_admin_job):
     new_admin_job.save()
@@ -41,6 +42,7 @@ def test_update_not_owned_job(tables, client, new_admin_job):
             }
     resp = client.put(ENDPOINT + '/{}'.format(new_admin_job.id), headers=HEADERS, data=json.dumps(data))
     assert resp.status_code == HTTPStatus.OK
+
 
 # DELETE /jobs/{job_id}
 def test_delete_not_owned_job(tables, client, new_admin_job):
