@@ -42,7 +42,10 @@ setup(
         'Safe==0.4',
         'python-usernames==0.2.3',
         'stringcase==1.2.0',
-        'alembic==1.0.3'
+        'alembic==1.0.3',
+        'pyjwt==1.7.1',
+        'openapi-spec-validator==0.2.9',
+        'jsonschema==2.6.0'
     ],
     zip_safe=False
 )
