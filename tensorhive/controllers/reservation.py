@@ -8,7 +8,7 @@ from tensorhive.models.Reservation import Reservation
 from tensorhive.models.User import User
 from tensorhive.utils.DateUtils import DateUtils
 from stringcase import snakecase
-from tensorhive.exceptions.ForbiddenReservationException import ForbiddenReservationException
+from tensorhive.exceptions.ForbiddenException import ForbiddenException
 import datetime
 
 log = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ def create(reservation: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
             status = 201
         else:
             content = {
-                'msg': RESERVATION['create']['failure']['forbidden']
+                'msg': RESERVATION['create']['failure']['forbidden'].format(reason='reservation not allowed')
             }
             status = 403
 
@@ -114,13 +114,13 @@ def update(id: ReservationId, newValues: Dict[str, Any]) -> Tuple[Content, HttpS
         reservation = Reservation.get(id)
 
         if reservation.end < datetime.datetime.utcnow() and not is_admin():
-            raise ForbiddenReservationException('reservation already finished')
+            raise ForbiddenException('reservation already finished')
 
         if reservation.start > datetime.datetime.utcnow() or is_admin():
             allowed_fields.add('start')
 
         if not set(new_values.keys()).issubset(allowed_fields):
-            raise ForbiddenReservationException('invalid field is present')
+            raise ForbiddenException('invalid field is present')
 
         for field_name, new_value in new_values.items():
             field_name = snakecase(field_name)
@@ -131,13 +131,13 @@ def update(id: ReservationId, newValues: Dict[str, Any]) -> Tuple[Content, HttpS
         user = User.get(get_jwt_identity())
         if not (is_admin() or __is_reservation_owner(reservation)) or not \
                 ReservationVerifier.is_reservation_allowed(user, reservation):
-            raise ForbiddenReservationException()
+            raise ForbiddenException("reservation not allowed")
 
         reservation.is_cancelled = False
         reservation.save()
         content, status = {'msg': RESERVATION['update']['success'], 'reservation': reservation.as_dict()}, 201
-    except ForbiddenReservationException as fre:
-        content, status = {'msg': RESERVATION['update']['failure']['forbidden'] + str(fre)}, 403
+    except ForbiddenException as fe:
+        content, status = {'msg': RESERVATION['update']['failure']['forbidden'].format(reason=fe)}, 403
     except NoResultFound:
         content, status = {'msg': RESERVATION['not_found']}, 404
     except AssertionError as e:
