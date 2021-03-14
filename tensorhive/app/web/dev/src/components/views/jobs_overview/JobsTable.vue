@@ -10,9 +10,12 @@
           @action="$emit('bulk-action', internalSelected, $event)"
         />
       </v-flex>
-      <v-btn v-else color="primary" to="/job/add" :small="smallAddButton">
-        Add Job
-      </v-btn>
+      <v-btn
+        v-else
+        color="primary"
+        to="/job/add"
+        :small="smallAddButton"
+      >Add Job</v-btn>
     </v-layout>
 
     <v-layout>
@@ -156,15 +159,15 @@ export default {
 </script>
 
 <style scoped>
-/* This resets font weight set by Bootstrap to the default 'normal' value. */
-/* The proper way of creating a deep selector would be using `::v-deep` but */
-/* it requires Vue Loader v15 which we do not use for now. */
->>> label {
-  font-weight: normal;
-}
+  /* This resets font weight set by Bootstrap to the default 'normal' value. */
+  /* The proper way of creating a deep selector would be using `::v-deep` but */
+  /* it requires Vue Loader v15 which we do not use for now. */
+  label {
+    font-weight: normal;
+  }
 
-.text-monospace {
-  font-family: ui-monospace, "SF Mono", SFMono-Regular, "DejaVu Sans Mono",
-    Liberation Mono, Menlo, Consolas, Monaco, monospace;
-}
+  .text-monospace {
+    font-family: ui-monospace, "SF Mono", SFMono-Regular, "DejaVu Sans Mono",
+      Liberation Mono, Menlo, Consolas, Monaco, monospace;
+  }
 </style>

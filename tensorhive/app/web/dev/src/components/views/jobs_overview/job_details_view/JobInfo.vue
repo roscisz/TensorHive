@@ -2,29 +2,29 @@
   <v-container grid-list-md>
     <v-layout wrap>
       <NameSection
-        :readOnly="readOnly"
+        :editMode="editMode"
         :name="job.name"
         @changeName="changeName"
       />
       <DescriptionSection
-        :readOnly="readOnly"
+        :editMode="editMode"
         :description="job.description"
         @changeDescription="changeDescription"
       />
       <DateRangeSection
-        :readOnly="readOnly"
+        :editMode="editMode"
         :startAt="job.startAt"
         :stopAt="job.stopAt"
         @changeStartAt="changeStartAt"
         @changeStopAt="changeStopAt"
       />
-      <v-flex xs6 md2 v-if="readOnly">
+      <v-flex xs6 md2 v-if="!editMode">
         <JobDetailsField v-slot="props" header="Status" :value="job.status">
           <JobStatus class="ma-0" :status="props.value" />
         </JobDetailsField>
       </v-flex>
 
-      <v-flex xs6 md2 v-if="readOnly">
+      <v-flex xs6 md2 v-if="!editMode">
         <JobDetailsField header="ID" :value="job.id" />
       </v-flex>
     </v-layout>
@@ -44,7 +44,7 @@ const nameCounter = 40
 export default {
   components: { NameSection, DescriptionSection, DateRangeSection, JobDetailsField, JobStatus },
   props: {
-    readOnly: {
+    editMode: {
       type: Boolean,
       default: true
     },
@@ -52,10 +52,10 @@ export default {
       type: Object,
       default () {
         return {
-          name: undefined,
-          description: undefined,
-          startAt: undefined,
-          stopAt: undefined
+          name: null,
+          description: null,
+          startAt: null,
+          stopAt: null
         }
       }
     }

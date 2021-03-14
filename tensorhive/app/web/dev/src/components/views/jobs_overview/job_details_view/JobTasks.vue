@@ -1,15 +1,6 @@
 <template>
   <v-container class="pa-0">
     <v-layout class="mb-2" align-center>
-      <v-layout class="px-4" v-if="prototypingMode" align-center>
-        <v-icon>info</v-icon>
-        <div class="ml-2 caption grey--text text--darken-1">
-          Newly added tasks have the
-          <i>Prototype</i> status and they will be
-          saved along with this job.
-        </div>
-      </v-layout>
-      <v-spacer></v-spacer>
       <v-tooltip v-if="showBulkActions" bottom>
         <template v-slot:activator="{ on }">
           <v-btn
@@ -37,7 +28,7 @@
             small
             color="grey"
             :readonly="performingAction"
-            @click="removeTasks"
+            @click="removeTasks(selectedTasks)"
           >
             <v-icon small>delete</v-icon>
           </v-btn>
@@ -46,25 +37,25 @@
       </v-tooltip>
       <v-spacer></v-spacer>
       <TaskCreate
-        v-if="prototypingMode"
+        v-if="editMode"
         :show-modal="addMultipleDialog"
         :chosen-template="chosenTemplate"
-        :selected-tasks="selectedTasks"
+        :selected-tasks="selectedExistingTasks"
         :editing-tasks="editingTasks"
         @open="addMultipleDialog = true"
-        @close="addMultipleDialog = false; chosenTemplate = ''; selectedTasks = []"
-        @add="addPrototypes"
-        @edit="editTasks"
+        @close="addMultipleDialog = false; chosenTemplate = ''; selectedExistingTasks = []; editingTasks = []"
+        @add="addTasks"
+        @edit="updateTasks"
       />
       <TaskTemplateChooser
-        v-if="prototypingMode"
+        v-if="editMode"
         :show-modal="templateDialog"
         @open="templateDialog = true"
         @close="templateDialog = false"
         @openFromTemplate="openFromTemplate"
       />
       <TaskDuplicate
-        v-if="prototypingMode"
+        v-if="editMode"
         :existing-tasks="existingTasks"
         :show-modal="duplicateDialog"
         @open="duplicateDialog = true"
@@ -76,19 +67,18 @@
       <v-flex xs12>
         <v-data-table
           v-bind:class="`elevation-${elevation}`"
-          v-model="internalSelected"
+          v-model="selectedTasks"
           item-key="id"
-          :select-all="prototypingMode"
+          :select-all="editMode"
           :headers="headers"
           :items="tasks"
           :loading="loading"
           :no-data-text="noDataText"
           :pagination.sync="pagination"
-          @input="$emit('update:selected', $event)"
         >
           <template v-slot:items="props">
             <tr>
-              <td v-if="prototypingMode">
+              <td v-if="editMode">
                 <v-tooltip bottom>
                   <template v-slot:activator="{ on }">
                     <v-checkbox
@@ -113,16 +103,13 @@
               <td>
                 <v-layout align-center justify-end>
                   <TaskLog
-                    v-if="readOnly"
-                    :show-modal="showModalLog"
-                    @open="showModalLog = true"
-                    @close="showModalLog = false"
-                    @getLog="getLog(...arguments)"
-                    :lines="logs"
-                    :path="path"
-                    :taskId="task.id"
+                    v-if="!editMode"
+                    :show-modal="logDialog"
+                    @open="logDialog = true"
+                    @close="logDialog = false"
+                    :taskId="props.item.id"
                   />
-                  <v-tooltip v-if="prototypingMode" bottom>
+                  <v-tooltip v-if="editMode" bottom>
                     <template v-slot:activator="{ on }">
                       <v-btn
                         class="ma-0"
@@ -138,7 +125,7 @@
                     </template>
                     <span>Edit this task</span>
                   </v-tooltip>
-                  <v-tooltip v-if="prototypingMode" bottom>
+                  <v-tooltip v-if="editMode" bottom>
                     <template v-slot:activator="{ on }">
                       <v-btn
                         class="ma-0"
@@ -147,60 +134,12 @@
                         icon
                         small
                         color="grey"
-                        @click="removeTask(props.item)"
+                        @click="removeTasks([props.item])"
                       >
                         <v-icon small>delete</v-icon>
                       </v-btn>
                     </template>
                     <span>Remove this task</span>
-                  </v-tooltip>
-                </v-layout>
-              </td>
-            </tr>
-          </template>
-          <template v-if="prototypingMode" v-slot:footer>
-            <tr v-for="task in internalPrototypes" :key="task.id">
-              <td>
-                <v-tooltip bottom>
-                  <template v-slot:activator="{ on }">
-                    <v-checkbox
-                      v-on="on"
-                      hide-details
-                      readonly
-                      color="grey"
-                      on-icon="add"
-                      :input-value="true"
-                    ></v-checkbox>
-                  </template>
-                  <span>This task will be created</span>
-                </v-tooltip>
-              </td>
-              <td>{{ task.hostname }}</td>
-              <td class="command-cell">
-                <TaskCommand no-command-text :command="task.command" />
-              </td>
-              <td>
-                <TaskStatus class="ma-0" :status="task.status" />
-              </td>
-              <td>
-                <!-- Skipping. Prototypes do not have PID. -->
-              </td>
-              <td>
-                <v-layout align-center justify-end>
-                  <v-tooltip bottom>
-                    <template v-slot:activator="{ on }">
-                      <v-btn
-                        class="mr-0"
-                        v-on="on"
-                        flat
-                        icon
-                        color="grey"
-                        @click="removePrototype(task.id)"
-                      >
-                        <v-icon>delete</v-icon>
-                      </v-btn>
-                    </template>
-                    <span>Remove</span>
                   </v-tooltip>
                 </v-layout>
               </td>
@@ -218,6 +157,7 @@ import TaskStatus from './job_tasks/TaskStatus'
 import TaskDuplicate from './job_tasks/TaskDuplicate'
 import TaskTemplateChooser from './job_tasks/TaskTemplateChooser'
 import TaskCreate from './job_tasks/TaskCreate'
+import TaskLog from './job_tasks/TaskLog'
 
 export default {
   components: {
@@ -225,7 +165,8 @@ export default {
     TaskStatus,
     TaskDuplicate,
     TaskTemplateChooser,
-    TaskCreate
+    TaskCreate,
+    TaskLog
   },
   props: {
     elevation: {
@@ -244,13 +185,7 @@ export default {
       type: String,
       default: 'No tasks to display'
     },
-    prototypes: {
-      type: Array,
-      default () {
-        return []
-      }
-    },
-    prototypingMode: {
+    editMode: {
       type: Boolean,
       default: false
     },
@@ -269,12 +204,10 @@ export default {
   },
   data () {
     return {
-      addDialog: false,
       addMultipleDialog: false,
       duplicateDialog: false,
       templateDialog: false,
-      internalPrototypes: this.prototypes,
-      internalSelected: this.selected,
+      logDialog: false,
       showBulkActions: false,
       prototypeId: 0,
       headers: [
@@ -295,17 +228,12 @@ export default {
         rowsPerPage: 10
       },
       chosenTemplate: '',
-      editingTasks: []
+      selectedTasks: [],
+      editingTasks: [],
+      selectedExistingTasks: []
     }
   },
   computed: {
-    showAddButton () {
-      if (this.prototypingMode) {
-        return true
-      }
-
-      return this.internalSelected.length === 0
-    },
     tasksPerformingCrud () {
       return Array.isArray(this.performingCrudAction)
         ? this.performingCrudAction
@@ -313,8 +241,8 @@ export default {
     }
   },
   watch: {
-    internalSelected () {
-      if (this.internalSelected.length) {
+    selectedTasks () {
+      if (this.selectedTasks.length) {
         this.showBulkActions = true
       } else {
         this.showBulkActions = false
@@ -327,11 +255,11 @@ export default {
       this.addMultipleDialog = true
     },
     editMultipleTasks () {
-      this.editingTasks = this.internalSelected
+      this.editingTasks = this.selectedTasks
       this.addMultipleDialog = true
     },
     openFromExisting (selectedTasks) {
-      this.selectedTasks = selectedTasks
+      this.selectedExistingTasks = selectedTasks
       this.duplicateDialog = false
       this.addMultipleDialog = true
     },
@@ -339,55 +267,17 @@ export default {
       this.chosenTemplate = chosenTemplate
       this.addMultipleDialog = true
     },
-    addPrototypes (tasks) {
-      for (let task of tasks) {
-        let newTask = { ...task, id: this.prototypeId++, status: 'prototype' }
-        this.internalPrototypes.push(newTask)
-      }
+    addTasks (tasksToAdd) {
       this.addMultipleDialog = false
-      this.$emit('updatePrototypes', this.internalPrototypes)
+      this.$emit('addTasks', tasksToAdd)
     },
-    editTasks (tasks) {
-      for (let newTask of tasks) {
-        for (let oldTask of this.tasks) {
-          if (newTask.id === oldTask.id) {
-            oldTask = JSON.parse(JSON.stringify(newTask))
-          }
-        }
-      }
+    updateTasks (tasksToUpdate) {
+      this.editingTasks = []
       this.addMultipleDialog = false
-      this.$emit('updateTasks', this.tasks)
+      this.$emit('updateTasks', tasksToUpdate)
     },
-    removeTask (task) {
-      for (let taskIndex in this.tasks) {
-        if (this.tasks[taskIndex].id === task.id) {
-          this.tasks.splice(taskIndex, 1)
-        }
-      }
-      this.$emit('removeTasks', this.tasks)
-    },
-    removeTasks () {
-      for (let selectedTask of this.internalSelected) {
-        for (let taskIndex in this.tasks) {
-          if (this.tasks[taskIndex].id === selectedTask.id) {
-            this.tasks.splice(taskIndex, 1)
-          }
-        }
-      }
-      this.$emit('removeTasks', this.tasks)
-    },
-    addPrototype (task) {
-      let newTask = { ...task, id: this.prototypeId++ }
-      this.addDialog = false
-      this.internalPrototypes.push(newTask)
-      this.$emit('updatePrototypes', this.internalPrototypes)
-    },
-    removePrototype (id) {
-      this.internalPrototypes = this.internalPrototypes.filter(
-        task => task.id !== id
-      )
-
-      this.$emit('updatePrototypes', this.internalPrototypes)
+    removeTasks (tasksToRemove) {
+      this.$emit('removeTasks', tasksToRemove)
     },
     isPerformingCrud (taskId) {
       return this.tasksPerformingCrud.includes(taskId)

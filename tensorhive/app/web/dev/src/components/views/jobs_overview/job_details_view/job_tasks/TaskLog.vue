@@ -14,14 +14,10 @@
             small
             color="grey"
             :readonly="performingAction"
-            @click="$emit('open')"
+            @click="openDialog()"
           >
             <!-- eslint-enable vue/valid-v-on vue/no-parsing-error -->
-            <v-icon
-              style="font-size:20px;"
-              v-on="on"
-              @click="getLog(taskId)"
-            >description</v-icon>
+            <v-icon style="font-size:20px;">description</v-icon>
           </v-btn>
         </template>
         <span>Show log</span>
@@ -79,7 +75,6 @@ export default {
   props: {
     showModal: Boolean,
     lines: Array,
-    path: String,
     taskId: Number,
     performingAction: Boolean
   },
@@ -88,7 +83,8 @@ export default {
       show: false,
       tailMode: false,
       autoRefresh: false,
-      autoRefreshIntervalId: -1
+      autoRefreshIntervalId: -1,
+      path: ''
     }
   },
   watch: {
@@ -127,6 +123,10 @@ export default {
         window.clearInterval(this.autoRefreshIntervalId)
         this.autoRefreshIntervalId = -1
       }
+    },
+    openDialog () {
+      this.$emit('open')
+      this.getLog(this.taskId)
     },
     getLog (id, tailMode = false) {
       if (!this.actionFlag) {

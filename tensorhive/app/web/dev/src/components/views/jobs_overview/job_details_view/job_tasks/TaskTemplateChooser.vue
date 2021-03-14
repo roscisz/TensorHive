@@ -1,12 +1,11 @@
 <template>
-  <v-dialog
-    width="80vw"
-    v-model="showModal"
-  >
+  <v-dialog width="80vw" v-model="showModal">
     <template v-slot:activator="{ on }">
-      <v-btn v-on="on" color="primary" small @click="$emit('open')">
-        Add Tasks From Template
-      </v-btn>
+      <v-btn
+        v-on="on"
+        color="primary"
+        @click="$emit('open')"
+      >Add Tasks From Template</v-btn>
     </template>
     <v-card>
       <v-card-text>
@@ -31,12 +30,7 @@
       </v-card-text>
       <v-card-text>
         <v-layout align-center justify-end>
-          <v-btn
-            color="primary"
-            @click="goToCreate()"
-          >
-            Go to task creator
-          </v-btn>
+          <v-btn color="primary" @click="goToCreate()">Go to task creator</v-btn>
         </v-layout>
       </v-card-text>
     </v-card>

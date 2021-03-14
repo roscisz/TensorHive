@@ -1,12 +1,7 @@
 <template>
   <v-dialog width="80vw" v-model="showModal">
     <template v-slot:activator="{ on }">
-      <v-btn
-        v-on="on"
-        color="primary"
-        small
-        @click="$emit('open')"
-      >Duplicate tasks</v-btn>
+      <v-btn v-on="on" color="primary" @click="$emit('open')">Duplicate tasks</v-btn>
     </template>
     <v-card>
       <v-card-text>

@@ -1,7 +1,7 @@
 <template>
   <v-dialog width="80vw" v-model="showModal">
     <template v-slot:activator="{ on }">
-      <v-btn v-on="on" color="primary" small @click="$emit('open')">Add Tasks</v-btn>
+      <v-btn v-on="on" color="primary" @click="$emit('open')">Add Tasks</v-btn>
     </template>
     <v-card>
       <v-card-text>
@@ -174,8 +174,28 @@ export default {
   },
   watch: {
     showModal () {
-      if (this.showModal === false) this.close()
-      else {
+      if (this.showModal === false) {
+        this.lines = [
+          {
+            id: 0,
+            host: '',
+            resource: '',
+            command: '',
+            parameters: [
+            ],
+            envVariables: [
+            ],
+            parameterIds: 0,
+            envVariableIds: 0,
+            enableTfConfig: false,
+            tfConfig: '',
+            tfConfigPort: '',
+            tfConfigTaskType: '',
+            tfConfigTaskIndex: -1
+          }
+        ]
+        this.close()
+      } else if (this.chosenTemplate !== '') {
         this.emptyParametersAndEnvVariables()
         switch (this.chosenTemplate) {
           case 'tf1':

@@ -122,9 +122,11 @@ export default {
       return null
     },
     formattedDatetime () {
-      const date = this.selectedDatetime
-
-      return date ? date.format(`${this.dateFormat} ${this.timeFormat}`) : ''
+      if (this.datetime) {
+        return moment(this.datetime).format(`${this.dateFormat} ${this.timeFormat}`)
+      } else {
+        return ''
+      }
     }
   },
   methods: {
@@ -139,7 +141,7 @@ export default {
       this.visible = false
       this.activeTab = 0
 
-      this.$emit('input', this.selectedDatetime)
+      this.$emit('input', this.selectedDatetime !== '' ? this.selectedDatetime.toISOString() : '')
     }
   }
 }

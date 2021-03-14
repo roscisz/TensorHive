@@ -1,5 +1,5 @@
 <template>
-  <v-flex xs12 sm6 md4 v-if="readOnly">
+  <v-flex xs12 sm6 md4 v-if="!editMode">
     <JobDetailsField header="Name" :value="name" />
   </v-flex>
   <v-flex xs12 v-else>
@@ -26,7 +26,7 @@ const nameCounter = 40
 export default {
   components: { JobDetailsField },
   props: {
-    readOnly: Boolean,
+    editMode: Boolean,
     name: String
   },
   data () {

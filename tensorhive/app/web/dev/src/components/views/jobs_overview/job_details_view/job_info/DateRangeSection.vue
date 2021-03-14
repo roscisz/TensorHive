@@ -1,10 +1,10 @@
 <template>
-  <v-layout wrap v-if="readOnly">
+  <v-layout wrap v-if="!editMode">
     <v-flex xs18 sm8 md6>
-      <JobDetailsField header="Start at" :value="startAt" />
+      <JobDetailsField header="Start at" :value="formatedStartAt" />
     </v-flex>
     <v-flex xs12 sm6 md4>
-      <JobDetailsField header="Stop at" :value="stopAt" />
+      <JobDetailsField header="Stop at" :value="formatedStopAt" />
     </v-flex>
   </v-layout>
   <v-flex xs12 v-else>
@@ -12,7 +12,7 @@
       <v-layout wrap>
         <v-flex xs12 sm6>
           <DatetimePicker
-            :datetime="startAtModel"
+            :datetime="startAtEditMode"
             @input="changeStartAt"
             box
             label="Start at"
@@ -21,7 +21,7 @@
         </v-flex>
         <v-flex xs12 sm6>
           <DatetimePicker
-            :datetime="stopAtModel"
+            :datetime="stopAt"
             @input="changeStopAt"
             box
             label="Stop at"
@@ -41,29 +41,25 @@ import DatetimePicker from '../../../../general/DatetimePicker'
 export default {
   components: { JobDetailsField, DatetimePicker },
   props: {
-    readOnly: Boolean,
-    startAt: Date,
-    stopAt: Date
+    editMode: Boolean,
+    startAt: String,
+    stopAt: String
   },
   data () {
     return {
-      startAtModel: this.startAt,
-      stopAtModel: this.stopAt
-    }
-  },
-  watch: {
-    startAt () {
-      this.startAtModel = this.startAt
-    },
-    stopAt () {
-      this.stopAtModel = this.stopAt
-    },
-    readOnly () {
-      this.startAtModel = this.startAt
-      this.stopAtModel = this.stopAt
+      pickersKey: 0
     }
   },
   computed: {
+    formatedStartAt () {
+      return this.startAt ? moment(this.startAt).format('YYYY-MM-DD HH:mm:ss') : ''
+    },
+    formatedStopAt () {
+      return this.stopAt ? moment(this.stopAt).format('YYYY-MM-DD HH:mm:ss') : ''
+    },
+    startAtEditMode () {
+      return this.startAt
+    },
     startAtRules () {
       const rules = [
         (v) => {
@@ -129,12 +125,12 @@ export default {
     }
   },
   methods: {
-    changeStartAt () {
-      this.$emit('changeStartAt', this.startAtModel)
+    changeStartAt (value) {
+      this.$emit('changeStartAt', value)
       this.$refs.dates.validate()
     },
-    changeStopAt () {
-      this.$emit('changeStopAt', this.stopAtModel)
+    changeStopAt (value) {
+      this.$emit('changeStopAt', value)
       this.$refs.dates.validate()
     }
   }

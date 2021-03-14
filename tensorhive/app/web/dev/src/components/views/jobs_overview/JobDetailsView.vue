@@ -1,81 +1,67 @@
 <template>
   <v-container>
-    <v-card outlined>
-      <div class="editIcon" v-if="readOnly">
+    <h5 class="headline mx-2">Job info</h5>
+    <v-spacer></v-spacer>
+    <v-card outlined :loading="loadingJob">
+      <div class="editIcon" v-if="!editMode">
         <v-layout>
           <v-flex xs12>
             <JobCrudActions
               :job-id="jobId"
-              :performing-action="performingCrudAction"
+              :performing-action="performingJobCrudAction"
               :show-details-action="false"
               @action="performJobCrudAction"
             />
           </v-flex>
         </v-layout>
       </div>
-      <v-tabs v-model="activeTab">
-        <v-tab :key="0">Job details</v-tab>
-        <v-tab :key="1">Job tasks</v-tab>
-        <v-tab-item key="info">
-          <v-card flat>
-            <v-card-text>
-              <v-layout>
-                <v-flex xs12>
-                  <JobInfo
-                    :readOnly="readOnly"
-                    :job="job"
-                    :loading="loadingJob"
-                    @changeJob="changeJob"
-                  />
-                </v-flex>
-              </v-layout>
-            </v-card-text>
-          </v-card>
-        </v-tab-item>
-        <v-tab-item key="timer">
-          <v-card flat>
-            <v-card-text>
-              <v-layout>
-                <v-flex xs12>
-                  <JobTasks
-                    header="Job tasks"
-                    :elevation="1"
-                    :loading="loadingTasks"
-                    :tasks="tasks"
-                    :existing-tasks="existingTasks"
-                    :prototypes="prototypes"
-                    :prototypingMode="!readOnly"
-                    @updatePrototypes="updatePrototypes"
-                    @updateTasks="updateTasks"
-                    @removeTasks="removeTasks"
-                  />
-                </v-flex>
-              </v-layout>
-            </v-card-text>
-          </v-card>
-        </v-tab-item>
-      </v-tabs>
+      <v-card-text>
+        <v-layout>
+          <v-flex xs12>
+            <JobInfo
+              :editMode="editMode"
+              :job="job"
+              :loading="loadingJob"
+              @changeJob="changeJob"
+            />
+          </v-flex>
+        </v-layout>
+      </v-card-text>
       <v-card-actions>
         <v-layout align-center justify-end>
           <v-btn outlined rounded text @click="cancelHandler">Cancel</v-btn>
           <v-btn
-            v-if="!readOnly && activeTab===1"
+            v-if="editMode"
             color="primary"
             outlined
             rounded
             :disabled="!job || job.name === ''"
             @click="saveHandler"
           >Save job</v-btn>
-          <v-btn
-            v-if="activeTab===0"
-            color="primary"
-            outlined
-            rounded
-            :disabled="!job || job.name === ''"
-            @click="activeTab = 1"
-          >Next step</v-btn>
         </v-layout>
       </v-card-actions>
+    </v-card>
+
+    <h5 class="headline mx-2 mt-4" v-if="jobId">Job tasks</h5>
+    <v-spacer v-if="jobId"></v-spacer>
+    <v-card outlined :loading="loadingTasks" v-if="jobId">
+      <v-card-text>
+        <v-layout>
+          <v-flex xs12>
+            <JobTasks
+              header="Job tasks"
+              :elevation="1"
+              :loading="loadingTasks"
+              :tasks="tasks"
+              :existing-tasks="existingTasks"
+              :editMode="editMode"
+              @addTasks="addTasks"
+              @updateTasks="updateTasks"
+              @removeTasks="removeTasks"
+            />
+          </v-flex>
+        </v-layout>
+      </v-card-text>
     </v-card>
     <v-snackbar v-model="snackbar" bottom color="error">
       {{ errorMessage }}
@@ -111,12 +97,9 @@ export default {
   data () {
     return {
       job: undefined,
-      readOnly: true,
+      editMode: false,
       tasks: [],
-      tasksToRemove: [],
-      tasksToUpdate: [],
       existingTasks: [],
-      prototypes: [],
       loadingJob: false,
       loadingTasks: false,
       performingJobCrudAction: false,
@@ -136,41 +119,44 @@ export default {
   },
   computed: {
     jobId () {
-      return this.$route.params.id
+      return +this.$route.params.id
     }
   },
   methods: {
     viewInit () {
       if (this.$route.fullPath.includes('/add') || this.$route.fullPath.includes('/edit')) {
-        this.readOnly = false
+        this.editMode = true
       } else {
-        this.readOnly = true
+        this.editMode = false
       }
       if (!this.$route.fullPath.includes('/add')) {
         this.getJob()
+        this.getTasks()
       }
-      this.getAllTasks()
     },
     getJob () {
       this.loadingJob = true
       getJob(this.$store.state.accessToken, this.$route.params.id)
         .then((job) => {
           this.job = job
-          this.loadingJob = false
         })
         .catch((error) => {
           this.errorHandler(error)
+        })
+        .finally(() => {
           this.loadingJob = false
         })
-
+    },
+    getTasks () {
       this.loadingTasks = true
       getTasks(this.$store.state.accessToken, this.$route.params.id)
         .then((tasks) => {
           this.tasks = tasks
-          this.loadingTasks = false
         })
         .catch((error) => {
           this.errorHandler(error)
+        })
+        .finally(() => {
           this.loadingTasks = false
         })
     },
@@ -181,10 +167,9 @@ export default {
       this.submitting = true
       if (this.$route.fullPath.includes('/add')) {
         this.createJob()
-          .then(({ id }) => this.tasksHandler(id))
-          .then(() => {
+          .then(({ id }) => {
             this.submitting = false
-            this.$router.push('/jobs_overview')
+            this.$router.push('/job/' + id + '/edit')
           })
           .catch(error => {
             this.submitting = false
@@ -193,19 +178,15 @@ export default {
           })
       } else {
         this.updateJob()
-          .then(({ id }) => this.tasksHandler(id))
           .then(() => {
             this.submitting = false
-            this.$router.push('/jobs_overview')
+            this.$router.push('/job/' + this.jobId)
           })
           .catch(error => {
             this.submitting = false
             this.errorHandler(error)
           })
       }
-    },
-    editHandler () {
-      this.$router.push(this.$route.fullPath + '/edit')
     },
     createJob () {
       const { description, name, startAt, stopAt } = this.job
@@ -214,27 +195,52 @@ export default {
         name,
         description: description || '',
         userId: this.$store.state.id,
-        startAt: (startAt && startAt.toISOString()) || null,
-        stopAt: (stopAt && stopAt.toISOString()) || null
+        startAt: !startAt ? null : startAt,
+        stopAt: !stopAt ? null : stopAt
       })
     },
-    tasksHandler (jobId) {
-      return Promise.all(
-        [...this.prototypes].map(({ hostname, command, cmdsegments }) =>
-          createJobTask(this.$store.state.accessToken, jobId, {
-            jobId,
+    addTasks (tasksToAdd) {
+      this.loadingTasks = true
+      Promise.all(
+        tasksToAdd.map(({ hostname, command, cmdsegments }) =>
+          createJobTask(this.$store.state.accessToken, this.jobId, {
+            jobId: this.jobId,
             hostname,
             command,
             cmdsegments
-          })
-        ),
-        [...this.tasksToUpdate].map((task) =>
+          }))
+      ).then(() => {
+        this.getTasks()
+      }).catch(error => {
+        this.loadingTasks = false
+        this.errorHandler(error)
+      })
+    },
+    updateTasks (tasksToUpdate) {
+      this.loadingTasks = true
+      Promise.all(
+        tasksToUpdate.map((task) =>
           updateTask(this.$store.state.accessToken, task.id, task)
-        ),
-        [...this.tasksToRemove].map((task) =>
+        )
+      ).then(() => {
+        this.getTasks()
+      }).catch(error => {
+        this.loadingTasks = false
+        this.errorHandler(error)
+      })
+    },
+    removeTasks (tasksToRemove) {
+      this.loadingTasks = true
+      return Promise.all(
+        tasksToRemove.map((task) =>
           deleteTask(this.$store.state.accessToken, task.id)
         )
-      )
+      ).then(() => {
+        this.getTasks()
+      }).catch(error => {
+        this.loadingTasks = false
+        this.errorHandler(error)
+      })
     },
     updateJob () {
       const { description, name, startAt, stopAt } = this.job
@@ -242,21 +248,12 @@ export default {
       return updateJob(this.$store.state.accessToken, this.$route.params.id, {
         name,
         description: description || '',
-        startAt: (startAt && startAt.toISOString()) || null,
-        stopAt: (stopAt && stopAt.toISOString()) || null
+        startAt: !startAt ? null : startAt,
+        stopAt: !stopAt ? null : stopAt
       })
     },
-    updatePrototypes (prototypes) {
-      this.prototypes = prototypes
-    },
-    updateTasks (tasks) {
-      this.tasksToUpdate = tasks
-    },
-    removeTasks (tasks) {
-      this.tasksToRemove = tasks
-    },
     cancelHandler () {
-      if (this.$route.fullPath.includes('/add') || this.readOnly === true) {
+      if (this.$route.fullPath.includes('/add') || this.editMode === false) {
         this.$router.push('/jobs_overview')
       } else {
         this.$router.push(this.$route.fullPath.replace('/edit', ''))
@@ -303,9 +300,8 @@ export default {
         }
 
         promise.catch(error => {
-          this.handleError(error)
-
-          this.performingJobAction = false
+          this.errorHandler(error)
+          this.performingJobCrudAction = false
           this.loadingTasks = false
         })
       }

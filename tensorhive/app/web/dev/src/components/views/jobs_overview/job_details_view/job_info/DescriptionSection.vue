@@ -1,5 +1,5 @@
 <template>
-  <v-flex xs12 sm6 md8 v-if="readOnly">
+  <v-flex xs12 sm6 md8 v-if="!editMode">
     <JobDetailsField v-slot="props" header="Description" :value="description">
       <div class="description">{{ props.value }}</div>
     </JobDetailsField>
@@ -22,7 +22,7 @@ import JobDetailsField from './JobDetailsField'
 export default {
   components: { JobDetailsField },
   props: {
-    readOnly: Boolean,
+    editMode: Boolean,
     description: String
   },
   methods: {
