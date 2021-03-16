@@ -58,6 +58,7 @@
               @addTasks="addTasks"
               @updateTasks="updateTasks"
               @removeTasks="removeTasks"
+              @error="errorHandler"
             />
           </v-flex>
         </v-layout>

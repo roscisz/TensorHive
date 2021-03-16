@@ -74,7 +74,6 @@ import { getTaskLogs } from '../../../../../api/tasks'
 export default {
   props: {
     showModal: Boolean,
-    lines: Array,
     taskId: Number,
     performingAction: Boolean
   },
@@ -84,7 +83,8 @@ export default {
       tailMode: false,
       autoRefresh: false,
       autoRefreshIntervalId: -1,
-      path: ''
+      path: '',
+      lines: []
     }
   },
   watch: {
@@ -129,22 +129,14 @@ export default {
       this.getLog(this.taskId)
     },
     getLog (id, tailMode = false) {
-      if (!this.actionFlag) {
-        this.snackbar = true
-        this.actionFlag = true
-        getTaskLogs(this.$store.state.accessToken, id, tailMode)
-          .then(response => {
-            this.logs = response.data.output_lines
-            this.path = response.data.path
-            this.showModalLog = true
-          })
-          .catch(error => {
-            this.handleError(error)
-          }).finally(() => {
-            this.snackbar = false
-            this.actionFlag = false
-          })
-      }
+      getTaskLogs(this.$store.state.accessToken, id, tailMode)
+        .then(response => {
+          this.lines = response.data.output_lines
+          this.path = response.data.path
+        })
+        .catch(error => {
+          this.$emit('error', error)
+        })
     }
   }
 }

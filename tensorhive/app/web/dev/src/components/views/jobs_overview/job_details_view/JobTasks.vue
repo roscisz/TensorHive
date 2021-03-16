@@ -108,6 +108,7 @@
                     @open="logDialog = true"
                     @close="logDialog = false"
                     :taskId="props.item.id"
+                    @error="(error) => $emit('error', error)"
                   />
                   <v-tooltip v-if="editMode" bottom>
                     <template v-slot:activator="{ on }">
