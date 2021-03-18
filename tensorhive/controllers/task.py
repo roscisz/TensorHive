@@ -13,6 +13,7 @@ from typing import Optional, Callable, Any, Dict, Tuple, List
 from datetime import datetime, timedelta
 from stringcase import snakecase
 import logging
+from tensorhive.exceptions.ForbiddenException import ForbiddenException
 
 log = logging.getLogger(__name__)
 TASK = API.RESPONSES['task']
@@ -126,10 +127,11 @@ def create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpStatusCode
     try:
         # User is not allowed to create task for someone else
         job = Job.query.filter(Job.id == job_id).one()
-        assert job.user_id == get_jwt_identity()
+        if not is_admin() and not job.user_id == get_jwt_identity():
+            raise ForbiddenException('unauthorized')
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError:
+    except ForbiddenException:
         content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_create(task, job_id)
@@ -143,10 +145,11 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
         parent_job = Job.get(task.job_id)
-        assert get_jwt_identity() == parent_job.user_id or is_admin()
+        if not is_admin() and not get_jwt_identity() == parent_job.user_id:
+            raise ForbiddenException('not an owner')
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError:
+    except ForbiddenException:
         content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_get(id)
@@ -163,10 +166,11 @@ def get_all(jobId: Optional[JobId], syncAll: Optional[bool]) -> Tuple[Content, H
     try:
         if job_id is not None:
             job = Job.query.filter(Job.id == job_id).one()
-            assert get_jwt_identity() == job.user_id or is_admin()
+            if not is_admin() and not get_jwt_identity() == job.user_id:
+                raise ForbiddenException
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError:
+    except ForbiddenException:
         content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_get_all(job_id, sync_all)
@@ -180,10 +184,11 @@ def update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCo
     try:
         task = Task.get(id)
         parent_job = Job.get(task.job_id)
-        assert is_admin() or parent_job.user_id == get_jwt_identity(), 'Not an owner'
+        if not is_admin() and not parent_job.user_id == get_jwt_identity():
+            raise ForbiddenException('not an owner')
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError:
+    except ForbiddenException:
         content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_update(id, newValues)
@@ -197,10 +202,11 @@ def destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
         parent_job = Job.get(task.job_id)
-        assert is_admin() or parent_job.user_id == get_jwt_identity(), 'Not an owner'
+        if not is_admin() and not parent_job.user_id == get_jwt_identity():
+            raise ForbiddenException('not an owner')
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError:
+    except ForbiddenException:
         content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_destroy(id)
@@ -214,10 +220,11 @@ def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
         parent_job = Job.get(task.job_id)
-        assert get_jwt_identity() == parent_job.user_id or is_admin()
+        if not is_admin() and not parent_job.user_id == get_jwt_identity():
+            raise ForbiddenException("not an owner")
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError:
+    except ForbiddenException:
         content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_get_log(id, tail)

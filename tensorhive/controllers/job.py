@@ -55,11 +55,13 @@ def get_all(userId: Optional[int]) -> Tuple[Content, HttpStatusCode]:
     try:
         if user_id:
             # Owner or admin can fetch
-            assert is_admin() or get_jwt_identity() == user_id
+            if not is_admin() and not get_jwt_identity() == user_id:
+                raise ForbiddenException("not an owner")
             jobs = Job.query.filter(Job.user_id == user_id).all()
         else:
             # Only admin can fetch all
-            assert is_admin()
+            if not is_admin():
+                raise ForbiddenException("unauthorized")
             jobs = Job.all()
         if sync_all:
             for job in jobs:
@@ -67,8 +69,8 @@ def get_all(userId: Optional[int]) -> Tuple[Content, HttpStatusCode]:
                     synchronize(task.id)
     except NoResultFound:
         content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
-    except AssertionError as ae:
-        content, status = {'msg': JOB['all']['forbidden'].format(reason=ae)}, HTTPStatus.FORBIDDEN.value
+    except ForbiddenException as fe:
+        content, status = {'msg': JOB['all']['forbidden'].format(reason=fe)}, HTTPStatus.FORBIDDEN.value
     except Exception as e:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, HTTPStatus.INTERNAL_SERVER_ERROR.value
