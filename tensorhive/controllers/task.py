@@ -524,7 +524,7 @@ def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
     """
     try:
         task = Task.get(id)
-        parent_job = Job.query.filter(task.job_id).one()
+        parent_job = Job.get(task.job_id)
         assert task.hostname, 'hostname is empty'
         assert parent_job.user, 'user does not exist'
         output_gen, log_path = task_nursery.fetch_log(task.hostname, parent_job.user.username, task.id, tail)
