@@ -131,8 +131,8 @@ export default {
     getLog (id, tailMode = false) {
       getTaskLogs(this.$store.state.accessToken, id, tailMode)
         .then(response => {
-          this.lines = response.data.output_lines
-          this.path = response.data.path
+          this.lines = response.lines
+          this.path = response.path
         })
         .catch(error => {
           this.$emit('error', error)
