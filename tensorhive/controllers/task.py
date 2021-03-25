@@ -242,30 +242,27 @@ def business_get_all(job_id: Optional[JobId], sync_all: Optional[bool]) -> Tuple
     In typical scenario API client would want to get all records without sync and
     then run sync each records individually.
     """
-    try:
-        # Temporary solution with sync_all
-        sync_all = True
-        tasks = []
-        if job_id is not None:
-            tasks = Task.query.filter(Task.job_id == job_id).all()
-        else:
-            user_id = get_jwt_identity()
-            if user_id is not None:
-                jobs = Job.query.filter(Job.user_id == user_id).all()
-                for job in jobs:
-                    job_tasks = Task.query.filter(Task.job_id == job.id).all()
-                    tasks.extend(job_tasks)
+    # Temporary solution with sync_all
+    sync_all = True
+    tasks = []
+    if job_id is not None:
+        tasks = Task.query.filter(Task.job_id == job_id).all()
+    else:
+        user_id = get_jwt_identity()
+        if user_id is not None:
+            jobs = Job.query.filter(Job.user_id == user_id).all()
+            for job in jobs:
+                job_tasks = Task.query.filter(Task.job_id == job.id).all()
+                tasks.extend(job_tasks)
 
-        # Wanted to decouple syncing from dict conversion with 2 oneliners (using list comprehension),
-        # but this code is O(n) instead of O(2n)
-        results = []
-        for task in tasks:
-            if sync_all:
-                synchronize(task.id)
-            results.append(task.as_dict())
-        return {'msg': TASK['all']['success'], 'tasks': results}, 200
-    except AssertionError:
-        return {'msg': GENERAL['unprivileged']}, 403
+    # Wanted to decouple syncing from dict conversion with 2 oneliners (using list comprehension),
+    # but this code is O(n) instead of O(2n)
+    results = []
+    for task in tasks:
+        if sync_all:
+            synchronize(task.id)
+        results.append(task.as_dict())
+    return {'msg': TASK['all']['success'], 'tasks': results}, 200
 
 
 def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpStatusCode]:
