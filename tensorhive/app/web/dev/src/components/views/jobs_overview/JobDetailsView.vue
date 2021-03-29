@@ -107,11 +107,20 @@ export default {
       submitting: false,
       snackbar: false,
       errorMessage: '',
-      activeTab: 0
+      activeTab: 0,
+      interval: null
     }
   },
   mounted () {
     this.viewInit()
+    let self = this
+    this.interval = setInterval(() => {
+      if (!self.$route.fullPath.includes('/job/')) {
+        clearInterval(self.interval)
+      } else {
+        self.viewInit()
+      }
+    }, 10000)
   },
   watch: {
     $route (to, from) {

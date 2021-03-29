@@ -44,13 +44,9 @@
 
               <td>{{ props.item.name }}</td>
 
-              <td class="text-monospace">
-                <JobUser
-                  :userId="props.item.userId"
-                  @error="$emit('error', $event)"
-                />
-              </td>
-
+              <td class="text-monospace">{{ props.item.username || props.item.userId }}</td>
+              <td>{{ prettyDate(props.item.startAt) }}</td>
+              <td>{{ prettyDate(props.item.stopAt) }}</td>
               <td>
                 <JobStatus class="ma-0" :status="props.item.status" />
               </td>
@@ -71,17 +67,16 @@
 </template>
 
 <script>
+import moment from 'moment'
 import JobBulkActions from './JobBulkActions'
 import JobCrudActions from './JobCrudActions'
 import JobStatus from './JobStatus'
-import JobUser from './JobUser'
 
 export default {
   components: {
     JobBulkActions,
     JobCrudActions,
-    JobStatus,
-    JobUser
+    JobStatus
   },
   props: {
     elevation: {
@@ -133,6 +128,8 @@ export default {
       headers: [
         { text: 'Name', value: 'name' },
         { text: 'User', value: 'username' },
+        { text: 'Start at', value: 'startAt' },
+        { text: 'Stop at', value: 'stopAt' },
         { text: 'Status', value: 'status' },
         { text: 'Actions', value: 'name', align: 'right', sortable: false }
       ],
@@ -153,6 +150,13 @@ export default {
   methods: {
     isPerformingCrud (jobId) {
       return this.jobsPerformingCrud.includes(jobId)
+    },
+    prettyDate (date) {
+      if (date !== null) {
+        return moment(date).format('dddd, MMMM Do, HH:mm')
+      } else {
+        return null
+      }
     }
   }
 }

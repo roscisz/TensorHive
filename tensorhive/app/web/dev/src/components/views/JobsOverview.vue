@@ -24,6 +24,7 @@
 </template>
 
 <script>
+import api from '../../api'
 import {
   getJobs,
   executeJob,
@@ -46,28 +47,62 @@ export default {
   data () {
     return {
       jobs: {},
+      usernames: {},
       loading: true,
       performingJobBulkAction: false,
       performingJobCrudAction: [],
       snackbar: false,
-      errorMessage: ''
+      errorMessage: '',
+      interval: null
     }
   },
   mounted () {
-    getJobs(this.$store.state.accessToken, this.$store.state.role === 'admin' ? null : this.$store.state.id)
-      .then(jobs => {
-        jobs.forEach((job) => {
-          this.jobs[job.id] = job
-        })
-        this.loading = false
-      })
-      .catch(error => {
-        this.loading = false
-
-        this.handleError(error)
-      })
+    this.initView()
+    let self = this
+    this.interval = setInterval(() => {
+      if (self.$route.fullPath !== '/jobs_overview') {
+        clearInterval(self.interval)
+      } else {
+        self.initView()
+      }
+    }, 10000)
   },
   methods: {
+    initView () {
+      this.loading = true
+      if (this.$store.state.role === 'admin') {
+        api
+          .request('get', '/users', this.$store.state.accessToken)
+          .then(response => {
+            response.data.forEach((user) => {
+              this.usernames[user.id] = user.username
+            })
+          })
+          .finally(() => {
+            this.fetchJobs()
+          })
+      } else {
+        this.fetchJobs()
+      }
+    },
+    fetchJobs () {
+      getJobs(this.$store.state.accessToken, this.$store.state.role === 'admin' ? null : this.$store.state.id)
+        .then(jobs => {
+          jobs.forEach((job) => {
+            this.jobs[job.id] = job
+            if (this.$store.state.role === 'admin') {
+              this.jobs[job.id].username = this.usernames.hasOwnProperty(job.userId) ? this.usernames[job.userId] : undefined
+            } else {
+              this.jobs[job.id].username = this.$store.state.user
+            }
+          })
+          this.loading = false
+        })
+        .catch(error => {
+          this.loading = false
+          this.handleError(error)
+        })
+    },
     performJobBulkAction (jobs, action) {
       this.performingJobBulkAction = true
 

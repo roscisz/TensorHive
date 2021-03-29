@@ -458,9 +458,7 @@ export default {
       tableKey: 0,
       actionFlag: false,
       showAlert: false,
-      show: false,
-      expanded: [12],
-      singleExpand: false
+      show: false
     }
   },
   methods: {
@@ -525,7 +523,9 @@ export default {
       Promise.all([
         jobUpdatePromise,
         taskUpdatePromise
-      ]).then(() => {
+      ]).finally(() => {
+        this.jobsLoading = false
+        this.tasksLoading = false
         this.getJobs()
       })
     },
@@ -564,11 +564,14 @@ export default {
       this.updateCard = false
       this.cancelCard = false
       this.tasksCard = false
+      this.selected = []
     },
     cancelReservation: function () {
+      this.selected = []
       this.cancel(this.reservation)
     },
     updateReservation: function () {
+      this.selected = []
       var newTime = [moment(this.newStartDate + 'T' + this.newStartTime), moment(this.newEndDate + 'T' + this.newEndTime)]
       this.update(this.reservation, newTime, this.newTitle, this.newDescription)
     }
