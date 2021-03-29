@@ -72,6 +72,7 @@
 </template>
 
 <script>
+import moment from 'moment'
 import {
   getJob,
   createJobTask,
@@ -258,8 +259,8 @@ export default {
       return updateJob(this.$store.state.accessToken, this.$route.params.id, {
         name,
         description: description || '',
-        startAt: !startAt ? null : startAt,
-        stopAt: !stopAt ? null : stopAt
+        startAt: !startAt ? null : moment(startAt).toISOString(),
+        stopAt: !stopAt ? null : moment(stopAt).toISOString()
       })
     },
     cancelHandler () {
