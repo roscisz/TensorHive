@@ -166,6 +166,50 @@ You can fully customize TensorHive behaviours via INI configuration files (which
 
 ----------------------
 
+#### Reverse proxy setup
+
+TensorHive supports reverse proxy setup. To use that you have to setup api and backend servers as usual. There are 2
+added fields in main_config.ini: `url_port` and `url_schema`. This will allow full setup of the URL that will be proxied.
+
+Lets assume, that the backend is running on `http://localhost:5000` and api on `http://localhost:1111`. We wont everything be visible
+at the `https://some-server/tensorhive`. Example proxy definition is as follows:
+
+```
+location /tensorhive {
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Host $host:$server_port;
+    proxy_set_header X-Forwarded-Server $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+    add_header 'Access-Control-Allow-Origin' '*';
+    add_header 'Access-Control-Allow-Credentials' 'true';
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+
+    proxy_pass  http://localhost:5000/tensorhive;
+    proxy_set_header SCRIPT_NAME /tensorhive;
+}
+
+location /tensorhive/api {
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Host $host:$server_port;
+    proxy_set_header X-Forwarded-Server $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+    add_header 'Access-Control-Allow-Origin' '*';
+    add_header 'Access-Control-Allow-Credentials' 'true';
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+
+    proxy_pass  http://localhost:1111;
+}
+
+```
+
+For the frontend to work correctly you also need to change the file `tensorhive/app/web/dev/src/main.js` and set
+the `base:` attribute of the router to the same URL context as in the proxy.
 
 Contribution and feedback
 ------------------------
