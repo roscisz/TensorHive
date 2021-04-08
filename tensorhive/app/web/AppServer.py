@@ -50,9 +50,10 @@ def _inject_api_endpoint_to_app():
     try:
         web_app_json_config_path = PosixPath(__file__).parent / 'dist/static/config.json'
         data = {
-            'apiPath': 'http://{}:{}/{}'.format(
+            'apiPath': '{}://{}:{}/{}'.format(
+                API.URL_SCHEMA,
                 API.URL_HOSTNAME,
-                API_SERVER.PORT,
+                API.URL_PORT,
                 API.URL_PREFIX),
             'version': tensorhive.__version__
         }
@@ -78,7 +79,7 @@ def start_server():
             'workers': APP_SERVER.WORKERS,
             'loglevel': APP_SERVER.LOG_LEVEL
         }
-        log.info(green('[✔] Web App available at: http://{}:{}'.format(API.URL_HOSTNAME, APP_SERVER.PORT)))
+        log.info(green('[✔] Web App available at: http://{}:{}'.format(API_SERVER.HOST, APP_SERVER.PORT)))
         GunicornStandaloneApplication(app, options).run()
     else:
         raise NotImplementedError('Selected backend is not supported yet.')

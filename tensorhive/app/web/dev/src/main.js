@@ -54,6 +54,8 @@ axios.get('/static/config.json').then(response => {
   var router = new VueRouter({
     routes: routes,
     mode: 'history',
+    // Change it if TensorHive will run in sub context! e.g. to '/tensorhive/',
+    base: '/',
     linkExactActiveClass: 'active',
     scrollBehavior: function (to, from, savedPosition) {
       return savedPosition || { x: 0, y: 0 }
