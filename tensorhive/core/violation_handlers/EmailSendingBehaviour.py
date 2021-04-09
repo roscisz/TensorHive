@@ -7,6 +7,7 @@ from tensorhive.core.utils.mailer import Mailer, Message, MessageBodyTemplater
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from inspect import cleandoc
+import queue
 import datetime
 import smtplib
 import logging
@@ -44,9 +45,9 @@ class EmailSendingBehaviour:
         self._test_smtp_configuration()
         self.interval = datetime.timedelta(minutes=MAILBOT.INTERVAL)
         self.timers = {}  # type: Dict[str, LastEmailTime]
+        self.message_queue = queue.Queue()  # type: queue.Queue
 
-    @override
-    def trigger_action(self, violation_data: Dict[str, Any]) -> None:
+    def _gather_notifications(self, violation_data: Dict[str, Any]) -> None:
         '''Contains business logic for intruder and admin email notifications.
         It relies on early returns if any error occures.
 
@@ -82,6 +83,19 @@ class EmailSendingBehaviour:
             self._email_intruder(intruder_email, violation_data, timer)
         if MAILBOT.NOTIFY_ADMIN and self._time_to_resend(timer, to_admin=True):
             self._email_admin(violation_data, timer)
+
+    def _send_queued_emails(self) -> None:
+        for i in range(MAILBOT.MAX_EMAILS_PER_PROTECTION_INTERVAL):
+            if self.message_queue.empty():
+                break
+            msg = self.message_queue.get()
+            self.mailer.send(msg)
+            log.info('Sending email to ({}) has been attempted.'.format(msg.recipients))
+
+    @override
+    def trigger_action(self, violation_data: Dict[str, Any]) -> None:
+        self._gather_notifications(violation_data)
+        self._send_queued_emails()
 
     def _time_to_resend(self, timer: LastEmailTime, to_admin: Optional[bool] = False) -> bool:
         '''Returns whether last email was sent min X time ago.'''
@@ -126,15 +140,17 @@ class EmailSendingBehaviour:
         '''Prepare message, send and update timer.'''
         email_body = MessageBodyTemplater(template=MAILBOT.INTRUDER_BODY_TEMPLATE).fill_in(data=violation_data)
         email = Message(author=MAILBOT.SMTP_LOGIN, to=email_address, subject=MAILBOT.INTRUDER_SUBJECT, body=email_body)
-        self.mailer.send(email)
+        self.message_queue.put(email)
         timer.to_intruder = datetime.datetime.utcnow()
-        log.info('Sending email to intruder ({}) has been attempted.'.format(email_address))
+        log.info('Email to intruder ({}) has been enqueued.'.format(email_address))
 
     def _email_admin(self, violation_data: Dict, timer: LastEmailTime) -> None:
         '''Prepare message, send and update timer.'''
         email_body = MessageBodyTemplater(template=MAILBOT.ADMIN_BODY_TEMPLATE).fill_in(data=violation_data)
-        email = Message(author=MAILBOT.SMTP_LOGIN, to=MAILBOT.ADMIN_EMAIL,
-                        subject=MAILBOT.ADMIN_SUBJECT, body=email_body)
-        self.mailer.send(email)
+        admin_emails = MAILBOT.ADMIN_EMAIL.split(',')
+        for admin_email in admin_emails:
+            email = Message(author=MAILBOT.SMTP_LOGIN, to=admin_email,
+                            subject=MAILBOT.ADMIN_SUBJECT, body=email_body)
+            self.message_queue.put(email)
+            log.info('Email to admin ({}) has been enqueued.'.format(admin_email))
         timer.to_admin = datetime.datetime.utcnow()
-        log.info('Sending email to admin ({}) has been attempted.'.format(MAILBOT.ADMIN_EMAIL))

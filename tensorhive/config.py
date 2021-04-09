@@ -214,6 +214,8 @@ class MAILBOT:
     mailbot_config = ConfigLoader.load(CONFIG_FILES.MAILBOT_CONFIG_PATH, displayed_title='mailbot')
     section = 'general'
     INTERVAL = mailbot_config.getfloat(section, 'interval', fallback=10.0)
+    MAX_EMAILS_PER_PROTECTION_INTERVAL = mailbot_config.getint(section,
+                                                               'max_emails_per_protection_interval', fallback=50)
     NOTIFY_INTRUDER = mailbot_config.getboolean(section, 'notify_intruder', fallback=True)
     NOTIFY_ADMIN = mailbot_config.getboolean(section, 'notify_admin', fallback=False)
     ADMIN_EMAIL = mailbot_config.get(section, 'admin_email', fallback=None)
