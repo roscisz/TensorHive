@@ -33,6 +33,18 @@ export function updateJob (token, jobId, job) {
     .then(response => response.data.job)
 }
 
+export function enqueueJob (token, jobId) {
+  return api
+    .request('put', `${jobsUrl}/${jobId}/enqueue`, token)
+    .then(response => response.data.job)
+}
+
+export function dequeueJob (token, jobId) {
+  return api
+    .request('put', `${jobsUrl}/${jobId}/dequeue`, token)
+    .then(response => response.data.job)
+}
+
 export function deleteJob (token, jobId) {
   return api.request('delete', `${jobsUrl}/${jobId}`, token)
 }

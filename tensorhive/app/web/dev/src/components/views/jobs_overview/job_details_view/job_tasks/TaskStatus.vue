@@ -3,9 +3,6 @@
 </template>
 
 <script>
-// Prototype status exists only on the front side and is used for tasks that are
-// freshly added and will be created when a user submits a form.
-const prototypeStatus = 'prototype'
 const inactiveStatus = 'not_running'
 const runningStatus = 'running'
 const terminatedStatus = 'terminated'
@@ -21,8 +18,6 @@ export default {
   computed: {
     color () {
       switch (this.status) {
-        case prototypeStatus:
-          return 'grey lighten-2'
         case inactiveStatus:
           return 'blue-grey lighten-4'
         case runningStatus:
@@ -37,8 +32,6 @@ export default {
     },
     textColor () {
       switch (this.status) {
-        case prototypeStatus:
-          return 'grey darken-2'
         case inactiveStatus:
           return 'blue-grey darken-2'
         case runningStatus:
@@ -53,8 +46,6 @@ export default {
     },
     text () {
       switch (this.status) {
-        case prototypeStatus:
-          return 'Prototype'
         case inactiveStatus:
           return 'Inactive'
         case runningStatus:

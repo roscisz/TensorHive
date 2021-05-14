@@ -55,6 +55,7 @@
                 <JobCrudActions
                   :job-id="props.item.id"
                   :performing-action="isPerformingCrud(props.item.id)"
+                  :job-queued="props.item.status === 'pending'"
                   @action="$emit('crud-action', props.item, $event)"
                 />
               </td>

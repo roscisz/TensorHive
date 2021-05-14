@@ -10,6 +10,7 @@
               :job-id="jobId"
               :performing-action="performingJobCrudAction"
               :show-details-action="false"
+              :job-queued="job && job.status === 'pending'"
               @action="performJobCrudAction"
             />
           </v-flex>
@@ -79,6 +80,8 @@ import {
   createJob,
   updateJob,
   executeJob,
+  enqueueJob,
+  dequeueJob,
   stopJob,
   killJob,
   deleteJob
@@ -283,6 +286,12 @@ export default {
         case Actions.Execute:
           promise = this.executeJob()
           break
+        case Actions.Enqueue:
+          promise = this.enqueueJob()
+          break
+        case Actions.Dequeue:
+          promise = this.dequeueJob()
+          break
         case Actions.Stop:
           promise = this.stopJob()
           break
@@ -319,6 +328,22 @@ export default {
     },
     executeJob () {
       return executeJob(this.$store.state.accessToken, this.job.id).then(job =>
+        getTasks(this.$store.state.accessToken, this.job.id).then(tasks => [
+          job,
+          tasks
+        ])
+      )
+    },
+    enqueueJob () {
+      return enqueueJob(this.$store.state.accessToken, this.job.id).then(job =>
+        getTasks(this.$store.state.accessToken, this.job.id).then(tasks => [
+          job,
+          tasks
+        ])
+      )
+    },
+    dequeueJob () {
+      return dequeueJob(this.$store.state.accessToken, this.job.id).then(job =>
         getTasks(this.$store.state.accessToken, this.job.id).then(tasks => [
           job,
           tasks

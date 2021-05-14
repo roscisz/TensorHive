@@ -4,6 +4,7 @@
 
 <script>
 const inactiveStatus = 'not_running'
+const pendingStatus = 'pending'
 const runningStatus = 'running'
 const terminatedStatus = 'terminated'
 const unsynchronizedStatus = 'unsynchronized'
@@ -20,6 +21,8 @@ export default {
       switch (this.status) {
         case inactiveStatus:
           return 'blue-grey lighten-4'
+        case pendingStatus:
+          return 'yellow lighten-4'
         case runningStatus:
           return 'blue lighten-4'
         case terminatedStatus:
@@ -34,6 +37,8 @@ export default {
       switch (this.status) {
         case inactiveStatus:
           return 'blue-grey darken-2'
+        case pendingStatus:
+          return 'blue-grey lighten-2'
         case runningStatus:
           return 'blue darken-2'
         case terminatedStatus:
@@ -48,6 +53,8 @@ export default {
       switch (this.status) {
         case inactiveStatus:
           return 'Inactive'
+        case pendingStatus:
+          return 'Pending'
         case runningStatus:
           return 'Running'
         case terminatedStatus:

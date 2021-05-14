@@ -28,6 +28,8 @@ import api from '../../api'
 import {
   getJobs,
   executeJob,
+  enqueueJob,
+  dequeueJob,
   stopJob,
   killJob,
   deleteJob,
@@ -136,6 +138,12 @@ export default {
         case JobBulkActions.Execute:
           promise = this.executeJobs(jobs)
           break
+        case JobCrudActions.Enqueue:
+          promise = this.enqueueJobs(jobs)
+          break
+        case JobCrudActions.Dequeue:
+          promise = this.dequeueJobs(jobs)
+          break
         case JobCrudActions.Stop:
         case JobBulkActions.Stop:
           promise = this.stopJobs(jobs)
@@ -173,6 +181,16 @@ export default {
     executeJobs (jobs) {
       return Promise.all(
         jobs.map(({ id }) => executeJob(this.$store.state.accessToken, id))
+      )
+    },
+    enqueueJobs (jobs) {
+      return Promise.all(
+        jobs.map(({ id }) => enqueueJob(this.$store.state.accessToken, id))
+      )
+    },
+    dequeueJobs (jobs) {
+      return Promise.all(
+        jobs.map(({ id }) => dequeueJob(this.$store.state.accessToken, id))
       )
     },
     stopJobs (jobs) {
