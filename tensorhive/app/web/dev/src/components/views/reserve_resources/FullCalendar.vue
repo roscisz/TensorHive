@@ -362,7 +362,7 @@ export default {
       },
       eventRender: function (event, element) {
         element.find('.fc-title').append('<br/>' + event.description)
-        if (self.selectedResources.length > 6) {
+        if (self.selectedResources.length > 8) {
           $(element).css('color', 'rgba(0, 0, 0, 0)')
         }
         if (!event.allDay && event.groupId !== 'restriction') {
