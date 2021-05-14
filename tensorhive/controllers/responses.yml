@@ -217,6 +217,12 @@ job:
     failure:
       state: Unable to execute job - {reason}
       tasks: Unable to execute job - {reason}
+  enqueue:
+    success: Job has been succesfully enqueued
+    failure: Unable to enqueue job - {reason}
+  dequeue:
+    success: Job has been succesfully dequeued
+    failure: Unable to dequeue job - {reason}
   stop:
     success: Job has been succesfully stopped
     failure:
