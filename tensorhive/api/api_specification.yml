@@ -2023,6 +2023,146 @@ paths:
                     example: {{RESPONSES['general']['internal_error']}}
       security:
         - Bearer: []
+  /jobs/{id}/enqueue:
+    put:
+      tags:
+        - jobs
+      summary: Enqueue a job by id
+      parameters:
+        - description: Job ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      operationId: tensorhive.controllers.job.enqueue
+      responses:
+        200:
+          description: {{RESPONSES['general']['ok']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['job']['enqueue']['success']}}
+                  job:
+                    $ref: '#/components/schemas/JobToDisplay'
+        403:
+          description: {{RESPONSES['general']['unprivileged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unprivileged']}}
+        404:
+          description: {{RESPONSES['job']['not_found']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['job']['not_found']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        409:
+          description: {{RESPONSES['job']['enqueue']['failure']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['job']['enqueue']['failure']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['internal_error']}}
+      security:
+        - Bearer: []
+  /jobs/{id}/dequeue:
+    put:
+      tags:
+        - jobs
+      summary: Dequeue a job by id
+      parameters:
+        - description: Job ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      operationId: tensorhive.controllers.job.dequeue
+      responses:
+        200:
+          description: {{RESPONSES['general']['ok']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['job']['enqueue']['success']}}
+                  job:
+                    $ref: '#/components/schemas/JobToDisplay'
+        403:
+          description: {{RESPONSES['general']['unprivileged']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['unprivileged']}}
+        404:
+          description: {{RESPONSES['job']['not_found']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['job']['not_found']}}
+        401:
+          description: {{RESPONSES['general']['unauthorized']}}
+        409:
+          description: {{RESPONSES['job']['dequeue']['failure']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['job']['dequeue']['failure']}}
+        500:
+          description: {{RESPONSES['general']['internal_error']}}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: {{RESPONSES['general']['internal_error']}}
+      security:
+        - Bearer: []
   /jobs/{id}/stop:
     get:
       tags: 
@@ -2981,71 +3121,6 @@ paths:
                     example: {{RESPONSES['ssh']['failure']['connection']}}
       security:
         - Bearer: []
-  /screen-sessions:
-    get:
-      tags:
-        - tasks
-      summary: Returns PIDs of active screen sessions running on username@hostname
-      description: |
-        It shows only sessions labeled by TensorHive and ignores anything else.
-        This endpoint is purely informational and does not rely on usage of any Task object.
-      operationId: tensorhive.controllers.task.screen_sessions
-      parameters:
-        - description: Username
-          in: query
-          name: username
-          required: true
-          schema:
-            type: string
-        - description: Hostname
-          in: query
-          name: hostname
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: {{RESPONSES['general']['ok']}}
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  msg:
-                    type: string
-                    example: {{RESPONSES['screen-sessions']['success']}}
-                  pids:
-                    type: array
-                    items:
-                      type: integer
-                    example:
-                      - 1234
-                      - 2345
-                      - 3456
-        401:
-          description: {{RESPONSES['general']['unauthorized']}}
-        422:
-          description: {{RESPONSES['screen-sessions']['failure']['assertions']}} or {{RESPONSES['general']['auth_error']}}
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  msg:
-                    type: string
-                    example: {{RESPONSES['screen-sessions']['failure']['assertions']}}
-        500:
-          description: {{RESPONSES['ssh']['failure']['connection']}} or {{RESPONSES['general']['internal_error']}}
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  msg:
-                    type: string
-                    example: {{RESPONSES['ssh']['failure']['connection']}}
-      # security:
-      #   - Bearer: []
 components:
   schemas:
     UserToDisplay:
