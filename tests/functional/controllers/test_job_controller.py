@@ -121,7 +121,7 @@ def test_update_job_without_dates(tables, client, new_job):
 
 # PUT /jobs/{job_id}
 def test_update_running_job(tables, client, new_job):
-    new_job.status = JobStatus.running
+    new_job._status = JobStatus.running
     new_job.save()
     data = {'name': 'NewName',
             'description': 'NewDescription',
@@ -146,7 +146,7 @@ def test_update_not_owned_job(tables, client, new_admin_job):
 
 # PUT /jobs/{job_id}
 def test_update_job_to_start_in_the_past(tables, client, new_job):
-    new_job.status = JobStatus.running
+    new_job._status = JobStatus.running
     new_job.save()
     data = {'name': 'NewName',
             'description': 'NewDescription',
@@ -159,7 +159,7 @@ def test_update_job_to_start_in_the_past(tables, client, new_job):
 
 # PUT /jobs/{job_id}
 def test_update_job_to_stop_before_start(tables, client, new_job):
-    new_job.status = JobStatus.running
+    new_job._status = JobStatus.running
     new_job.save()
     data = {'name': 'NewName',
             'description': 'NewDescription',

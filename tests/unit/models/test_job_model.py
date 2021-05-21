@@ -39,16 +39,21 @@ def test_adding_task_to_a_job_that_he_is_already_in_fails(tables, new_job_with_t
 
 def test_synchronizing_job(tables, new_job_with_task, new_task_2):
     new_job_with_task.save()
-    new_job_with_task.status = JobStatus.unsynchronized
+    new_job_with_task._status = JobStatus.unsynchronized
     new_task = new_job_with_task.tasks[0]
-    new_task.status = TaskStatus.unsynchronized
-    new_task_2.status = TaskStatus.unsynchronized
-    new_job_with_task.add_task(new_task_2)
 
-    new_task.status = TaskStatus.not_running
-    new_job_with_task.synchronize_status(new_task.status)
-    assert new_job_with_task.status is not JobStatus.not_running
+    new_task.status = TaskStatus.unsynchronized
+    assert new_job_with_task.status is JobStatus.unsynchronized
+
+    new_task.status = TaskStatus.running
+    assert new_job_with_task.status is JobStatus.running
 
     new_task_2.status = TaskStatus.not_running
-    new_job_with_task.synchronize_status(new_task.status)
+    new_job_with_task.add_task(new_task_2)
+    assert new_job_with_task.status is JobStatus.running
+
+    new_task.status = TaskStatus.terminated
+    assert new_job_with_task.status is JobStatus.terminated
+
+    new_task.status = TaskStatus.not_running
     assert new_job_with_task.status is JobStatus.not_running

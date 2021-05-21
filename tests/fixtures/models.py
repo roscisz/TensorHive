@@ -189,7 +189,7 @@ def new_job(new_user):
     job = Job(name='job_name',
               description='testDescription',
               user_id=new_user.id,
-              status=JobStatus.not_running)
+              _status=JobStatus.not_running)
     job.save()
     return job
 
@@ -200,7 +200,7 @@ def new_running_job(new_user):
     job = Job(name='running_job',
               description='A running job',
               user_id=new_user.id,
-              status=JobStatus.running)
+              _status=JobStatus.running)
     job.save()
     return job
 
@@ -211,7 +211,7 @@ def new_job_with_task(new_user, new_task):
     job = Job(name='job_name',
               description='testDescription',
               user_id=new_user.id,
-              status=JobStatus.not_running)
+              _status=JobStatus.not_running)
     job.save()
     job.add_task(new_task)
     return job
@@ -224,7 +224,7 @@ def new_admin_job(new_user, new_admin, new_task):
     job = Job(name='admin_job',
               description='Admin is the owner of this job',
               user_id=new_admin.id,
-              status=JobStatus.not_running)
+              _status=JobStatus.not_running)
     job.save()
     job.add_task(new_task)
     return job
@@ -234,7 +234,7 @@ def new_admin_job(new_user, new_admin, new_task):
 def new_task():
     task = Task(command='python command.py',
                 hostname='localhost',
-                status=TaskStatus.not_running)
+                _status=TaskStatus.not_running)
     cmd_segment = CommandSegment(
         name='--batch_size',
         _segment_type=SegmentType.parameter
@@ -248,7 +248,7 @@ def new_task():
 def new_task_2():
     task = Task(command='python command2.py',
                 hostname='remotehost',
-                status=TaskStatus.not_running)
+                _status=TaskStatus.not_running)
     cmd_segment = CommandSegment(
         name='--rank',
         _segment_type=SegmentType.parameter
