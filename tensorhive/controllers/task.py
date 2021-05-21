@@ -79,7 +79,6 @@ def synchronize(task_id: TaskId) -> None:
         log.debug('Task {} status was: {}'.format(task_id, task.status.name))
         task.status = TaskStatus.unsynchronized
         task.save()
-        parent_job.synchronize_status(task.status)
         log.debug('Task {} is now: {}'.format(task_id, task.status.name))
     else:
         log.debug('[BEFORE SYNC] Task {} status was: {}'.format(task_id, task.status.name))
@@ -93,7 +92,6 @@ def synchronize(task_id: TaskId) -> None:
                 log.debug(change_status_msg.format(id=task_id, curr_status=task.status.name))
             task.pid = None
             task.save()
-            parent_job.synchronize_status(task.status)
 
 
 def synchronize_task_record(func: Callable) -> Callable:
@@ -161,7 +159,6 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
 @jwt_required
 def get_all(jobId: Optional[JobId], syncAll: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
     sync_all = syncAll
-    sync_all = True
     job_id = jobId
     try:
         if job_id is not None:
@@ -242,8 +239,6 @@ def business_get_all(job_id: Optional[JobId], sync_all: Optional[bool]) -> Tuple
     In typical scenario API client would want to get all records without sync and
     then run sync each records individually.
     """
-    # Temporary solution with sync_all
-    sync_all = True
     tasks = []
     if job_id is not None:
         tasks = Task.query.filter(Task.job_id == job_id).all()
