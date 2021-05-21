@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum, DateTime, Text
-from datetime import datetime
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum, DateTime, Text, Boolean
+from datetime import datetime, timedelta
 from tensorhive.database import Base
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -7,7 +7,7 @@ from tensorhive.models.CRUDModel import CRUDModel
 from tensorhive.models.Task import Task, TaskStatus
 from tensorhive.utils.DateUtils import DateUtils
 from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
-from typing import Optional, Union
+from typing import Optional, Union, List
 import enum
 import logging
 log = logging.getLogger(__name__)
@@ -18,6 +18,7 @@ class JobStatus(enum.Enum):
     running = 2
     terminated = 3
     unsynchronized = 4
+    pending = 5
 
 
 class Job(CRUDModel, Base):  # type: ignore
@@ -29,12 +30,14 @@ class Job(CRUDModel, Base):  # type: ignore
     name = Column(String(40), nullable=False)
     description = Column(Text)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
-    status = Column(Enum(JobStatus), default=JobStatus.not_running, nullable=False)
+    user = relationship("User", back_populates="_jobs")
+    _status = Column(Enum(JobStatus), default=JobStatus.not_running, nullable=False)
     _start_at = Column(DateTime)
     _stop_at = Column(DateTime)
+    is_queued = Column(Boolean)
 
     _tasks = relationship(
-        'Task', cascade='all, delete', backref=backref('job', single_parent=True), lazy='subquery')
+        'Task', cascade='all, delete', back_populates="job", lazy='subquery')
 
     def __repr__(self):
         return '<Job id={id}, name={name}, description={description}, user={user_id}, status={status}>'.format(
@@ -42,7 +45,7 @@ class Job(CRUDModel, Base):  # type: ignore
             name=self.name,
             description=self.description,
             user_id=self.user_id,
-            status=self.status.name)
+            status=self._status.name)
 
     def check_assertions(self):
         if self.stop_at is not None and self.start_at is not None:
@@ -56,11 +59,16 @@ class Job(CRUDModel, Base):  # type: ignore
     def number_of_tasks(self):
         return len(self._tasks)
 
+    @hybrid_property
+    def status(self):
+        return self._status
+
     def add_task(self, task: Task):
         if task in self.tasks:
             raise InvalidRequestException('Task {task} is already assigned to job {job}!'
                                           .format(task=task, job=self))
         self.tasks.append(task)
+        self.synchronize_status()
         self.save()
 
     def remove_task(self, task: Task):
@@ -70,18 +78,41 @@ class Job(CRUDModel, Base):  # type: ignore
         self.tasks.remove(task)
         self.save()
 
-    def synchronize_status(self, status: TaskStatus):
+    def synchronize_status(self):
         """ Job status is synchronized on every change of one of its tasks status
         """
-        for task in self.tasks:
-            if task.status is not status:
-                return
-        if status is TaskStatus.unsynchronized:
-            self.status = JobStatus.unsynchronized
-        elif status is TaskStatus.not_running:
-            self.status = JobStatus.not_running
-        elif status is TaskStatus.terminated:
-            self.status = JobStatus.terminated
+        status_pre = self._status
+
+        statuses = [task.status for task in self.tasks]
+        if TaskStatus.unsynchronized in statuses and self._status is not JobStatus.pending:
+            self._status = JobStatus.unsynchronized
+        elif TaskStatus.running in statuses:
+            self._status = JobStatus.running
+        elif TaskStatus.terminated in statuses:
+            self._status = JobStatus.terminated
+        elif TaskStatus.not_running in statuses:
+            self._status = JobStatus.not_running
+
+        if status_pre is JobStatus.running and self._status is JobStatus.not_running:
+            self.is_queued = False
+
+        self.save()
+
+    def enqueue(self):
+        assert self.status is not JobStatus.pending, 'Cannot enqueue job that is already pending'
+
+        statuses = [task.status for task in self.tasks]
+        assert not TaskStatus.running in statuses, 'Cannot enqueue job that contains running tasks'
+
+        self.is_queued = True
+        self._status = JobStatus.pending
+        self.save()
+
+    def dequeue(self):
+        assert self._status == JobStatus.pending
+
+        self.is_queued = False
+        self._status = JobStatus.not_running
         self.save()
 
     @hybrid_property
@@ -114,5 +145,13 @@ class Job(CRUDModel, Base):  # type: ignore
 
     def as_dict(self, include_private=None):
         ret = super(Job, self).as_dict(include_private=include_private)
-        ret['status'] = self.status.name
+        ret['status'] = self._status.name
         return ret
+
+    @staticmethod
+    def get_job_queue() -> List['Job']:
+        return Job.query.filter(Job.is_queued).filter(Job.status != JobStatus.running).all()
+
+    @staticmethod
+    def get_jobs_running_from_queue() -> List['Job']:
+        return Job.query.filter(Job.is_queued).filter(Job.status == JobStatus.running).all()

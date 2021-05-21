@@ -23,11 +23,13 @@ class Task(CRUDModel, Base):  # type: ignore
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     job_id = Column(Integer, ForeignKey('jobs.id', ondelete='CASCADE'))
+    job = relationship("Job", back_populates="_tasks")
     hostname = Column(String(40), nullable=False)
     pid = Column(Integer)
-    status = Column(Enum(TaskStatus), default=TaskStatus.not_running, nullable=False)
+    _status = Column(Enum(TaskStatus), default=TaskStatus.not_running, nullable=False)
     command = Column(String(400), nullable=False)
     _cmd_segments = relationship('CommandSegment', secondary='cmd_segment2task', back_populates='_tasks')
+    gpu_id = Column(Integer, nullable=True)  # TODO: link with hardware DB model when it's ready
 
     def __repr__(self):
         return '<Task id={id}, jobId={job_id}, name={hostname}, command={command}\n' \
@@ -37,10 +39,20 @@ class Task(CRUDModel, Base):  # type: ignore
                 hostname=self.hostname,
                 command=self.command,
                 pid=self.pid,
-                status=self.status.name)
+                status=self._status.name)
 
     def check_assertions(self):
         pass
+
+    @hybrid_property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, value):
+        self._status = value
+        if self.job is not None:
+            self.job.synchronize_status()
 
     @hybrid_property
     def cmd_segments(self):
@@ -127,7 +139,7 @@ class Task(CRUDModel, Base):  # type: ignore
 
     def as_dict(self, include_private=None):
         ret = super(Task, self).as_dict(include_private=include_private)
-        ret['status'] = self.status.name
+        ret['status'] = self._status.name
         try:
             envs_array = []
             params_array = []
