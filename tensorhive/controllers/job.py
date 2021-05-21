@@ -6,10 +6,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.config import API
 from tensorhive.models.Job import Job, JobStatus
 from tensorhive.models.Task import Task
-from tensorhive.utils.DateUtils import DateUtils
 from tensorhive.controllers.task import business_spawn, business_terminate, synchronize
 from tensorhive.exceptions.InvalidRequestException import InvalidRequestException
-from datetime import datetime
 from stringcase import snakecase
 from tensorhive.exceptions.ForbiddenException import ForbiddenException
 
@@ -55,7 +53,7 @@ def get_all(userId: Optional[int]) -> Tuple[Content, HttpStatusCode]:
     try:
         if user_id:
             # Owner or admin can fetch
-            if not is_admin() and not get_jwt_identity() == user_id:
+            if not (is_admin() or get_jwt_identity() == user_id):
                 raise ForbiddenException("not an owner")
             jobs = Job.query.filter(Job.user_id == user_id).all()
         else:
@@ -308,6 +306,46 @@ def business_execute(id: JobId) -> Tuple[Content, HttpStatusCode]:
     else:
         log.info('Job {} is now: {}'.format(job.id, job.status.name))
         content, status = {'msg': JOB['execute']['success'], 'job': job.as_dict()}, HTTPStatus.OK.value
+    finally:
+        return content, status
+
+
+# PUT /jobs/{id}/enqueue
+@jwt_required
+def enqueue(id: JobId) -> Tuple[Content, HttpStatusCode]:
+    try:
+        job = Job.get(id)
+        if not (is_admin() or job.user_id == get_jwt_identity()):
+            raise ForbiddenException("not an owner")
+        job.enqueue()
+    except NoResultFound:
+        content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
+    except ForbiddenException as fe:
+        content, status = {'msg': GENERAL['unprivileged'].format(reason=fe)}, HTTPStatus.FORBIDDEN.value
+    except AssertionError as ae:
+        content, status = {'msg': JOB['enqueue']['failure'].format(reason=ae)}, HTTPStatus.CONFLICT.value
+    else:
+        content, status = {'msg': JOB['enqueue']['success'], 'job': job.as_dict()}, HTTPStatus.OK.value
+    finally:
+        return content, status
+
+
+# PUT /jobs/{id}/dequeue
+@jwt_required
+def dequeue(id: JobId) -> Tuple[Content, HttpStatusCode]:
+    try:
+        job = Job.get(id)
+        if not (is_admin() or job.user_id == get_jwt_identity()):
+            raise ForbiddenException("not an owner")
+        job.dequeue()
+    except NoResultFound:
+        content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
+    except ForbiddenException as fe:
+        content, status = {'msg': GENERAL['unprivileged'].format(reason=fe)}, HTTPStatus.FORBIDDEN.value
+    except AssertionError as ae:
+        content, status = {'msg': JOB['dequeue']['failure'].format(reason=ae)}, HTTPStatus.CONFLICT.value
+    else:
+        content, status = {'msg': JOB['dequeue']['success'], 'job': job.as_dict()}, HTTPStatus.OK.value
     finally:
         return content, status
 
