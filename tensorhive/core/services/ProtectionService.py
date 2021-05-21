@@ -1,14 +1,13 @@
 from tensorhive.core.services.Service import Service
 from tensorhive.models.Reservation import Reservation
 from tensorhive.models.User import User
-from tensorhive.database import db_session
+from tensorhive.database import db_session  # pylint: disable=unused-import
 from tensorhive.core.utils.decorators import override
 from tensorhive.core.utils.time import utc2local
 from tensorhive.core.managers.InfrastructureManager import InfrastructureManager
 from tensorhive.core.managers.SSHConnectionManager import SSHConnectionManager
-from pssh.clients.native import ParallelSSHClient
-from typing import Generator, Dict, List, Optional
-import datetime
+from tensorhive.core import ssh
+from typing import List, Optional
 import time
 import gevent
 import json
@@ -37,74 +36,6 @@ class ProtectionService(Service):
         elif isinstance(injected_object, SSHConnectionManager):
             self.connection_manager = injected_object
 
-    def node_tty_sessions(self, connection) -> List[Dict]:
-        '''Executes shell command in order to fetch all active terminal sessions'''
-        command = 'who'
-        output = connection.run_command(command)
-
-        # FIXME Assumes that only one node is in connection
-        for _, host_out in output.items():
-            result = self._parse_output(host_out.stdout)
-        return result
-
-    def node_gpu_processes(self, hostname: str) -> Dict:
-        '''
-
-        Example result:
-        {
-            # Most common example
-            "GPU-c6d01ed6-8240-2e11-efe9-aa32794b8273": [
-                {
-                    "pid": 1979,
-                    "command": "X",
-                    "owner": "root"
-                }
-            ],
-
-            # If GPU has no processes
-            "GPU-abcdefg6-8240-2e11-efe9-abcdefgb8273": [],
-
-            # If GPU does not support `nvidia-smi pmon`
-            "GPU-abcdefg6-8240-2e11-efe9-abcdefgb8273": None
-        }
-        '''
-        infrastructure = self.infrastructure_manager.infrastructure
-
-        # Make sure we can fetch GPU data first.
-        # Example reasons: node is unreachable, nvidia-smi failed
-        if infrastructure.get(hostname, {}).get('GPU') is None:
-            log.debug('There is no GPU data for host: {}'.format(hostname))
-            return {}
-
-        # Loop through each GPU on node
-        node_processes = {}
-        for uuid, gpu_data in infrastructure[hostname]['GPU'].items():
-            if 'processes' in infrastructure[hostname]['GPU'][uuid]:
-                single_gpu_processes = infrastructure[hostname]['GPU'][uuid]['processes']
-                node_processes[uuid] = single_gpu_processes
-        return node_processes
-
-    def _parse_output(self, stdout: Generator) -> List[Dict]:
-        '''
-        Transforms command output into a dictionary
-        Assumes command was: 'who | grep <username>'
-        '''
-        stdout_lines = list(stdout)  # type: List[str]
-
-        # Empty stdout
-        if stdout_lines is None:
-            return None
-
-        def as_dict(line):
-            columns = line.split()
-            return {
-                # I wanted it to be more explicit and flexible (even if it could be done better)
-                'USER': columns[0],
-                'TTY': columns[1]
-            }
-
-        return [as_dict(line) for line in stdout_lines]
-
     def find_hostname(self, uuid: str) -> Optional[str]:
         '''Seeks the hostname of node which has GPU with given UUID'''
         infrastructure = self.infrastructure_manager.infrastructure
@@ -113,16 +44,6 @@ class ProtectionService(Service):
                 return hostname
         log.warning('GPU with UUID="{}" was not found'.format(uuid))
         return None
-
-    @property
-    def ignored_processes(self):
-        return [
-            'Xorg',
-            '/usr/lib/xorg/Xorg',
-            '/usr/bin/X',
-            'X',
-            '-'  # nvidia-smi on TITAN X shows this for whatever reason...
-        ]
 
     def gpu_users(self, node_processes, uuid) -> List[str]:
         '''Finds all users who are using GPU with given UUID'''
@@ -134,7 +55,8 @@ class ProtectionService(Service):
             return []
 
         for process in gpu_processes:
-            if process['command'] not in self.ignored_processes:
+            # FIXME: this if should be obsolete
+            if process['command'] not in self.infrastructure_manager.ignored_processes:
                 owners.append(process['owner'])
         unique_owners = list(set(owners))
         return unique_owners
@@ -169,8 +91,8 @@ class ProtectionService(Service):
 
             # 2. Establish connection to node and find all tty sessions
             node_connection = self.connection_manager.single_connection(hostname)
-            node_sessions = self.node_tty_sessions(node_connection)
-            node_processes = self.node_gpu_processes(hostname)
+            node_sessions = ssh.node_tty_sessions(node_connection)
+            node_processes = self.infrastructure_manager.node_gpu_processes(hostname)
             reserved_gpu_process_owners = self.gpu_users(node_processes, uuid)
 
             is_unprivileged = lambda sess: sess['USER'] in reserved_gpu_process_owners
