@@ -253,6 +253,7 @@ class JOB_SCHEDULING_SERVICE:
     ENABLED = config.getboolean(section, 'enabled', fallback=True)
     UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=30.0)
     STOP_TERMINATION_ATTEMPTS_AFTER = config.getfloat(section, 'stop_termination_attempts_after_mins', fallback=5.0)
+    SCHEDULE_QUEUED_JOBS_WHEN_FREE_MINS = config.getint(section, "schedule_queued_jobs_when_free_mins", fallback=30)
 
 
 class AUTH:
