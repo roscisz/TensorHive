@@ -403,31 +403,6 @@ def business_destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-# TODO Disable this endpoint later, return 403 Forbidden
-# GET /screen-sessions?username=foo&hostname=bar
-def screen_sessions(username: str, hostname: str) -> Tuple[Content, HttpStatusCode]:
-    """Returns pids of running `screen` sessions.
-
-    This endpoint is for purely development purposes,
-    currently there's no need to use it.
-    """
-    try:
-        assert username and hostname, 'parameters must not be empty'
-        pids = task_nursery.running(host=hostname, user=username)
-    except AssertionError as e:
-        content, status = {'msg': SCREEN_SESSIONS['failure']['assertions'].format(reason=e)}, 422
-    except (ConnectionErrorException, AuthenticationException, UnknownHostException) as e:
-        content, status = {'msg': SSH['failure']['connection'].format(reason=e)}, 500
-    except Exception as e:
-        log.critical(e)
-        content, status = {'msg': GENERAL['internal_error']}, 500
-    else:
-        # FIXME
-        content, status = {'msg': SCREEN_SESSIONS['success'], 'pids': pids}, 200
-    finally:
-        return content, status
-
-
 @synchronize_task_record
 def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     """Spawns command stored in Task db record (task.full_command).
