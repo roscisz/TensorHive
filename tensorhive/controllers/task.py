@@ -268,6 +268,7 @@ def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpS
         new_task = Task(
             hostname=task['hostname'],
             command=task['command'])
+        new_task.gpu_id = parse_gpu_id_from_command(task['command'])
         parent_job = Job.query.filter(Job.id == job_id).one()
         for segment in task['cmdsegments']['params']:
             new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.parameter,
@@ -318,6 +319,15 @@ def business_get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
+def parse_gpu_id_from_command(value):
+    if value.startswith('CUDA_VISIBLE_DEVICES='):
+        gpu_id = value.split('CUDA_VISIBLE_DEVICES=')[1][0]
+        if gpu_id == ' ':
+            return None
+        else:
+            return int(gpu_id)
+
+
 def business_update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     """Updates certain fields of a Task db record, including command field and segments."""
     try:
@@ -328,6 +338,7 @@ def business_update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, Htt
             if key == 'hostname':
                 setattr(task, key, value)
             elif key == 'command':
+                task.gpu_id = parse_gpu_id_from_command(value)
                 setattr(task, key, value)
             elif key == 'cmdsegments':
                 # FIXME Somehow the loop doesn't get all of the elements by the first time
