@@ -21,6 +21,7 @@ from tensorhive.core.services.JobSchedulingService import JobSchedulingService
 from tensorhive.core.violation_handlers.ProtectionHandler import ProtectionHandler
 from tensorhive.core.violation_handlers.MessageSendingBehaviour import MessageSendingBehaviour
 from tensorhive.core.violation_handlers.EmailSendingBehaviour import EmailSendingBehaviour
+from tensorhive.core.scheduling import GreedyScheduler
 from tensorhive.core import ssh
 from pathlib import PosixPath
 import logging
@@ -76,6 +77,13 @@ class TensorHiveManager(metaclass=Singleton):
             # TODO Add more monitors here
             monitoring_service = MonitoringService(monitors=monitors, interval=MONITORING_SERVICE.UPDATE_INTERVAL)
             services.append(monitoring_service)
+        if JOB_SCHEDULING_SERVICE.ENABLED:
+            job_scheduling_service = JobSchedulingService(
+                interval=JOB_SCHEDULING_SERVICE.UPDATE_INTERVAL,
+                stop_attempts_after=JOB_SCHEDULING_SERVICE.STOP_TERMINATION_ATTEMPTS_AFTER)
+            # TODO: scheduler configuration when more schedulers are available
+            job_scheduling_service.inject(GreedyScheduler())
+            services.append(job_scheduling_service)
         if PROTECTION_SERVICE.ENABLED:
             violation_handlers = []
             if PROTECTION_SERVICE.NOTIFY_ON_PTY:
@@ -90,11 +98,6 @@ class TensorHiveManager(metaclass=Singleton):
         if USAGE_LOGGING_SERVICE.ENABLED:
             usage_logging_service = UsageLoggingService(interval=USAGE_LOGGING_SERVICE.UPDATE_INTERVAL)
             services.append(usage_logging_service)
-        if JOB_SCHEDULING_SERVICE.ENABLED:
-            job_scheduling_service = JobSchedulingService(
-                interval=JOB_SCHEDULING_SERVICE.UPDATE_INTERVAL,
-                stop_attempts_after=JOB_SCHEDULING_SERVICE.STOP_TERMINATION_ATTEMPTS_AFTER)
-            services.append(job_scheduling_service)
         return services
 
     def configure_services_from_config(self):
