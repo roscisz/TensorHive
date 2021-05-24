@@ -390,10 +390,10 @@ def business_stop(id: JobId, gracefully: Optional[bool] = True) -> Tuple[Content
         not_terminated_tasks = 0
         for task in job.tasks:
             content, status = business_terminate(task.id, gracefully)
-            if status == HTTPStatus.OK.value:
+            if status != HTTPStatus.OK.value:
                 not_terminated_tasks += 1
 
-        assert not_terminated_tasks == 0, 'Could not terminate tasks'
+        assert not_terminated_tasks == 0, 'Not all tasks could be terminated'
         # If job was scheduled to start automatically
         # but user decided to stop it manually
         # scheduler should not execute the job by itself then
