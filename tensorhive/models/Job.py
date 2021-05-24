@@ -102,7 +102,7 @@ class Job(CRUDModel, Base):  # type: ignore
         assert self.status is not JobStatus.pending, 'Cannot enqueue job that is already pending'
 
         statuses = [task.status for task in self.tasks]
-        assert not TaskStatus.running in statuses, 'Cannot enqueue job that contains running tasks'
+        assert TaskStatus.running not in statuses, 'Cannot enqueue job that contains running tasks'
 
         self.is_queued = True
         self._status = JobStatus.pending
