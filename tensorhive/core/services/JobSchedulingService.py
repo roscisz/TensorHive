@@ -72,8 +72,8 @@ class JobSchedulingService(Service):
             log.warning(content['msg'])
             return False
 
-    @staticmethod
-    def check_current_gpu_slots(hosts_with_gpu_occupation: Dict[str, Dict[str, bool]]) -> Dict[str, Dict[str, int]]:
+    def check_current_gpu_slots(self,
+                                hosts_with_gpu_occupation: Dict[str, Dict[str, bool]]) -> Dict[str, Dict[str, int]]:
         '''For each GPU in the dictionary, return the numbers of minutes until the next reservation of consecutive GPUs.
         Return 0 for GPUs that are currently occupied, regardless of the reservations.
         Return None for GPUs that have no scheduled reservations in the future.
@@ -88,11 +88,14 @@ class JobSchedulingService(Service):
                 if hosts_with_gpu_occupation[host][gpu_id]:
                     ret[host][gpu_id] = 0
                 else:
-                    next_reservation = Reservation.query.filter(and_(Reservation.resource_id == gpu_id,
-                                                                     Reservation.start > datetime.now())).\
-                        order_by(Reservation.start).first()
-                    if next_reservation is not None:
-                        ret[host][gpu_id] = (next_reservation.start - datetime.now()).total_seconds(60)
+                    near_reservations = Reservation.upcoming_events_for_resource(gpu_id, self.considered_future_period)
+                    if len(near_reservations):
+                        nearest_reservation = near_reservations[0]
+                        if nearest_reservation.start > datetime.now():  # type: ignore
+                            ret[host][gpu_id] = \
+                                (nearest_reservation.start - datetime.now()).total_seconds() / 60  # type: ignore
+                        else:
+                            ret[host][gpu_id] = 0
                     else:
                         ret[host][gpu_id] = None
         return ret
@@ -114,8 +117,7 @@ class JobSchedulingService(Service):
                                      allow_own: bool = True) -> bool:
         for task in job.tasks:
             gpu_id = Scheduler.get_assigned_gpu_uid(task, available_hosts_with_gpu_occupation)
-            upcoming_reservations = Reservation.surrounding_events_for_resource(gpu_id, self.stop_attempts_after,
-                                                                                considered_future_period)
+            upcoming_reservations = Reservation.upcoming_events_for_resource(gpu_id, considered_future_period)
 
             if allow_own:
                 for reservation in upcoming_reservations:
