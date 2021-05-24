@@ -48,7 +48,7 @@ class Task(CRUDModel, Base):  # type: ignore
     def status(self):
         return self._status
 
-    @status.setter
+    @status.setter  # type: ignore
     def status(self, value):
         self._status = value
         if self.job is not None:

@@ -1,6 +1,6 @@
 import logging
 from http import HTTPStatus
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any, Dict, Tuple, Optional
 from flask_jwt_extended import jwt_required, get_jwt_claims, get_jwt_identity
 from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.config import API

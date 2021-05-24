@@ -1,7 +1,7 @@
 from tensorhive.core.services.Service import Service
 from tensorhive.core.utils.decorators import override
 from tensorhive.models.Job import Job
-from tensorhive.models.Task import Task, TaskStatus
+from tensorhive.models.Task import TaskStatus
 from tensorhive.models.User import User
 from tensorhive.models.Reservation import Reservation
 from sqlalchemy import or_, and_
@@ -32,7 +32,8 @@ class JobSchedulingService(Service):
         super().__init__()
         self.interval = interval
         self.stop_attempts_after = timedelta(minutes=stop_attempts_after)
-        self.stubborn_job_ids: Set[int] = []
+        self.stubborn_job_ids: Set[int] = set()
+        self.considered_future_period = timedelta(minutes=CONFIG.SCHEDULE_QUEUED_JOBS_WHEN_FREE_MINS)
 
     @override
     def inject(self, injected_object):
@@ -97,7 +98,7 @@ class JobSchedulingService(Service):
         return ret
 
     @staticmethod
-    def check_if_resources_available_for_job(job: Job, current_device_occupation: Dict[str, List[bool]]) -> bool:
+    def check_if_resources_available_for_job(job: Job, current_device_occupation: Dict[str, Dict[str, bool]]) -> bool:
         for task in job.tasks:
             if not task.hostname:
                 return False
@@ -107,8 +108,10 @@ class JobSchedulingService(Service):
                 return False
         return True
 
-    def interferes_with_reservations(self, job: Job, available_hosts_with_gpu_occupation: Dict[str, Dict],
-                                     considered_future_period: timedelta = 0, allow_own: bool = True) -> bool:
+    @staticmethod
+    def interferes_with_reservations(job: Job, available_hosts_with_gpu_occupation: Dict[str, Dict],
+                                     considered_future_period: timedelta = timedelta(0),
+                                     allow_own: bool = True) -> bool:
         for task in job.tasks:
             gpu_id = Scheduler.get_assigned_gpu_uid(task, available_hosts_with_gpu_occupation)
             upcoming_reservations = Reservation.surrounding_events_for_resource(gpu_id, self.stop_attempts_after,
@@ -217,15 +220,15 @@ class JobSchedulingService(Service):
 
         log.debug('{} jobs should be stopped.'.format(len(jobs_to_stop)))
         for job in jobs_to_stop:
-            content, status = self.stop_with_grace(job.id)
             log.info(self._log_msg(now=now, action='Stopping scheduled', id=job.id, scheduled=job._stop_at))
+            content, status = self.stop_with_grace(job.id)
 
             if status == 200:
                 log.debug(content['job']['status'])
             else:
                 log.warning(content['msg'])
 
-    def sync_running_from_queue(self, available_hosts_with_gpu_occupation: Dict[str, Dict[str, bool]]):
+    def sync_running_from_queue(self, available_hosts_with_gpu_occupation: Dict[str, Dict[str, List]]):
         jobs_running_from_queue = Job.get_jobs_running_from_queue()
 
         for job in jobs_running_from_queue:
