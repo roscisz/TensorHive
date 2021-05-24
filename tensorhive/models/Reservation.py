@@ -93,10 +93,8 @@ class Reservation(CRUDModel, Base):  # type: ignore
 
         current_time = datetime.datetime.utcnow()
 
-        query = and_(# Events that has already started
-                     cls.start <= current_time,
-                     # Events before their end
-                     current_time <= cls.end)
+        query = and_(cls.start <= current_time,  # type: ignore  # Events that has already started
+                     current_time <= cls.end)  # type: ignore  # Events before their end
 
         if resource_id is not None:
             query = and_(query, cls.resource_id == resource_id)
@@ -106,16 +104,17 @@ class Reservation(CRUDModel, Base):  # type: ignore
         return [e for e in events if not e.is_cancelled]
 
     @classmethod
-    def surrounding_events_for_resource(cls, resource_id: str, period_before: timedelta,
-                                        period_after: timedelta) -> List['Reservation']:
+    def upcoming_events_for_resource(cls, resource_id: str, period_after: timedelta) -> List['Reservation']:
         current_time = datetime.datetime.utcnow()
-        events =  cls.query.filter(
+        events = cls.query.filter(
             and_(
                 cls.resource_id == resource_id,
-                cls.start >= current_time - period_before,
-                cls.start <= current_time + period_after
+                or_(and_(cls.start < current_time,  # type: ignore
+                         cls.end > current_time),  # type: ignore
+                    and_(cls.start >= current_time,  # type: ignore
+                         cls.start <= current_time + period_after))  # type: ignore
             )
-        ).all()
+        ).order_by(Reservation.start).all()
         return [e for e in events if not e.is_cancelled]
 
     def would_interfere(self):
