@@ -50,11 +50,13 @@ class InfrastructureManager():
         # Loop through each GPU on node
         node_processes = {}
         for uuid, gpu_data in self.infrastructure[hostname]['GPU'].items():
-                if 'processes' in self.infrastructure[hostname]['GPU'][uuid]:
-                    single_gpu_processes = self.infrastructure[hostname]['GPU'][uuid]['processes']
-                    if single_gpu_processes is not None:
-                        node_processes[uuid] = [process for process in single_gpu_processes if process['command']
-                                                not in self.ignored_processes]
+            if 'processes' in self.infrastructure[hostname]['GPU'][uuid]:
+                single_gpu_processes = self.infrastructure[hostname]['GPU'][uuid]['processes']
+                if single_gpu_processes is not None:
+                    node_processes[uuid] = [process for process in single_gpu_processes if process['command']
+                                            not in self.ignored_processes]
+                else:
+                    node_processes[uuid] = []
         return node_processes
 
     def all_nodes_with_gpu_processes(self) -> Dict[str, Dict]:
