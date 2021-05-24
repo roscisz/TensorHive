@@ -17,9 +17,11 @@ class Scheduler(ABC):
     @staticmethod
     # TODO: remove this dirty function when gpu_uid becomes stored in Task
     def get_assigned_gpu_uid(task: Task, hardware_map: Dict[str, Dict]) -> str:
-        if task.gpu_id is None:
+        gpu_ids = list(hardware_map[task.hostname].keys())
+
+        if task.gpu_id is None or task.gpu_id >= len(gpu_ids):
             return None
-        return list(hardware_map[task.hostname].keys())[task.gpu_id]
+        return gpu_ids[task.gpu_id]
 
 
 class GreedyScheduler(Scheduler):
