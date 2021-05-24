@@ -283,7 +283,7 @@ def business_execute(id: JobId) -> Tuple[Content, HttpStatusCode]:
             if status is not HTTPStatus.OK.value:
                 not_spawned_tasks.append(task.id)
 
-        job.status = JobStatus.running
+        job.synchronize_status()
         job.save()
 
         assert not_spawned_tasks == [], 'Could not spawn some tasks'
@@ -400,7 +400,7 @@ def business_stop(id: JobId, gracefully: Optional[bool] = True) -> Tuple[Content
         if job.start_at:
             # So this job should not be started automatically anymore
             job.start_at = None
-        job.status = JobStatus.terminated
+        job.synchronize_status()
         job.save()
     except NoResultFound:
         content, status = {'msg': JOB['not_found']}, HTTPStatus.NOT_FOUND.value
