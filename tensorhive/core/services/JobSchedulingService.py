@@ -13,6 +13,7 @@ from tensorhive.core.managers.SSHConnectionManager import SSHConnectionManager
 from tensorhive.core import task_nursery
 from typing import List, Dict, Set
 from datetime import datetime, timedelta
+from http import HTTPStatus
 from tensorhive.database import db_session  # pylint: disable=unused-import
 import gevent
 import logging
@@ -192,11 +193,14 @@ class JobSchedulingService(Service):
 
     def stop_with_grace(self, job_id: int):
         if job_id in self.stubborn_job_ids:
+            log.info(self._log_msg(now=datetime.utcnow(), action='Killing ungracefully', id=job_id))
             self.stubborn_job_ids.remove(job_id)
             return business_stop(job_id, gracefully=False)
         else:
-            self.stubborn_job_ids.add(job_id)
-            return business_stop(job_id, gracefully=True)
+            log.info(self._log_msg(now=datetime.utcnow(), action='Stopping gracefully', id=job_id))
+            _, status = business_stop(job_id, gracefully=True)
+            if status != HTTPStatus.OK.value:
+                self.stubborn_job_ids.add(job_id)
 
     def stop_scheduled(self):
         """Triggers `stop` on database records that should not be running.
@@ -258,6 +262,7 @@ class JobSchedulingService(Service):
                     job_should_be_stopped = True
 
             if job_should_be_stopped:
+                log.info(self._log_msg(now=datetime.utcnow(), action='Stopping queued job', id=job.id))
                 self.stop_with_grace(job.id)
 
     @override
