@@ -28,7 +28,7 @@ setup(
     keywords='gpu reservation calendar monitoring machine learning distributed tensorflow pytorch',
     install_requires=[
         'alembic==1.0.3',
-        'bcrypt==3.2.0',
+        'bcrypt==3.1.7',
         'certifi==2020.12.5',
         'cffi==1.14.5',
         'chardet==4.0.0',
