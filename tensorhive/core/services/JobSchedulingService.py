@@ -25,7 +25,7 @@ class JobSchedulingService(Service):
 
     It runs periodically, checking if database records require taking some action.
     """
-    _infrastructure_manager: InfrastructureManager = None
+    _infrastructure_manager = None
     _connection_manager: SSHConnectionManager = None
     _scheduler: Scheduler = None
 
