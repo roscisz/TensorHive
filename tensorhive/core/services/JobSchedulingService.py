@@ -25,15 +25,15 @@ class JobSchedulingService(Service):
 
     It runs periodically, checking if database records require taking some action.
     """
-    _infrastructure_manager = None
-    _connection_manager: SSHConnectionManager = None
-    _scheduler: Scheduler = None
+    _infrastructure_manager = None  # type: InfrastructureManager
+    _connection_manager = None  # type: SSHConnectionManager
+    _scheduler = None  # type: Scheduler
 
     def __init__(self, interval: float, stop_attempts_after: float):
         super().__init__()
         self.interval = interval
         self.stop_attempts_after = timedelta(minutes=stop_attempts_after)
-        self.stubborn_job_ids: Set[int] = set()
+        self.stubborn_job_ids = set()  # type: Set[int]
         self.considered_future_period = timedelta(minutes=CONFIG.SCHEDULE_QUEUED_JOBS_WHEN_FREE_MINS)
 
     @override
@@ -81,7 +81,7 @@ class JobSchedulingService(Service):
         :param hosts_with_gpu_occupation: {hostname: {GPU_id: True if GPU occupied}}
         :returns: {hostname: {GPU_id: number_of_minutes until next occupation of the GPU}}
         '''
-        ret: Dict[str, Dict[str, int]] = {}
+        ret = {}  # type: Dict[str, Dict[str, int]]
 
         for host in hosts_with_gpu_occupation:
             ret[host] = {}
@@ -165,7 +165,7 @@ class JobSchedulingService(Service):
         current_infrastructure = self._infrastructure_manager.infrastructure
 
         for job in jobs:
-            owner: User = job.user
+            owner = job.user  # type: User
             user_filtered_infrastructure = owner.filter_infrastructure_by_user_restrictions(current_infrastructure)
             user_filtered_hostname_gpus = {}
             for hostname in user_filtered_infrastructure:
