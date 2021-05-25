@@ -240,11 +240,12 @@ class JobSchedulingService(Service):
         for job in jobs_running_from_queue:
             job_should_be_stopped = False
             for task in job.tasks:
-                if task.pid not in task_nursery.running(task.hostname, job.user.username):
+                gpu_uid = Scheduler.get_assigned_gpu_uid(task, available_hosts_with_gpu_occupation)
+
+                if not gpu_uid or task.pid not in task_nursery.running(task.hostname, job.user.username):
                     task.status = TaskStatus.not_running
                     continue
 
-                gpu_uid = Scheduler.get_assigned_gpu_uid(task, available_hosts_with_gpu_occupation)
                 current_processes_on_gpu = available_hosts_with_gpu_occupation[task.hostname][gpu_uid]
                 if current_processes_on_gpu is None:
                     other_process_pids = []
