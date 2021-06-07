@@ -1,7 +1,7 @@
 TensorHive
 ===
-![](https://img.shields.io/badge/release-v0.3.6-brightgreen.svg?style=popout-square)
-![](https://img.shields.io/badge/pypi-v0.3.6-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/release-v1.0.0-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/pypi-v1.0.0-brightgreen.svg?style=popout-square)
 ![](https://img.shields.io/badge/Issues%20and%20PRs-welcome-yellow.svg?style=popout-square)
 ![](https://img.shields.io/badge/platform-Linux-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/hardware-Nvidia-green.svg?style=popout-square)
@@ -10,8 +10,7 @@ TensorHive
 
 <img src="https://github.com/roscisz/TensorHive/raw/master/images/logo_small.png" height="130" align="left">
 
-TensorHive is an open source tool for monitoring and managing computing resources across multiple hosts.
-It solves the most common problems and nightmares about accessing and sharing your AI-oriented infrastructure across multiple, often competing users.
+TensorHive is an open source tool for managing computing resources used by multiple users across distributed hosts. It focuses on granting exclusive access to GPUs for machine learning workloads and consists of __reservation__, __monitoring__ and __job execution__ modules.
 
 It's designed with __simplicity, flexibility and configuration-friendliness__ in mind.
 
@@ -23,11 +22,10 @@ It's designed with __simplicity, flexibility and configuration-friendliness__ in
 
 Each column represents all reservation events for a GPU on a given day.
 In order to make a new reservation simply click and drag with your mouse, select GPU(s), add some meaningful title, optionally adjust time range.
-
 If there are many hosts and GPUs in our infrastructure, you can use our simplified, horizontal calendar to quickly identify empty time slots and filter out already reserved GPUs.
 ![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/reservations_overview_screenshot.png)
 
-From now on, **only your processes are eligible to run on reserved GPU(s)**. TensorHive periodically checks if some other user has violated it. He will be spammed with warnings on all his PTYs, emailed every once in a while, additionally admin will also be notified (it all depends on the configuration).
+From now on, **only your processes are eligible to run on the reserved GPU(s)**. TensorHive periodically checks if some other user has violated it. They will be spammed with warnings on all his PTYs, emailed every once in a while, additionally admin will also be notified (it all depends on the configuration).
 
 Terminal warning             |  Email warning             |  Admin warning
 :-------------------------:|:-------------------------:|:-------------------------:
@@ -41,20 +39,18 @@ Here you can add new watches, select metrics and monitor ongoing GPU processes a
 
 ![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/nodes_overview_screenshot.png)
 
-#### Task execution
+#### Job execution
 
-Thanks to the `Task execution` module, you can define commands for tasks you want to run on any configured nodes.
-You can manage them manually or set spawn/terminate date.
+Thanks to the `Job execution` module, you can define commands for tasks you want to run on any configured nodes.
+You can manage them manually, set specific spawn/terminate dates or add jobs to a queue, so that they are executed automatically
+when the required resources are not reserved.
 Commands are run within `screen` session, so attaching to it while they are running is a piece of cake.
 
 It provides a simple, but flexible (**framework-agnostic**) command templating mechanism that will help you automate multi-node trainings.
-Additionally, specialized templates help to conveniently set proper parameters for chosen well known frameworks:
+Additionally, specialized templates help to conveniently set proper parameters for chosen well known frameworks. In the [examples](https://github.com/roscisz/TensorHive/tree/master/examples) directory, you will find sample scenarios of using the `Job execution` module for various
+frameworks (including TensorFlow and PyTorch) and computing environments.
 
 ![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/examples/TF_CONFIG/img/multi_process.png)
-
-In the [examples](https://github.com/roscisz/TensorHive/tree/master/examples)
-directory, you will find sample scenarios of using the `Task execution` module for various
-frameworks and computing environments.
 
 TensorHive requires that users who want to use this feature must append TensorHive's public key to their `~/.ssh/authorized_keys` on all nodes they want to connect to.
 
@@ -66,7 +62,9 @@ Our goal is to provide solutions for painful problems that ML engineers often ha
 
 #### You should really consider using TensorHive if anything described in profiles below matches you:
 1. You're an **admin**, who is responsible for managing a cluster (or multiple servers) with powerful GPUs installed.
-- :angry: There are more users than resources, so they have to compete for it, but you don't know how to deal with that chaos
+- :angry: There are more users than resources, so they have to compete for it
+- :microphone: The users require __exclusive access__ to the GPUs, rather than a queuing system 
+- :crystal_ball: You need to control which projects in your organization consume the most computing power
 - :ocean: Other popular tools are simply an overkill, have different purpose or require a lot of time to spend on reading documentation, installation and configuration (Grafana, Kubernetes, Slurm)
 - :penguin: People using your infrastructure expect only one interface for all the things related to training models (besides terminal): monitoring, reservation calendar and scheduling distributed jobs 
 - :collision: Can't risk messing up sensitive configuration by installing software on each individual machine, prefering centralized solution which can be managed from one place
@@ -94,7 +92,14 @@ Our goal is to provide solutions for painful problems that ML engineers often ha
 
 &nbsp;&nbsp;&nbsp;&nbsp; :arrow_right: no more manual logging in to each individual machine in order to check if GPU is currently in use or not
 
-For more details, check out the [full list of features](#features).
+:four: Access to specific GPUs or hosts can be granted to specific users or groups
+
+&nbsp;&nbsp;&nbsp;&nbsp; :arrow_right: division of the infrastructure can be easily adjusted to the current needs of work groups in your organization
+
+:five: Automatic execution of queued jobs when there are no active GPU reservations
+
+&nbsp;&nbsp;&nbsp;&nbsp; :arrow_right: jobs that are not urgent can be added to a queue and automatically executed later
+
 
 ---------------
 
@@ -138,7 +143,7 @@ tensorhive test
 ```
 
 (optional) If you want to allow your UNIX users to set up their TensorHive accounts on their own and run distributed
-programs through `Task execution` plugin, use the `key` command to generate the SSH key for TensorHive: 
+programs through `Job execution` module, use the `key` command to generate the SSH key for TensorHive: 
 ```
 tensorhive key
 ```
@@ -161,51 +166,6 @@ You can fully customize TensorHive behaviours via INI configuration files (which
 
 ----------------------
 
-### Features
-
-#### Core
-- [x] :mag_right: Monitor metrics on each host
-    - [x] :tm: Nvidia GPUs
-    - [x] :pager: CPU, RAM
-    - [ ] :open_file_folder: HDD
-- [x] :customs: Protection of reserved resources
-    - [x] :warning:	Send warning messages to terminal of users who violate the rules
-    - [x] :mailbox_with_no_mail: Send e-mail warnings
-    - [x] :closed_lock_with_key: Grant users and groups access to specific GPUs at given time schedules
-    - [ ] :bomb: Kill unwanted processes
-- [X] :rocket: Task execution and scheduling
-    - [x] :old_key: Execute any command in the name of a user
-    - [x] :alarm_clock: Schedule spawn and termination
-    - [x] :repeat: Synchronize process status
-    - [x] :factory: Use `screen` command as backend - user can easily attach to running task
-    - [x] :skull: Remote process interruption, termination and kill
-    - [x] :floppy_disk: Save stdout to disk
-- [x] :watch: Track wasted (idle) time during reservation
-    - [x] :hocho: Gather and calculate average gpu and mem utilization
-    - [ ] :loudspeaker: Remind user when his reservation starts and ends
-    - [ ] :incoming_envelope: Send e-mail if idle for too long
-    
-#### Web
-- [x] :chart_with_downwards_trend: Configurable charts view
-    - [x] Metrics and active processes
-    - [ ] Detailed hardware specification 
-- [x] :calendar: Calendar view
-    - [x] Allow making reservations for selected GPUs
-    - [x] Edit reservations
-    - [x] Cancel reservations
-    - [x] Attach jobs to reservation
-- [x] :baby_symbol: Task execution
-    - [x] Create parametrized tasks and assign to hosts, automatically set `CUDA_VISIBLE_DEVICES`
-    - [x] Buttons for task spawning/scheduling/termination/killing actions
-    - [x] Fetch log produced by running task
-    - [x] Group actions (spawn, schedule, terminate, kill selected)
-- [ ] :straight_ruler: Detailed hardware specification panel (CPU clock speed, RAM, etc.)
-- [ ] :penguin: Admin panel
-    - [ ] User banning
-    - [ ] Accept/reject reservation requests
-    - [ ] Modify rules on-the-fly (without restarting)
-    - [ ] Show popups to users (something like message of the day - `motd`)
-
 
 Contribution and feedback
 ------------------------
@@ -213,7 +173,7 @@ We'd :heart: to collect your observations, issues and pull requests!
 
 Feel free to **report any configuration problems, we will help you**.
 
-Currently we are working on grouping tasks into jobs that can be queued and automatically scheduled, deadline - January 2021 :shipit:, so stay tuned!
+Currently we are gathering practical infrastructure protection scenarios from our users to extract and further support the most common TensorHive deployments.
 
 If you consider becoming a contributor, please look at issues labeled as 
 [**good-first-issue**](https://github.com/roscisz/TensorHive/issues?q=is%3Aissue+is%3Aopen+label%3Agood-first-issue)
@@ -222,9 +182,6 @@ and
 
 Credits
 -------
-TensorHive has been greatly supported within a joint project between [**VoiceLab.ai**](https://voicelab.ai) and
-[**Gdańsk University of Technology**](https://pg.edu.pl/) titled: "Exploration and selection of methods
-for parallelization of neural network training using multiple GPUs".
 
 Project created and maintained by:
 - Paweł Rościszewski [(@roscisz)](https://github.com/roscisz)
@@ -236,8 +193,11 @@ Project created and maintained by:
 - Mateusz Piotrowski [(@matpiotrowski)](https://github.com/matpiotrowski)
 - Martyna Oleszkiewicz [(@martyole)](https://github.com/martyole)
 - Tomasz Menet [(@tomenet)](https://github.com/tomenet)
+- Bartosz Jankowski [(@brtjank)](https://github.com/brtjank)
 
-
+TensorHive has been greatly supported within a joint project between [**VoiceLab.ai**](https://voicelab.ai) and
+[**Gdańsk University of Technology**](https://pg.edu.pl/) titled: "Exploration and selection of methods
+for parallelization of neural network training using multiple GPUs".
 
 
 License
