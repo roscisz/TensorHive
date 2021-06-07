@@ -1,25 +1,25 @@
 <template>
-<div>
-  <full-calendar-reserve
-    :show-modal="showModalReserve"
-    @close="showModalReserve = false"
-    :startDate="startDate"
-    :endDate="endDate"
-    :resources-checkboxes="resourcesCheckboxes"
-    :number-of-resources="selectedResources.length"
-    :add-reservation="addReservation"
-  ></full-calendar-reserve>
-  <full-calendar-info
-    :show-modal="showModalInfo"
-    @close="showModalInfo = false"
-    @handleError="handleError"
-    :reservation="reservation"
-    :cancel="cancelReservation"
-    :update="updateReservation"
-    :refreshTasks="refreshTasks"
-    :nodes="nodes"
-  ></full-calendar-info>
-</div>
+  <div>
+    <full-calendar-reserve
+      :show-modal="showModalReserve"
+      @close="showModalReserve = false"
+      :startDate="startDate"
+      :endDate="endDate"
+      :resources-checkboxes="resourcesCheckboxes"
+      :number-of-resources="selectedResources.length"
+      :add-reservation="addReservation"
+    ></full-calendar-reserve>
+    <full-calendar-info
+      :show-modal="showModalInfo"
+      @close="showModalInfo = false"
+      @handleError="handleError"
+      :reservation="reservation"
+      :cancel="cancelReservation"
+      :update="updateReservation"
+      :refreshJobs="refreshJobs"
+      :nodes="nodes"
+    ></full-calendar-info>
+  </div>
 </template>
 
 <script>
@@ -67,7 +67,7 @@ export default {
       startDate: null,
       endDate: null,
       resourcesCheckboxes: [],
-      refreshTasks: false,
+      refreshJobs: false,
       parsedNodeNames: [],
       restrictionEvents: []
     }
@@ -271,7 +271,7 @@ export default {
               if (moment(date).isSameOrAfter(moment(restriction.startsAt).startOf('day')) &&
                 (!restriction.endsAt || moment(date).isSameOrBefore(moment(restriction.endsAt).endOf('day'))) &&
                 (!restriction.endsAt || moment(eventStart).isSameOrBefore(moment(restriction.endsAt))) &&
-              moment(eventEnd).isSameOrAfter(restriction.startsAt)) {
+                moment(eventEnd).isSameOrAfter(restriction.startsAt)) {
                 if (moment(eventStart).isBefore(restriction.startsAt)) eventStart = restriction.startsAt
                 if (!!restriction.endsAt && moment(eventEnd).isAfter(moment(restriction.endsAt))) eventEnd = restriction.endsAt
                 this.showRestrictionResourcesEvents(restriction, start, end, eventStart, eventEnd)
@@ -297,7 +297,7 @@ export default {
       else resourceCount = restriction.resources.length
       for (var j = 0; j < resourceCount; j++) {
         if ((!restriction.endsAt || moment(calendarStart).isSameOrBefore(restriction.endsAt)) &&
-        moment(calendarEnd).isSameOrAfter(moment(restriction.startsAt))) {
+          moment(calendarEnd).isSameOrAfter(moment(restriction.startsAt))) {
           restrictionEvent.start = eventStart
           restrictionEvent.end = eventEnd
           restrictionEvent.isGlobal = restriction.isGlobal
@@ -305,7 +305,7 @@ export default {
           this.restrictionEvents.push(restrictionEvent)
 
           if (this.selectedResources.some(r => r.uuid === restrictionEvent.resourceId) ||
-          restrictionEvent.isGlobal) {
+            restrictionEvent.isGlobal) {
             this.calendar.fullCalendar('renderEvent', restrictionEvent)
           }
         }
@@ -362,7 +362,7 @@ export default {
       },
       eventRender: function (event, element) {
         element.find('.fc-title').append('<br/>' + event.description)
-        if (self.selectedResources.length > 6) {
+        if (self.selectedResources.length > 8) {
           $(element).css('color', 'rgba(0, 0, 0, 0)')
         }
         if (!event.allDay && event.groupId !== 'restriction') {
@@ -473,7 +473,7 @@ export default {
         if (!calEvent.allDay) {
           self.reservationId = calEvent.id
           self.calendar.fullCalendar('refetchEvents')
-          self.refreshTasks = !self.refreshTasks
+          self.refreshJobs = !self.refreshJobs
           self.showModalInfo = true
         }
       },
@@ -485,11 +485,12 @@ export default {
 }
 </script>
 <style>
-  @import '../../../../static/fullcalendar/fullcalendar.css';
-  .fc th, .fc td {
+  @import "../../../../static/fullcalendar/fullcalendar.css";
+  .fc th,
+  .fc td {
     border-color: #222d32 !important;
   }
-  .fc-event{
+  .fc-event {
     display: flex;
     flex-wrap: wrap;
     align-items: center;

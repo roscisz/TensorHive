@@ -45,6 +45,8 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
     _restrictions = relationship('Restriction', secondary='restriction2assignee', back_populates='_users',
                                  viewonly=True)
     _reservations = relationship('Reservation', cascade='all,delete')
+    _jobs = relationship(
+        'Job', cascade='all, delete', back_populates="user", lazy='subquery')
 
     min_password_length = 8
 
@@ -59,6 +61,14 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
     @hybrid_property
     def roles(self):
         return self._roles
+
+    @hybrid_property
+    def jobs(self):
+        return self._jobs
+
+    @hybrid_property
+    def number_of_jobs(self):
+        return len(self._jobs)
 
     @roles.setter  # type: ignore
     def roles(self, new_roles):

@@ -1,36 +1,23 @@
 <template>
   <div>
-    <v-alert
-      v-model="alert"
-      dismissible
-      type="error"
-    >
-      {{ errorMessage }}
-    </v-alert>
+    <v-alert v-model="alert" dismissible type="error">{{ errorMessage }}</v-alert>
     <div class="select_line">
+      <v-select class="select_item" v-model="selectedNode" :items="nodes"></v-select>
+      <div class="select_space" />
       <v-select
         class="select_item"
-        v-model="selectedNode"
-        :items="nodes"
+        v-model="selectedResourceType"
+        :items="resourceTypes"
       ></v-select>
-      <div class="select_space"/>
-      <v-select
-          class="select_item"
-          v-model="selectedResourceType"
-          :items="resourceTypes"
-      ></v-select>
-      <div class="select_space"/>
-      <v-select
-        class="select_item"
-        v-model="selectedMetric"
-        :items="metrics"
-      ></v-select>
+      <div class="select_space" />
+      <v-select class="select_item" v-model="selectedMetric" :items="metrics"></v-select>
       <v-btn
         color="indigo"
         fab
         dark
         small
         outline
+        class="pt-2"
         @click="removeMe()"
       >
         <v-icon dark>delete</v-icon>
@@ -59,13 +46,14 @@
         </template>
       </v-data-table>
     </div>
-    <div v-else>
+    <div class="chart_box" v-else>
       <LineChart
-         class="chart_box"
         :chart-data="metricData"
         :options="metricOptions"
         :rerender-chart="rerenderChart"
-        :update-chart="updateChart"/>
+        :update-chart="updateChart"
+        :styles="chartStyles"
+      />
     </div>
   </div>
 </template>
@@ -109,7 +97,10 @@ export default {
       ],
       processes: [],
       alert: false,
-      errorMessage: ''
+      errorMessage: '',
+      chartStyles: {
+        height: '100%'
+      }
     }
   },
 
@@ -268,27 +259,24 @@ export default {
 </script>
 
 <style>
-.select_line{
-  display: flex;
-  justify-content: left;
-  position: sticky
-}
-.select_space{
-  width: 5%;
-}
-.select_item{
-  width: 30%;
-  position: sticky;
-}
-.chart_box{
-  width: 100%;
-  height: 34vh;
-  position: relative;
-}
-.table_box{
-  width: 100%;
-  height: 34vh;
-  position: relative;
-  overflow-y: scroll;
-}
+  .select_line {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+  }
+  .select_space {
+    width: 5%;
+  }
+  .select_item {
+    width: 30%;
+  }
+  .chart_box {
+    width: 100%;
+    height: calc(100% - 90px);
+  }
+  .table_box {
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+  }
 </style>

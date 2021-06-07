@@ -1,16 +1,14 @@
 from tensorhive.core.utils.decorators import memoize, timeit
 from tensorhive.config import SSH
 from pssh.clients.native import ParallelSSHClient
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict, Tuple, Generator, List
 from paramiko.rsakey import RSAKey
-import functools
 from pathlib import PosixPath
 import pssh
 import logging
 log = logging.getLogger(__name__)
 
-__author__ = '@micmarty'
-__all__ = ['build_dedicated_config_for', 'get_client', 'run_command', 'get_stdout', 'succeeded']
+__author__ = '@micmarty, @roscisz'
 """
 This module provides a universal and stateless API for SSH-related tasks.
 
@@ -139,3 +137,36 @@ def init_ssh_key(path: PosixPath):
         key = generate_cert(path)
         log.info('[⚙] Generated SSH key in {}'.format(path))
     return key
+
+
+def node_tty_sessions(connection) -> List[Dict]:
+    '''Executes shell command in order to fetch all active terminal sessions'''
+    command = 'who'
+    output = connection.run_command(command)
+
+    # FIXME Assumes that only one node is in connection
+    for _, host_out in output.items():
+        result = _parse_who_output(host_out.stdout)
+    return result
+
+
+def _parse_who_output(stdout: Generator) -> List[Dict]:
+    '''
+    Transforms command output into a dictionary
+    Assumes command was: 'who | grep <username>'
+    '''
+    stdout_lines = list(stdout)  # type: List[str]
+
+    # Empty stdout
+    if stdout_lines is None:
+        return None
+
+    def as_dict(line):
+        columns = line.split()
+        return {
+            # I wanted it to be more explicit and flexible (even if it could be done better)
+            'USER': columns[0],
+            'TTY': columns[1]
+        }
+
+    return [as_dict(line) for line in stdout_lines]

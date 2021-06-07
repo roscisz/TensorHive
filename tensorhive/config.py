@@ -214,6 +214,8 @@ class MAILBOT:
     mailbot_config = ConfigLoader.load(CONFIG_FILES.MAILBOT_CONFIG_PATH, displayed_title='mailbot')
     section = 'general'
     INTERVAL = mailbot_config.getfloat(section, 'interval', fallback=10.0)
+    MAX_EMAILS_PER_PROTECTION_INTERVAL = mailbot_config.getint(section,
+                                                               'max_emails_per_protection_interval', fallback=50)
     NOTIFY_INTRUDER = mailbot_config.getboolean(section, 'notify_intruder', fallback=True)
     NOTIFY_ADMIN = mailbot_config.getboolean(section, 'notify_admin', fallback=False)
     ADMIN_EMAIL = mailbot_config.get(section, 'admin_email', fallback=None)
@@ -246,11 +248,12 @@ class USAGE_LOGGING_SERVICE:
     LOG_CLEANUP_ACTION = config.getint(section, 'log_cleanup_action', fallback=2)
 
 
-class TASK_SCHEDULING_SERVICE:
-    section = 'task_scheduling_service'
+class JOB_SCHEDULING_SERVICE:
+    section = 'job_scheduling_service'
     ENABLED = config.getboolean(section, 'enabled', fallback=True)
     UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=30.0)
     STOP_TERMINATION_ATTEMPTS_AFTER = config.getfloat(section, 'stop_termination_attempts_after_mins', fallback=5.0)
+    SCHEDULE_QUEUED_JOBS_WHEN_FREE_MINS = config.getint(section, "schedule_queued_jobs_when_free_mins", fallback=30)
 
 
 class AUTH:

@@ -22,15 +22,15 @@
         <span class="page">Nodes Overview</span>
       </a>
     </router-link>
-    <li class="header">TASKS</li>
+    <li class="header">JOBS</li>
     <router-link
       tag="li"
       class="pageLink"
-      to="/tasks_overview"
+      to="/jobs_overview"
     >
       <a>
-        <i class="fa fa-tasks"></i>
-        <span class="page">Tasks Overview</span>
+        <i class="fa fa-suitcase"></i>
+        <span class="page">Jobs Overview</span>
       </a>
     </router-link>
     <li

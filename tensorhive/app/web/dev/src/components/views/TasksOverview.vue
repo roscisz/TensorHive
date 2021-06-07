@@ -46,7 +46,8 @@
       @getLog="getLog(...arguments)"
       :lines="logs"
       :path="path"
-      :taskId="taskId"/>
+      :taskId="taskId"
+    />
     <v-dialog v-model="showModalHowItWorks" width="500">
       <v-card>
         <v-card-text class="headline grey lighten-2" primary-title>
@@ -74,7 +75,13 @@
     <v-dialog v-model="showModalRemove" width="400">
       <v-card>
         <v-card-text class="headline grey lighten-2" primary-title>
-          <v-btn class="float-right-button" flat icon color="black" @click="showModalRemove= false">
+          <v-btn
+            class="float-right-button"
+            flat
+            icon
+            color="black"
+            @click="showModalRemove= false"
+          >
             <v-icon>close</v-icon>
           </v-btn>Do you want to remove this task?
         </v-card-text>
@@ -130,7 +137,10 @@
         </template>
         <v-progress-linear v-slot:progress :indeterminate="true"></v-progress-linear>
         <template v-slot:items="props">
-          <tr :active="props.selected" @click="props.selected = !props.selected">
+          <tr
+            :active="props.selected"
+            @click="props.selected = !props.selected"
+          >
             <td>
               <v-checkbox :input-value="props.selected" primary hide-details></v-checkbox>
             </td>
@@ -150,13 +160,19 @@
               </v-tooltip>
               <v-tooltip top>
                 <template v-slot:activator="{ on }">
-                  <v-icon v-on="on" @click="spawnTasks(props.item.id)">play_arrow</v-icon>
+                  <v-icon
+                    v-on="on"
+                    @click="spawnTasks(props.item.id)"
+                  >play_arrow</v-icon>
                 </template>
                 <span>Spawn task</span>
               </v-tooltip>
               <v-tooltip top>
                 <template v-slot:activator="{ on }">
-                  <v-icon v-on="on" @click="terminateTasks(props.item.id, null)">stop</v-icon>
+                  <v-icon
+                    v-on="on"
+                    @click="terminateTasks(props.item.id, null)"
+                  >stop</v-icon>
                 </template>
                 <span>
                   Terminate task - does not guarantee that
@@ -191,7 +207,10 @@
               </v-tooltip>
               <v-tooltip top>
                 <template v-slot:activator="{ on }">
-                  <v-icon v-on="on" @click="showConfirmationDialog(props.item.id)">delete</v-icon>
+                  <v-icon
+                    v-on="on"
+                    @click="showConfirmationDialog(props.item.id)"
+                  >delete</v-icon>
                 </template>
                 <span>Remove task</span>
               </v-tooltip>
@@ -202,7 +221,10 @@
     </div>
     <div class="text-xs-center pt-2">
       <v-btn color="primary" @click="openFromTemplate('')">Create tasks</v-btn>
-      <v-btn color="primary" @click="showModalChooseTemplate=true">Create tasks from template</v-btn>
+      <v-btn
+        color="primary"
+        @click="showModalChooseTemplate=true"
+      >Create tasks from template</v-btn>
       <v-tooltip top>
         <template v-slot:activator="{ on }">
           <v-icon v-on="on" @click="getTasks(true)">refresh</v-icon>
@@ -232,13 +254,19 @@
       </v-tooltip>
       <v-tooltip top>
         <template v-slot:activator="{ on }">
-          <v-icon style="font-size:20px;" v-on="on" @click="terminateTasks(null, false)">💀</v-icon>
+          <v-icon
+            style="font-size:20px;"
+            v-on="on"
+            @click="terminateTasks(null, false)"
+          >💀</v-icon>
         </template>
         <span>Kill selected tasks - use when command is more stubborn</span>
       </v-tooltip>
     </div>
     <v-snackbar color="amber" v-model="snackbar" bottom multi-line>
-      <span style="color:black">Synchronization in progress. Actions are not allowed now.</span>
+      <span
+        style="color:black"
+      >Synchronization in progress. Actions are not allowed now.</span>
       <v-btn color="black" flat @click="snackbar = false">Close</v-btn>
     </v-snackbar>
     <v-snackbar color="red" v-model="snackbarError" bottom multi-line>
@@ -251,10 +279,10 @@
 <script>
 import api from '../../api'
 import moment from 'moment'
-import TaskCreate from './tasks_overview/TaskCreate.vue'
+import TaskCreate from './jobs_overview/job_details_view/job_tasks/TaskCreate.vue'
 import TaskEdit from './tasks_overview/TaskEdit.vue'
 import TaskSchedule from './tasks_overview/TaskSchedule.vue'
-import TaskLog from './tasks_overview/TaskLog.vue'
+import TaskLog from './jobs_overview/job_details_view/job_tasks/TaskLog.vue'
 import TaskTemplateChooser from './tasks_overview/TaskTemplateChooser'
 export default {
   components: {
@@ -621,28 +649,28 @@ export default {
 }
 </script>
 <style>
-.dark-font {
-  color: black !important;
-  font-size: 1.5em;
-}
-.table-container {
-  max-height: 80vh;
-  overflow-y: scroll;
-}
-.float-right-button {
-  float: right;
-}
-.parameter-name-input {
-  max-width: 150px;
-}
-.task-command {
-  background-color: #f8f9fa;
-  border: 1px solid #eaecf0;
-}
-.space {
-  width: 5px;
-}
-.task-select {
-  max-width: 100px;
-}
+  .dark-font {
+    color: black !important;
+    font-size: 1.5em;
+  }
+  .table-container {
+    max-height: 80vh;
+    overflow-y: scroll;
+  }
+  .float-right-button {
+    float: right;
+  }
+  .parameter-name-input {
+    max-width: 150px;
+  }
+  .task-command {
+    background-color: #f8f9fa;
+    border: 1px solid #eaecf0;
+  }
+  .space {
+    width: 5px;
+  }
+  .task-select {
+    max-width: 100px;
+  }
 </style>

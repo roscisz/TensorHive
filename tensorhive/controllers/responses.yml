@@ -140,12 +140,12 @@ reservation:
   create:
     success: Reservation has been successfully created
     failure:
-      forbidden: Cannot create reservation due to lack of permissions
+      forbidden: Cannot create reservation due to lack of permissions - {reason}
       invalid: Requirements not met - {reason}
   update:
     success: Reservation has been successfully updated
     failure:
-      forbidden: Cannot update reservation due to lack of permissions
+      forbidden: Cannot update reservation due to lack of permissions - {reason}
       invalid: Requirements not met - {reason}
       assertions: Unable to update reservation - {reason}
   delete:
@@ -169,6 +169,7 @@ task:
     success: Task has been successfully created
     failure:
       invalid: Requirements not met - {reason}
+      duplicate: Unable to create task - {reason}
   update:
     success: Task has been successfully updated
     failure:
@@ -188,6 +189,56 @@ task:
     failure:
       state: Unable to terminate, {reason}
       exit_code: Accepted, but termination operation did not succeed (op. exit_code was not 0)
+      connection: Cannot connect, unable to terminate task, {reason}
+job:
+  not_found: Job has not been found
+  all:
+    success: Jobs has been successfully fetched
+    forbidden: Fetching job list forbidden - {reason}
+  get:
+    success: Job has been successfully fetched
+    forbidden: Fetching job forbidden - {reason}
+  create:
+    success: Job has been successfully created
+    failure:
+      invalid: Requirements not met - {reason}
+      duplicate: Unable to create job - {reason}
+  update:
+    success: Job has been successfully updated
+    failure:
+      assertions: Unable to update job - {reason}
+      forbidden: Job deletion forbidden - {reason}
+  delete:
+    success: Job has been successfully delete
+    failure:
+      assertions: Unable to delete job - {reason}
+  execute:
+    success: Job has been succesfully executed
+    failure:
+      state: Unable to execute job - {reason}
+      tasks: Unable to execute job - {reason}
+  enqueue:
+    success: Job has been succesfully enqueued
+    failure: Unable to enqueue job - {reason}
+  dequeue:
+    success: Job has been succesfully dequeued
+    failure: Unable to dequeue job - {reason}
+  stop:
+    success: Job has been succesfully stopped
+    failure:
+      state: Unable to stop job - {reason}
+      tasks: Unable to stop job - {reason}
+  tasks:
+    add:
+      failure: 
+        duplicate: Unable to add task to job - {reason}
+        assertions: Unable to add task to job - {reason}
+      success: Task has been assigned to job
+    remove:
+      failure: 
+        not_found: Unable to remove task from job - {reason}
+        assertions: Unable to remove task from job - {reason}
+      success: Task has been removed from job
 token:
   revoke:
     success: '{token_type} has been revoked'

@@ -18,6 +18,7 @@ class MonitoringService(Service):
     monitors = []  # type: List
     connections = []  # type: List
     infrastructure_manager = None
+    connection_manager = None
 
     def __init__(self, monitors, interval=0.0):
         super().__init__()

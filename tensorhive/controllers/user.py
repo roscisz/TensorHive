@@ -125,11 +125,11 @@ def authorized_keys_entry() -> str:
 @admin_required
 def update(newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     user = newValues
-    print('REQ', user)
+
     if user.get('id') is not None:
         try:
             found_user = User.get(user['id'])
-            updatable_field_names = ['username', 'password', 'email']
+            updatable_field_names = ['username', 'password', 'email', 'roles']
 
             for field_name in updatable_field_names:
                 if user.get(field_name) is not None:

@@ -22,7 +22,8 @@ import 'material-design-icons-iconfont/dist/material-design-icons.css'
 
 import axios from 'axios'
 import config from './config'
-axios.get('static/config.json').then(response => {
+
+axios.get('/static/config.json').then(response => {
   config.serverURI = response.data.apiPath
   config.version = response.data.version
   if (window.localStorage) {
