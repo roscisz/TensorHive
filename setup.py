@@ -70,7 +70,7 @@ setup(
         'ssh2-python==0.26.0',
         'stringcase==1.2.0',
         'swagger_ui_bundle==0.0.8',
-        'urllib3==1.26.4',
+        'urllib3==1.26.5',
         'Werkzeug==0.16.1',
         'zope.event==4.5.0',
         'zope.interface==5.4.0',
