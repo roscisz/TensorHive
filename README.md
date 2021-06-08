@@ -35,7 +35,7 @@ Terminal warning             |  Email warning             |  Admin warning
 
 #### Infrastructure monitoring dashboard
 Accessible infrastructure can be monitored in the Nodes overview tab. Sample screenshot:
-Here you can add new watches, select metrics and monitor ongoing GPU processes and its' owners.
+Here you can add new watches, select metrics and monitor ongoing GPU processes and their owners.
 
 ![image](https://raw.githubusercontent.com/roscisz/TensorHive/master/images/nodes_overview_screenshot.png)
 
@@ -66,11 +66,11 @@ Our goal is to provide solutions for painful problems that ML engineers often ha
 - :microphone: The users require __exclusive access__ to the GPUs, rather than a queuing system 
 - :crystal_ball: You need to control which projects in your organization consume the most computing power
 - :ocean: Other popular tools are simply an overkill, have different purpose or require a lot of time to spend on reading documentation, installation and configuration (Grafana, Kubernetes, Slurm)
-- :penguin: People using your infrastructure expect only one interface for all the things related to training models (besides terminal): monitoring, reservation calendar and scheduling distributed jobs 
+- :penguin: People using your infrastructure expect only one interface for all the things related to managing computing infrastructure: monitoring, reservation calendar and scheduling distributed jobs
 - :collision: Can't risk messing up sensitive configuration by installing software on each individual machine, prefering centralized solution which can be managed from one place
 
 2. You're a **standalone user** who has access to beefy GPUs scattered across multiple machines.
-- :part_alternation_mark: You want to be able to determine if batch size is too small or if there's a bottleneck when moving data from memory to GPU - charts with metrics such as `gpu_util`, `mem_util`, `mem_used` are great for this purpose
+- :part_alternation_mark: You want to keep the GPU utilization high, considering batch size, host to device data transfer etc. - charts with metrics such as `gpu_util`, `mem_util`, `mem_used` are great for this purpose
 - :date: Visualizing names of training experiments using calendar helps you track how you're progressing on the project
 - :snake: Launching distributed trainings is essential for you, no matter what the framework is
 - :dizzy_face: Managing a list of training commands for all your distributed training experiments drives you nuts
