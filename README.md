@@ -126,8 +126,8 @@ git clone https://github.com/roscisz/TensorHive.git && cd TensorHive
 pip install -e .
 ```
 
-TensorHive is already shipped with newest web app build, but in case you modify the source, you can can build it with `make app` (currently on `master` branch). For more useful commands see our [Makefile](https://github.com/roscisz/TensorHive/blob/master/tensorhive/Makefile).
-Build tested with `Node v14.15.1` and `npm 6.14.8`
+TensorHive is already shipped with newest web app build, but in case you modify the source, you can can build it with `make app`. For more useful commands see our [Makefile](https://github.com/roscisz/TensorHive/blob/master/tensorhive/Makefile).
+Build tested with `Node v14.15.4` and `npm 6.14.10`
 
 #### Basic usage
 
