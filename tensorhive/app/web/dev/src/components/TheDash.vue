@@ -182,6 +182,10 @@ export default {
 .content-wrapper {
   min-height: 100vh;
 }
+.wrapper .main-header {
+  // Default `z-index` clips dialogs from Vuetify.
+  z-index: 1;
+}
 .wrapper.fixed_layout {
   .main-header {
     position: fixed;

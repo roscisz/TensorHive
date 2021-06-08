@@ -39,6 +39,8 @@ def _import_models() -> None:
     from tensorhive.models.RevokedToken import RevokedToken
     from tensorhive.models.Role import Role
     from tensorhive.models.Task import Task
+    from tensorhive.models.Job import Job
+    from tensorhive.models.CommandSegment import CommandSegment, CommandSegment2Task
 
 
 def initialize_db(alembic_config) -> None:

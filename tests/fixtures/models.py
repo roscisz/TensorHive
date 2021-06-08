@@ -7,6 +7,9 @@ from tensorhive.models.User import User
 from tensorhive.models.Group import Group
 from tensorhive.models.Resource import Resource
 from tensorhive.models.Role import Role
+from tensorhive.models.Job import Job, JobStatus
+from tensorhive.models.Task import Task, TaskStatus
+from tensorhive.models.CommandSegment import CommandSegment, SegmentType
 from datetime import timedelta
 
 
@@ -178,3 +181,78 @@ def inactive_schedule():
     schedule = RestrictionSchedule(schedule_days=schedule_expression, hour_start=start_time, hour_end=end_time)
     schedule.save()
     return schedule
+
+
+@pytest.fixture(scope='function')
+def new_job(new_user):
+    new_user.save()
+    job = Job(name='job_name',
+              description='testDescription',
+              user_id=new_user.id,
+              _status=JobStatus.not_running)
+    job.save()
+    return job
+
+
+@pytest.fixture(scope='function')
+def new_running_job(new_user):
+    new_user.save()
+    job = Job(name='running_job',
+              description='A running job',
+              user_id=new_user.id,
+              _status=JobStatus.running)
+    job.save()
+    return job
+
+
+@pytest.fixture(scope='function')
+def new_job_with_task(new_user, new_task):
+    new_user.save()
+    job = Job(name='job_name',
+              description='testDescription',
+              user_id=new_user.id,
+              _status=JobStatus.not_running)
+    job.save()
+    job.add_task(new_task)
+    return job
+
+
+@pytest.fixture(scope='function')
+def new_admin_job(new_user, new_admin, new_task):
+    new_user.save()
+    new_admin.save()
+    job = Job(name='admin_job',
+              description='Admin is the owner of this job',
+              user_id=new_admin.id,
+              _status=JobStatus.not_running)
+    job.save()
+    job.add_task(new_task)
+    return job
+
+
+@pytest.fixture(scope='function')
+def new_task():
+    task = Task(command='python command.py',
+                hostname='localhost',
+                _status=TaskStatus.not_running)
+    cmd_segment = CommandSegment(
+        name='--batch_size',
+        _segment_type=SegmentType.parameter
+    )
+    task.add_cmd_segment(cmd_segment, '32')
+    task.save()
+    return task
+
+
+@pytest.fixture(scope='function')
+def new_task_2():
+    task = Task(command='python command2.py',
+                hostname='remotehost',
+                _status=TaskStatus.not_running)
+    cmd_segment = CommandSegment(
+        name='--rank',
+        _segment_type=SegmentType.parameter
+    )
+    task.add_cmd_segment(cmd_segment, '1')
+    task.save()
+    return task

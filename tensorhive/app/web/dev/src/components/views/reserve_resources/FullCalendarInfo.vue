@@ -23,10 +23,18 @@
           <v-avatar>
             <v-icon class="large-icon" large>memory</v-icon>
           </v-avatar>
-          <div class="spaced-text">GPU{{reservation.resourceIndex}} {{reservation.resourceName}}</div>
+          <div
+            class="spaced-text"
+          >GPU{{reservation.resourceIndex}} {{reservation.resourceName}}</div>
         </v-chip>
 
-        <v-btn class="float-right-button" flat icon color="black" @click="close()">
+        <v-btn
+          class="float-right-button"
+          flat
+          icon
+          color="black"
+          @click="close()"
+        >
           <v-icon>close</v-icon>
         </v-btn>
 
@@ -79,7 +87,10 @@
                   v-on="on"
                 ></v-text-field>
               </template>
-              <v-date-picker v-model="newStartDate" @input="startDateMenu = false"></v-date-picker>
+              <v-date-picker
+                v-model="newStartDate"
+                @input="startDateMenu = false"
+              ></v-date-picker>
             </v-menu>
             <v-menu
               ref="startMenu"
@@ -130,7 +141,12 @@
               min-width="290px"
             >
               <template v-slot:activator="{ on }">
-                <v-text-field v-model="newEndDate" label="End date" prepend-icon="event" v-on="on"></v-text-field>
+                <v-text-field
+                  v-model="newEndDate"
+                  label="End date"
+                  prepend-icon="event"
+                  v-on="on"
+                ></v-text-field>
               </template>
               <v-date-picker v-model="newEndDate" @input="endDateMenu = false"></v-date-picker>
             </v-menu>
@@ -181,9 +197,10 @@
           v-if="tasksCard"
           v-model="selected"
           :headers="headers"
-          :items="tasks"
+          :items="Object.values(jobs)"
           :pagination.sync="pagination"
-          :loading="actionFlag"
+          :loading="jobsLoading"
+          expand
           select-all
           item-key="id"
           class="elevation-1"
@@ -213,15 +230,42 @@
           </template>
           <v-progress-linear v-slot:progress :indeterminate="true"></v-progress-linear>
           <template v-slot:items="props">
-            <tr :active="props.selected" @click="props.selected = !props.selected">
+            <tr
+              :active="props.selected"
+              @click="props.selected = !props.selected; props.expanded = !props.expanded"
+            >
               <td>
                 <v-checkbox :input-value="props.selected" primary hide-details></v-checkbox>
               </td>
               <td>{{ props.item.id }}</td>
-              <td class="task-command">{{ props.item.command }}</td>
-              <td>{{ prettyDate(props.item.spawnAt) }}</td>
-              <td>{{ prettyDate(props.item.terminateAt) }}</td>
+              <td>{{ props.item.name }}</td>
+              <td>{{ prettyDate(props.item.startAt) }}</td>
+              <td>{{ prettyDate(props.item.stopAt) }}</td>
             </tr>
+          </template>
+          <template v-slot:expand="expandedProps">
+            <v-card>
+              <v-data-table
+                :headers="expandHeaders"
+                :items="expandedProps.item.tasks"
+                class="elevation-1"
+                :key="expandedProps.item.id"
+                :loading="tasksLoading"
+              >
+                <template v-slot:items="props">
+                  <tr
+                    :active="props.selected"
+                    @click="props.selected = !props.selected"
+                  >
+                    <td>{{ props.item.id }}</td>
+                    <td>{{ props.item.hostname }}</td>
+                    <td class="task-command">{{ props.item.command }}</td>
+                    <td>{{ props.item.status }}</td>
+                    <td>{{ props.item.pid }}</td>
+                  </tr>
+                </template>
+              </v-data-table>
+            </v-card>
           </template>
         </v-data-table>
         <v-btn
@@ -230,7 +274,7 @@
           color="info"
           small
           round
-          @click="checkActionFlag()"
+          @click="scheduleJobs()"
         >Assign selected</v-btn>
         <v-card-text v-if="actionsAbility" class="container">
           <v-btn
@@ -261,34 +305,38 @@
           <v-btn color="success" round @click="cancelReservation()">Yes</v-btn>
         </v-card-text>
         <v-card-text v-if="updateCard">
-          <v-btn color="error" small outline round @click="updateCard=false">Back</v-btn>
+          <v-btn
+            color="error"
+            small
+            outline
+            round
+            @click="updateCard=false"
+          >Back</v-btn>
           <v-btn color="success" round @click="updateReservation()">Update</v-btn>
         </v-card-text>
       </v-card>
     </v-dialog>
   </v-layout>
 </template>
-
 <script>
 import api from '../../../api'
 import moment from 'moment'
+import { updateJob } from '../../../api/jobs'
+import { updateTask } from '../../../api/tasks'
 export default {
   name: 'FullCalendarInfo',
-
   props: {
     showModal: Boolean,
     reservation: Object,
     cancel: Function,
     update: Function,
-    refreshTasks: Boolean,
+    refreshJobs: Boolean,
     nodes: Object
   },
-
   computed: {
     actionsAbility () {
       return this.reservation.userId === this.$store.state.id || this.$store.state.role === 'admin'
     },
-
     gpuUtilAvg () {
       if (this.reservation.gpuUtilAvg === null) {
         return 'Reservation is not completed yet, no data'
@@ -298,7 +346,6 @@ export default {
         return this.reservation.gpuUtilAvg + '%'
       }
     },
-
     memUtilAvg () {
       if (this.reservation.memUtilAvg === null) {
         return 'Reservation is not completed yet, no data'
@@ -311,24 +358,19 @@ export default {
     reservationTitle () {
       return this.reservation.title
     },
-
     reservationDescription () {
       return this.reservation.description
     },
-
     reservationStart () {
       return this.reservation.start
     },
-
     reservationEnd () {
       return this.reservation.end
     },
-
     reservationCancelled () {
       return this.reservation.isCancelled
     }
   },
-
   watch: {
     reservation () {
       for (var nodeName in this.nodes) {
@@ -342,7 +384,6 @@ export default {
         }
       }
     },
-
     showModal () {
       this.show = this.showModal
     },
@@ -350,18 +391,15 @@ export default {
       if (this.show === false) this.close()
     },
 
-    refreshTasks () {
-      this.getTasks()
+    refreshJobs () {
+      this.getJobs()
     },
-
     reservationTitle () {
       this.newTitle = this.reservationTitle
     },
-
     reservationDescription () {
       this.newDescription = this.reservationDescription
     },
-
     reservationStart () {
       if (this.reservationStart !== null) {
         this.newStartDate = moment(this.reservationStart).format('YYYY-MM-DD')
@@ -371,7 +409,6 @@ export default {
         this.newStartTime = ''
       }
     },
-
     reservationEnd () {
       if (this.reservationEnd !== null) {
         this.newEndDate = moment(this.reservationEnd).format('YYYY-MM-DD')
@@ -382,7 +419,6 @@ export default {
       }
     }
   },
-
   data () {
     return {
       tasksCard: false,
@@ -401,14 +437,23 @@ export default {
       pagination: {
         sortBy: 'name'
       },
-      tasks: [],
+      jobs: {},
+      jobsLoading: false,
+      tasksLoading: false,
       selected: [],
       selectedIndex: 0,
       headers: [
         { text: 'ID', value: 'id' },
+        { text: 'Name', value: 'name' },
+        { text: 'Start at', value: 'startAt' },
+        { text: 'Stop at', value: 'stopAt' }
+      ],
+      expandHeaders: [
+        { text: 'ID', value: 'id' },
+        { text: 'Hostname', value: 'hostname' },
         { text: 'Command', value: 'command' },
-        { text: 'Spawn at', value: 'spawnAt' },
-        { text: 'Terminate at', value: 'terminateAt' }
+        { text: 'Status', value: 'status' },
+        { text: 'PID', value: 'pid', align: 'right' }
       ],
       tableKey: 0,
       actionFlag: false,
@@ -416,7 +461,6 @@ export default {
       show: false
     }
   },
-
   methods: {
     prettyDate (date) {
       if (date !== null) {
@@ -425,109 +469,88 @@ export default {
         return null
       }
     },
-
+    getJobs: function (noTasks = false) {
+      this.jobsLoading = true
+      api
+        .request('get', '/jobs?userId=' + this.$store.state.id, this.$store.state.accessToken)
+        .then(response => {
+          let jobsObject = {}
+          response.data.jobs.forEach(job => {
+            job.tasks = []
+            jobsObject[job.id] = job
+          })
+          this.jobs = jobsObject
+          if (!noTasks) {
+            this.getTasks()
+          }
+        })
+        .catch(error => {
+          this.$emit('handleError', error)
+        })
+        .finally(() => {
+          this.jobsLoading = false
+        })
+    },
     getTasks: function () {
+      this.tasksLoading = true
       api
-        .request('get', '/tasks?userId=' + this.$store.state.id + '&syncAll=false', this.$store.state.accessToken)
+        .request('get', '/tasks?jobId=null&syncAll=false', this.$store.state.accessToken)
         .then(response => {
-          this.tasks = response.data.tasks
+          response.data.tasks.forEach(task => {
+            this.jobs[task.jobId].tasks.push(task)
+          })
         })
         .catch(error => {
           this.$emit('handleError', error)
         })
+        .finally(() => {
+          this.tasksLoading = false
+        })
     },
-
-    checkActionFlag: function () {
-      if (this.actionFlag === false) {
-        this.actionFlag = true
-        this.showAlert = true
-        this.scheduleTasks()
+    scheduleJobs: function () {
+      this.jobsLoading = true
+      this.tasksLoading = true
+      let jobUpdatePromise = Promise.all(
+        this.selected.map(job => updateJob(this.$store.state.accessToken, job.id, { startAt: this.reservation.start, stopAt: this.reservation.end }))
+      )
+      let selectedTasks = []
+      for (let job of this.selected) {
+        selectedTasks = selectedTasks.concat(job.tasks)
       }
+      let taskUpdatePromise = Promise.all(
+        selectedTasks.map(task => updateTask(this.$store.state.accessToken, task.id, this.getHostAndCommand(task.command)))
+      )
+      Promise.all([
+        jobUpdatePromise,
+        taskUpdatePromise
+      ]).finally(() => {
+        this.jobsLoading = false
+        this.tasksLoading = false
+        this.getJobs()
+      })
     },
-
-    scheduleTasks: function () {
-      var id
-      id = this.selected[this.selectedIndex].id
-      var newTask = this.adjustHostAndCommand()
-      newTask['spawnAt'] = this.reservation.start
-      newTask['terminateAt'] = this.reservation.end
-      api
-        .request('put', '/tasks/' + id, this.$store.state.accessToken, newTask)
-        .then(response => {
-          this.getTask(id)
-        })
-        .catch(error => {
-          this.$emit('handleError', error)
-          this.getTask(id)
-        })
-    },
-
-    adjustHostAndCommand: function () {
+    getHostAndCommand: function (command) {
       for (var nodeName in this.nodes) {
         for (var gpuUUID in this.nodes[nodeName].GPU) {
           if (gpuUUID === this.reservation.resourceId) {
             return {
               hostname: nodeName,
-              command: this.setCommand(this.nodes[nodeName].GPU[gpuUUID].index)
+              command: this.setCommand(command, this.nodes[nodeName].GPU[gpuUUID].index)
             }
           }
         }
       }
       return {}
     },
-
-    setCommand: function (index) {
-      var command = this.selected[this.selectedIndex].command
-      var splitCommand = command.split(' ')
+    setCommand: function (command, index) {
+      let splitCommand = command.split(' ')
       splitCommand[0] = 'CUDA_VISIBLE_DEVICES=' + index
       return splitCommand.join(' ')
     },
-
-    getTask: function (id) {
-      api
-        .request('get', '/tasks/' + id, this.$store.state.accessToken)
-        .then(response => {
-          this.updateTask(id, response.data.task)
-          this.selectedIndex++
-          if (this.selectedIndex < this.selected.length) {
-            this.scheduleTasks()
-          } else {
-            this.selectedIndex = 0
-            this.actionFlag = false
-            this.showAlert = false
-          }
-        })
-        .catch(error => {
-          this.$emit('handleError', error)
-          this.selectedIndex++
-          if (this.selectedIndex < this.selected.length) {
-            this.scheduleTasks()
-          } else {
-            this.selectedIndex = 0
-            this.actionFlag = false
-            this.showAlert = false
-          }
-        })
-    },
-
-    updateTask: function (id, newData) {
-      for (var index in this.tasks) {
-        if (this.tasks[index].id === id) {
-          if (newData !== null) {
-            this.tasks[index] = newData
-          } else {
-            this.tasks.splice(index, 1)
-          }
-        }
-      }
-      this.tableKey++
-    },
-
     toggleAll () {
       if (this.selected.length) this.selected = []
       else this.selected = this.tasks.slice()
     },
-
     changeSort (column) {
       if (this.pagination.sortBy === column) {
         this.pagination.descending = !this.pagination.descending
@@ -536,48 +559,44 @@ export default {
         this.pagination.descending = false
       }
     },
-
     close: function () {
       this.$emit('close')
       this.updateCard = false
       this.cancelCard = false
       this.tasksCard = false
+      this.selected = []
     },
-
     cancelReservation: function () {
+      this.selected = []
       this.cancel(this.reservation)
     },
-
     updateReservation: function () {
+      this.selected = []
       var newTime = [moment(this.newStartDate + 'T' + this.newStartTime), moment(this.newEndDate + 'T' + this.newEndTime)]
       this.update(this.reservation, newTime, this.newTitle, this.newDescription)
     }
   }
 }
 </script>
-
 <style>
-.float-right-button {
-  float: right;
-}
-.container {
-  overflow: hidden;
-}
-
-.large-icon {
-  padding-left: 20px;
-}
-
-.spaced-text {
-  padding-left: 15px;
-  padding-right: 10px;
-}
-
-.large-chip {
-  font-size: 20px;
-  width: auto;
-  height: 50px;
-  /* margin-left: 20px; */
-  /* text-align: right; */
-}
+  .float-right-button {
+    float: right;
+  }
+  .container {
+    overflow: hidden;
+  }
+  .large-icon {
+    padding-left: 20px;
+  }
+  .spaced-text {
+    padding-left: 15px;
+    padding-right: 10px;
+  }
+  .large-chip {
+    font-size: 20px;
+    width: auto;
+    height: 50px;
+    /* margin-left: 20px; */
+    /* text-align: right; */
+  }
 </style>

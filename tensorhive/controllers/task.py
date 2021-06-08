@@ -1,17 +1,19 @@
 from tensorhive.models.Task import Task, TaskStatus
+from tensorhive.models.CommandSegment import CommandSegment, CommandSegment2Task, SegmentType
 from tensorhive.models.User import User
+from tensorhive.models.Job import Job
 from tensorhive.core import task_nursery
-from tensorhive.utils.DateUtils import DateUtils
 from tensorhive.core.task_nursery import SpawnError, ExitCodeError
 from pssh.exceptions import ConnectionErrorException, AuthenticationException, UnknownHostException
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt_claims
 from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.config import API
 from functools import wraps
-from typing import Optional, Callable, Any, Dict, Tuple
+from typing import Optional, Callable, Any, Dict, Tuple, List
 from datetime import datetime, timedelta
 from stringcase import snakecase
 import logging
+from tensorhive.exceptions.ForbiddenException import ForbiddenException
 
 log = logging.getLogger(__name__)
 TASK = API.RESPONSES['task']
@@ -36,6 +38,7 @@ Connexion has this feature under the hood but it does not always work as it shou
 Content = Dict[str, Any]
 HttpStatusCode = int
 TaskId = int
+JobId = int
 
 
 def synchronize(task_id: TaskId) -> None:
@@ -54,13 +57,16 @@ def synchronize(task_id: TaskId) -> None:
     -----------------------------------------------
     running             => terminated
     unsynchronized      => not_running
+
+    On every state transition job status is synchronized too
     """
     log.debug('Syncing Task {}...'.format(task_id))
     try:
         task = Task.get(task_id)
+        parent_job = Job.get(task.job_id)
         assert task.hostname, 'hostname is empty'
-        assert task.user, 'user does not exist'
-        active_sessions_pids = task_nursery.running(host=task.hostname, user=task.user.username)
+        assert parent_job.user, 'user does not exist'
+        active_sessions_pids = task_nursery.running(host=task.hostname, user=parent_job.user.username)
     except NoResultFound:
         # This exception must be handled within try/except block when using Task.get()
         # In other words, methods decorated with @synchronize_task_record must handle this case by themselves!
@@ -113,18 +119,20 @@ def synchronize_task_record(func: Callable) -> Callable:
 
 
 # Controllers
-# POST /tasks
+# POST /jobs/{job_id}/tasks
 @jwt_required
-def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
+def create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpStatusCode]:
     try:
         # User is not allowed to create task for someone else
-        assert task.get('userId') == get_jwt_identity()
+        job = Job.query.filter(Job.id == job_id).one()
+        if not is_admin() and not job.user_id == get_jwt_identity():
+            raise ForbiddenException('unauthorized')
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError:
+    except ForbiddenException:
         content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
-        content, status = business_create(task)
+        content, status = business_create(task, job_id)
     finally:
         return content, status
 
@@ -134,10 +142,12 @@ def create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
 def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
-        assert get_jwt_identity() == task.user_id or is_admin()
+        parent_job = Job.get(task.job_id)
+        if not is_admin() and not get_jwt_identity() == parent_job.user_id:
+            raise ForbiddenException('not an owner')
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError:
+    except ForbiddenException:
         content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_get(id)
@@ -145,24 +155,22 @@ def get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-#  GET /tasks?userId=X?syncAll=1
+#  GET /tasks?jobId=1?syncAll=1
 @jwt_required
-def get_all(userId: Optional[int], syncAll: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
-    user_id, sync_all = userId, syncAll
+def get_all(jobId: Optional[JobId], syncAll: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
+    sync_all = syncAll
+    job_id = jobId
     try:
-        if user_id:
-            # Owner or admin can fetch
-            assert get_jwt_identity() == user_id or is_admin()
-        else:
-            # Only admin can fetch all
-            assert is_admin()
-
+        if job_id is not None:
+            job = Job.query.filter(Job.id == job_id).one()
+            if not is_admin() and not get_jwt_identity() == job.user_id:
+                raise ForbiddenException
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError:
+    except ForbiddenException:
         content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
-        content, status = business_get_all(user_id, sync_all)
+        content, status = business_get_all(job_id, sync_all)
     finally:
         return content, status
 
@@ -172,10 +180,12 @@ def get_all(userId: Optional[int], syncAll: Optional[bool]) -> Tuple[Content, Ht
 def update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
-        assert task.user_id == get_jwt_identity(), 'Not an owner'
+        parent_job = Job.get(task.job_id)
+        if not is_admin() and not parent_job.user_id == get_jwt_identity():
+            raise ForbiddenException('not an owner')
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError:
+    except ForbiddenException:
         content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_update(id, newValues)
@@ -188,46 +198,15 @@ def update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCo
 def destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
-        assert task.user_id == get_jwt_identity(), 'Not an owner'
+        parent_job = Job.get(task.job_id)
+        if not is_admin() and not parent_job.user_id == get_jwt_identity():
+            raise ForbiddenException('not an owner')
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError:
+    except ForbiddenException:
         content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_destroy(id)
-    finally:
-        return content, status
-
-
-# GET /tasks/{id}/spawn
-@jwt_required
-def spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
-    try:
-        task = Task.get(id)
-        assert task.user_id == get_jwt_identity(), 'Not an owner'
-    except NoResultFound as e:
-        log.error(e)
-        content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError:
-        content, status = {'msg': GENERAL['unprivileged']}, 403
-    else:
-        content, status = business_spawn(id)
-    finally:
-        return content, status
-
-
-# GET /tasks/{id}/terminate
-@jwt_required
-def terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[Content, HttpStatusCode]:
-    try:
-        task = Task.get(id)
-        assert get_jwt_identity() == task.user_id or is_admin()
-    except NoResultFound:
-        content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError:
-        content, status = {'msg': GENERAL['unprivileged']}, 403
-    else:
-        content, status = business_terminate(id, gracefully)
     finally:
         return content, status
 
@@ -237,10 +216,12 @@ def terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[Content, H
 def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
     try:
         task = Task.get(id)
-        assert get_jwt_identity() == task.user_id or is_admin()
+        parent_job = Job.get(task.job_id)
+        if not is_admin() and not parent_job.user_id == get_jwt_identity():
+            raise ForbiddenException("not an owner")
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError:
+    except ForbiddenException:
         content, status = {'msg': GENERAL['unprivileged']}, 403
     else:
         content, status = business_get_log(id, tail)
@@ -251,19 +232,23 @@ def get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
 # Business logic
 
 
-def business_get_all(user_id: Optional[int], sync_all: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
-    """Fetches either all Task records or only those in relation with specific user.
+def business_get_all(job_id: Optional[JobId], sync_all: Optional[bool]) -> Tuple[Content, HttpStatusCode]:
+    """Fetches all Task records or those within specific job.
     Allows for synchronizing state of each Task out-of-the-box.
 
     In typical scenario API client would want to get all records without sync and
     then run sync each records individually.
     """
-    # TODO Exceptions should never occur, but need to experiment more
-    if user_id:
-        # Returns [] if such User with such id does not exist (SQLAlchemy behavior)
-        tasks = Task.query.filter(Task.user_id == user_id).all()
+    tasks = []
+    if job_id is not None:
+        tasks = Task.query.filter(Task.job_id == job_id).all()
     else:
-        tasks = Task.all()
+        user_id = get_jwt_identity()
+        if user_id is not None:
+            jobs = Job.query.filter(Job.user_id == user_id).all()
+            for job in jobs:
+                job_tasks = Task.query.filter(Task.job_id == job.id).all()
+                tasks.extend(job_tasks)
 
     # Wanted to decouple syncing from dict conversion with 2 oneliners (using list comprehension),
     # but this code is O(n) instead of O(2n)
@@ -275,23 +260,35 @@ def business_get_all(user_id: Optional[int], sync_all: Optional[bool]) -> Tuple[
     return {'msg': TASK['all']['success'], 'tasks': results}, 200
 
 
-def business_create(task: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
-    """Creates new Task db record.
-    Fields which require to be of datetime type are explicitly converted here.
+def business_create(task: Dict[str, Any], job_id: JobId) -> Tuple[Content, HttpStatusCode]:
+    """ Creates new Task db record under the given parent job
+    and new db records for given command segments of that task.
     """
     try:
         new_task = Task(
-            user_id=task['userId'],
             hostname=task['hostname'],
-            command=task['command'],
-            # TODO Adjust API spec, optional fields
-            spawn_at=DateUtils.try_parse_string(task.get('spawnAt')),
-            terminate_at=DateUtils.try_parse_string(task.get('terminateAt')))
-        # assert all(task.values()), 'fields cannot be blank or null'
+            command=task['command'])
+        new_task.gpu_id = parse_gpu_id_from_command(task['command'])
+        parent_job = Job.query.filter(Job.id == job_id).one()
+        for segment in task['cmdsegments']['params']:
+            new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.parameter,
+                                                      CommandSegment.name == segment['name']).first()
+            if (new_segment is None):
+                new_segment = CommandSegment(
+                    name=segment['name'],
+                    _segment_type=SegmentType.parameter)
+            new_task.add_cmd_segment(new_segment, segment['value'])
+        for segment in task['cmdsegments']['envs']:
+            new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.env_variable,
+                                                      CommandSegment.name == segment['name']).first()
+            if (new_segment is None):
+                new_segment = CommandSegment(
+                    name=segment['name'],
+                    _segment_type=SegmentType.env_variable)
+            new_task.add_cmd_segment(new_segment, segment['value'])
+
         new_task.save()
-    except ValueError:
-        # Invalid string format for datetime
-        content, status = {'msg': GENERAL['bad_request']}, 422
+        parent_job.add_task(new_task)
     except KeyError:
         # At least one of required fields was not present
         content, status = {'msg': GENERAL['bad_request']}, 422
@@ -322,26 +319,53 @@ def business_get(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-# TODO What if task is already running: allow for updating command, hostname, etc.?
-def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
-    """Updates certain fields of a Task db record, see `allowed_fields`."""
-    allowed_fields = {'command', 'hostname', 'spawnAt', 'terminateAt'}
+def parse_gpu_id_from_command(value):
+    if value.startswith('CUDA_VISIBLE_DEVICES='):
+        gpu_id = value.split('CUDA_VISIBLE_DEVICES=')[1][0]
+        if gpu_id == ' ':
+            return None
+        else:
+            return int(gpu_id)
+
+
+def business_update(id: TaskId, newValues: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
+    """Updates certain fields of a Task db record, including command field and segments."""
     try:
-        assert set(new_values.keys()).issubset(allowed_fields), 'invalid field is present'
+        new_values = newValues
         task = Task.get(id)
-        for field_name, new_value in new_values.items():
-            if field_name in {'spawnAt', 'terminateAt'}:
-                new_value = DateUtils.try_parse_string(new_value)
-            field_name = snakecase(field_name)
-            # Check that every field matches
-            assert (field_name is not None) and hasattr(task, field_name), 'task has no {} field'.format(field_name)
-            setattr(task, field_name, new_value)
+        assert task.status is not TaskStatus.running, "Cannot update task which is already running"
+        for key, value in new_values.items():
+            if key == 'hostname':
+                setattr(task, key, value)
+            elif key == 'command':
+                task.gpu_id = parse_gpu_id_from_command(value)
+                setattr(task, key, value)
+            elif key == 'cmdsegments':
+                # FIXME Somehow the loop doesn't get all of the elements by the first time
+                # but repeating it cleares it
+                for segment in task.cmd_segments:
+                    task.remove_cmd_segment(segment)
+                for segment in task.cmd_segments:
+                    task.remove_cmd_segment(segment)
+                for segment in new_values['cmdsegments']['envs']:
+                    new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.env_variable,
+                                                              CommandSegment.name == segment['name']).first()
+                    if (new_segment is None):
+                        new_segment = CommandSegment(
+                            name=segment['name'],
+                            _segment_type=SegmentType.env_variable)
+                    task.add_cmd_segment(new_segment, segment['value'])
+                for segment in new_values['cmdsegments']['params']:
+                    new_segment = CommandSegment.query.filter(CommandSegment.segment_type == SegmentType.parameter,
+                                                              CommandSegment.name == segment['name']).first()
+                    if (new_segment is None):
+                        new_segment = CommandSegment(
+                            name=segment['name'],
+                            _segment_type=SegmentType.parameter)
+                    task.add_cmd_segment(new_segment, segment['value'])
         task.save()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
-    except ValueError:
-        # Invalid string format for datetime
-        content, status = {'msg': GENERAL['bad_request']}, 422
     except AssertionError as e:
         content, status = {'msg': TASK['update']['failure']['assertions'].format(reason=e)}, 422
     except Exception as e:
@@ -355,11 +379,18 @@ def business_update(id: TaskId, new_values: Dict[str, Any]) -> Tuple[Content, Ht
 
 @synchronize_task_record
 def business_destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
-    """Deletes a Task db record. Requires terminating task manually in advance."""
+    """Deletes a Task db record. Requires terminating task manually in advance.
+    All of the m-n relationship links (task-cmd_segment) are deleted too
+    Have to delete unwanted command segments (no task attached) manually
+    """
     try:
         task = Task.get(id)
+        cmd_segments = task.cmd_segments
         assert task.status is not TaskStatus.running, 'must be terminated first'
         task.destroy()
+        for segment in cmd_segments:
+            if len(segment.tasks) == 0:
+                segment.destroy()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except AssertionError as e:
@@ -372,53 +403,26 @@ def business_destroy(id: TaskId) -> Tuple[Content, HttpStatusCode]:
         return content, status
 
 
-# TODO Disable this endpoint later, return 403 Forbidden
-# GET /screen-sessions?username=foo&hostname=bar
-def screen_sessions(username: str, hostname: str) -> Tuple[Content, HttpStatusCode]:
-    """Returns pids of running `screen` sessions.
-
-    This endpoint is for purely development purposes,
-    currently there's no need to use it.
-    """
-    try:
-        assert username and hostname, 'parameters must not be empty'
-        pids = task_nursery.running(host=hostname, user=username)
-    except AssertionError as e:
-        content, status = {'msg': SCREEN_SESSIONS['failure']['assertions'].format(reason=e)}, 422
-    except (ConnectionErrorException, AuthenticationException, UnknownHostException) as e:
-        content, status = {'msg': SSH['failure']['connection'].format(reason=e)}, 500
-    except Exception as e:
-        log.critical(e)
-        content, status = {'msg': GENERAL['internal_error']}, 500
-    else:
-        # FIXME
-        content, status = {'msg': SCREEN_SESSIONS['success'], 'pids': pids}, 200
-    finally:
-        return content, status
-
-
 @synchronize_task_record
 def business_spawn(id: TaskId) -> Tuple[Content, HttpStatusCode]:
-    """Spawns command stored in Task db record (task.command).
-
+    """Spawns command stored in Task db record (task.full_command).
     It won't allow for spawning task which is currently running (sync + status check).
     If spawn operation has succeeded then `running` status is set.
     """
     try:
         task = Task.get(id)
-
+        parent_job = Job.get(task.job_id)
         assert task.status is not TaskStatus.running, 'task is already running'
-        assert task.command, 'command is empty'
+        assert task.full_command, 'command is empty'
         assert task.hostname, 'hostname is empty'
-        assert task.user, 'user does not exist'
+        assert parent_job.user, 'user does not exist'
 
-        pid = task_nursery.spawn(task.command, task.hostname, task.user.username, name_appendix=str(task.id))
+        pid = task_nursery.spawn(task.full_command,
+                                 task.hostname,
+                                 parent_job.user.username,
+                                 name_appendix=str(task.id))
         task.pid = pid
         task.status = TaskStatus.running
-
-        # If task was scheduled to terminate and user just
-        # spawned that task manually, scheduler should still
-        # continue to watch and terminate the task automatically.
         task.save()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
@@ -451,13 +455,13 @@ def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[C
         task = Task.get(id)
         assert task.status is TaskStatus.running, 'only running tasks can be terminated'
         assert task.pid, 'task has no pid assigned'  # It means there's inconsistency
+        parent_job = Job.get(task.job_id)
 
         # gracefully:
         # True -> interrupt (allows output to be flushed into log file)
         # None -> terminate (works almost every time, but losing output that could be produced before closing)
         # False -> kill (similar to above, but success is almost guaranteed)
-        exit_code = task_nursery.terminate(task.pid, task.hostname, task.user.username, gracefully=gracefully)
-
+        exit_code = task_nursery.terminate(task.pid, task.hostname, parent_job.user.username, gracefully=gracefully)
         if exit_code != 0:
             raise ExitCodeError('operation exit code is not 0')
 
@@ -467,20 +471,15 @@ def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[C
         # task.pid = None
         # task.status = TaskStatus.terminated
 
-        # Task was scheduled to spawn automatically
-        # but user decided to terminate it manually
-        # scheduler should not spawn the task by itself then
-        if task.spawn_at:
-            # So this task should not be spawned automatically anymore
-            task.spawn_at = None
-            task.save()
+        task.save()
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
-    except AssertionError as e:
-        content, status = {'msg': TASK['terminate']['failure']['state'].format(reason=e)}, 409
     except ExitCodeError:
         content, status = {'msg': TASK['terminate']['failure']['exit_code'], 'exit_code': exit_code}, 202
-    # TODO What if terminate could not connect, ConnectionErrorException?
+    except AssertionError as e:
+        content, status = {'msg': TASK['terminate']['failure']['state'].format(reason=e)}, 409
+    except ConnectionErrorException as e:
+        content, status = {'msg': TASK['failure']['connection'].format(reason=e)}, 500
     except Exception as e:
         log.critical(e)
         content, status = {'msg': GENERAL['internal_error']}, 500
@@ -493,7 +492,7 @@ def business_terminate(id: TaskId, gracefully: Optional[bool] = True) -> Tuple[C
 def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
     """Fetches log file created by spawned task (output redirection).
 
-    It relies on reading files located on filesystem, via connection with `task.user.username@task.host`
+    It relies on reading files located on filesystem, via connection with `parent_job.user.username@task.host`
     If file does not exist there's no way to fetch it from database (currently).
     File names must be named in one fashion (standard defined in `task_nursery.fetch_log`,
     currently: `task_<id>.log`). Renaming them manually will lead to inconsistency or 'Not Found' errors.
@@ -503,9 +502,10 @@ def business_get_log(id: TaskId, tail: bool) -> Tuple[Content, HttpStatusCode]:
     """
     try:
         task = Task.get(id)
+        parent_job = Job.get(task.job_id)
         assert task.hostname, 'hostname is empty'
-        assert task.user, 'user does not exist'
-        output_gen, log_path = task_nursery.fetch_log(task.hostname, task.user.username, task.id, tail)
+        assert parent_job.user, 'user does not exist'
+        output_gen, log_path = task_nursery.fetch_log(task.hostname, parent_job.user.username, task.id, tail)
     except NoResultFound:
         content, status = {'msg': TASK['not_found']}, 404
     except ExitCodeError as e:

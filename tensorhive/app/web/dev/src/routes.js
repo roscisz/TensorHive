@@ -4,8 +4,10 @@ import NotFoundView from './components/404.vue'
 // Import Views - Dash
 import CalendarView from './components/views/ReservationsOverview.vue'
 import WatchView from './components/views/NodesOverview.vue'
-import TasksView from './components/views/TasksOverview.vue'
+import JobsView from './components/views/JobsOverview.vue'
+import JobDetailsView from './components/views/jobs_overview/JobDetailsView.vue'
 import UsersView from './components/views/UsersOverview.vue'
+
 // Routes
 const routes = [
   {
@@ -35,12 +37,41 @@ const routes = [
         }
       },
       {
-        path: 'tasks_overview',
-        alias: '',
-        component: TasksView,
-        name: 'Tasks overview',
+        path: 'jobs_overview',
+        component: JobsView,
+        name: 'Jobs view',
         meta: {
-          description: 'Tasks overview',
+          description: 'Overview of all jobs',
+          requiresAuth: true,
+          role: 'user'
+        }
+      },
+      {
+        path: 'job/add',
+        component: JobDetailsView,
+        name: 'Job add',
+        meta: {
+          description: 'Add a job',
+          requiresAuth: true,
+          role: 'user'
+        }
+      },
+      {
+        path: 'job/:id',
+        component: JobDetailsView,
+        name: 'Job view',
+        meta: {
+          description: 'Details of a job',
+          requiresAuth: true,
+          role: 'user'
+        }
+      },
+      {
+        path: 'job/:id/edit',
+        component: JobDetailsView,
+        name: 'Job view',
+        meta: {
+          description: 'Details of a job',
           requiresAuth: true,
           role: 'user'
         }

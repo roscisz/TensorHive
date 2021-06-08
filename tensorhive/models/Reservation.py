@@ -6,6 +6,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, backref
 from typing import List
 import datetime
+from datetime import timedelta
 import logging
 log = logging.getLogger(__name__)
 
@@ -86,16 +87,35 @@ class Reservation(CRUDModel, Base):  # type: ignore
         self._is_cancelled = value
 
     @classmethod
-    def current_events(cls):
-        '''Returns only those events that should be currently respected by users'''
+    def current_events(cls, resource_id: str = None):
+        '''Returns only those events that should be currently respected by users
+        :param resource_id: if provided, return only events for a given resource'''
+
         current_time = datetime.datetime.utcnow()
-        current_events = cls.query.filter(
+
+        query = and_(cls.start <= current_time,  # type: ignore  # Events that has already started
+                     current_time <= cls.end)  # type: ignore  # Events before their end
+
+        if resource_id is not None:
+            query = and_(query, cls.resource_id == resource_id)
+
+        events = cls.query.filter(query).all()
+
+        return [e for e in events if not e.is_cancelled]
+
+    @classmethod
+    def upcoming_events_for_resource(cls, resource_id: str, period_after: timedelta) -> List['Reservation']:
+        current_time = datetime.datetime.utcnow()
+        events = cls.query.filter(
             and_(
-                # Events that has already started
-                cls.start <= current_time,
-                # Events before their end
-                current_time <= cls.end)).all()
-        return [c for c in current_events if not c.is_cancelled]
+                cls.resource_id == resource_id,
+                or_(and_(cls.start < current_time,  # type: ignore
+                         cls.end > current_time),  # type: ignore
+                    and_(cls.start >= current_time,  # type: ignore
+                         cls.start <= current_time + period_after))  # type: ignore
+            )
+        ).order_by(Reservation.start).all()
+        return [e for e in events if not e.is_cancelled]
 
     def would_interfere(self):
         conflicting_reservations = Reservation.query.filter(

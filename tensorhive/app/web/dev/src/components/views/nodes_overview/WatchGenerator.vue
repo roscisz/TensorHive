@@ -1,17 +1,11 @@
 <template>
   <div>
-    <v-alert
-      v-model="alert"
-      dismissible
-      type="error"
-    >
-      {{ errorMessage }}
-    </v-alert>
-    <div class="watch_table" >
+    <v-alert v-model="alert" dismissible type="error">{{ errorMessage }}</v-alert>
+    <div class="watch_table">
       <WatchBox
         class="watch_box"
-        v-for="watch in watches"
-        :key="watch.id"
+        v-for="(watch, index) in watches"
+        :key="deleteTrigger + 'watch' + index"
         :default-node="watch.defaultNode"
         :default-resource-type="watch.defaultResourceType"
         :default-metric="watch.defaultMetric"
@@ -19,14 +13,14 @@
         :chart-datasets="chartDatasets"
         :update-chart="updateChart"
         :time="time"
-        @changeDefaultNode="changeDefaultNode(watch.id, ...arguments)"
-        @changeDefaultResourceType="changeDefaultResourceType(watch.id, ...arguments)"
-        @changeDefaultMetric="changeDefaultMetric(watch.id, ...arguments)"
-        @deleteWatch="deleteWatch(watch.id)"
+        @changeDefaultNode="changeDefaultNode(index, ...arguments)"
+        @changeDefaultResourceType="changeDefaultResourceType(index, ...arguments)"
+        @changeDefaultMetric="changeDefaultMetric(index, ...arguments)"
+        @deleteWatch="deleteWatch(index)"
       />
       <div class="button_box">
         <v-btn
-          class="big_button"
+          class="big_button pt-4"
           fab
           dark
           color="#b8bcc2"
@@ -60,7 +54,7 @@ export default {
       errorMessage: '',
       updateChart: false,
       resourcesIndexes: {},
-      watchIds: 3
+      deleteTrigger: 0
     }
   },
 
@@ -91,39 +85,23 @@ export default {
 
     saveWatches: function () {
       window.localStorage.setItem('watches', JSON.stringify(this.watches))
-      window.localStorage.setItem('watchIds', JSON.stringify(this.watchIds))
     },
-    changeDefaultNode: function (id, name) {
-      for (var index in this.watches) {
-        if (this.watches[index].id === id) {
-          this.watches[index].defaultNode = name
-        }
-      }
+    changeDefaultNode: function (index, node) {
+      this.watches[index].defaultNode = node
       this.saveWatches()
     },
-    changeDefaultResourceType: function (id, name) {
-      for (var index in this.watches) {
-        if (this.watches[index].id === id) {
-          this.watches[index].defaultResourceType = name
-        }
-      }
+    changeDefaultResourceType: function (index, resourceType) {
+      this.watches[index].defaultResourceType = resourceType
       this.saveWatches()
     },
-    changeDefaultMetric: function (id, name) {
-      for (var index in this.watches) {
-        if (this.watches[index].id === id) {
-          this.watches[index].defaultMetric = name
-        }
-      }
+    changeDefaultMetric: function (index, metric) {
+      this.watches[index].defaultMetric = metric
       this.saveWatches()
     },
-    deleteWatch: function (id) {
-      for (var index in this.watches) {
-        if (this.watches[index].id === id) {
-          this.watches.splice(index, 1)
-        }
-      }
+    deleteWatch: function (index) {
+      this.watches.splice(index, 1)
       this.saveWatches()
+      this.deleteTrigger++
     },
 
     setColor: function (node) {
@@ -147,32 +125,27 @@ export default {
         .request('get', '/nodes/metrics', this.$store.state.accessToken)
         .then(response => {
           if (JSON.parse(window.localStorage.getItem('watches')) === null) {
-            var id = 0
             this.watches = []
             for (var host in response.data) {
               var hostData = response.data[host]
               if ('GPU' in hostData) {
                 this.watches.push({
-                  id: id++,
                   defaultNode: host,
                   defaultResourceType: 'GPU',
                   defaultMetric: 'utilization'
                 })
                 this.watches.push({
-                  id: id++,
                   defaultNode: host,
                   defaultResourceType: 'GPU',
                   defaultMetric: 'mem_used'
                 })
                 this.watches.push({
-                  id: id,
                   defaultNode: host,
                   defaultResourceType: 'GPU',
                   defaultMetric: 'processes'
                 })
               } else {
                 this.watches.push({
-                  id: id++,
                   defaultNode: host,
                   defaultResourceType: 'CPU',
                   defaultMetric: 'utilization'
@@ -181,7 +154,6 @@ export default {
             }
           } else {
             this.watches = JSON.parse(window.localStorage.getItem('watches'))
-            this.watchIds = JSON.parse(window.localStorage.getItem('watchIds'))
           }
           this.parseData(response.data)
         })
@@ -416,12 +388,10 @@ export default {
 
     addWatch: function () {
       this.watches.push({
-        id: this.watchIds,
         defaultNode: '',
         defaultResourceType: 'GPU',
         defaultMetric: ''
       })
-      this.watchIds++
       this.saveWatches()
     }
   }
@@ -429,23 +399,23 @@ export default {
 </script>
 
 <style>
-.button_box{
-  margin-top: 10vh;
-  margin-left: 10vw;
-}
-.big_button{
-  height: 150px !important;
-  width: 150px !important;
-}
-.watch_table{
-  display: flex;
-  flex-wrap: wrap;
-}
-.watch_box{
-  height: 40vh;
-  width: 25vw;
-  min-width: 300px;
-  margin-left: 3vh;
-  margin-bottom: 5vh;
-}
+  .button_box {
+    margin-top: calc((100vh - 130px) / 4 - 50px);
+    margin-left: calc((100% - 72px) / 6 - 50px);
+  }
+  .big_button {
+    height: 150px !important;
+    width: 150px !important;
+  }
+  .watch_table {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .watch_box {
+    height: calc((100vh - 130px) / 2);
+    width: calc((100% - 72px) / 3);
+    min-width: 300px;
+    margin-left: 24px;
+    margin-top: 40px;
+  }
 </style>
