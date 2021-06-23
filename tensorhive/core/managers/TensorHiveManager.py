@@ -21,6 +21,8 @@ from tensorhive.core.services.JobSchedulingService import JobSchedulingService
 from tensorhive.core.violation_handlers.ProtectionHandler import ProtectionHandler
 from tensorhive.core.violation_handlers.MessageSendingBehaviour import MessageSendingBehaviour
 from tensorhive.core.violation_handlers.EmailSendingBehaviour import EmailSendingBehaviour
+from tensorhive.core.violation_handlers.UserProcessKillingBehaviour import UserProcessKillingBehaviour
+from tensorhive.core.violation_handlers.SudoProcessKillingBehaviour import SudoProcessKillingBehaviour
 from tensorhive.core.scheduling import GreedyScheduler
 from tensorhive.core import ssh
 from pathlib import PosixPath
@@ -84,7 +86,7 @@ class TensorHiveManager(metaclass=Singleton):
             # TODO: scheduler configuration when more schedulers are available
             job_scheduling_service.inject(GreedyScheduler())
             services.append(job_scheduling_service)
-        if PROTECTION_SERVICE.ENABLED:
+        if PROTECTION_SERVICE.LEVEL:
             violation_handlers = []
             if PROTECTION_SERVICE.NOTIFY_ON_PTY:
                 message_sending_handler = ProtectionHandler(behaviour=MessageSendingBehaviour())
@@ -92,8 +94,15 @@ class TensorHiveManager(metaclass=Singleton):
             if PROTECTION_SERVICE.NOTIFY_VIA_EMAIL:
                 email_sending_handler = ProtectionHandler(behaviour=EmailSendingBehaviour())
                 violation_handlers.append(email_sending_handler)
+            if PROTECTION_SERVICE.KILL_PROCESSES:
+                if PROTECTION_SERVICE.KILL_PROCESSES > 1:
+                    process_killing_handler = ProtectionHandler(behaviour=SudoProcessKillingBehaviour())
+                else:
+                    process_killing_handler = ProtectionHandler(behaviour=UserProcessKillingBehaviour())
+                violation_handlers.append(process_killing_handler)
             protection_service = ProtectionService(
-                handlers=violation_handlers, interval=PROTECTION_SERVICE.UPDATE_INTERVAL)
+                handlers=violation_handlers, interval=PROTECTION_SERVICE.UPDATE_INTERVAL,
+                strict_reservations=PROTECTION_SERVICE.LEVEL > 1)
             services.append(protection_service)
         if USAGE_LOGGING_SERVICE.ENABLED:
             usage_logging_service = UsageLoggingService(interval=USAGE_LOGGING_SERVICE.UPDATE_INTERVAL)
