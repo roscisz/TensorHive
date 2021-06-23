@@ -36,10 +36,12 @@ def build_dedicated_config_for(host: Hostname, user: Username) -> Tuple[HostsCon
     valid `config` and `pconfig` parameter to `get_client()` function.
     """
     assert host and user, 'Arguments must not be None!'
+    assert host in SSH.AVAILABLE_NODES
     hosts_config = {
         host: {
             'user': user,
-            'pkey': SSH.KEY_FILE
+            'pkey': SSH.KEY_FILE,
+            'port': SSH.AVAILABLE_NODES[host]['port']
         }
     }
     # Read config extracted from hosts_config.ini (proxy is common for all hosts)
