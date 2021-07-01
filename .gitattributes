@@ -1,1 +1,4 @@
 tensorhive/app/web/dev/static/* linguist-vendored
+tensorhive/app/web/dev/static/**/* linguist-vendored
+tensorhive/app/web/dev/build_vue/* linguist-vendored
+tensorhive/app/web/dev/test/**/* linguist-vendored
