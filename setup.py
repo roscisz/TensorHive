@@ -38,7 +38,7 @@ setup(
         'connexion==2.3.0',
         'cryptography==3.2.1',
         'Flask==1.1.4',
-        'Flask-Cors==3.0.7',
+        'Flask-Cors==3.0.9',
         'Flask-JWT-Extended==3.13.1',
         'gevent==21.1.2',
         'greenlet==1.1.0',
