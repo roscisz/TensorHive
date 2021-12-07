@@ -61,7 +61,7 @@ setup(
         'python-dateutil==2.8.1',
         'python-editor==1.0.4',
         'python-usernames==0.2.3',
-        'PyYAML==5.3.1',
+        'PyYAML==5.4',
         'requests==2.25.1',
         'Safe==0.4',
         'six==1.16.0',
