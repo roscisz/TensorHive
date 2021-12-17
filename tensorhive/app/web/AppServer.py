@@ -80,7 +80,7 @@ def start_server():
             'workers': APP_SERVER.WORKERS,
             'loglevel': APP_SERVER.LOG_LEVEL
         }
-        log.info(green('[✔] Web App available at: http://{}:{}'.format(API_SERVER.HOST, APP_SERVER.PORT)))
+        log.info(green('[✔] Web App available at: http://{}:{}'.format(APP_SERVER.HOST, APP_SERVER.PORT)))
         GunicornStandaloneApplication(app, options).run()
     else:
         raise NotImplementedError('Selected backend is not supported yet.')
