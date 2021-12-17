@@ -53,8 +53,7 @@ axios.get('static/config.json').then(response => {
   // Routing logic
   var router = new VueRouter({
     routes: routes,
-    mode: 'history',
-    base: response.data.baseURL,
+    mode: 'hash',
     linkExactActiveClass: 'active',
     scrollBehavior: function (to, from, savedPosition) {
       return savedPosition || { x: 0, y: 0 }
