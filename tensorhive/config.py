@@ -187,7 +187,6 @@ class APP_SERVER:
     PORT = config.getint(section, 'port', fallback=5000)
     WORKERS = config.getint(section, 'workers', fallback=4)
     LOG_LEVEL = config.get(section, 'loglevel', fallback='warning')
-    BASE_URL = config.get(section, 'base_url', fallback='/')
 
 
 class API_SERVER:

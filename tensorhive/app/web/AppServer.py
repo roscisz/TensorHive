@@ -55,8 +55,7 @@ def _inject_api_endpoint_to_app():
                 API.URL_HOSTNAME,
                 API.URL_PORT,
                 API.URL_PREFIX),
-            'version': tensorhive.__version__,
-            'baseURL': APP_SERVER.BASE_URL
+            'version': tensorhive.__version__
         }
         # Overwrite current file content/create file if it does not exist
         with open(str(web_app_json_config_path), 'w') as json_file:
