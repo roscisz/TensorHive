@@ -43,28 +43,23 @@ def test_create_reservation_unprivileged(tables, client, new_user):
     assert resp.status_code == HTTPStatus.FORBIDDEN
 
 
-def test_create_reservation(tables, client, new_user, restriction):
+def test_create_reservation(tables, client, new_user, permissive_restriction):
     new_user.save()
-
-    # Create a restriction and assign it to the user
-    restriction.starts_at = '2101-01-01T10:00:00.000Z'
-    restriction.ends_at = '2101-01-05T10:00:00.000Z'
-    restriction.apply_to_user(new_user)
 
     # Create a resource and assign it to the restriction
     resource = Resource(id='0123456789012345678901234567890123456789')
     resource.save()
-    restriction.apply_to_resource(resource)
 
     # Try to create reservation for a period that the user has access to, as specified by the restriction.
     # Should succeed.
+    now = datetime.datetime.now()
     data = {
         'title': 'Test reservation',
         'description': 'Test reservation',
         'resourceId': '0123456789012345678901234567890123456789',
         'userId': new_user.id,
-        'start': '2101-01-02T10:00:00.000Z',
-        'end': '2101-01-03T12:00:00.000Z'
+        'start': DateUtils.stringify_datetime_to_api_format(now),
+        'end': DateUtils.stringify_datetime_to_api_format(now + timedelta(hours=1))
     }
     resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
     resp_json = json.loads(resp.data.decode('utf-8'))

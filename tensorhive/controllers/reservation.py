@@ -9,7 +9,7 @@ from tensorhive.models.User import User
 from tensorhive.utils.DateUtils import DateUtils
 from stringcase import snakecase
 from tensorhive.exceptions.ForbiddenException import ForbiddenException
-import datetime
+from datetime import datetime, timedelta
 
 log = logging.getLogger(__name__)
 RESERVATION = API.RESPONSES['reservation']
@@ -113,10 +113,10 @@ def update(id: ReservationId, newValues: Dict[str, Any]) -> Tuple[Content, HttpS
     try:
         reservation = Reservation.get(id)
 
-        if reservation.end < datetime.datetime.utcnow() and not is_admin():
+        if reservation.end < datetime.utcnow() and not is_admin():
             raise ForbiddenException('reservation already finished')
 
-        if reservation.start > datetime.datetime.utcnow() or is_admin():
+        if reservation.start > datetime.utcnow() or is_admin():
             allowed_fields.add('start')
 
         if not set(new_values.keys()).issubset(allowed_fields):
@@ -154,7 +154,7 @@ def delete(id: ReservationId) -> Tuple[Content, HttpStatusCode]:
     try:
         reservation_to_destroy = Reservation.get(id)
 
-        assert (reservation_to_destroy.start > datetime.datetime.utcnow() and __is_reservation_owner(
+        assert (reservation_to_destroy.start > datetime.utcnow() and __is_reservation_owner(
             reservation_to_destroy)) or is_admin(), GENERAL['unprivileged']
 
         reservation_to_destroy.destroy()
