@@ -96,6 +96,29 @@ def test_create_reservation_with_an_indefinite_restriction(tables, client, new_u
     assert Reservation.get(resp_json['reservation']['id']) is not None
 
 
+def test_create_reservation_starting_in_the_past(tables, client, new_user, permissive_restriction):
+    new_user.save()
+
+    # Create a resource and assign it to the restriction
+    resource = Resource(id='0123456789012345678901234567890123456789')
+    resource.save()
+
+    past_time = datetime.datetime.now() - timedelta(minutes=2)
+    end_time = past_time + timedelta(hours=1)
+
+    data = {
+        'title': 'Test reservation',
+        'description': 'Test reservation',
+        'resourceId': '0123456789012345678901234567890123456789',
+        'userId': new_user.id,
+        'start': DateUtils.stringify_datetime_to_api_format(past_time),
+        'end': DateUtils.stringify_datetime_to_api_format(end_time)
+    }
+    resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+
+
 def test_create_reservation_with_permissions_just_for_a_part_of_it(tables, client, new_user, restriction):
     new_user.save()
 
