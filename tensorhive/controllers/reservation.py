@@ -80,8 +80,13 @@ def create(reservation: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
             end=reservation['end']
         )
 
+        reservation_start = DateUtils.try_parse_string(new_reservation.start)
+        request_time_limit = timedelta(minutes=1)
+        starts_in_the_future = (reservation_start + request_time_limit) >= datetime.now()
+
         user = User.get(get_jwt_identity())
         if (is_admin() or __is_reservation_owner(new_reservation)) \
+                and (is_admin() or starts_in_the_future) \
                 and ReservationVerifier.is_reservation_allowed(user, new_reservation):
             new_reservation.save()
             content = {
