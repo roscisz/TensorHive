@@ -158,6 +158,8 @@ def init():
     else:
         host = '0.0.0.0'
     main_config.set('api', 'url_hostname', host)
+    main_config.set('api', 'url_schema', 'http')
+    main_config.set('api', 'url_port', '1111')
     with open(CONFIG_FILES.MAIN_CONFIG_PATH, 'w') as main_config_file:
         main_config.write(main_config_file)
     click.echo(green('[⚙] TensorHive will be accessible via: {}'.format(host)))
