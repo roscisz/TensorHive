@@ -15,7 +15,7 @@ const routes = [
     component: DashView,
     children: [
       {
-        path: '/reservations_overview',
+        path: 'reservations_overview',
         alias: '',
         component: CalendarView,
         name: 'Reservation Overview',

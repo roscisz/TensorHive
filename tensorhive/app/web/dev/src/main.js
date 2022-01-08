@@ -23,7 +23,7 @@ import 'material-design-icons-iconfont/dist/material-design-icons.css'
 import axios from 'axios'
 import config from './config'
 
-axios.get('/static/config.json').then(response => {
+axios.get('static/config.json').then(response => {
   config.serverURI = response.data.apiPath
   config.version = response.data.version
   if (window.localStorage) {
@@ -53,7 +53,7 @@ axios.get('/static/config.json').then(response => {
   // Routing logic
   var router = new VueRouter({
     routes: routes,
-    mode: 'history',
+    mode: 'hash',
     linkExactActiveClass: 'active',
     scrollBehavior: function (to, from, savedPosition) {
       return savedPosition || { x: 0, y: 0 }
