@@ -7,11 +7,17 @@ from paramiko.rsakey import RSAKey
 
 
 def test_config_builder_with_good_arguments():
-    config, _ = sut.build_dedicated_config_for('hostname', 'username')
+    hostname = 'hostname'
+    username = 'username'
+    port = 31337
+
+    SSH.AVAILABLE_NODES = {hostname: {'user': username, 'port': port}}
+    config, _ = sut.build_dedicated_config_for(hostname, username)
     assert config == {
-        'hostname': {
-            'user': 'username',
-            'pkey': SSH.KEY_FILE
+        hostname: {
+            'user': username,
+            'pkey': SSH.KEY_FILE,
+            'port': port
         }
     }
 
