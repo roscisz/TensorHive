@@ -80,26 +80,30 @@ def create(reservation: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
             end=reservation['end']
         )
 
+        if not is_admin() and not __is_reservation_owner(new_reservation):
+            raise ForbiddenException("Cannot reserve resources in another user's name")
+
         reservation_start = DateUtils.try_parse_string(new_reservation.start)
         request_time_limit = timedelta(minutes=1)
         starts_in_the_future = (reservation_start + request_time_limit) >= datetime.now()
+        if not is_admin() and not starts_in_the_future:
+            raise ForbiddenException("Cannot reserve resources in the past")
 
         user = User.get(get_jwt_identity())
-        if (is_admin() or __is_reservation_owner(new_reservation)) \
-                and (is_admin() or starts_in_the_future) \
-                and ReservationVerifier.is_reservation_allowed(user, new_reservation):
-            new_reservation.save()
-            content = {
-                'msg': RESERVATION['create']['success'],
-                'reservation': new_reservation.as_dict()
-            }
-            status = 201
-        else:
-            content = {
-                'msg': RESERVATION['create']['failure']['forbidden'].format(reason='reservation not allowed')
-            }
-            status = 403
+        if not ReservationVerifier.is_reservation_allowed(user, new_reservation):
+            raise ForbiddenException("Reservation not allowed")
 
+        new_reservation.save()
+        content = {
+            'msg': RESERVATION['create']['success'],
+            'reservation': new_reservation.as_dict()
+        }
+        status = 201
+    except ForbiddenException as e:
+        content = {
+            'msg': RESERVATION['create']['failure']['forbidden'].format(reason=e)
+        }
+        status = 403
     except AssertionError as e:
         content = {'msg': RESERVATION['create']['failure']['invalid'].format(reason=e)}
         status = 422
