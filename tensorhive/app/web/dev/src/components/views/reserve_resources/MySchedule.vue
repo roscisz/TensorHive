@@ -170,6 +170,7 @@ export default {
 
   watch: {
     parsedNodes () {
+      this.loadOrInitSelected()
       this.fillTable()
       for (var nodeIndex in this.parsedNodes) {
         var nodeName = this.parsedNodes[nodeIndex].nodeName
@@ -449,7 +450,6 @@ export default {
       header: header,
       hours: hours
     }
-    this.loadOrInitSelected()
   }
 }
 </script>
