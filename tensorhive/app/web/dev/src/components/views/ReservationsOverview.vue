@@ -162,7 +162,6 @@ export default {
         }
         this.parsedNodes.push(tempNode)
       }
-      this.loadCalendar()
     },
 
     loadCalendar () {
