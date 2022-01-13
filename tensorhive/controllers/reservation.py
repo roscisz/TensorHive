@@ -85,7 +85,7 @@ def create(reservation: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
 
         reservation_start = DateUtils.try_parse_string(new_reservation.start)
         request_time_limit = timedelta(minutes=1)
-        starts_in_the_future = (reservation_start + request_time_limit) >= datetime.now()
+        starts_in_the_future = (reservation_start + request_time_limit) >= datetime.utcnow()
         if not is_admin() and not starts_in_the_future:
             raise ForbiddenException("Cannot reserve resources in the past")
 

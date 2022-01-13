@@ -92,9 +92,9 @@ class JobSchedulingService(Service):
                     near_reservations = Reservation.upcoming_events_for_resource(gpu_id, self.considered_future_period)
                     if len(near_reservations):
                         nearest_reservation = near_reservations[0]
-                        if nearest_reservation.start > datetime.now():  # type: ignore
+                        if nearest_reservation.start > datetime.utcnow():  # type: ignore
                             ret[host][gpu_id] = \
-                                (nearest_reservation.start - datetime.now()).total_seconds() / 60  # type: ignore
+                                (nearest_reservation.start - datetime.utcnow()).total_seconds() / 60  # type: ignore
                         else:
                             ret[host][gpu_id] = 0
                     else:
