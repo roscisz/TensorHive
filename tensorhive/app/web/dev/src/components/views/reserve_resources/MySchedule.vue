@@ -252,8 +252,13 @@ export default {
     },
 
     loadOrInitSelected: function () {
-      this.selectedNodes = Set.from(JSON.parse(window.localStorage.getItem('selectedNodes')))
-      this.selectedResources = JSON.parse(window.localStorage.getItem('selectedResources'))
+      try {
+        this.selectedNodes = Set.from(JSON.parse(window.localStorage.getItem('selectedNodes')))
+        this.selectedResources = JSON.parse(window.localStorage.getItem('selectedResources'))
+      } catch (e) {
+        this.selectedNodes = null
+        this.selectedResources = null
+      }
 
       if (this.selectedNodes === null || this.selectedResources === null) {
         this.selectedNodes = new Set()
@@ -273,6 +278,7 @@ export default {
           }
         }
       }
+
       for (var entry in this.selectedResources) {
         this.selectedResources[entry] = Set.from(this.selectedResources[entry])
       }
