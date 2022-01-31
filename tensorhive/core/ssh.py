@@ -1,6 +1,7 @@
 from tensorhive.core.utils.decorators import memoize, timeit
 from tensorhive.config import SSH
 from pssh.clients.native import ParallelSSHClient
+from pssh.exceptions import AuthenticationException
 from typing import Optional, Dict, Tuple, Generator, List
 from paramiko.rsakey import RSAKey
 from pathlib import PosixPath
@@ -35,10 +36,12 @@ def build_dedicated_config_for(host: Hostname, user: Username) -> Tuple[HostsCon
     valid `config` and `pconfig` parameter to `get_client()` function.
     """
     assert host and user, 'Arguments must not be None!'
+    assert host in SSH.AVAILABLE_NODES
     hosts_config = {
         host: {
             'user': user,
-            'pkey': SSH.KEY_FILE
+            'pkey': SSH.KEY_FILE,
+            'port': SSH.AVAILABLE_NODES[host]['port']
         }
     }
     # Read config extracted from hosts_config.ini (proxy is common for all hosts)
@@ -109,6 +112,9 @@ def get_stdout(host: Hostname, output: pssh.output.HostOutput) -> Optional[str]:
         raise
     except (TypeError, ):
         log.warning('Could not extract stdout for {}: {}'.format(host, output))
+        return None
+    except AuthenticationException:
+        log.warning('Could not authenticate SSH connection for {}: {}'.format(host, output))
         return None
     except Exception as e:
         log.critical(e)

@@ -206,10 +206,11 @@ class MONITORING_SERVICE:
 
 class PROTECTION_SERVICE:
     section = 'protection_service'
-    ENABLED = config.getboolean(section, 'enabled', fallback=True)
+    LEVEL = config.getint(section, 'level', fallback=1)
     UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=2.0)
     NOTIFY_ON_PTY = config.getboolean(section, 'notify_on_pty', fallback=True)
     NOTIFY_VIA_EMAIL = config.getboolean(section, 'notify_via_email', fallback=False)
+    KILL_PROCESSES = config.getint(section, 'kill_processes', fallback=0)
 
 
 class MAILBOT:

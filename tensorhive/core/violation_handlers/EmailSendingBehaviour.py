@@ -54,9 +54,7 @@ class EmailSendingBehaviour:
         :param violation_data: data received from ProtectionService
         '''
         # Expect certain keys beforehand
-        assert {'INTRUDER_USERNAME', 'RESERVATION_OWNER_USERNAME',
-                'RESERVATION_OWNER_EMAIL', 'RESERVATION_END', 'UUID', 'HOSTNAME'
-                }.issubset(violation_data), 'Invalid keys in violation_data'
+        assert {'INTRUDER_USERNAME', 'GPUS'}.issubset(violation_data), 'Missing keys in violation_data'
 
         if not self._test_smtp_configuration():
             return

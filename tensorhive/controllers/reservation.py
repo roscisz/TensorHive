@@ -9,7 +9,7 @@ from tensorhive.models.User import User
 from tensorhive.utils.DateUtils import DateUtils
 from stringcase import snakecase
 from tensorhive.exceptions.ForbiddenException import ForbiddenException
-import datetime
+from datetime import datetime, timedelta
 
 log = logging.getLogger(__name__)
 RESERVATION = API.RESPONSES['reservation']
@@ -80,21 +80,30 @@ def create(reservation: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
             end=reservation['end']
         )
 
-        user = User.get(get_jwt_identity())
-        if (is_admin() or __is_reservation_owner(new_reservation)) \
-                and ReservationVerifier.is_reservation_allowed(user, new_reservation):
-            new_reservation.save()
-            content = {
-                'msg': RESERVATION['create']['success'],
-                'reservation': new_reservation.as_dict()
-            }
-            status = 201
-        else:
-            content = {
-                'msg': RESERVATION['create']['failure']['forbidden'].format(reason='reservation not allowed')
-            }
-            status = 403
+        if not is_admin() and not __is_reservation_owner(new_reservation):
+            raise ForbiddenException("Cannot reserve resources in another user's name")
 
+        reservation_start = DateUtils.try_parse_string(new_reservation.start)
+        request_time_limit = timedelta(minutes=1)
+        starts_in_the_future = (reservation_start + request_time_limit) >= datetime.utcnow()
+        if not is_admin() and not starts_in_the_future:
+            raise ForbiddenException("Cannot reserve resources in the past")
+
+        user = User.get(get_jwt_identity())
+        if not ReservationVerifier.is_reservation_allowed(user, new_reservation):
+            raise ForbiddenException("Reservation not allowed")
+
+        new_reservation.save()
+        content = {
+            'msg': RESERVATION['create']['success'],
+            'reservation': new_reservation.as_dict()
+        }
+        status = 201
+    except ForbiddenException as e:
+        content = {
+            'msg': RESERVATION['create']['failure']['forbidden'].format(reason=e)
+        }
+        status = 403
     except AssertionError as e:
         content = {'msg': RESERVATION['create']['failure']['invalid'].format(reason=e)}
         status = 422
@@ -113,10 +122,10 @@ def update(id: ReservationId, newValues: Dict[str, Any]) -> Tuple[Content, HttpS
     try:
         reservation = Reservation.get(id)
 
-        if reservation.end < datetime.datetime.utcnow() and not is_admin():
+        if reservation.end < datetime.utcnow() and not is_admin():
             raise ForbiddenException('reservation already finished')
 
-        if reservation.start > datetime.datetime.utcnow() or is_admin():
+        if reservation.start > datetime.utcnow() or is_admin():
             allowed_fields.add('start')
 
         if not set(new_values.keys()).issubset(allowed_fields):
@@ -154,7 +163,7 @@ def delete(id: ReservationId) -> Tuple[Content, HttpStatusCode]:
     try:
         reservation_to_destroy = Reservation.get(id)
 
-        assert (reservation_to_destroy.start > datetime.datetime.utcnow() and __is_reservation_owner(
+        assert (reservation_to_destroy.start > datetime.utcnow() and __is_reservation_owner(
             reservation_to_destroy)) or is_admin(), GENERAL['unprivileged']
 
         reservation_to_destroy.destroy()
