@@ -231,6 +231,23 @@ location /tensorhive/api {
 </p>
 </details>
 
+Citation
+------------------------
+If you use TensorHive for a scientific publication, we would appreciate citations:
+
+```bibtex
+@article{JMLR:v22:20-225,
+  author  = {Paweł Rościszewski and Michał Martyniak and Filip Schodowski},
+  title   = {TensorHive: Management of Exclusive GPU Access for Distributed Machine Learning Workloads},
+  journal = {Journal of Machine Learning Research},
+  year    = {2021},
+  volume  = {22},
+  number  = {215},
+  pages   = {1-5},
+  url     = {http://jmlr.org/papers/v22/20-225.html}
+}
+```
+
 Contribution and feedback
 ------------------------
 We'd :heart: to collect your observations, issues and pull requests!
