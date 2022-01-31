@@ -1,10 +1,9 @@
 TensorHive
 ===
-![](https://img.shields.io/badge/release-v1.0.0-brightgreen.svg?style=popout-square)
-![](https://img.shields.io/badge/pypi-v1.0.0-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/release-v1.1.0-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/pypi-v1.1.0-brightgreen.svg?style=popout-square)
 ![](https://img.shields.io/badge/Issues%20and%20PRs-welcome-yellow.svg?style=popout-square)
-![](https://img.shields.io/badge/platform-Linux-blue.svg?style=popout-square)
-![](https://img.shields.io/badge/hardware-Nvidia-green.svg?style=popout-square)
+![](https://img.shields.io/badge/platform-GNU/Linux-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7%20|%203.8-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=popout-square)
 
