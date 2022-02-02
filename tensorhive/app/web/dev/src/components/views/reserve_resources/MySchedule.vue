@@ -46,7 +46,7 @@
                   <v-checkbox
                     class="small-checkbox"
                     color="success"
-                    label="Change all"
+                    label="Select all"
                     v-model="changeAllCheckbox"
                     @change="changeAll"
                   >
@@ -159,7 +159,6 @@ export default {
       reactive: false,
       range: 7,
       changeAllCheckbox: true,
-      selectedNodes: 0,
       allFlag: false,
       nodeFlag: false
     }
@@ -171,7 +170,14 @@ export default {
 
   watch: {
     parsedNodes () {
+      this.loadOrInitSelected()
       this.fillTable()
+      for (var nodeIndex in this.parsedNodes) {
+        var nodeName = this.parsedNodes[nodeIndex].nodeName
+        this.checkIfAllResourcesSelected(nodeName)
+      }
+      this.checkIfAllNodesSelected()
+      this.loadResources()
     }
   },
 
@@ -189,15 +195,20 @@ export default {
     changeWholeNode: function (nodeName) {
       this.nodeFlag = true
       for (var resourceId in this.tableContent.nodes[nodeName].resources) {
-        var resourceName = this.tableContent.nodes[nodeName].resources[resourceId]
-        var resource = this.tableContent.resources[resourceName]
+        var resourceUUID = this.tableContent.nodes[nodeName].resources[resourceId]
+        var resource = this.tableContent.resources[resourceUUID]
         resource.selected = this.tableContent.nodes[nodeName].selected
+        if (this.tableContent.nodes[nodeName].selected) {
+          this.selectedResources[nodeName].add(resource.resourceUUID)
+        } else {
+          this.selectedResources[nodeName].delete(resource.resourceUUID)
+        }
       }
       if (!this.allFlag) {
         if (this.tableContent.nodes[nodeName].selected) {
-          this.selectedNodes += 1
+          this.selectedNodes.add(nodeName)
         } else {
-          this.selectedNodes -= 1
+          this.selectedNodes.delete(nodeName)
         }
         this.checkIfAllNodesSelected()
         this.loadResources()
@@ -206,7 +217,7 @@ export default {
     },
 
     checkIfAllNodesSelected: function () {
-      if (this.selectedNodes === Object.keys(this.tableContent.nodes).length) {
+      if (this.selectedNodes.size === Object.keys(this.tableContent.nodes).length) {
         this.changeAllCheckbox = true
       } else {
         this.changeAllCheckbox = false
@@ -214,30 +225,72 @@ export default {
     },
 
     changeResource: function (nodeName, resourceUUID) {
-      if (!this.allFlag && !this.nodeFlag) {
-        if (this.tableContent.resources[resourceUUID].selected) {
-          this.tableContent.nodes[nodeName].selectedResources += 1
-        } else {
-          this.tableContent.nodes[nodeName].selectedResources -= 1
-        }
-        this.checkIfAllResourcesSelected(nodeName)
-        this.checkIfAllNodesSelected()
-        this.forceRerenderTables()
-        this.loadResources()
+      if (this.allFlag || this.nodeFlag) {
+        return
       }
+
+      if (this.tableContent.resources[resourceUUID].selected) {
+        this.selectedResources[nodeName].add(resourceUUID)
+      } else {
+        this.selectedResources[nodeName].delete(resourceUUID)
+      }
+
+      this.checkIfAllResourcesSelected(nodeName)
+      this.checkIfAllNodesSelected()
+      this.forceRerenderTables()
+      this.loadResources()
     },
 
     checkIfAllResourcesSelected: function (nodeName) {
-      if (this.tableContent.nodes[nodeName].selectedResources === Object.keys(this.tableContent.nodes[nodeName].resources).length) {
+      if (this.selectedResources[nodeName].size === Object.keys(this.tableContent.nodes[nodeName].resources).length) {
         this.tableContent.nodes[nodeName].selected = true
-        this.selectedNodes += 1
+        this.selectedNodes.add(nodeName)
       } else {
         this.tableContent.nodes[nodeName].selected = false
-        this.selectedNodes -= 1
+        this.selectedNodes.delete(nodeName)
       }
     },
 
+    loadOrInitSelected: function () {
+      try {
+        this.selectedNodes = Set.from(JSON.parse(window.localStorage.getItem('selectedNodes')))
+        this.selectedResources = JSON.parse(window.localStorage.getItem('selectedResources'))
+      } catch (e) {
+        this.selectedNodes = null
+        this.selectedResources = null
+      }
+
+      if (this.selectedNodes === null || this.selectedResources === null) {
+        this.selectedNodes = new Set()
+        this.selectedResources = {}
+        for (var nodeIndex in this.parsedNodes) {
+          var node = this.parsedNodes[nodeIndex]
+          var nodeName = node.nodeName
+          this.selectedNodes.add(nodeName)
+
+          this.selectedResources[nodeName] = new Set()
+          for (var resourceTypeIndex in node.resourceTypes) {
+            var resourceType = node.resourceTypes[resourceTypeIndex]
+            for (var resourceIndex in resourceType.resources) {
+              var resourceUUID = resourceType.resources[resourceIndex].resourceUUID
+              this.selectedResources[nodeName].add(resourceUUID)
+            }
+          }
+        }
+      }
+
+      for (var entry in this.selectedResources) {
+        this.selectedResources[entry] = Set.from(this.selectedResources[entry])
+      }
+    },
+
+    storeSelected: function () {
+      window.localStorage.setItem('selectedNodes', JSON.stringify(this.selectedNodes))
+      window.localStorage.setItem('selectedResources', JSON.stringify(this.selectedResources))
+    },
+
     loadResources: function () {
+      this.storeSelected()
       this.$emit('loadResources', this.tableContent.resources)
     },
 
@@ -265,42 +318,45 @@ export default {
     fillTable: function () {
       this.resourceIds = []
       this.tableContent.nodes = {}
-      this.tableContent.resources = []
+      this.tableContent.resources = {}
+
       for (var nodeIndex in this.parsedNodes) {
         var node = this.parsedNodes[nodeIndex]
+        var nodeName = node.nodeName
         var nodeSlots = []
         for (var i = 0; i < 48 * this.range; i++) {
           nodeSlots.push({ value: '', id: 'slot ' + i, reserved: false, userReservation: false })
         }
-        this.tableContent.nodes[node.nodeName] = {
-          nodeName: node.nodeName,
+        this.tableContent.nodes[nodeName] = {
+          nodeName: nodeName,
           hidden: true,
           resources: [],
-          selected: true,
-          selectedResources: 0,
+          selected: this.selectedNodes.has(nodeName),
           slots: nodeSlots
         }
+
         for (var resourceTypeIndex in node.resourceTypes) {
           var resourceType = node.resourceTypes[resourceTypeIndex]
           for (var resourceIndex in resourceType.resources) {
             var resource = resourceType.resources[resourceIndex]
-            resource.name = resource.nodeName + ' GPU' + resourceIndex
-            resource['selected'] = true
-            this.tableContent.nodes[node.nodeName].selectedResources += 1
+            resource.name = resource.nodeName + ' ' + resourceType.name + resourceIndex
+            if (resource.nodeName in this.selectedResources) {
+              resource['selected'] = this.selectedResources[resource.nodeName].has(resource.resourceUUID)
+            } else {
+              resource['selected'] = 'false'
+            }
             this.resourcesIds.push(resource.resourceUUID)
             var slots = []
             for (i = 0; i < 48 * this.range; i++) {
               slots.push({ value: '', id: 'slot ' + i, reserved: false, userReservation: false })
             }
             resource['slots'] = slots
-            this.tableContent.nodes[node.nodeName].resources.push(resource.resourceUUID)
+            this.tableContent.nodes[nodeName].resources.push(resource.resourceUUID)
             this.tableContent.resources[resource.resourceUUID] = resource
           }
         }
-        this.tableContent.nodes[node.nodeName].selectedResources = Object.keys(this.tableContent.nodes[node.nodeName].resources).length
+        this.selectedNodes.add(nodeName)
       }
-      this.selectedNodes = Object.keys(this.tableContent.nodes).length
-      this.getReservations()
     },
 
     getReservations: function () {
@@ -400,7 +456,6 @@ export default {
       header: header,
       hours: hours
     }
-    this.fillTable()
   }
 }
 </script>

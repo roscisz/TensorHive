@@ -1,10 +1,9 @@
 TensorHive
 ===
-![](https://img.shields.io/badge/release-v1.0.0-brightgreen.svg?style=popout-square)
-![](https://img.shields.io/badge/pypi-v1.0.0-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/release-v1.1.0-brightgreen.svg?style=popout-square)
+![](https://img.shields.io/badge/pypi-v1.1.0-brightgreen.svg?style=popout-square)
 ![](https://img.shields.io/badge/Issues%20and%20PRs-welcome-yellow.svg?style=popout-square)
-![](https://img.shields.io/badge/platform-Linux-blue.svg?style=popout-square)
-![](https://img.shields.io/badge/hardware-Nvidia-green.svg?style=popout-square)
+![](https://img.shields.io/badge/platform-GNU/Linux-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7%20|%203.8-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=popout-square)
 
@@ -158,14 +157,96 @@ Web application and API Documentation can be accessed via URLs highlighted in gr
 ##### Advanced configuration
 You can fully customize TensorHive behaviours via INI configuration files (which will be created automatically after `tensorhive init`):
 ```
+~/.config/TensorHive/hosts_config.ini
 ~/.config/TensorHive/main_config.ini
 ~/.config/TensorHive/mailbot_config.ini
-~/.config/TensorHive/hosts_config.ini
 ```
-[(see example)](https://github.com/roscisz/TensorHive/blob/master/tensorhive/main_config.ini)
+<details>
+<summary>(see example)</summary>
+<p>
+
+[hosts_config.ini](https://github.com/roscisz/TensorHive/blob/master/tensorhive/hosts_config.ini)
+[main_config.ini](https://github.com/roscisz/TensorHive/blob/master/tensorhive/main_config.ini)
+[mailbot_config.ini](https://github.com/roscisz/TensorHive/blob/master/tensorhive/mailbot_config.ini)
+
+
+</p>
+</details>
 
 ----------------------
 
+#### Reverse proxy setup
+
+Serving TensorHive through reverse proxy requires proper configuration of URL parameters in the `[api]` section of
+`main_config.ini`, including `url_schema`, `url_hostname`, `url_port` and `url_prefix`.
+
+<details>
+<summary>(see example)</summary>
+<p>
+
+Let's assume that the WebApp is served locally on `http://localhost:5000`, the API on `http://localhost:1111` and we
+want to serve TensorHive publicly at `https://some-server/tensorhive`. In such case the following `main_config.ini`:
+
+```
+url_schema = https
+url_hostname = some-server
+url_port = 443
+url_prefix = tensorhive/api
+```
+should be used along with a reverse proxy similar to the following example for nginx:
+
+```
+location /tensorhive {
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Host $host:$server_port;
+    proxy_set_header X-Forwarded-Server $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+    add_header 'Access-Control-Allow-Origin' '*';
+    add_header 'Access-Control-Allow-Credentials' 'true';
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+
+    proxy_pass  http://localhost:5000/tensorhive;
+    proxy_set_header SCRIPT_NAME /tensorhive;
+}
+
+location /tensorhive/api {
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Host $host:$server_port;
+    proxy_set_header X-Forwarded-Server $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+    add_header 'Access-Control-Allow-Origin' '*';
+    add_header 'Access-Control-Allow-Credentials' 'true';
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+
+    proxy_pass  http://localhost:1111;
+}
+```
+
+</p>
+</details>
+
+Citation
+------------------------
+If you use TensorHive for a scientific publication, we would appreciate citations:
+
+```bibtex
+@article{JMLR:v22:20-225,
+  author  = {Paweł Rościszewski and Michał Martyniak and Filip Schodowski},
+  title   = {TensorHive: Management of Exclusive GPU Access for Distributed Machine Learning Workloads},
+  journal = {Journal of Machine Learning Research},
+  year    = {2021},
+  volume  = {22},
+  number  = {215},
+  pages   = {1-5},
+  url     = {http://jmlr.org/papers/v22/20-225.html}
+}
+```
 
 Contribution and feedback
 ------------------------

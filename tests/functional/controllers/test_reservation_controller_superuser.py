@@ -6,6 +6,9 @@ from importlib import reload
 from sqlalchemy.orm.exc import NoResultFound
 import auth_patcher
 
+import datetime
+from datetime import timedelta
+from tensorhive.utils.DateUtils import DateUtils
 import json
 import pytest
 
@@ -74,6 +77,31 @@ def test_update_past_reservation(tables, client, past_reservation, permissive_re
     assert resp.status_code == HTTPStatus.CREATED
     assert resp_json['reservation']['title'] == new_reservation_title
     assert Reservation.get(past_reservation.id).title == new_reservation_title
+
+
+def test_create_reservation_starting_in_the_past(tables, client, new_user, permissive_restriction):
+    new_user.save()
+
+    # Create a resource and assign it to the restriction
+    resource = Resource(id='0123456789012345678901234567890123456789')
+    resource.save()
+
+    past_time = datetime.datetime.now() - timedelta(minutes=2)
+    end_time = past_time + timedelta(hours=1)
+
+    data = {
+        'title': 'Test reservation',
+        'description': 'Test reservation',
+        'resourceId': '0123456789012345678901234567890123456789',
+        'userId': new_user.id,
+        'start': DateUtils.stringify_datetime_to_api_format(past_time),
+        'end': DateUtils.stringify_datetime_to_api_format(end_time)
+    }
+    resp = client.post(ENDPOINT, headers=HEADERS, data=json.dumps(data))
+    resp_json = json.loads(resp.data.decode('utf-8'))
+
+    assert resp.status_code == HTTPStatus.CREATED
+    assert Reservation.get(resp_json['reservation']['id']) is not None
 
 
 def test_delete_active_reservation(tables, client, active_reservation, permissive_restriction):

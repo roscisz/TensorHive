@@ -32,9 +32,10 @@ class APIServer():
                     strict_validation=True)
         CORS(app.app)
         log.info('[⚙] Starting API server with {} backend'.format(API_SERVER.BACKEND))
-        URL = 'http://{host}:{port}/{url_prefix}/ui/'.format(
+        URL = '{schema}://{host}:{port}/{url_prefix}/ui/'.format(
+            schema=API.URL_SCHEMA,
             host=API.URL_HOSTNAME,
-            port=API_SERVER.PORT,
+            port=API.URL_PORT,
             url_prefix=API.URL_PREFIX)
         log.info(green('[✔] API documentation (Swagger UI) available at: {}'.format(URL)))
         app.run(server=API_SERVER.BACKEND,

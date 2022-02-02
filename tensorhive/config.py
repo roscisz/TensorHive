@@ -167,7 +167,9 @@ class DB:
 class API:
     section = 'api'
     TITLE = config.get(section, 'title', fallback='TensorHive API')
+    URL_SCHEMA = config.get(section, 'url_schema', fallback='http')
     URL_HOSTNAME = config.get(section, 'url_hostname', fallback='0.0.0.0')
+    URL_PORT = config.get(section, 'url_port', fallback='1111')
     URL_PREFIX = config.get(section, 'url_prefix', fallback='api')
     SPEC_FILE = config.get(section, 'spec_file', fallback='api_specification.yml')
     IMPL_LOCATION = config.get(section, 'impl_location', fallback='tensorhive.api.controllers')
@@ -204,10 +206,11 @@ class MONITORING_SERVICE:
 
 class PROTECTION_SERVICE:
     section = 'protection_service'
-    ENABLED = config.getboolean(section, 'enabled', fallback=True)
+    LEVEL = config.getint(section, 'level', fallback=1)
     UPDATE_INTERVAL = config.getfloat(section, 'update_interval', fallback=2.0)
     NOTIFY_ON_PTY = config.getboolean(section, 'notify_on_pty', fallback=True)
     NOTIFY_VIA_EMAIL = config.getboolean(section, 'notify_via_email', fallback=False)
+    KILL_PROCESSES = config.getint(section, 'kill_processes', fallback=0)
 
 
 class MAILBOT:
