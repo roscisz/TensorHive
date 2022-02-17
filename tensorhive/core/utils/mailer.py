@@ -80,7 +80,9 @@ class Mailer:
         # assert self.smtp_server and self.smtp_port, 'SMTP server and port must not be None!'
         self.server = smtplib.SMTP(self.smtp_server, self.smtp_port)
         self.server.starttls()
-        self.server.login(login, password)
+        if login and login.strip():
+            if password and password.strip():
+                self.server.login(login, password)
 
     def disconnect(self) -> None:
         self.server.close()
