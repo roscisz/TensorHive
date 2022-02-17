@@ -120,7 +120,8 @@ class EmailSendingBehaviour:
         '''
         try:
             assert MAILBOT.SMTP_SERVER and MAILBOT.SMTP_PORT, 'Incomplete SMTP server configuration'
-            assert MAILBOT.SMTP_LOGIN and MAILBOT.SMTP_PASSWORD, 'Incomplete SMTP server credentials'
+            # not needed enymore, checked during login
+            # assert MAILBOT.SMTP_LOGIN and MAILBOT.SMTP_PASSWORD, 'Incomplete SMTP server credentials'
             if MAILBOT.NOTIFY_ADMIN:
                 assert MAILBOT.ADMIN_EMAIL, 'Admin contact email not specified despite enabled notifications'
 
