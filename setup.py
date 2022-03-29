@@ -52,7 +52,7 @@ setup(
         'Mako==1.1.4',
         'MarkupSafe==1.1.1',
         'openapi-spec-validator==0.2.9',
-        'paramiko==2.7.2',
+        'paramiko==2.10.1',
         'parallel-ssh==1.9.1',
         'passlib==1.7.1',
         'pycparser==2.20',
