@@ -56,7 +56,7 @@ setup(
         'parallel-ssh==1.9.1',
         'passlib==1.7.1',
         'pycparser==2.20',
-        'PyJWT==1.7.1',
+        'PyJWT==2.4.0',
         'PyNaCl==1.4.0',
         'python-dateutil==2.8.1',
         'python-editor==1.0.4',
