@@ -49,7 +49,7 @@ setup(
         'itsdangerous==1.1.0',
         'Jinja2==2.11.3',
         'jsonschema==2.6.0',
-        'Mako==1.1.4',
+        'Mako==1.2.2',
         'MarkupSafe==1.1.1',
         'openapi-spec-validator==0.2.9',
         'paramiko==2.7.2',
