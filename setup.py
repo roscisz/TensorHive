@@ -29,7 +29,7 @@ setup(
     install_requires=[
         'alembic==1.0.3',
         'bcrypt==3.1.7',
-        'certifi==2020.12.5',
+        'certifi==2022.12.7',
         'cffi==1.14.5',
         'chardet==4.0.0',
         'Click==7.0',
