@@ -36,7 +36,7 @@ setup(
         'clickclick==20.10.2',
         'coloredlogs==10.0',
         'connexion==2.5.0',
-        'cryptography==3.2.1',
+        'cryptography==39.0.1',
         'Flask==1.1.4',
         'Flask-Cors==3.0.9',
         'Flask-JWT-Extended==3.13.1',
