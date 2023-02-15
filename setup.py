@@ -71,7 +71,7 @@ setup(
         'stringcase==1.2.0',
         'swagger_ui_bundle==0.0.8',
         'urllib3==1.26.5',
-        'Werkzeug==0.16.1',
+        'Werkzeug==2.2.3',
         'zope.event==4.5.0',
         'zope.interface==5.4.0',
     ],
