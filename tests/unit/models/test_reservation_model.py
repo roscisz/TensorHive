@@ -3,7 +3,11 @@ from datetime import timedelta, datetime
 from tensorhive.models.Reservation import Reservation
 
 
-def test_reservation_creation(tables, new_reservation):
+def test_reservation_creation(tables, new_reservation, faker):
+    new_reservation.save()
+
+    new_reservation.start = faker.future_datetime()
+    new_reservation.end = new_reservation.start + timedelta(days=8, seconds=-1)
     new_reservation.save()
 
 

@@ -110,7 +110,7 @@ def run_command(client: ParallelSSHClient, command: str) -> CommandResult:
         raise  # FIXME Find out what throws this exception
     else:
         log.debug('Command `{}` finished'.format(command))
-        ret : CommandResult = {}
+        ret: CommandResult = {}
         for host_output in result:
             ret[host_output.host] = host_output
         return ret
