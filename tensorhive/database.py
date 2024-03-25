@@ -16,7 +16,7 @@ if bool(os.environ.get('PYTEST')):
 else:
     db_uri = DB.SQLALCHEMY_DATABASE_URI
 
-engine = create_engine(db_uri, convert_unicode=True, echo=False)
+engine = create_engine(db_uri, echo=False)
 db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 
 Base = declarative_base()
