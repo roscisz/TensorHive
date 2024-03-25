@@ -70,7 +70,7 @@ class CRUDModel:
 
     @classmethod
     def _serialize(self, field):
-        if type(field) == datetime.datetime:
+        if type(field) is datetime.datetime:
             return DateUtils.stringify_datetime(field)
         else:
             return field

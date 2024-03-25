@@ -75,7 +75,7 @@ class JobSchedulingService(Service):
 
     def check_current_gpu_slots(self,
                                 hosts_with_gpu_occupation: Dict[str, Dict[str, bool]]) -> Dict[str, Dict[str, int]]:
-        '''For each GPU in the dictionary, return the numbers of minutes until the next reservation of consecutive GPUs.
+        '''For each GPU in the dictionary, return the numbers of minutes until the next reservation of the GPUs.
         Return 0 for GPUs that are currently occupied, regardless of the reservations.
         Return None for GPUs that have no scheduled reservations in the future.
         :param hosts_with_gpu_occupation: {hostname: {GPU_id: True if GPU occupied}}

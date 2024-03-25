@@ -13,7 +13,7 @@ def test_memoize_for_correct_func_call_count():
     @memoize
     def foo(a: dict, b: dict, c: bool) -> bool:
         time.sleep(10)
-        return a and b and c
+        return a is not None and b is not None and c is not None
 
     with patch.object(time, 'sleep') as mocked_sleep:
         [add(1, 2) for _ in range(10)]
