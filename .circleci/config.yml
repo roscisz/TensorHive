@@ -7,17 +7,14 @@ workflows:
   test:
     jobs:
       - test:
-          name: "python3.5"
-          version: "3.5"
-      - test:
-          name: "python3.6"
-          version: "3.6"
-      - test:
-          name: "python3.7"
-          version: "3.7"
-      - test:
           name: "python3.8"
           version: "3.8"
+      - test:
+          name: "python3.9"
+          version: "3.9"
+      - test:
+          name: "python3.10"
+          version: "3.10"
 
 jobs:
   test:
@@ -33,7 +30,7 @@ jobs:
           pip-dependency-file: requirements-dev.txt
       - run:
           name: Run mypy checks
-          command: mypy tensorhive tests
+          command: mypy -p tensorhive -p tests
       - run:
           name: Run flake8 checks
           command: python -m flake8 tensorhive tests

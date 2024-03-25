@@ -2,16 +2,15 @@ os: linux
 sudo: false   # Uses sudo for e.g. binding the port but not for testing
 language: python
 python:
-  - 3.5
-  - 3.6
-  - 3.7
   - 3.8
+  - 3.9
+  - 3.10
 cache: pip
 install: 
   - pip install .
   - pip install -r requirements-dev.txt
 before_script:
-  - mypy tensorhive tests
+  - mypy -p tensorhive -p tests
   - python -m flake8 tensorhive tests
 script:
   - pytest

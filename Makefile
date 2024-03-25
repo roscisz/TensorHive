@@ -32,11 +32,6 @@ dev-deps:
 	pip install -r requirements-dev.txt
 	$(call green, "Done.\n")
 
-docs:
-	@echo "Generating pdoc documentation for TensorHive Core..."
-	pdoc --html tensorhive.core --only-pypath --overwrite --html-dir docs/ && mv docs/tensorhive/core/* docs/
-	$(call green, "Done. You can now browse the docs via: firefox docs/index.html\n")
-
 
 clean-config:
 	$(call yellow, "Cleaning existing configuration files...")
@@ -62,7 +57,7 @@ clean:
 
 
 codestyle:
-	- mypy tensorhive tests
+	- mypy -p tensorhive -p tests
 	@echo "-------------------------------------------"
 	python -m flake8 tensorhive tests
 
