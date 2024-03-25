@@ -2,6 +2,7 @@ os: linux
 sudo: false   # Uses sudo for e.g. binding the port but not for testing
 language: python
 python:
+  - 3.7
   - 3.8
   - 3.9
   - 3.10

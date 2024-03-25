@@ -7,6 +7,9 @@ workflows:
   test:
     jobs:
       - test:
+          name: "python3.7"
+          version: "3.7"
+      - test:
           name: "python3.8"
           version: "3.8"
       - test:

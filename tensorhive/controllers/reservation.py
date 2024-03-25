@@ -83,7 +83,9 @@ def create(reservation: Dict[str, Any]) -> Tuple[Content, HttpStatusCode]:
         if not is_admin() and not __is_reservation_owner(new_reservation):
             raise ForbiddenException("Cannot reserve resources in another user's name")
 
-        reservation_start = DateUtils.try_parse_string(new_reservation.start)
+        # Type check ignored, because mypy 1.4.1 compatible with python3.7, recognizes
+        # new_reservation.start as callable. This won't be needed for newer mypy (e.g. 1.9.0)
+        reservation_start = DateUtils.try_parse_string(new_reservation.start)  # type: ignore
         request_time_limit = timedelta(minutes=1)
         starts_in_the_future = (reservation_start + request_time_limit) >= datetime.utcnow()
         if not is_admin() and not starts_in_the_future:

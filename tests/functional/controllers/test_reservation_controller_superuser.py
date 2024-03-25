@@ -86,7 +86,7 @@ def test_create_reservation_starting_in_the_past(tables, client, new_user, permi
     resource = Resource(id='0123456789012345678901234567890123456789')
     resource.save()
 
-    past_time = datetime.datetime.now() - timedelta(minutes=2)
+    past_time = datetime.datetime.utcnow() - timedelta(minutes=2)
     end_time = past_time + timedelta(hours=1)
 
     data = {

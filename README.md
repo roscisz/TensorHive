@@ -4,7 +4,7 @@ TensorHive
 ![](https://img.shields.io/badge/pypi-v1.1.0-brightgreen.svg?style=popout-square)
 ![](https://img.shields.io/badge/Issues%20and%20PRs-welcome-yellow.svg?style=popout-square)
 ![](https://img.shields.io/badge/platform-GNU/Linux-blue.svg?style=popout-square)
-![](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7%20|%203.8-blue.svg?style=popout-square)
+![](https://img.shields.io/badge/python-3.7%20|%203.8%20|%203.9%20|%203.10%20|%203.11-blue.svg?style=popout-square)
 ![](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=popout-square)
 
 <img src="https://github.com/roscisz/TensorHive/raw/master/images/logo_small.png" height="130" align="left">

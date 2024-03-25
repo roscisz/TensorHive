@@ -27,7 +27,7 @@ setup(
     download_url='https://github.com/roscisz/TensorHive/archive/{}.tar.gz'.format(tensorhive.__version__),
     keywords='gpu reservation calendar monitoring machine learning distributed tensorflow pytorch',
     install_requires=[
-        'alembic==1.13.1',
+        'alembic==1.12.1',
         'bcrypt==3.1.7',
         'certifi==2020.12.5',
         'cffi==1.14.5',
@@ -40,7 +40,7 @@ setup(
         'Flask==1.1.4',
         'Flask-Cors==3.0.9',
         'Flask-JWT-Extended==3.13.1',
-        'gevent==24.2.1',
+        'gevent==22.10.2',
         'greenlet==3.0.3',
         'gunicorn==19.9.0',
         'humanfriendly==9.1',
@@ -66,6 +66,8 @@ setup(
         'six==1.16.0',
         'SQLAlchemy==1.4.52',
         'SQLAlchemy-Utils==0.41.1',
+        # TODO: python3.12 support depends on releasing this:
+        # https://github.com/ParallelSSH/ssh2-python/pull/194
         'ssh2-python==1.0.0',
         'stringcase==1.2.0',
         'swagger_ui_bundle==0.0.8',
