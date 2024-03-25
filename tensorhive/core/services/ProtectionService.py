@@ -38,6 +38,8 @@ class ProtectionService(Service):
 
     def find_hostname(self, uuid: str) -> Optional[str]:
         '''Seeks the hostname of node which has GPU with given UUID'''
+        if self.infrastructure_manager is None:
+            return None
         infrastructure = self.infrastructure_manager.infrastructure
         for hostname, node_data in infrastructure.items():
             if node_data.get('GPU', {}).get(uuid):
@@ -47,6 +49,8 @@ class ProtectionService(Service):
 
     def gpu_attr(self, hostname: str, uuid: str, attribute='name') -> str:
         '''Fetches the value of 'name' or 'index' attributes for GPU with specific UUID'''
+        if self.infrastructure_manager is None:
+            return None
         infrastructure = self.infrastructure_manager.infrastructure
         all_gpus = infrastructure.get(hostname, {}).get('GPU', {})
         gpu = all_gpus.get(uuid, {})

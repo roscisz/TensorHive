@@ -234,7 +234,11 @@ class UsageLoggingService(Service):
         assert isinstance(uuid, str) and len(uuid) == 40
 
         for hostname in infrastructure.keys():
-            gpu_data = infrastructure[hostname].get('GPU').get(uuid)
-            if gpu_data:
-                return gpu_data
-        raise KeyError(uuid + ' has not been found!')
+            all_gpu_data = infrastructure[hostname].get('GPU')
+            if all_gpu_data is None:
+                return None
+            if uuid not in all_gpu_data:
+                return None
+            gpu_data = all_gpu_data.get(uuid)
+            return gpu_data
+        return None

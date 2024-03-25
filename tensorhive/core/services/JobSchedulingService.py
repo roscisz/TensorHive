@@ -108,6 +108,10 @@ class JobSchedulingService(Service):
                 return False
             if not task.gpu_id:
                 return False
+            if task.hostname not in current_device_occupation:
+                return False
+            if task.gpu_id not in current_device_occupation[task.hostname]:
+                return False
             if current_device_occupation[task.hostname][task.gpu_id]:
                 return False
         return True
