@@ -3,7 +3,7 @@ import os
 import stat
 import tensorhive.core.ssh as sut
 from tensorhive.config import SSH
-from paramiko.rsakey import RSAKey
+from cryptography.hazmat.primitives import serialization as crypto_serialization
 
 
 def test_config_builder_with_good_arguments():
@@ -43,7 +43,11 @@ def saved_key(key_path):
 
 
 def test_generate_cert_generated_cert_is_loadable(saved_key, key_path):
-    RSAKey.from_private_key_file(str(key_path))
+    with open(key_path, "rb") as key_file:
+        crypto_serialization.load_pem_private_key(
+            key_file.read(),
+            password=None
+        )
 
 
 def test_generate_cert_generating_twice_throws_exception(saved_key, key_path):

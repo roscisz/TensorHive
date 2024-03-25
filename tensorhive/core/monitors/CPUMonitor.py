@@ -13,8 +13,8 @@ class CPUMonitor(Monitor):
         output = group_connection.run_command(cmd, stop_on_errors=False)
         group_connection.join(output)
 
-        for host, host_out in output.items():
-            uuid = 'CPU_{}'.format(host)
+        for host_out in output:
+            uuid = 'CPU_{}'.format(host_out.host)
             metrics = {uuid: {'index': 0, 'metrics': dict()}}
             if host_out.exit_code == 0:
                 # Command executed successfully
@@ -29,8 +29,8 @@ class CPUMonitor(Monitor):
             else:
                 # Command execution failed
                 if host_out.exit_code:
-                    log.error('cpu query failed with {} exit code on {}'.format(host_out.exit_code, host))
+                    log.error('cpu query failed with {} exit code on {}'.format(host_out.exit_code, host_out.host))
                 elif host_out.exception:
-                    log.error('cpu query raised {} on {}'.format(host_out.exception.__class__.__name__, host))
+                    log.error('cpu query raised {} on {}'.format(host_out.exception.__class__.__name__, host_out.host))
                 metrics = None
-            infrastructure_manager.infrastructure[host]['CPU'] = metrics
+            infrastructure_manager.infrastructure[host_out.host]['CPU'] = metrics

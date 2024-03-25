@@ -1,11 +1,14 @@
 from tensorhive.core.utils.decorators import memoize, timeit
 from tensorhive.config import SSH
-from pssh.clients.native import ParallelSSHClient
+from pssh.clients.ssh import ParallelSSHClient
 from pssh.exceptions import AuthenticationException
 from typing import Optional, Dict, Tuple, Generator, List
-from paramiko.rsakey import RSAKey
+from cryptography.hazmat.primitives import serialization as crypto_serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.backends import default_backend as crypto_default_backend
 from pathlib import PosixPath
 import pssh
+from pssh.exceptions import PKeyFileError
 import logging
 log = logging.getLogger(__name__)
 
@@ -55,18 +58,33 @@ def get_client(config: HostsConfig, pconfig: Optional[ProxyConfig] = None, **kwa
 
     Client is fetched directly from cache if identical arguments were used recently.
     """
-    if pconfig is None:
-        pconfig = {}
-
-    return ParallelSSHClient(
-        hosts=config.keys(),
-        host_config=config,
-        pkey=SSH.KEY_FILE,
-        proxy_host=pconfig.get('proxy_host'),
-        proxy_user=pconfig.get('proxy_user'),
-        proxy_port=pconfig.get('proxy_port'),
-        num_retries=0,
-        **kwargs)
+    hostnames = list(config.keys())
+    try:
+        if pconfig is not None:
+            client = ParallelSSHClient(
+                hosts=hostnames,
+                host_config=config,
+                pkey=SSH.KEY_FILE,
+                proxy_host=SSH.PROXY['proxy_host'],
+                proxy_user=SSH.PROXY['proxy_user'],
+                proxy_port=SSH.PROXY['proxy_port'],
+                **kwargs
+                # Ignore timeout and num_retires for proxy
+            )
+        else:
+            client = ParallelSSHClient(
+                hosts=hostnames,
+                host_config=config,
+                timeout=SSH.TIMEOUT,
+                pkey=SSH.KEY_FILE,
+                num_retries=0,
+                **kwargs
+            )
+    except PKeyFileError as e:
+        log.error('[✘] {}'.format(str(e)))
+        return None
+    else:
+        return client
 
 
 def run_command(client: ParallelSSHClient, command: str) -> CommandResult:
@@ -92,7 +110,10 @@ def run_command(client: ParallelSSHClient, command: str) -> CommandResult:
         raise  # FIXME Find out what throws this exception
     else:
         log.debug('Command `{}` finished'.format(command))
-        return result
+        ret : CommandResult = {}
+        for host_output in result:
+            ret[host_output.host] = host_output
+        return ret
 
 
 def get_stdout(host: Hostname, output: pssh.output.HostOutput) -> Optional[str]:
@@ -130,14 +151,28 @@ def succeeded(host: Hostname, output: pssh.output.HostOutput) -> bool:
 
 def generate_cert(path, replace=False):
     path.touch(mode=0o600, exist_ok=replace)
-    key = RSAKey.generate(2048)
-    key.write_private_key_file(str(path))
-    return key
+    key = rsa.generate_private_key(
+        backend=crypto_default_backend(),
+        public_exponent=65537,
+        key_size=2048
+    )
+    private_key = key.private_bytes(
+        encoding=crypto_serialization.Encoding.PEM,
+        format=crypto_serialization.PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=crypto_serialization.NoEncryption()
+    )
+    with open(path, 'wb') as encrypted_file:
+        encrypted_file.write(private_key)
+    return private_key
 
 
 def init_ssh_key(path: PosixPath):
     if path.exists():
-        key = RSAKey.from_private_key_file(str(path))
+        with open(path, "rb") as key_file:
+            key = crypto_serialization.load_pem_private_key(
+                key_file.read(),
+                password=None
+            )
         log.info('[⚙] Using existing SSH key in {}'.format(path))
     else:
         key = generate_cert(path)
@@ -151,7 +186,7 @@ def node_tty_sessions(connection) -> List[Dict]:
     output = connection.run_command(command)
 
     # FIXME Assumes that only one node is in connection
-    for _, host_out in output.items():
+    for host_out in output:
         result = _parse_who_output(host_out.stdout)
     return result
 

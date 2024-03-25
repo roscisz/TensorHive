@@ -3,8 +3,6 @@ import socket
 from typing import Any, Dict, List, Tuple, Union
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, get_raw_jwt
 from flask_jwt_extended import jwt_refresh_token_required, jwt_required, get_jwt_claims
-from paramiko.client import SSHClient, WarningPolicy
-from paramiko.ssh_exception import AuthenticationException, BadHostKeyException, SSHException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from tensorhive.authorization import admin_required
@@ -14,6 +12,9 @@ from tensorhive.models.RevokedToken import RevokedToken
 from tensorhive.models.Role import Role
 from tensorhive.models.User import User
 from tensorhive.models.Group import Group
+from pssh.clients.ssh import SSHClient
+from pssh.exceptions import PKeyFileError, AuthenticationError
+from cryptography.hazmat.primitives import serialization as crypto_serialization
 
 log = logging.getLogger(__name__)
 GENERAL = API.RESPONSES['general']
@@ -100,26 +101,30 @@ def ssh_signup(user: Dict[str, Any]) -> Tuple[Union[str, List[Any], Content], Ht
     # TODO: configure nodes used for authentication
     auth_node = next(iter(SSH.AVAILABLE_NODES))
 
-    ssh_key = TensorHiveManager().dedicated_ssh_key
-    test_client = SSHClient()
-    test_client.load_system_host_keys()
-    test_client.set_missing_host_key_policy(WarningPolicy())
+    ssh_key_path = TensorHiveManager().dedicated_ssh_key_path
 
     try:
-        test_client.connect(auth_node, username=user['username'], pkey=ssh_key)
-    except AuthenticationException:
+        test_client = SSHClient(
+            host=auth_node,
+            user=user['username'],
+            # TODO: port?
+            pkey=str(ssh_key_path)
+        )
+        test_client.disconnect()
+    except AuthenticationError:
         return {'msg': GENERAL['unprivileged']}, 403
-    except (BadHostKeyException, SSHException, socket.error) as e:
+    except (PKeyFileError, socket.error) as e:
         return 'An error occurred while authenticating: {}'.format(e), 500
-    finally:
-        test_client.close()
 
     return do_create(user)
 
 
 def authorized_keys_entry() -> str:
-    key = TensorHiveManager().dedicated_ssh_key.get_base64()
-    return 'ssh-rsa {} tensorhive@{}'.format(key, APP_SERVER.HOST)
+    key = TensorHiveManager().dedicated_ssh_key.public_key().public_bytes(
+        crypto_serialization.Encoding.OpenSSH,
+        crypto_serialization.PublicFormat.OpenSSH
+    )
+    return '{} tensorhive@{}'.format(key.decode(), APP_SERVER.HOST)
 
 
 @admin_required

@@ -1,6 +1,6 @@
 from tensorhive.core import ssh
-from tensorhive.core.ssh import HostsConfig, ProxyConfig, Hostname, Username
-from pssh.clients.native import ParallelSSHClient
+from tensorhive.core.ssh import Hostname, Username
+from pssh.clients.ssh import ParallelSSHClient
 from typing import List, Optional, Dict, Iterator, Tuple
 import time
 from datetime import datetime

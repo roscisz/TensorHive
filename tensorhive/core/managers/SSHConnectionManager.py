@@ -1,9 +1,7 @@
 from tensorhive.config import SSH
-from pssh.clients.native import ParallelSSHClient
+from pssh.clients.ssh import ParallelSSHClient
 from pssh.exceptions import PKeyFileError
-from paramiko.rsakey import RSAKey
 from typing import Dict
-from tensorhive.core import ssh
 import logging
 log = logging.getLogger(__name__)
 
@@ -19,7 +17,7 @@ class SSHConnectionManager():
 
     @classmethod
     def new_parallel_ssh_client(cls, config, key_path=None) -> ParallelSSHClient:
-        hostnames = config.keys()
+        hostnames = list(config.keys())
         try:
             if SSH.PROXY:
                 client = ParallelSSHClient(
@@ -96,20 +94,20 @@ class SSHConnectionManager():
 
         # 3. Log appropriate messages based on command's result
         num_failed = 0
-        for host, host_output in output.items():
+        for host_output in output:
             if host_output.exception is None and host_output.exit_code == 0:
                 log.info(message_template.format(
                     icon='✔',
-                    host=host,
+                    host=host_output.host,
                     msg='OK'))
             else:
                 num_failed += 1
                 error_message = 'FAILED (exit code: {}, exception: {})'.format(
                     host_output.exit_code,
-                    host_output.exception.__class__.__name__)
+                    host_output.exception)
                 log.critical(message_template.format(
                     icon='✘',
-                    host=host,
+                    host=host_output.host,
                     msg=error_message))
 
         # 4. Show simple summary of failed connections
