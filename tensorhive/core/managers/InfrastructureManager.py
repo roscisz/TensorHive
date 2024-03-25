@@ -11,9 +11,9 @@ class InfrastructureManager():
     '''
 
     def __init__(self, available_nodes):
-        self._infrastructure = {}  # type: Dict
+        self._infrastructure = {}
         for node in available_nodes.keys():
-            self._infrastructure[node] = {}  # type: Dict
+            self._infrastructure[node] = {}
 
     @property
     def infrastructure(self) -> Dict:

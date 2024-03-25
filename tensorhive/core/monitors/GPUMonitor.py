@@ -13,7 +13,7 @@ class GPUMonitor(Monitor):
     @override
     def update(self, group_connection, infrastructure_manager):
         self._update_gpu_metrics(group_connection, infrastructure_manager)
-        processes = self._current_processes(group_connection, infrastructure_manager)  # type: Dict
+        processes = self._current_processes(group_connection, infrastructure_manager)
         self._update_processes(infrastructure_manager, processes)
 
     @property

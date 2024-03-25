@@ -83,7 +83,7 @@ class ProtectionService(Service):
 
         current_infrastructure = self.infrastructure_manager.all_nodes_with_gpu_processes()
         for hostname in current_infrastructure:
-            violations = {}  # type: Dict[str, Dict]
+            violations = {}
             for gpu_id in current_infrastructure[hostname]:
                 processes = current_infrastructure[hostname][gpu_id]
                 if self.strict_reservations or (processes is not None and len(processes)):
