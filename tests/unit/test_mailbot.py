@@ -9,7 +9,7 @@ import pytest
 import email
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def violation_data():
     return {
         'INTRUDER_USERNAME': 'intruder_email_mock',
