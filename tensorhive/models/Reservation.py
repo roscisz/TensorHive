@@ -19,10 +19,7 @@ class Reservation(CRUDModel, Base):  # type: ignore
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    user = relationship(
-        'User',
-        backref=backref('reservations', passive_deletes=True, cascade='all, delete, delete-orphan'),
-        lazy='subquery')
+    user = relationship('User', back_populates='_reservations', lazy='subquery')
     title = Column(String(60), unique=False, nullable=False)
     description = Column(String(200), nullable=True)
     resource_id = Column(String(60), nullable=False)

@@ -44,7 +44,8 @@ class User(CRUDModel, RestrictionAssignee):  # type: ignore
     _groups = relationship('Group', secondary='user2group', back_populates='_users', viewonly=True)
     _restrictions = relationship('Restriction', secondary='restriction2assignee', back_populates='_users',
                                  viewonly=True)
-    _reservations = relationship('Reservation', cascade='all,delete')
+    _reservations = relationship(
+        'Reservation', passive_deletes=True, cascade='all, delete, delete-orphan', back_populates='user')
     _jobs = relationship(
         'Job', cascade='all, delete', back_populates="user", lazy='subquery')
 

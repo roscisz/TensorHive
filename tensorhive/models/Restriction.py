@@ -42,7 +42,8 @@ class Restriction(CRUDModel, Base):  # type: ignore
     is_global = Column(Boolean, nullable=False)
 
     _users = relationship('User', secondary='restriction2assignee', back_populates='_restrictions')
-    _groups = relationship('Group', secondary='restriction2assignee', back_populates='_restrictions')
+    _groups = relationship('Group', secondary='restriction2assignee', back_populates='_restrictions',
+                           overlaps="_users")
     _resources = relationship('Resource', secondary='restriction2resource', back_populates='_restrictions')
     _schedules = relationship('RestrictionSchedule', secondary='restriction2schedule', back_populates='_restrictions')
 
