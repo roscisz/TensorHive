@@ -14,6 +14,8 @@ import json
 import logging
 log = logging.getLogger(__name__)
 
+ALLOW_DATA_MISSING_TIMES = 1
+
 
 class LogFileCleanupAction(IntEnum):
     REMOVE = 0
@@ -136,6 +138,9 @@ class UsageLoggingService(Service):
         super().__init__()
         self.interval = interval
         self.log_dir.mkdir(parents=True, exist_ok=True)
+        # Often GPU data is missing during the first run, this is
+        # to raise warnings only after a few missing data events
+        self._data_missing = 0
 
     @override
     def inject(self, injected_object):
@@ -160,15 +165,23 @@ class UsageLoggingService(Service):
         '''Updates log files related to current reservations'''
         current_reservations = Reservation.current_events()
         infrastructure = self.infrastructure_manager.infrastructure
+        data_was_missing = False
+
         for reservation in current_reservations:
             filename = '{id}.json'.format(id=reservation.id)
             log_file_path = self.log_dir / filename
-            try:
-                gpu_data = self.extract_specific_gpu_data(
-                    uuid=reservation.resource_id, infrastructure=infrastructure)
+            gpu_data = self.extract_specific_gpu_data(
+                uuid=reservation.resource_id, infrastructure=infrastructure)
+            if gpu_data is None:
+                if self._data_missing >= ALLOW_DATA_MISSING_TIMES:
+                    log.warning(f'Usage logging has no data for GPU {reservation.resource_id}')
+                data_was_missing = True
+            else:
+                self._data_missing = 0
                 Log(data=gpu_data).save(out_path=log_file_path)
-            except Exception as e:
-                log.error(e)
+
+        if data_was_missing:
+            self._data_missing += 1
 
     def _clean_up_old_log_file(self, file: PosixPath):
         '''
